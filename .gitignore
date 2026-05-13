@@ -42,3 +42,11 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# referencing files
+# Artisans_Project_Checklist.pdf
+# BOA_Master_Technical_Document_2.pdf
+# FRONTEND STRUCTURE AND RULES.pdf
+shared_implementation.md
+backend_integration.md
+*.pdf
