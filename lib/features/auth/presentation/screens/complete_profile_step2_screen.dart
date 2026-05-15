@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../shared/presentation/screens/messages_list_screen.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../widgets/dot_indicator.dart';
@@ -25,15 +26,15 @@ class CompleteProfileStep2Screen extends StatefulWidget {
 class _CompleteProfileStep2ScreenState
     extends State<CompleteProfileStep2Screen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  
+
   // Shared
   final TextEditingController _bioController = TextEditingController();
-  
+
   // Worker specific
   final TextEditingController _skillsController = TextEditingController();
   String? _selectedCategory;
   String _experienceLevel = 'Beginner';
-  
+
   bool _isSubmitting = false;
   String _selectedRole = 'worker'; // Default, overridden by args
 
@@ -74,7 +75,7 @@ class _CompleteProfileStep2ScreenState
 
   Future<void> _finishProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     if (!_isClient && _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a category.')),
@@ -89,7 +90,11 @@ class _CompleteProfileStep2ScreenState
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile completion saved locally (stub).')),
     );
-    // TODO: Navigate to home/dashboard
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      MessagesListScreen.routeName,
+      (Route<dynamic> route) => false,
+    );
   }
 
   Widget _buildWorkerFields() {
@@ -98,8 +103,7 @@ class _CompleteProfileStep2ScreenState
       children: <Widget>[
         Text('PRIMARY CATEGORY',
             style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700)),
+                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
         const SizedBox(height: 10),
         DropdownButtonFormField<String>(
           value: _selectedCategory,
@@ -107,7 +111,8 @@ class _CompleteProfileStep2ScreenState
             hintText: 'Select your main trade',
             filled: true,
             fillColor: AppColors.surface,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(24),
               borderSide: const BorderSide(color: AppColors.outline),
@@ -128,22 +133,18 @@ class _CompleteProfileStep2ScreenState
           },
         ),
         const SizedBox(height: 20),
-        
         Text('SKILLS',
             style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700)),
+                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
         const SizedBox(height: 10),
         AppInput(
           controller: _skillsController,
           hint: 'e.g., Pipe fitting, leak repair...',
         ),
         const SizedBox(height: 20),
-
         Text('EXPERIENCE LEVEL',
             style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700)),
+                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
         const SizedBox(height: 10),
         Wrap(
           spacing: 8,
@@ -180,14 +181,13 @@ class _CompleteProfileStep2ScreenState
       children: <Widget>[
         Text(_isClient ? 'ABOUT YOU' : 'PROFESSIONAL BIO',
             style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700)),
+                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
         const SizedBox(height: 10),
         AppInput(
           controller: _bioController,
-          hint: _isClient 
-            ? "Tell us a bit about yourself and what services you usually need..."
-            : "Tell clients about your background, work ethic, and why they should hire you...",
+          hint: _isClient
+              ? "Tell us a bit about yourself and what services you usually need..."
+              : "Tell clients about your background, work ethic, and why they should hire you...",
           maxLines: 4,
           maxLength: 250,
           validator: (String? value) {
@@ -211,14 +211,13 @@ class _CompleteProfileStep2ScreenState
             // ── Header bar ───────────────────────────────────────
             Container(
               color: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
               child: Row(
                 children: <Widget>[
                   IconButton(
                     onPressed: () => Navigator.maybePop(context),
-                    icon: const Icon(Icons.arrow_back,
-                        color: AppColors.primary),
+                    icon:
+                        const Icon(Icons.arrow_back, color: AppColors.primary),
                   ),
                   const SizedBox(width: 10),
                   Text('Artisans',
@@ -242,14 +241,17 @@ class _CompleteProfileStep2ScreenState
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: <Widget>[
-                        Text(_isClient ? 'Tell Us About You' : 'Professional Details',
+                        Text(
+                            _isClient
+                                ? 'Tell Us About You'
+                                : 'Professional Details',
                             style: AppTextStyles.displayMd
                                 .copyWith(fontSize: 58 * 0.7)),
                         const SizedBox(height: 10),
                         Text(
-                          _isClient 
-                            ? 'A quick bio helps artisans know who they are working with.'
-                            : 'These details help clients find you for the right jobs.',
+                          _isClient
+                              ? 'A quick bio helps artisans know who they are working with.'
+                              : 'These details help clients find you for the right jobs.',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyLg,
                         ),
@@ -263,14 +265,11 @@ class _CompleteProfileStep2ScreenState
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              
                               if (!_isClient) ...<Widget>[
                                 _buildWorkerFields(),
                                 const SizedBox(height: 24),
                               ],
-                              
                               _buildSharedFields(),
-                              
                               const SizedBox(height: 24),
                               GradientButton(
                                 label: 'Complete Setup & Explore',
