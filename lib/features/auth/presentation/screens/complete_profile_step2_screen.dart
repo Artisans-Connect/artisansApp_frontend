@@ -3,16 +3,13 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/presentation/screens/messages_list_screen.dart';
+import '../../../../shared/presentation/screens/worker_home_shell_screen.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../models/onboarding_session.dart';
 import '../../widgets/dot_indicator.dart';
 
-/// Step 3 of 3 in profile completion — role-adaptive details.
-///
-/// Receives the selected role from [CompleteProfileStep1Screen] via
-/// route arguments.
-/// If Client: Asks for bio and general service preferences.
-/// If Worker: Asks for specific skills, category, and experience level.
+/// Final onboarding step — bio only (worker trade/areas captured earlier).
 class CompleteProfileStep2Screen extends StatefulWidget {
   const CompleteProfileStep2Screen({super.key});
 
@@ -23,181 +20,43 @@ class CompleteProfileStep2Screen extends StatefulWidget {
       _CompleteProfileStep2ScreenState();
 }
 
-class _CompleteProfileStep2ScreenState
-    extends State<CompleteProfileStep2Screen> {
+class _CompleteProfileStep2ScreenState extends State<CompleteProfileStep2Screen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-
-  // Shared
   final TextEditingController _bioController = TextEditingController();
-
-  // Worker specific
-  final TextEditingController _skillsController = TextEditingController();
-  String? _selectedCategory;
-  String _experienceLevel = 'Beginner';
-
+  final OnboardingSession _session = OnboardingSession.instance;
   bool _isSubmitting = false;
-  String _selectedRole = 'worker'; // Default, overridden by args
-
-  final List<String> _categories = const <String>[
-    'Plumbing',
-    'Electrical',
-    'Carpentry',
-    'Cleaning',
-    'Landscaping',
-    'Painting',
-    'Other'
-  ];
-
-  final List<String> _experienceLevels = const <String>[
-    'Beginner',
-    'Intermediate',
-    'Expert',
-    'Master'
-  ];
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final Object? arg = ModalRoute.of(context)?.settings.arguments;
-    if (arg is String && (arg == 'client' || arg == 'worker')) {
-      _selectedRole = arg;
-    }
-  }
 
   @override
   void dispose() {
     _bioController.dispose();
-    _skillsController.dispose();
     super.dispose();
   }
 
-  bool get _isClient => _selectedRole == 'client';
+  bool get _isClient => _session.isClient;
+
+  String get _stepLabel => _isClient ? 'Step 3 of 3' : 'Bio';
+
+  int get _activeDot => _isClient ? 2 : 1;
+  int get _totalDots => _isClient ? 3 : 2;
 
   Future<void> _finishProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    if (!_isClient && _selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category.')),
-      );
-      return;
-    }
-
     setState(() => _isSubmitting = true);
+    _session.bio = _bioController.text.trim();
     await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() => _isSubmitting = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile completion saved locally (stub).')),
     );
+    final String route = _isClient
+        ? MessagesListScreen.routeName
+        : WorkerHomeShellScreen.routeName;
     Navigator.pushNamedAndRemoveUntil(
       context,
-      MessagesListScreen.routeName,
+      route,
       (Route<dynamic> route) => false,
-    );
-  }
-
-  Widget _buildWorkerFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text('PRIMARY CATEGORY',
-            style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
-        DropdownButtonFormField<String>(
-          value: _selectedCategory,
-          decoration: InputDecoration(
-            hintText: 'Select your main trade',
-            filled: true,
-            fillColor: AppColors.surface,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-              borderSide: const BorderSide(color: AppColors.outline),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(24),
-              borderSide: const BorderSide(color: AppColors.outline),
-            ),
-          ),
-          items: _categories.map((String category) {
-            return DropdownMenuItem<String>(
-              value: category,
-              child: Text(category),
-            );
-          }).toList(),
-          onChanged: (String? value) {
-            setState(() => _selectedCategory = value);
-          },
-        ),
-        const SizedBox(height: 20),
-        Text('SKILLS',
-            style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
-        AppInput(
-          controller: _skillsController,
-          hint: 'e.g., Pipe fitting, leak repair...',
-        ),
-        const SizedBox(height: 20),
-        Text('EXPERIENCE LEVEL',
-            style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: _experienceLevels.map((String level) {
-            final bool isSelected = _experienceLevel == level;
-            return ChoiceChip(
-              label: Text(level),
-              selected: isSelected,
-              onSelected: (bool selected) {
-                if (selected) setState(() => _experienceLevel = level);
-              },
-              selectedColor: AppColors.primary.withOpacity(0.15),
-              labelStyle: TextStyle(
-                color: isSelected ? AppColors.primary : AppColors.textPrimary,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-                side: BorderSide(
-                  color: isSelected ? AppColors.primary : AppColors.outline,
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSharedFields() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Text(_isClient ? 'ABOUT YOU' : 'PROFESSIONAL BIO',
-            style: AppTextStyles.labelCaps.copyWith(
-                color: AppColors.textSecondary, fontWeight: FontWeight.w700)),
-        const SizedBox(height: 10),
-        AppInput(
-          controller: _bioController,
-          hint: _isClient
-              ? "Tell us a bit about yourself and what services you usually need..."
-              : "Tell clients about your background, work ethic, and why they should hire you...",
-          maxLines: 4,
-          maxLength: 250,
-          validator: (String? value) {
-            if ((value ?? '').trim().length < 10) {
-              return 'Bio should be at least 10 characters.';
-            }
-            return null;
-          },
-        ),
-      ],
     );
   }
 
@@ -208,7 +67,6 @@ class _CompleteProfileStep2ScreenState
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            // ── Header bar ───────────────────────────────────────
             Container(
               color: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -216,8 +74,7 @@ class _CompleteProfileStep2ScreenState
                 children: <Widget>[
                   IconButton(
                     onPressed: () => Navigator.maybePop(context),
-                    icon:
-                        const Icon(Icons.arrow_back, color: AppColors.primary),
+                    icon: const Icon(Icons.arrow_back, color: AppColors.primary),
                   ),
                   const SizedBox(width: 10),
                   Text('Artisans',
@@ -225,14 +82,12 @@ class _CompleteProfileStep2ScreenState
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700)),
                   const Spacer(),
-                  Text('Step 3 of 3',
+                  Text(_stepLabel,
                       style: AppTextStyles.bodyMd
                           .copyWith(fontWeight: FontWeight.w700)),
                 ],
               ),
             ),
-
-            // ── Scrollable content ───────────────────────────────
             Expanded(
               child: SingleChildScrollView(
                 child: Form(
@@ -242,16 +97,15 @@ class _CompleteProfileStep2ScreenState
                     child: Column(
                       children: <Widget>[
                         Text(
-                            _isClient
-                                ? 'Tell Us About You'
-                                : 'Professional Details',
-                            style: AppTextStyles.displayMd
-                                .copyWith(fontSize: 58 * 0.7)),
+                          _isClient ? 'Tell Us About You' : 'Your bio',
+                          style: AppTextStyles.displayMd
+                              .copyWith(fontSize: 58 * 0.7),
+                        ),
                         const SizedBox(height: 10),
                         Text(
                           _isClient
                               ? 'A quick bio helps artisans know who they are working with.'
-                              : 'These details help clients find you for the right jobs.',
+                              : 'Help clients understand your experience and approach.',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyLg,
                         ),
@@ -260,16 +114,34 @@ class _CompleteProfileStep2ScreenState
                           width: double.infinity,
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(28)),
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(28),
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              if (!_isClient) ...<Widget>[
-                                _buildWorkerFields(),
-                                const SizedBox(height: 24),
-                              ],
-                              _buildSharedFields(),
+                              Text(
+                                _isClient ? 'ABOUT YOU' : 'PROFESSIONAL BIO',
+                                style: AppTextStyles.labelCaps.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              AppInput(
+                                controller: _bioController,
+                                hint: _isClient
+                                    ? 'What kind of help do you usually need?'
+                                    : 'Tell clients about your background and work ethic…',
+                                maxLines: 4,
+                                maxLength: 250,
+                                validator: (String? value) {
+                                  if ((value ?? '').trim().length < 10) {
+                                    return 'Bio should be at least 10 characters.';
+                                  }
+                                  return null;
+                                },
+                              ),
                               const SizedBox(height: 24),
                               GradientButton(
                                 label: 'Complete Setup & Explore',
@@ -293,11 +165,9 @@ class _CompleteProfileStep2ScreenState
                 ),
               ),
             ),
-
-            // ── Dot indicator ────────────────────────────────────
             Padding(
               padding: const EdgeInsets.only(bottom: 24, top: 8),
-              child: const DotIndicator(totalDots: 3, activeIndex: 2),
+              child: DotIndicator(totalDots: _totalDots, activeIndex: _activeDot),
             ),
           ],
         ),

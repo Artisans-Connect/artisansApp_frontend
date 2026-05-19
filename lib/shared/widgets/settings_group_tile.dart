@@ -18,14 +18,15 @@ class SettingsGroup extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
-          child: Text(
-            title.toUpperCase(),
-            style:
-                AppTextStyles.labelCaps.copyWith(fontWeight: FontWeight.w700),
+        if (title.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(4, 8, 4, 10),
+            child: Text(
+              title.toUpperCase(),
+              style:
+                  AppTextStyles.labelCaps.copyWith(fontWeight: FontWeight.w700),
+            ),
           ),
-        ),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,

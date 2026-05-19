@@ -7,14 +7,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../models/onboarding_session.dart';
 import '../../widgets/dot_indicator.dart';
 
-/// Step 2 of 3 in profile completion — photo, role confirmation, and location.
-///
-/// Receives the selected role from [RoleSelectionScreen] via route
-/// arguments.  The account-type card is **interactive**: tapping it
-/// toggles between "Client" and "Worker" inline so the user can change
-/// their mind without navigating back.
+/// Photo upload and location — role comes from [OnboardingSession] (read-only).
 class CompleteProfileStep1Screen extends StatefulWidget {
   const CompleteProfileStep1Screen({super.key});
 
@@ -28,18 +24,9 @@ class CompleteProfileStep1Screen extends StatefulWidget {
 class _CompleteProfileStep1ScreenState
     extends State<CompleteProfileStep1Screen> {
   final TextEditingController _locationController = TextEditingController();
-  String _selectedRole = 'worker'; // default; overridden by arguments
+  final OnboardingSession _session = OnboardingSession.instance;
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final Object? arg = ModalRoute.of(context)?.settings.arguments;
-    if (arg is String && (arg == 'client' || arg == 'worker')) {
-      _selectedRole = arg;
-    }
-  }
 
   @override
   void dispose() {
@@ -47,7 +34,14 @@ class _CompleteProfileStep1ScreenState
     super.dispose();
   }
 
-  bool get _isClient => _selectedRole == 'client';
+  bool get _isClient => _session.isClient;
+  bool get _isWorker => _session.isWorker;
+
+  String get _stepLabel =>
+      _isWorker ? 'Photo & location' : 'Step 2 of 3';
+
+  int get _activeDot => _isWorker ? 0 : 1;
+  int get _totalDots => _isWorker ? 2 : 3;
 
   Future<void> _pickImage() async {
     showModalBottomSheet<void>(
@@ -103,51 +97,6 @@ class _CompleteProfileStep1ScreenState
     );
   }
 
-  void _showRoleSelector() {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (BuildContext ctx) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 36),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Text('Choose Account Type',
-                  style: AppTextStyles.displayMd
-                      .copyWith(fontSize: 22)),
-              const SizedBox(height: 20),
-              _RoleSheetOption(
-                title: 'Client Profile',
-                subtitle: 'Looking for workers',
-                icon: Icons.desktop_windows_outlined,
-                isSelected: _isClient,
-                onTap: () {
-                  setState(() => _selectedRole = 'client');
-                  Navigator.pop(ctx);
-                },
-              ),
-              const SizedBox(height: 12),
-              _RoleSheetOption(
-                title: 'Worker Profile',
-                subtitle: 'Ready to offer services',
-                icon: Icons.work_outline,
-                isSelected: !_isClient,
-                onTap: () {
-                  setState(() => _selectedRole = 'worker');
-                  Navigator.pop(ctx);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -173,7 +122,7 @@ class _CompleteProfileStep1ScreenState
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700)),
                   const Spacer(),
-                  Text('Step 2 of 3',
+                  Text(_stepLabel,
                       style: AppTextStyles.bodyMd
                           .copyWith(fontWeight: FontWeight.w700)),
                 ],
@@ -265,70 +214,62 @@ class _CompleteProfileStep1ScreenState
                           ),
                           const SizedBox(height: 24),
 
-                          // ── Account type — interactive ──────────
+                          // ── Account type — read-only from session ──
                           Text('ACCOUNT TYPE',
                               style: AppTextStyles.labelCaps.copyWith(
                                   color: AppColors.textSecondary,
                                   fontWeight: FontWeight.w700)),
                           const SizedBox(height: 10),
-                          GestureDetector(
-                            onTap: _showRoleSelector,
-                            child: Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: AppColors.surfaceDim,
-                                borderRadius: BorderRadius.circular(22),
-                              ),
-                              child: Row(
-                                children: <Widget>[
-                                  CircleAvatar(
-                                    radius: 24,
-                                    backgroundColor: _isClient
-                                        ? AppColors.primary.withOpacity(0.15)
-                                        : AppColors.secondary,
-                                    child: Icon(
-                                      _isClient
-                                          ? Icons.desktop_windows_outlined
-                                          : Icons.badge_outlined,
-                                      color: _isClient
-                                          ? AppColors.primary
-                                          : Colors.white,
-                                    ),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceDim,
+                              borderRadius: BorderRadius.circular(22),
+                            ),
+                            child: Row(
+                              children: <Widget>[
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundColor: _isClient
+                                      ? AppColors.primary.withOpacity(0.15)
+                                      : AppColors.secondary,
+                                  child: Icon(
+                                    _isClient
+                                        ? Icons.desktop_windows_outlined
+                                        : Icons.badge_outlined,
+                                    color: _isClient
+                                        ? AppColors.primary
+                                        : Colors.white,
                                   ),
-                                  const SizedBox(width: 14),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: <Widget>[
-                                        Text(
-                                          'SELECTED ROLE',
-                                          style: AppTextStyles.labelCaps
-                                              .copyWith(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        'SELECTED ROLE',
+                                        style: AppTextStyles.labelCaps.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w700,
                                         ),
-                                        Text(
-                                          _isClient
-                                              ? 'Client Profile'
-                                              : 'Worker Profile',
-                                          style: AppTextStyles.bodyLg.copyWith(
-                                            color: AppColors.textPrimary,
-                                            fontWeight: FontWeight.w700,
-                                          ),
+                                      ),
+                                      Text(
+                                        _isClient
+                                            ? 'Client Profile'
+                                            : 'Worker Profile',
+                                        style: AppTextStyles.bodyLg.copyWith(
+                                          color: AppColors.textPrimary,
+                                          fontWeight: FontWeight.w700,
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                  const Icon(Icons.check_circle_outline,
-                                      color: AppColors.success, size: 18),
-                                  TextButton(
-                                    onPressed: _showRoleSelector,
-                                    child: const Text('Change'),
-                                  ),
-                                ],
-                              ),
+                                ),
+                                const Icon(Icons.check_circle,
+                                    color: AppColors.success, size: 20),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 22),
@@ -349,13 +290,11 @@ class _CompleteProfileStep1ScreenState
                             label: 'SAVE & CONTINUE',
                             trailingIcon: Icons.arrow_forward,
                             onPressed: () {
-                              // We could optionally pass image file path and location, 
-                              // but since this is UI-focused right now, we'll just pass the role.
-                              // Real app would likely store this in a riverpod provider or similar.
+                              _session.locationLabel =
+                                  _locationController.text.trim();
                               Navigator.pushNamed(
                                 context,
                                 '/auth/complete-profile-step2',
-                                arguments: _selectedRole,
                               );
                             },
                           ),
@@ -370,74 +309,8 @@ class _CompleteProfileStep1ScreenState
             // ── Dot indicator ────────────────────────────────────
             Padding(
               padding: const EdgeInsets.only(bottom: 24, top: 8),
-              child: const DotIndicator(totalDots: 3, activeIndex: 1),
+              child: DotIndicator(totalDots: _totalDots, activeIndex: _activeDot),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-/// Small helper widget used inside the role-change bottom sheet.
-// ─────────────────────────────────────────────────────────────────────
-class _RoleSheetOption extends StatelessWidget {
-  const _RoleSheetOption({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.08)
-              : AppColors.surfaceDim,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: isSelected
-                ? AppColors.primary.withOpacity(0.35)
-                : Colors.transparent,
-          ),
-        ),
-        child: Row(
-          children: <Widget>[
-            CircleAvatar(
-              radius: 24,
-              backgroundColor:
-                  isSelected ? AppColors.primary : AppColors.outline,
-              child: Icon(icon, color: Colors.white),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(title,
-                      style: AppTextStyles.bodyLg.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700)),
-                  Text(subtitle, style: AppTextStyles.bodyMd),
-                ],
-              ),
-            ),
-            if (isSelected)
-              const Icon(Icons.check_circle, color: AppColors.success),
           ],
         ),
       ),

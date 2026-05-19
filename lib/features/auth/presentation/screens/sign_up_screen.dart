@@ -4,6 +4,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../models/onboarding_session.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -38,6 +39,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 700));
     if (!mounted) return;
     setState(() => _isSubmitting = false);
+    final OnboardingSession session = OnboardingSession.instance;
+    session.fullName = _nameController.text.trim();
+    session.phone = _phoneController.text.trim();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Sign-up is stubbed for this UI phase.')),
     );

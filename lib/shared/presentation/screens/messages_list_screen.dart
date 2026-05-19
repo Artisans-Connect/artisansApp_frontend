@@ -11,9 +11,11 @@ import 'settings_screen.dart';
 import 'user_profile_screen.dart';
 
 class MessagesListScreen extends StatefulWidget {
-  const MessagesListScreen({super.key});
+  const MessagesListScreen({super.key, this.embedInShell = false});
 
   static const String routeName = '/shared/messages';
+
+  final bool embedInShell;
 
   @override
   State<MessagesListScreen> createState() => _MessagesListScreenState();

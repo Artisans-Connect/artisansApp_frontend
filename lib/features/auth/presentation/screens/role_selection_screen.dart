@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../models/onboarding_session.dart';
 import '../../widgets/dot_indicator.dart';
 import '../../widgets/role_option_card.dart';
+import 'complete_profile_step1_screen.dart';
+import 'worker_trade_selection_screen.dart';
 
 /// Step 1 of 3 in profile completion — role selection.
 ///
@@ -96,9 +99,22 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       label: 'Continue with Selection',
                       onPressed: _selectedRole == null
                           ? null
-                          : () => Navigator.pushNamed(
-                              context, '/auth/complete-profile-step1',
-                              arguments: _selectedRole),
+                          : () {
+                              final OnboardingSession session =
+                                  OnboardingSession.instance;
+                              session.setRoleFromString(_selectedRole!);
+                              if (_selectedRole == 'worker') {
+                                Navigator.pushNamed(
+                                  context,
+                                  WorkerTradeSelectionScreen.routeName,
+                                );
+                              } else {
+                                Navigator.pushNamed(
+                                  context,
+                                  CompleteProfileStep1Screen.routeName,
+                                );
+                              }
+                            },
                     ),
                   ],
                 ),

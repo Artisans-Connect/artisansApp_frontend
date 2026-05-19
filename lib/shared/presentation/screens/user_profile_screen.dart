@@ -3,33 +3,29 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../widgets/gradient_button.dart';
-import '../../data/shared_stub_data.dart';
-import '../../models/user_profile_view.dart';
 import '../../widgets/profile_section_card.dart';
 import '../navigation/shared_route_args.dart';
+import '../../utils/shared_user_context.dart';
+import '../../models/user_profile_view.dart';
+import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
 
+/// Shared profile for clients and workers. Same route; sections vary by [UserProfileViewData.role].
 class UserProfileScreen extends StatelessWidget {
-  const UserProfileScreen({super.key});
+  const UserProfileScreen({super.key, this.embedInShell = false});
 
   static const String routeName = '/shared/profile';
 
-  UserProfileViewData _resolveProfile(ProfileArgs? args) {
-    if (args == null || args.userId == SharedStubData.currentUserId) {
-      return SharedStubData.currentUserProfile;
-    }
-    if (args.viewAsWorker || args.userId != SharedStubData.currentUserId) {
-      return SharedStubData.sampleWorkerProfile;
-    }
-    return SharedStubData.currentUserProfile;
-  }
+  /// When true, user is inside worker shell — Settings live on another tab.
+  final bool embedInShell;
 
   @override
   Widget build(BuildContext context) {
     final ProfileArgs? args =
         ModalRoute.of(context)?.settings.arguments as ProfileArgs?;
-    final UserProfileViewData profile = _resolveProfile(args);
-    final bool isOwnProfile = profile.id == SharedStubData.currentUserId;
+    final UserProfileViewData profile = SharedUserContext.resolveProfile(args);
+    final bool isOwnProfile = SharedUserContext.isOwnProfile(args?.userId);
+    final bool isWorkerView = profile.isWorker;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF2F0F8),
@@ -39,27 +35,35 @@ class UserProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  onPressed: () => Navigator.maybePop(context),
-                  icon: const Icon(Icons.arrow_back),
+              if (!embedInShell)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () => Navigator.maybePop(context),
+                    icon: const Icon(Icons.arrow_back),
+                  ),
                 ),
-              ),
               _ProfileHero(profile: profile),
               const SizedBox(height: 20),
+              if (profile.locationLabel != null &&
+                  profile.locationLabel!.isNotEmpty) ...<Widget>[
+                ProfileSectionCard(
+                  title: 'Location',
+                  child: _InfoRow(
+                    icon: Icons.location_on_outlined,
+                    label: profile.locationLabel!,
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
               ProfileSectionCard(
                 title: 'Contact',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    if (profile.phone != null)
-                      _InfoRow(
-                          icon: Icons.phone_outlined, label: profile.phone!),
-                    if (profile.phone == null)
-                      Text('No phone added yet.', style: AppTextStyles.bodyMd),
-                  ],
-                ),
+                child: profile.phone != null
+                    ? _InfoRow(
+                        icon: Icons.phone_outlined,
+                        label: profile.phone!,
+                      )
+                    : Text('No phone added yet.', style: AppTextStyles.bodyMd),
               ),
               const SizedBox(height: 14),
               ProfileSectionCard(
@@ -70,24 +74,46 @@ class UserProfileScreen extends StatelessWidget {
                       .copyWith(color: AppColors.textPrimary),
                 ),
               ),
-              if (profile.isWorker) ...<Widget>[
-                const SizedBox(height: 14),
-                ProfileSectionCard(
-                  title: 'Skills',
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: profile.skills
-                        .map(
-                          (String skill) => Chip(
-                            label: Text(skill),
-                            backgroundColor: AppColors.surfaceDim,
-                            side: BorderSide.none,
-                          ),
-                        )
-                        .toList(),
+              if (isWorkerView) ...<Widget>[
+                if (profile.skills.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 14),
+                  ProfileSectionCard(
+                    title: 'Skills & trades',
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: profile.skills
+                          .map(
+                            (String skill) => Chip(
+                              label: Text(skill),
+                              backgroundColor: AppColors.surfaceDim,
+                              side: BorderSide.none,
+                            ),
+                          )
+                          .toList(),
+                    ),
                   ),
-                ),
+                ],
+                if (profile.serviceAreas.isNotEmpty) ...<Widget>[
+                  const SizedBox(height: 14),
+                  ProfileSectionCard(
+                    title: 'Service areas',
+                    child: Text(
+                      profile.serviceAreas.join(', '),
+                      style: AppTextStyles.bodyLg,
+                    ),
+                  ),
+                ],
+                if (profile.experienceBand != null) ...<Widget>[
+                  const SizedBox(height: 14),
+                  ProfileSectionCard(
+                    title: 'Experience',
+                    child: Text(
+                      profile.experienceBand!,
+                      style: AppTextStyles.bodyLg,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 14),
                 ProfileSectionCard(
                   title: 'Stats',
@@ -103,11 +129,20 @@ class UserProfileScreen extends StatelessWidget {
                       if (profile.totalJobs != null)
                         Expanded(
                           child: _StatBlock(
-                            label: 'Jobs',
+                            label: 'Jobs completed',
                             value: '${profile.totalJobs}',
                           ),
                         ),
                     ],
+                  ),
+                ),
+              ] else if (profile.totalJobs != null) ...<Widget>[
+                const SizedBox(height: 14),
+                ProfileSectionCard(
+                  title: 'Activity',
+                  child: _StatBlock(
+                    label: 'Jobs posted',
+                    value: '${profile.totalJobs}',
                   ),
                 ),
               ],
@@ -115,20 +150,25 @@ class UserProfileScreen extends StatelessWidget {
               if (isOwnProfile) ...<Widget>[
                 GradientButton(
                   label: 'Edit Profile',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text(
-                              'Edit profile is stubbed for this UI phase.')),
-                    );
-                  },
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    EditProfileScreen.routeName,
+                  ),
                 ),
-                const SizedBox(height: 12),
-                TextButton(
-                  onPressed: () =>
-                      Navigator.pushNamed(context, SettingsScreen.routeName),
-                  child: const Text('Account Settings'),
-                ),
+                if (!embedInShell) ...<Widget>[
+                  const SizedBox(height: 12),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      SettingsScreen.routeName,
+                    ),
+                    child: Text(
+                      SharedUserContext.isWorker
+                          ? 'Account settings'
+                          : 'Settings & info',
+                    ),
+                  ),
+                ],
               ] else
                 GradientButton(
                   label: 'Message',
@@ -170,14 +210,13 @@ class _ProfileHero extends StatelessWidget {
                 ),
               ),
               if (profile.isVerified)
-                Positioned(
+                const Positioned(
                   bottom: 0,
                   right: 0,
                   child: CircleAvatar(
                     radius: 14,
                     backgroundColor: AppColors.success,
-                    child: const Icon(Icons.verified,
-                        color: Colors.white, size: 16),
+                    child: Icon(Icons.verified, color: Colors.white, size: 16),
                   ),
                 ),
             ],

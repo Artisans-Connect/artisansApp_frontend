@@ -7,10 +7,15 @@ import 'features/auth/presentation/screens/role_selection_screen.dart';
 import 'features/auth/presentation/screens/sign_in_screen.dart';
 import 'features/auth/presentation/screens/sign_up_screen.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
+import 'features/auth/presentation/screens/worker_service_areas_screen.dart';
+import 'features/auth/presentation/screens/worker_trade_selection_screen.dart';
 import 'shared/presentation/screens/chat_detail_screen.dart';
+import 'shared/presentation/screens/edit_profile_screen.dart';
+import 'shared/presentation/screens/job_receipt_screen.dart';
 import 'shared/presentation/screens/messages_list_screen.dart';
 import 'shared/presentation/screens/settings_screen.dart';
 import 'shared/presentation/screens/user_profile_screen.dart';
+import 'shared/presentation/screens/worker_home_shell_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -28,6 +33,10 @@ class MyApp extends StatelessWidget {
         RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
         SignInScreen.routeName: (_) => const SignInScreen(),
         SignUpScreen.routeName: (_) => const SignUpScreen(),
+        WorkerTradeSelectionScreen.routeName: (_) =>
+            const WorkerTradeSelectionScreen(),
+        WorkerServiceAreasScreen.routeName: (_) =>
+            const WorkerServiceAreasScreen(),
         CompleteProfileStep1Screen.routeName: (_) =>
             const CompleteProfileStep1Screen(),
         CompleteProfileStep2Screen.routeName: (_) =>
@@ -36,6 +45,9 @@ class MyApp extends StatelessWidget {
         ChatDetailScreen.routeName: (_) => const ChatDetailScreen(),
         UserProfileScreen.routeName: (_) => const UserProfileScreen(),
         SettingsScreen.routeName: (_) => const SettingsScreen(),
+        EditProfileScreen.routeName: (_) => const EditProfileScreen(),
+        JobReceiptScreen.routeName: (_) => const JobReceiptScreen(),
+        WorkerHomeShellScreen.routeName: (_) => const WorkerHomeShellScreen(),
       },
     );
   }

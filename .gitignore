@@ -49,4 +49,5 @@ app.*.map.json
 # FRONTEND STRUCTURE AND RULES.pdf
 shared_implementation.md
 backend_integration.md
+shared_handoff_plan.md
 *.pdf
