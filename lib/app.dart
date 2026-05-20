@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'features/splash/presentation/splash_screen.dart';
+import 'core/navigation/app_router.dart';
+import 'core/navigation/app_routes.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -8,8 +9,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Artisans' ,
-      home: const SplashScreen(),
+      onGenerateRoute: AppRouter.generateRoute,
+      initialRoute: AppRoutes.splash,
     );
   }
 }
