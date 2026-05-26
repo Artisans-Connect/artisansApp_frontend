@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../shared/presentation/screens/messages_list_screen.dart';
 import 'screens/worker_active_empty_screen.dart';
 import 'screens/worker_active_in_progress_screen.dart';
 import 'screens/worker_active_pre_start_screen.dart';
@@ -11,6 +12,8 @@ import 'widgets/worker_bottom_nav.dart';
 
 class WorkerShell extends StatefulWidget {
   const WorkerShell({super.key});
+
+  static const String routeName = '/shared/worker-home';
 
   @override
   State<WorkerShell> createState() => _WorkerShellState();
@@ -71,7 +74,7 @@ class _WorkerShellState extends State<WorkerShell> {
           children: [
             const WorkerRequestsScreen(),
             _bookingsTab(),
-            const SizedBox.shrink(),
+            const MessagesListScreen(embedInShell: true),
             _profileTab(),
           ],
         ),

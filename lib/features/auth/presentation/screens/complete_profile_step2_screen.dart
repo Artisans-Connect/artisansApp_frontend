@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/presentation/screens/messages_list_screen.dart';
-import '../../../../shared/presentation/screens/worker_home_shell_screen.dart';
+import '../../../worker/presentation/worker_shell.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
@@ -52,7 +52,7 @@ class _CompleteProfileStep2ScreenState extends State<CompleteProfileStep2Screen>
     );
     final String route = _isClient
         ? MessagesListScreen.routeName
-        : WorkerHomeShellScreen.routeName;
+        : WorkerShell.routeName;
     Navigator.pushNamedAndRemoveUntil(
       context,
       route,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/mock_worker_job.dart';
-import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
 import '../theme/worker_text_styles.dart';

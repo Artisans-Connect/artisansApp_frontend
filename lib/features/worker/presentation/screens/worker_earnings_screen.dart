@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
@@ -27,10 +28,16 @@ class WorkerEarningsScreen extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: WorkerSpacing.md),
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: WorkerColors.primaryFixed,
-              child: const Icon(Icons.person, color: WorkerColors.primary),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () {
+                Navigator.pushNamed(context, UserProfileScreen.routeName);
+              },
+              child: CircleAvatar(
+                radius: 18,
+                backgroundColor: WorkerColors.primaryFixed,
+                child: const Icon(Icons.person, color: WorkerColors.primary),
+              ),
             ),
           ),
         ],

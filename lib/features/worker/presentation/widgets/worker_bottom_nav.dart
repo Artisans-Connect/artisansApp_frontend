@@ -55,13 +55,6 @@ class WorkerBottomNav extends StatelessWidget {
                 tab: WorkerNavTab.messages,
                 current: currentTab,
                 onTap: onTabSelected,
-                onDisabledTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Messages — coming soon'),
-                    ),
-                  );
-                },
               ),
               _NavItem(
                 icon: Icons.person_outline_rounded,
@@ -85,7 +78,6 @@ class _NavItem extends StatelessWidget {
     required this.tab,
     required this.current,
     required this.onTap,
-    this.onDisabledTap,
   });
 
   final IconData icon;
@@ -93,20 +85,13 @@ class _NavItem extends StatelessWidget {
   final WorkerNavTab tab;
   final WorkerNavTab current;
   final ValueChanged<WorkerNavTab> onTap;
-  final VoidCallback? onDisabledTap;
 
   @override
   Widget build(BuildContext context) {
     final isActive = current == tab;
 
     return InkWell(
-      onTap: () {
-        if (tab == WorkerNavTab.messages) {
-          onDisabledTap?.call();
-        } else {
-          onTap(tab);
-        }
-      },
+      onTap: () => onTap(tab),
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

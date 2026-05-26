@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../models/mock_worker_data.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -27,7 +28,12 @@ class WorkerStatsScreen extends StatelessWidget {
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {
+              Navigator.pushNamed(context, SettingsScreen.routeName);
+            },
+          ),
         ],
       ),
       body: SingleChildScrollView(

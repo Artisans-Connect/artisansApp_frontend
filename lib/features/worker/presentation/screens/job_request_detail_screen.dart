@@ -7,7 +7,6 @@ import '../theme/worker_spacing.dart';
 import '../theme/worker_text_styles.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
-import '../widgets/job_detail_card.dart';
 import '../widgets/map_placeholder.dart';
 import '../widgets/reference_photos_row.dart';
 import '../widgets/timing_estimate_row.dart';
