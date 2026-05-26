@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/client/presentation/screens/client_home_screen.dart';
 import '../../features/client/presentation/screens/explore_artisans_screen.dart';
 import '../../features/client/presentation/screens/map_discovery_screen.dart';
@@ -20,10 +19,6 @@ import 'app_routes.dart';
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
-      case AppRoutes.splash:
-        return MaterialPageRoute(
-          builder: (_) => const SplashScreen(),
-        );
 
       case AppRoutes.clientHome:
         return MaterialPageRoute(

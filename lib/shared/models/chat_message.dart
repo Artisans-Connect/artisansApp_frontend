@@ -5,6 +5,7 @@ class ChatMessage {
     required this.content,
     required this.sentAt,
     required this.isMine,
+    this.imageUrls,
   });
 
   final String id;
@@ -12,4 +13,5 @@ class ChatMessage {
   final String content;
   final DateTime sentAt;
   final bool isMine;
+  final List<String>? imageUrls;
 }

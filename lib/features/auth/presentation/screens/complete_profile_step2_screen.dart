@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
-import '../../../../shared/presentation/screens/messages_list_screen.dart';
+import '../../../client/presentation/client_shell.dart';
 import '../../../worker/presentation/worker_shell.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
@@ -51,7 +51,7 @@ class _CompleteProfileStep2ScreenState extends State<CompleteProfileStep2Screen>
       const SnackBar(content: Text('Profile completion saved locally (stub).')),
     );
     final String route = _isClient
-        ? MessagesListScreen.routeName
+        ? ClientShell.routeName
         : WorkerShell.routeName;
     Navigator.pushNamedAndRemoveUntil(
       context,

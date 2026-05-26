@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../data/shared_stub_data.dart';
+import '../../widgets/custom_app_bar.dart';
 
 /// Read-only job receipt for workers (mock 66).
 class JobReceiptScreen extends StatelessWidget {
@@ -15,16 +16,10 @@ class JobReceiptScreen extends StatelessWidget {
     final receipt = SharedStubData.sampleJobReceipt;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.maybePop(context),
-          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-        ),
-        title: Text('Job receipt',
-            style: AppTextStyles.displayMd.copyWith(fontSize: 22)),
+      backgroundColor: AppColors.surface,
+      appBar: const CustomAppBar(
+        title: 'Job receipt',
+        showBackButton: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -80,12 +75,27 @@ class JobReceiptScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            _ReceiptSection(
-              title: 'Payment',
-              rows: <_ReceiptRow>[
-                _ReceiptRow(
-                  Icons.payments_outlined,
-                  'GHS ${receipt.amountGhs.toStringAsFixed(2)}',
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: _ReceiptSection(
+                    title: 'Time spent',
+                    rows: const <_ReceiptRow>[
+                      _ReceiptRow(Icons.schedule, '2h 30m'),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _ReceiptSection(
+                    title: 'Earnings',
+                    rows: <_ReceiptRow>[
+                      _ReceiptRow(
+                        Icons.payments_outlined,
+                        'GHS ${receipt.amountGhs.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -93,16 +103,55 @@ class JobReceiptScreen extends StatelessWidget {
               const SizedBox(height: 16),
               _ReceiptSection(
                 title: 'Notes',
-                rows: <_ReceiptRow>[
-                  _ReceiptRow(Icons.notes, receipt.notes!),
-                ],
+                child: Text(
+                  receipt.notes!,
+                  style: AppTextStyles.bodyLg,
+                ),
               ),
             ],
+            const SizedBox(height: 16),
+            _ReceiptSection(
+              title: 'Completion Photos',
+              child: GridView.count(
+                crossAxisCount: 3,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                children: <Widget>[
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=256&auto=format&fit=crop',
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceDim,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.image_outlined, color: AppColors.outline),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
-            Text(
-              'This receipt is read-only. Disputes and payouts are handled in a future release.',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyMd,
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ListTile(
+                leading: const Icon(Icons.report_problem_outlined, color: AppColors.error),
+                title: Text('Report an issue', style: AppTextStyles.bodyLg.copyWith(color: AppColors.error)),
+                trailing: const Icon(Icons.chevron_right, color: AppColors.outline),
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Issue reporting opens here.')),
+                  );
+                },
+              ),
             ),
           ],
         ),
@@ -112,10 +161,11 @@ class JobReceiptScreen extends StatelessWidget {
 }
 
 class _ReceiptSection extends StatelessWidget {
-  const _ReceiptSection({required this.title, required this.rows});
+  const _ReceiptSection({required this.title, this.rows, this.child});
 
   final String title;
-  final List<_ReceiptRow> rows;
+  final List<_ReceiptRow>? rows;
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -131,20 +181,22 @@ class _ReceiptSection extends StatelessWidget {
           Text(title,
               style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 12),
-          ...rows.map(
-            ( _ReceiptRow row) => Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: Row(
-                children: <Widget>[
-                  Icon(row.icon, color: AppColors.primary, size: 20),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(row.label, style: AppTextStyles.bodyLg),
-                  ),
-                ],
+          if (child != null) child!,
+          if (rows != null)
+            ...rows!.map(
+              (_ReceiptRow row) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  children: <Widget>[
+                    Icon(row.icon, color: AppColors.primary, size: 20),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(row.label, style: AppTextStyles.bodyLg),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

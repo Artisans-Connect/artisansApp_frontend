@@ -5,6 +5,7 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../data/shared_stub_data.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_input.dart';
+import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
 
 /// Shared edit profile — worker form (64) vs slimmer client form on the same route.
@@ -130,18 +131,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         SharedUserContext.session.phone ?? SharedStubData.currentUserProfile.phone ?? '';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.maybePop(context),
-          icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-        ),
-        title: Text('Edit Profile',
-            style: AppTextStyles.displayMd.copyWith(fontSize: 22)),
+      backgroundColor: AppColors.surface,
+      appBar: CustomAppBar(
+        title: 'Edit Profile',
+        showBackButton: true,
         actions: <Widget>[
-          TextButton(onPressed: _save, child: const Text('Save')),
+          TextButton(
+            onPressed: _save,
+            child: Text(
+              'Save',
+              style: AppTextStyles.bodyLg.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: SingleChildScrollView(
@@ -201,16 +206,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 runSpacing: 8,
                 children: <Widget>[
                   ..._editableSkills.map(
-                    (String skill) => Chip(
+                    (String skill) => InputChip(
                       label: Text(skill),
-                      onDeleted: () =>
-                          setState(() => _editableSkills.remove(skill)),
+                      labelStyle: AppTextStyles.bodyMd.copyWith(color: AppColors.primary),
+                      backgroundColor: AppColors.surfaceDim,
+                      deleteIconColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        side: BorderSide.none,
+                      ),
+                      onDeleted: () => setState(() => _editableSkills.remove(skill)),
                     ),
                   ),
-                  ActionChip(
-                    avatar: const Icon(Icons.add, size: 18),
-                    label: const Text('Add skill'),
-                    onPressed: _addSkill,
+                  InkWell(
+                    onTap: _addSkill,
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.5),
+                          style: BorderStyle.none,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        color: Colors.transparent,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(Icons.add, size: 16, color: AppColors.primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Add skill',
+                            style: AppTextStyles.bodyMd.copyWith(color: AppColors.primary),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -308,10 +340,15 @@ class _LockedField extends StatelessWidget {
     return TextFormField(
       initialValue: value,
       enabled: false,
+      style: AppTextStyles.bodyLg.copyWith(color: AppColors.outline),
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColors.surfaceDim,
-        suffixIcon: const Icon(Icons.lock_outline, color: AppColors.textSecondary),
+        fillColor: AppColors.surfaceDim.withOpacity(0.5),
+        suffixIcon: const Icon(Icons.lock_outline, color: AppColors.outline),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }

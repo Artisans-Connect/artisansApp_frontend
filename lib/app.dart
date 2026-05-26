@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'core/navigation/app_router.dart';
-import 'core/navigation/app_routes.dart';
 import 'features/auth/presentation/screens/complete_profile_step1_screen.dart';
 import 'features/auth/presentation/screens/complete_profile_step2_screen.dart';
 import 'features/auth/presentation/screens/onboarding_screen.dart';
@@ -12,6 +11,7 @@ import 'features/auth/presentation/screens/splash_screen.dart';
 import 'features/auth/presentation/screens/worker_service_areas_screen.dart';
 import 'features/auth/presentation/screens/worker_trade_selection_screen.dart';
 import 'features/worker/presentation/worker_shell.dart';
+import 'features/client/presentation/client_shell.dart';
 import 'shared/presentation/screens/chat_detail_screen.dart';
 import 'shared/presentation/screens/edit_profile_screen.dart';
 import 'shared/presentation/screens/job_receipt_screen.dart';
@@ -50,6 +50,7 @@ class MyApp extends StatelessWidget {
         EditProfileScreen.routeName: (_) => const EditProfileScreen(),
         JobReceiptScreen.routeName: (_) => const JobReceiptScreen(),
         WorkerShell.routeName: (_) => const WorkerShell(),
+        ClientShell.routeName: (_) => const ClientShell(),
       },
       onGenerateRoute: AppRouter.generateRoute,
     );

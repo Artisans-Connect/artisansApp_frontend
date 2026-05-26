@@ -6,7 +6,9 @@ import '../../../../core/navigation/app_routes.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
-  const BookingHistoryScreen({Key? key}) : super(key: key);
+  const BookingHistoryScreen({Key? key, this.embedInShell = false}) : super(key: key);
+
+  final bool embedInShell;
 
   @override
   State<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
@@ -75,6 +77,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
       backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
         title: 'Booking History',
+        showBackButton: !widget.embedInShell,
         onBackPressed: () => Navigator.pop(context),
       ),
       body: SingleChildScrollView(

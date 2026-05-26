@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/profile_section_card.dart';
 import '../navigation/shared_route_args.dart';
@@ -28,21 +29,27 @@ class UserProfileScreen extends StatelessWidget {
     final bool isWorkerView = profile.isWorker;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
+      backgroundColor: AppColors.surface,
+      appBar: embedInShell
+          ? null
+          : CustomAppBar(
+              title: isOwnProfile ? 'My Profile' : 'Profile',
+              showBackButton: true,
+              actions: <Widget>[
+                if (isOwnProfile)
+                  IconButton(
+                    onPressed: () => Navigator.pushNamed(context, EditProfileScreen.routeName),
+                    icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
+                  ),
+                const SizedBox(width: 8),
+              ],
+            ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              if (!embedInShell)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () => Navigator.maybePop(context),
-                    icon: const Icon(Icons.arrow_back),
-                  ),
-                ),
               _ProfileHero(profile: profile),
               const SizedBox(height: 20),
               if (profile.locationLabel != null &&
@@ -126,6 +133,13 @@ class UserProfileScreen extends StatelessWidget {
                             value: profile.rating!.toStringAsFixed(1),
                           ),
                         ),
+                      if (profile.rating != null && profile.totalJobs != null)
+                        Container(
+                          width: 1,
+                          height: 40,
+                          color: AppColors.outlineVariant,
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                        ),
                       if (profile.totalJobs != null)
                         Expanded(
                           child: _StatBlock(
@@ -155,7 +169,7 @@ class UserProfileScreen extends StatelessWidget {
                     EditProfileScreen.routeName,
                   ),
                 ),
-                if (!embedInShell) ...<Widget>[
+                if (!embedInShell || SharedUserContext.isClient) ...<Widget>[
                   const SizedBox(height: 12),
                   TextButton(
                     onPressed: () => Navigator.pushNamed(
@@ -200,15 +214,22 @@ class _ProfileHero extends StatelessWidget {
         children: <Widget>[
           Stack(
             children: <Widget>[
-              CircleAvatar(
-                radius: 52,
-                backgroundColor: AppColors.surfaceDim,
-                child: Text(
-                  profile.fullName.isNotEmpty ? profile.fullName[0] : '?',
-                  style: AppTextStyles.displayMd
-                      .copyWith(color: AppColors.primary),
+              if (profile.avatarUrl != null)
+                CircleAvatar(
+                  radius: 52,
+                  backgroundImage: NetworkImage(profile.avatarUrl!),
+                  backgroundColor: AppColors.surfaceDim,
+                )
+              else
+                CircleAvatar(
+                  radius: 52,
+                  backgroundColor: AppColors.surfaceDim,
+                  child: Text(
+                    profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?',
+                    style: AppTextStyles.displayMd
+                        .copyWith(color: AppColors.primary, fontSize: 32),
+                  ),
                 ),
-              ),
               if (profile.isVerified)
                 const Positioned(
                   bottom: 0,

@@ -4,6 +4,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../features/auth/presentation/screens/sign_in_screen.dart';
 import '../../utils/shared_user_context.dart';
+import '../../widgets/custom_app_bar.dart';
 import '../../widgets/settings_group_tile.dart';
 import 'edit_profile_screen.dart';
 
@@ -118,36 +119,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        automaticallyImplyLeading: !widget.embedInShell,
-        leading: widget.embedInShell
-            ? null
-            : IconButton(
-                onPressed: () => Navigator.maybePop(context),
-                icon: const Icon(Icons.arrow_back, color: AppColors.primary),
-              ),
-        title: Text(
-          _isWorker ? 'Settings' : 'Settings & Info',
-          style: AppTextStyles.displayMd.copyWith(fontSize: 22),
-        ),
-        actions: <Widget>[
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Center(
-              child: Text(
-                'Artisans',
-                style: AppTextStyles.bodyLg.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
+      backgroundColor: AppColors.surface,
+      appBar: widget.embedInShell
+          ? null
+          : CustomAppBar(
+              title: _isWorker ? 'Settings' : 'Settings & Info',
+              showBackButton: true,
+              actions: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Center(
+                    child: Text(
+                      'Artisans',
+                      style: AppTextStyles.bodyLg.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: _isWorker ? _buildWorkerBody() : _buildClientBody(),

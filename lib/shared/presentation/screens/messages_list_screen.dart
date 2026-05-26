@@ -5,10 +5,11 @@ import '../../../core/theme/app_text_styles.dart';
 import '../../data/shared_stub_data.dart';
 import '../../models/conversation_summary.dart';
 import '../../widgets/conversation_tile.dart';
+import '../../widgets/custom_app_bar.dart';
+import '../../widgets/search_bar.dart';
 import '../navigation/shared_route_args.dart';
 import 'chat_detail_screen.dart';
 import 'settings_screen.dart';
-import 'user_profile_screen.dart';
 
 class MessagesListScreen extends StatefulWidget {
   const MessagesListScreen({super.key, this.embedInShell = false});
@@ -24,6 +25,7 @@ class MessagesListScreen extends StatefulWidget {
 class _MessagesListScreenState extends State<MessagesListScreen> {
   bool _isLoading = true;
   List<ConversationSummary> _conversations = <ConversationSummary>[];
+  String _searchQuery = '';
 
   @override
   void initState() {
@@ -38,6 +40,16 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       _conversations = SharedStubData.conversations;
       _isLoading = false;
     });
+  }
+
+  List<ConversationSummary> get _filteredConversations {
+    if (_searchQuery.isEmpty) return _conversations;
+    final String query = _searchQuery.toLowerCase();
+    return _conversations
+        .where((ConversationSummary c) =>
+            c.counterpartName.toLowerCase().contains(query) ||
+            c.lastMessagePreview.toLowerCase().contains(query))
+        .toList();
   }
 
   void _openChat(ConversationSummary conversation) {
@@ -57,103 +69,106 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: false,
-        title: Text(
-          'Messages',
-          style: AppTextStyles.displayMd.copyWith(fontSize: 22),
-        ),
-        actions: <Widget>[
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.search, color: AppColors.primary),
-          ),
+      backgroundColor: AppColors.surface,
+      appBar: _buildAppBar(),
+      body: _buildBody(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.edit_outlined, color: Colors.white),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return CustomAppBar(
+      title: 'Messages',
+      showBackButton: !widget.embedInShell,
+      actions: <Widget>[
+        if (!widget.embedInShell) ...[
           IconButton(
             onPressed: () =>
                 Navigator.pushNamed(context, SettingsScreen.routeName),
-            icon: const Icon(Icons.settings_outlined, color: AppColors.primary),
+            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
           ),
-          IconButton(
-            onPressed: () => Navigator.pushNamed(
-              context,
-              UserProfileScreen.routeName,
-              arguments:
-                  const ProfileArgs(userId: SharedStubData.currentUserId),
-            ),
-            icon: const CircleAvatar(
-              radius: 14,
-              backgroundColor: AppColors.surfaceDim,
-              child: Icon(Icons.person, size: 16, color: AppColors.primary),
-            ),
-          ),
-          const SizedBox(width: 8),
         ],
-      ),
-      body: _buildBody(),
+        const SizedBox(width: 4),
+      ],
     );
   }
 
   Widget _buildBody() {
     if (_isLoading) {
-      return ListView.separated(
-        padding: const EdgeInsets.only(top: 8),
-        itemCount: 5,
-        separatorBuilder: (_, __) => Divider(
-          height: 1,
-          color: AppColors.outline.withOpacity(0.25),
-        ),
-        itemBuilder: (_, int index) =>
-            _ConversationSkeleton(key: ValueKey<int>(index)),
-      );
+      return _buildSkeletonList();
     }
 
-    if (_conversations.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              Icon(Icons.chat_bubble_outline,
-                  size: 64, color: AppColors.outline),
-              const SizedBox(height: 16),
-              Text(
-                'No conversations yet',
-                style: AppTextStyles.displayMd.copyWith(fontSize: 20),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'When you match with an artisan or client, your chats will appear here.',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyLg,
-              ),
-            ],
+    return Column(
+      children: <Widget>[
+        // Search bar
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: CustomSearchBar(
+            hintText: 'Search conversations...',
+            onChanged: (String value) => setState(() => _searchQuery = value),
           ),
         ),
-      );
-    }
-
-    return RefreshIndicator(
-      onRefresh: _loadConversations,
-      child: ListView.separated(
-        padding: const EdgeInsets.only(top: 8, bottom: 24),
-        itemCount: _conversations.length,
-        separatorBuilder: (_, __) => Divider(
-          height: 1,
-          color: AppColors.outline.withOpacity(0.25),
+        // Conversation list
+        Expanded(
+          child: _filteredConversations.isEmpty
+              ? _buildEmptyState()
+              : RefreshIndicator(
+                  onRefresh: _loadConversations,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.only(top: 8, bottom: 80),
+                    itemCount: _filteredConversations.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      final ConversationSummary conversation =
+                          _filteredConversations[index];
+                      return ConversationTile(
+                        conversation: conversation,
+                        onTap: () => _openChat(conversation),
+                      );
+                    },
+                  ),
+                ),
         ),
-        itemBuilder: (BuildContext context, int index) {
-          final ConversationSummary conversation = _conversations[index];
-          return ConversationTile(
-            conversation: conversation,
-            onTap: () => _openChat(conversation),
-          );
-        },
+      ],
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(Icons.chat_bubble_outline,
+                size: 64, color: AppColors.outline),
+            const SizedBox(height: 16),
+            Text(
+              'No conversations yet',
+              style: AppTextStyles.displayMd.copyWith(fontSize: 20),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'When you match with an artisan or client, your chats will appear here.',
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyLg,
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _buildSkeletonList() {
+    return ListView.builder(
+      padding: const EdgeInsets.only(top: 16),
+      itemCount: 5,
+      itemBuilder: (_, int index) =>
+          _ConversationSkeleton(key: ValueKey<int>(index)),
     );
   }
 }
@@ -164,43 +179,50 @@ class _ConversationSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: <Widget>[
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceDim,
-              shape: BoxShape.circle,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: AppColors.surfaceDim,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Container(
-                  height: 14,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceDim,
-                    borderRadius: BorderRadius.circular(8),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Container(
+                    height: 14,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceDim,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  height: 12,
-                  width: 180,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceDim,
-                    borderRadius: BorderRadius.circular(8),
+                  const SizedBox(height: 10),
+                  Container(
+                    height: 12,
+                    width: 180,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceDim,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -9,6 +9,7 @@ class ConversationSummary {
     this.counterpartAvatarUrl,
     this.unreadCount = 0,
     this.jobTitle,
+    this.isOnline = false,
   });
 
   final String id;
@@ -20,4 +21,5 @@ class ConversationSummary {
   final DateTime lastMessageAt;
   final int unreadCount;
   final String? jobTitle;
+  final bool isOnline;
 }

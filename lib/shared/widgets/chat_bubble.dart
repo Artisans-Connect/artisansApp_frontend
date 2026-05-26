@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../models/chat_message.dart';
-import '../utils/time_format.dart';
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({
@@ -17,48 +16,102 @@ class ChatBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final Alignment alignment =
         message.isMine ? Alignment.centerRight : Alignment.centerLeft;
-    final Color bubbleColor =
-        message.isMine ? AppColors.primary : AppColors.surfaceDim;
-    final Color textColor =
-        message.isMine ? Colors.white : AppColors.textPrimary;
 
     return Align(
       alignment: alignment,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: bubbleColor,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(20),
-            topRight: const Radius.circular(20),
-            bottomLeft: Radius.circular(message.isMine ? 20 : 4),
-            bottomRight: Radius.circular(message.isMine ? 4 : 20),
-          ),
-        ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 4),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment:
+              message.isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: <Widget>[
-            Text(
-              message.content,
-              style:
-                  AppTextStyles.bodyLg.copyWith(color: textColor, height: 1.35),
+            Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.sizeOf(context).width * 0.75,
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                gradient: message.isMine
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: <Color>[Color(0xFF6366F1), Color(0xFF3B82F6)],
+                      )
+                    : null,
+                color: message.isMine ? null : const Color(0xFFEEECF5),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(message.isMine ? 20 : 6),
+                  bottomRight: Radius.circular(message.isMine ? 6 : 20),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  if (message.imageUrls != null && message.imageUrls!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: message.imageUrls!.map((String url) {
+                          return ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: Image.network(
+                              url,
+                              width: 120,
+                              height: 120,
+                              fit: BoxFit.cover,
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  Text(
+                    message.content,
+                    style: AppTextStyles.bodyLg.copyWith(
+                      color: message.isMine ? Colors.white : AppColors.textPrimary,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 6),
-            Text(
-              formatRelativeTime(message.sentAt),
-              style: AppTextStyles.bodyMd.copyWith(
-                color:
-                    message.isMine ? Colors.white70 : AppColors.textSecondary,
-                fontSize: 11,
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    _formatTime(message.sentAt),
+                    style: AppTextStyles.bodyMd.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
+                    ),
+                  ),
+                  if (message.isMine) ...<Widget>[
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.done_all,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ],
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime dt) {
+    final int hour = dt.hour;
+    final int minute = dt.minute;
+    final String period = hour >= 12 ? 'PM' : 'AM';
+    final int displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
 }
