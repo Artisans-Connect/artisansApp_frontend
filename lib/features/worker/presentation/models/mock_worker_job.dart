@@ -1,0 +1,122 @@
+enum JobUrgency { asap, scheduled }
+
+enum WorkerJobStatus { incoming, active, completing, completed, cancelled }
+
+enum HistoryStatus { completed, cancelled }
+
+class MockWorkerJob {
+  const MockWorkerJob({
+    required this.id,
+    required this.title,
+    required this.category,
+    required this.description,
+    required this.addressLabel,
+    required this.latitude,
+    required this.longitude,
+    required this.clientName,
+    required this.urgency,
+    this.clientRating = 4.9,
+    this.reviewCount = 12,
+    this.isNewClient = false,
+    this.isUrgent = false,
+    this.rateLabel,
+    this.distanceKm,
+    this.photoCount = 0,
+    this.status = WorkerJobStatus.incoming,
+    this.scheduledLabel,
+    this.urgencyBadge,
+    this.estimateLabel,
+    this.estimatedBudgetLabel,
+    this.referencePhotoLabels = const [],
+    this.cityLine,
+    this.postalLine,
+    this.mapLabel,
+    this.earnedAmount,
+    this.historyStatus,
+    this.historyDate,
+    this.historyRating,
+  });
+
+  final String id;
+  final String title;
+  final String category;
+  final String description;
+  final String addressLabel;
+  final double latitude;
+  final double longitude;
+  final String clientName;
+  final JobUrgency urgency;
+  final double clientRating;
+  final int reviewCount;
+  final bool isNewClient;
+  final bool isUrgent;
+  final String? rateLabel;
+  final double? distanceKm;
+  final int photoCount;
+  final WorkerJobStatus status;
+  final String? scheduledLabel;
+  final String? urgencyBadge;
+  final String? estimateLabel;
+  final String? estimatedBudgetLabel;
+  final List<String> referencePhotoLabels;
+  final String? cityLine;
+  final String? postalLine;
+  final String? mapLabel;
+  final double? earnedAmount;
+  final HistoryStatus? historyStatus;
+  final String? historyDate;
+  final double? historyRating;
+
+  String get urgencyLabel => urgencyBadge ??
+      (urgency == JobUrgency.asap ? 'ASAP' : (scheduledLabel ?? 'Scheduled'));
+
+  String get distanceText {
+    if (distanceKm == null) return addressLabel;
+    if (distanceKm! < 1) {
+      return '${(distanceKm! * 1000).round()} m away';
+    }
+    return '${distanceKm!.toStringAsFixed(1)} km away';
+  }
+
+  String get locationLine {
+    if (distanceKm == null) return addressLabel;
+    return '${distanceText} • $addressLabel';
+  }
+
+  String get estimateDisplay =>
+      estimateLabel ?? estimatedBudgetLabel ?? rateLabel ?? '—';
+
+  MockWorkerJob copyWith({WorkerJobStatus? status}) {
+    return MockWorkerJob(
+      id: id,
+      title: title,
+      category: category,
+      description: description,
+      addressLabel: addressLabel,
+      latitude: latitude,
+      longitude: longitude,
+      clientName: clientName,
+      urgency: urgency,
+      clientRating: clientRating,
+      reviewCount: reviewCount,
+      isNewClient: isNewClient,
+      isUrgent: isUrgent,
+      rateLabel: rateLabel,
+      distanceKm: distanceKm,
+      photoCount: photoCount,
+      status: status ?? this.status,
+      scheduledLabel: scheduledLabel,
+      urgencyBadge: urgencyBadge,
+      estimateLabel: estimateLabel,
+      estimatedBudgetLabel: estimatedBudgetLabel,
+      referencePhotoLabels: referencePhotoLabels,
+      cityLine: cityLine,
+      postalLine: postalLine,
+      mapLabel: mapLabel,
+      earnedAmount: earnedAmount,
+      historyStatus: historyStatus,
+      historyDate: historyDate,
+      historyRating: historyRating,
+    );
+  }
+}
