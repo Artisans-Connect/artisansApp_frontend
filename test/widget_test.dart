@@ -1,31 +1,40 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:artisans_app/app.dart';
+import 'package:artisans_app/features/worker/presentation/models/mock_worker_data.dart';
+import 'package:artisans_app/features/worker/presentation/screens/job_request_detail_screen.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/worker_dev_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:artisans_app/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Worker shell shows Requests on EXPLORE tab',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const WorkerDevRouter());
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Requests'), findsOneWidget);
+    expect(find.text('Available for work'), findsOneWidget);
+    expect(find.text('EXPLORE'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  testWidgets('Accept job from detail updates session',
+      (WidgetTester tester) async {
+    final session = WorkerSessionState();
+    await tester.pumpWidget(
+      MaterialApp(
+        home: WorkerScope(
+          notifier: session,
+          child: JobRequestDetailScreen(
+            job: MockWorkerData.incomingJobs.first,
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Accept Job'));
+    await tester.pumpAndSettle();
+
+    expect(session.hasActiveJob, isTrue);
+    expect(session.jobPhase, WorkerJobPhase.preStart);
   });
 }

@@ -1,0 +1,83 @@
+import 'package:flutter/material.dart';
+import '../theme/worker_colors.dart';
+import '../theme/worker_text_styles.dart';
+
+class SegmentToggle extends StatelessWidget {
+  const SegmentToggle({
+    super.key,
+    required this.leftLabel,
+    required this.rightLabel,
+    required this.isLeftSelected,
+    required this.onChanged,
+  });
+
+  final String leftLabel;
+  final String rightLabel;
+  final bool isLeftSelected;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: WorkerColors.primaryFixed.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(28),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SegmentChip(
+              label: leftLabel,
+              selected: isLeftSelected,
+              onTap: () => onChanged(true),
+            ),
+          ),
+          Expanded(
+            child: _SegmentChip(
+              label: rightLabel,
+              selected: !isLeftSelected,
+              onTap: () => onChanged(false),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SegmentChip extends StatelessWidget {
+  const _SegmentChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: selected ? WorkerColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(24),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: WorkerTextStyles.bodyLg.copyWith(
+            color: selected ? WorkerColors.onPrimary : WorkerColors.onSurface,
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+}
