@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
+import 'core/navigation/app_router.dart';
+import 'core/navigation/app_routes.dart';
 import 'features/auth/presentation/screens/complete_profile_step1_screen.dart';
 import 'features/auth/presentation/screens/complete_profile_step2_screen.dart';
 import 'features/auth/presentation/screens/onboarding_screen.dart';
@@ -49,6 +51,7 @@ class MyApp extends StatelessWidget {
         JobReceiptScreen.routeName: (_) => const JobReceiptScreen(),
         WorkerShell.routeName: (_) => const WorkerShell(),
       },
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
