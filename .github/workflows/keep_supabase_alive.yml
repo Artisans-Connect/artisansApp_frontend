@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Ping Supabase API
         run: |
-            curl -L -X POST 'https://ggryjtvgaqjprfgkqgaa.supabase.co/functions/v1/health' \
-            -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncnlqdHZnYXFqcHJmZ2txZ2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MzQ0NzQsImV4cCI6MjA2MzMxMDQ3NH0.YrThZH6-1_V7nKFzclMTFfvYZrgodrCLr0mhvjudmUo' \
+            curl -L -X POST 'https://qdeznjpvkhrxesjykovi.supabase.co/functions/v1/health' \
+            -H 'Authorization: Bearer sb_publishable_YqekfqmdaSRYENeJMm84sA_jZrQWasf' \
             -H 'Content-Type: application/json' \
             --data '{"name":"Functions"}'
