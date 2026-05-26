@@ -1,0 +1,16 @@
+name: Keep Supabase Alive
+on:
+  schedule:
+    - cron: '0 0 */3 * *' # Runs every 3 days
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase API
+        run: |
+            curl -L -X POST 'https://ggryjtvgaqjprfgkqgaa.supabase.co/functions/v1/health' \
+            -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncnlqdHZnYXFqcHJmZ2txZ2FhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MzQ0NzQsImV4cCI6MjA2MzMxMDQ3NH0.YrThZH6-1_V7nKFzclMTFfvYZrgodrCLr0mhvjudmUo' \
+            -H 'Content-Type: application/json' \
+            --data '{"name":"Functions"}'
