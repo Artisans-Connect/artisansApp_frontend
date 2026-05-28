@@ -13,12 +13,21 @@ import 'settings_screen.dart';
 
 /// Shared profile for clients and workers. Same route; sections vary by [UserProfileViewData.role].
 class UserProfileScreen extends StatelessWidget {
-  const UserProfileScreen({super.key, this.embedInShell = false});
+  const UserProfileScreen({
+    super.key,
+    this.embedInShell = false,
+    this.onOpenWorkerEarnings,
+    this.onOpenWorkerStats,
+    this.onOpenWorkerHistory,
+  });
 
   static const String routeName = '/shared/profile';
 
   /// When true, user is inside worker shell — Settings live on another tab.
   final bool embedInShell;
+  final VoidCallback? onOpenWorkerEarnings;
+  final VoidCallback? onOpenWorkerStats;
+  final VoidCallback? onOpenWorkerHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +159,39 @@ class UserProfileScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (isOwnProfile &&
+                    (onOpenWorkerEarnings != null ||
+                        onOpenWorkerStats != null ||
+                        onOpenWorkerHistory != null)) ...<Widget>[
+                  const SizedBox(height: 14),
+                  ProfileSectionCard(
+                    title: 'Worker dashboard',
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        if (onOpenWorkerEarnings != null)
+                          OutlinedButton.icon(
+                            onPressed: onOpenWorkerEarnings,
+                            icon: const Icon(Icons.account_balance_wallet_outlined),
+                            label: const Text('Earnings'),
+                          ),
+                        if (onOpenWorkerStats != null)
+                          OutlinedButton.icon(
+                            onPressed: onOpenWorkerStats,
+                            icon: const Icon(Icons.query_stats_outlined),
+                            label: const Text('Stats'),
+                          ),
+                        if (onOpenWorkerHistory != null)
+                          OutlinedButton.icon(
+                            onPressed: onOpenWorkerHistory,
+                            icon: const Icon(Icons.history),
+                            label: const Text('History'),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
               ] else if (profile.totalJobs != null) ...<Widget>[
                 const SizedBox(height: 14),
                 ProfileSectionCard(
