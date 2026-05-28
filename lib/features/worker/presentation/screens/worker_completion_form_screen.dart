@@ -10,9 +10,14 @@ import '../widgets/job_detail_card.dart';
 import 'worker_completion_success_screen.dart';
 
 class WorkerCompletionFormScreen extends StatefulWidget {
-  const WorkerCompletionFormScreen({super.key, required this.job});
+  const WorkerCompletionFormScreen({
+    super.key,
+    required this.job,
+    required this.onCompletionSubmitted,
+  });
 
   final MockWorkerJob job;
+  final VoidCallback onCompletionSubmitted;
 
   @override
   State<WorkerCompletionFormScreen> createState() =>
@@ -48,7 +53,10 @@ class _WorkerCompletionFormScreenState
     setState(() => _isSubmitting = false);
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (_) => WorkerCompletionSuccessScreen(job: widget.job),
+        builder: (_) => WorkerCompletionSuccessScreen(
+          job: widget.job,
+          onDone: widget.onCompletionSubmitted,
+        ),
       ),
     );
   }
@@ -66,7 +74,7 @@ class _WorkerCompletionFormScreenState
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Complete Job',
+          'Complete Booking',
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
         ),
         centerTitle: true,
@@ -85,10 +93,10 @@ class _WorkerCompletionFormScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Job Summary', style: WorkerTextStyles.titleMd),
+                  Text('Booking Summary', style: WorkerTextStyles.titleMd),
                   const SizedBox(height: 8),
                   Text(
-                    'Confirm your work details to finalize the invoice and notify the client.',
+                    'Confirm your work details to close this booking and notify the client.',
                     style: WorkerTextStyles.bodyMd,
                   ),
                 ],

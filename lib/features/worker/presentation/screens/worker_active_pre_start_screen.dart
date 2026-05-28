@@ -8,7 +8,6 @@ import '../theme/worker_text_styles.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
-import '../widgets/worker_bottom_nav.dart';
 
 class WorkerActivePreStartScreen extends StatelessWidget {
   const WorkerActivePreStartScreen({super.key, required this.job});
@@ -24,15 +23,10 @@ class WorkerActivePreStartScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: WorkerColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
-          onPressed: () => session.setTab(WorkerNavTab.bookings),
-        ),
         title: Column(
           children: [
             Text(
-              'ACTIVE JOB',
+              'ACTIVE BOOKING',
               style: WorkerTextStyles.labelCaps.copyWith(fontSize: 9),
             ),
             Text(
@@ -45,7 +39,7 @@ class WorkerActivePreStartScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),
-            onPressed: () {},
+            onPressed: () => _stub(context, 'More actions'),
           ),
         ],
       ),
@@ -152,7 +146,7 @@ class WorkerActivePreStartScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('JOB ADDRESS', style: WorkerTextStyles.labelCaps),
+                  Text('BOOKING ADDRESS', style: WorkerTextStyles.labelCaps),
                   const SizedBox(height: WorkerSpacing.sm),
                   Row(
                     children: [
@@ -170,7 +164,7 @@ class WorkerActivePreStartScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: WorkerSpacing.lg),
-                  Text('DESCRIPTION', style: WorkerTextStyles.labelCaps),
+                  Text('REQUEST DETAILS', style: WorkerTextStyles.labelCaps),
                   const SizedBox(height: WorkerSpacing.sm),
                   Text(
                     job.description,
@@ -204,7 +198,7 @@ class WorkerActivePreStartScreen extends StatelessWidget {
                       session.cancelActiveJob();
                     },
                     child: Text(
-                      'Cancel Job',
+                      'Cancel Booking',
                       style: WorkerTextStyles.bodyLg.copyWith(
                         color: WorkerColors.error,
                         fontWeight: FontWeight.w600,

@@ -11,11 +11,13 @@ class RequestJobCard extends StatelessWidget {
     required this.job,
     required this.onAccept,
     this.onTap,
+    this.isAcceptEnabled = true,
   });
 
   final MockWorkerJob job;
   final VoidCallback onAccept;
   final VoidCallback? onTap;
+  final bool isAcceptEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -134,7 +136,7 @@ class RequestJobCard extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
-                  onPressed: onAccept,
+                  onPressed: isAcceptEnabled ? onAccept : null,
                   style: FilledButton.styleFrom(
                     backgroundColor: WorkerColors.primaryContainer,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -143,7 +145,7 @@ class RequestJobCard extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    'ACCEPT',
+                    isAcceptEnabled ? 'VIEW REQUEST' : 'GO ONLINE TO ACCEPT',
                     style: WorkerTextStyles.badge.copyWith(
                       fontSize: 13,
                       letterSpacing: 0.8,

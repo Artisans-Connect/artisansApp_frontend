@@ -9,7 +9,6 @@ import '../widgets/availability_card.dart';
 import '../widgets/request_job_card.dart';
 import '../widgets/skeleton_box.dart';
 import 'job_request_detail_screen.dart';
-import 'worker_design_reference_screen.dart';
 
 enum RequestsViewState { loading, loaded, empty }
 
@@ -42,9 +41,13 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
   }
 
   void _openDetail(MockWorkerJob job) {
+    final session = WorkerScope.of(context);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => JobRequestDetailScreen(job: job),
+        builder: (_) => JobRequestDetailScreen(
+          job: job,
+          onAcceptRequest: session.acceptJob,
+        ),
       ),
     );
   }
@@ -58,13 +61,8 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
       appBar: AppBar(
         backgroundColor: WorkerColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
-          onPressed: () {},
-        ),
         title: Text(
-          'Requests',
+          'Job Requests',
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
         ),
         centerTitle: true,
@@ -73,9 +71,9 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
             icon: const Icon(Icons.filter_list_rounded),
             color: WorkerColors.primary,
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const WorkerDesignReferenceScreen(),
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Request filters coming soon'),
                 ),
               );
             },
@@ -115,7 +113,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
           const SizedBox(height: 80),
           Center(
             child: Text(
-              'No requests right now',
+              'No open requests right now',
               style: WorkerTextStyles.titleMd,
             ),
           ),
@@ -146,6 +144,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
           job: job,
           onTap: () => _openDetail(job),
           onAccept: () => _openDetail(job),
+          isAcceptEnabled: session.isAvailable,
         );
       },
     );
