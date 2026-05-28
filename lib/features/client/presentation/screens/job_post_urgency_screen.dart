@@ -3,76 +3,72 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/secondary_button.dart';
 
 class JobPostUrgencyScreen extends StatefulWidget {
-  final Map<String, dynamic>? jobData;
-
-  const JobPostUrgencyScreen({
-    Key? key,
-    this.jobData,
-  }) : super(key: key);
+  const JobPostUrgencyScreen({Key? key, required jobData}) : super(key: key);
 
   @override
   State<JobPostUrgencyScreen> createState() => _JobPostUrgencyScreenState();
 }
 
 class _JobPostUrgencyScreenState extends State<JobPostUrgencyScreen> {
-  late String _budgetStyle = 'fixed';
-  late String _urgency = 'asap';
-  late DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
-  late String _selectedTimeWindow = 'Morning (8am - 12pm)';
-  late double _projectBudget = 0.0;
-
-  final List<String> timeWindows = [
-    'Morning (8am - 12pm)',
-    'Afternoon (12pm - 5pm)',
-    'Evening (5pm - 9pm)',
-    'Flexible',
-  ];
+  String _budgetStyle = 'fixed'; // 'fixed' or 'range'
+  String _urgency = 'asap'; // 'asap' or 'scheduled'
+  String _timeWindow = 'Morning (8am - 12pm)';
+  late TextEditingController _budgetController;
+  late TextEditingController _dateController;
 
   @override
   void initState() {
     super.initState();
-    if (widget.jobData != null) {
-      _budgetStyle = widget.jobData!['budgetStyle'] ?? 'fixed';
-      _projectBudget = widget.jobData!['projectBudget'] ?? 0.0;
-      _urgency = widget.jobData!['urgency'] ?? 'asap';
-    }
+    _budgetController = TextEditingController();
+    _dateController = TextEditingController();
   }
 
-  String _formatCurrency(double amount) {
-    return '\$${amount.toStringAsFixed(2)}';
-  }
-
-  String _formatDate(DateTime date) {
-    return '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
-    }
+  @override
+  void dispose() {
+    _budgetController.dispose();
+    _dateController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: CustomAppBar(
-        title: 'ConnectFlow',
-        onBackPressed: () => Navigator.pop(context),
-        centerTitle: false,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: AppColors.primary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'ConnectFlow',
+          style: AppTypography.displayMedium.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -81,552 +77,590 @@ class _JobPostUrgencyScreenState extends State<JobPostUrgencyScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Progress Section
+              Text(
+                'STEP 6 OF 7',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.05,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Title and Progress
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'STEP 6 OF 7',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                  Text(
+                    'Budget &\nUrgency',
+                    style: AppTypography.displayLarge.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 32,
+                    ),
+                  ),
+                  Text(
+                    '85%\nComplete',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              LinearProgressIndicator(
+                value: 0.85,
+                minHeight: 6,
+                backgroundColor: AppColors.outlineVariant,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              // Budget Style Section
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                  border: Border.all(
+                    color: AppColors.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.attach_money, color: AppColors.primary),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(
+                          'Budget Style',
+                          style: AppTypography.labelLarge.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Budget Style Toggle
+                    Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _budgetStyle = 'fixed';
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: _budgetStyle == 'fixed'
+                                    ? AppColors.primary.withOpacity(0.1)
+                                    : Colors.transparent,
+                                border: Border.all(
+                                  color: _budgetStyle == 'fixed'
+                                      ? AppColors.primary
+                                      : AppColors.outlineVariant,
+                                  width: _budgetStyle == 'fixed' ? 2 : 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                              ),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'Fixed',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: _budgetStyle == 'fixed'
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Price',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: _budgetStyle == 'fixed'
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _budgetStyle = 'range';
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                              decoration: BoxDecoration(
+                                color: _budgetStyle == 'range'
+                                    ? AppColors.primary.withOpacity(0.1)
+                                    : Colors.transparent,
+                                border: Border.all(
+                                  color: _budgetStyle == 'range'
+                                      ? AppColors.primary
+                                      : AppColors.outlineVariant,
+                                  width: _budgetStyle == 'range' ? 2 : 0.5,
+                                ),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                              ),
+                              child: Center(
+                                child: Column(
+                                  children: [
+                                    Text(
+                                      'Price',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: _budgetStyle == 'range'
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Range',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: _budgetStyle == 'range'
+                                            ? AppColors.primary
+                                            : AppColors.textSecondary,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Budget Input
+                    Text(
+                      'PROJECT BUDGET (USD)',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextField(
+                      controller: _budgetController,
+                      style: AppTypography.displaySmall.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        hintText: '\$ 0.00',
+                        hintStyle: AppTypography.displaySmall.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        contentPadding: const EdgeInsets.all(AppSpacing.md),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          borderSide: BorderSide(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          borderSide: BorderSide(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.xs),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
                     ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusXLarge),
-                    ),
-                    child: Text(
-                      '85% Complete',
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Average for similar projects: \$450 - \$800',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Title
-              Text(
-                'Budget &\nUrgency',
-                style: AppTypography.displayMedium,
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Progress Bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                child: LinearProgressIndicator(
-                  value: 0.85,
-                  minHeight: 6,
-                  backgroundColor: AppColors.outlineVariant,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
+                  ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Budget Style Section
-              _buildBudgetStyleSection(),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Project Budget Section
-              _buildProjectBudgetSection(),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
 
               // Urgency Section
-              _buildUrgencySection(),
-              const SizedBox(height: AppSpacing.lg),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                  border: Border.all(
+                    color: AppColors.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.flash_on, color: AppColors.primary),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(
+                          'Urgency',
+                          style: AppTypography.labelLarge.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // ASAP Button
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _urgency = 'asap';
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: _urgency == 'asap'
+                              ? AppColors.primary.withOpacity(0.1)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: _urgency == 'asap'
+                                ? AppColors.primary
+                                : AppColors.outlineVariant,
+                            width: _urgency == 'asap' ? 2 : 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.flash_on_sharp,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'ASAP',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  'Within 24 hours',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // Scheduled Button
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _urgency = 'scheduled';
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: _urgency == 'scheduled'
+                              ? AppColors.primary.withOpacity(0.1)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: _urgency == 'scheduled'
+                                ? AppColors.primary
+                                : AppColors.outlineVariant,
+                            width: _urgency == 'scheduled' ? 2 : 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.calendar_today,
+                              color: AppColors.textSecondary,
+                              size: 24,
+                            ),
+                            const SizedBox(width: AppSpacing.md),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Scheduled',
+                                  style: AppTypography.labelLarge.copyWith(
+                                    color: AppColors.textPrimary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  'Choose a date',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    if (_urgency == 'scheduled') ...[
+                      // Preferred Date
+                      Text(
+                        'PREFERRED DATE',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      TextField(
+                        controller: _dateController,
+                        style: AppTypography.bodyMedium,
+                        decoration: InputDecoration(
+                          hintText: 'mm/dd/yyyy',
+                          hintStyle: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                          suffixIcon: Icon(Icons.calendar_today, color: AppColors.textSecondary),
+                          filled: true,
+                          fillColor: AppColors.surface,
+                          contentPadding: const EdgeInsets.all(AppSpacing.md),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                            borderSide: BorderSide(
+                              color: AppColors.outlineVariant,
+                              width: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Time Window
+                      Text(
+                        'TIME WINDOW',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.md,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          border: Border.all(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Icon(Icons.schedule, color: AppColors.textSecondary),
+                            const SizedBox(width: AppSpacing.md),
+                            Expanded(
+                              child: Text(
+                                _timeWindow,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            Icon(Icons.expand_more, color: AppColors.textSecondary),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
 
               // Action Buttons
               Row(
                 children: [
                   Expanded(
-                    child: SecondaryButton(
-                      label: 'Back',
-                      icon: Icons.arrow_back_ios,
+                    child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.outlineVariant),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Back',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    flex: 2,
-                    child: PrimaryButton(
-                      label: 'Review Details',
-                      icon: Icons.arrow_forward_ios,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: ElevatedButton(
                       onPressed: () {
-                        final jobData = widget.jobData ?? {};
-                        jobData['budgetStyle'] = _budgetStyle;
-                        jobData['projectBudget'] = _projectBudget;
-                        jobData['urgency'] = _urgency;
-                        jobData['preferredDate'] = _selectedDate;
-                        jobData['timeWindow'] = _selectedTimeWindow;
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.jobPostSummary,
-                          arguments: jobData,
-                        );
+                        Navigator.pushNamed(context, AppRoutes.jobPostSummary);
                       },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Review\nDetails',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Icon(Icons.arrow_forward, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
 
-              // Promotional Card
-              _buildPromotionalCard(),
-              const SizedBox(height: AppSpacing.lg),
+              // Info Card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Finding your perfect match',
+                      style: AppTypography.displaySmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Setting a fair budget and clear timeline helps us attract the top 1% of talent for your specific needs.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
 
               // Quick Summary
-              _buildQuickSummary(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBudgetStyleSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.wallet_outlined,
-              color: AppColors.textPrimary,
-              size: AppSpacing.iconMedium,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              'Budget Style',
-              style: AppTypography.labelLarge,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-            border: Border.all(
-              color: AppColors.outlineVariant,
-              width: 1,
-            ),
-          ),
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              Expanded(
-                child: _buildBudgetStyleButton(
-                  label: 'Fixed\nPrice',
-                  isSelected: _budgetStyle == 'fixed',
-                  onTap: () {
-                    setState(() {
-                      _budgetStyle = 'fixed';
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: _buildBudgetStyleButton(
-                  label: 'Price\nRange',
-                  isSelected: _budgetStyle == 'range',
-                  onTap: () {
-                    setState(() {
-                      _budgetStyle = 'range';
-                    });
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBudgetStyleButton({
-    required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.outlineVariant,
-            width: 1,
-          ),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: AppTypography.labelMedium.copyWith(
-            color: isSelected ? AppColors.onPrimary : AppColors.textPrimary,
-            height: 1.3,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProjectBudgetSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'PROJECT BUDGET (USD)',
-          style: AppTypography.labelMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
               Text(
-                _formatCurrency(_projectBudget),
-                style: AppTypography.priceTag.copyWith(
-                  fontSize: 24,
+                'QUICK SUMMARY',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.05,
                 ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Text(
-                'Average for similar projects: \$450 - \$800',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
+              _buildSummaryRow('Project Type', 'Web Development'),
+              const SizedBox(height: AppSpacing.md),
+              _buildSummaryRow('Scope', '3-6 Months'),
+              const SizedBox(height: AppSpacing.md),
+              _buildSummaryRow('Est. Total', '\$500.00', isHighlight: true),
+              const SizedBox(height: AppSpacing.xl),
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildUrgencySection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.flash_on_outlined,
-              color: AppColors.textPrimary,
-              size: AppSpacing.iconMedium,
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            Text(
-              'Urgency',
-              style: AppTypography.labelLarge,
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        // ASAP Option
-        _buildUrgencyOption(
-          icon: Icons.flash_on,
-          title: 'ASAP',
-          subtitle: 'Within 24 hours',
-          isSelected: _urgency == 'asap',
-          onTap: () {
-            setState(() {
-              _urgency = 'asap';
-            });
-          },
-        ),
-        const SizedBox(height: AppSpacing.md),
-
-        // Scheduled Option
-        _buildUrgencyOption(
-          icon: Icons.calendar_today,
-          title: 'Scheduled',
-          subtitle: 'Choose a date',
-          isSelected: _urgency == 'scheduled',
-          onTap: () {
-            setState(() {
-              _urgency = 'scheduled';
-            });
-          },
-        ),
-
-        if (_urgency == 'scheduled') ...[
-          const SizedBox(height: AppSpacing.lg),
-          _buildDateInputField(),
-          const SizedBox(height: AppSpacing.md),
-          _buildTimeWindowDropdown(),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildUrgencyOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.outlineVariant,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary : AppColors.surfaceContainer,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? AppColors.onPrimary : AppColors.textSecondary,
-                size: AppSpacing.iconMedium,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.labelLarge,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  subtitle,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
-    );
-  }
-
-  Widget _buildDateInputField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'PREFERRED DATE',
-          style: AppTypography.labelMedium.copyWith(
-            color: AppColors.textSecondary,
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: AppColors.surface,
+        elevation: 1,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore, color: AppColors.textSecondary),
+            label: 'EXPLORE',
+            activeIcon: Icon(Icons.explore, color: AppColors.primary),
           ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Row(
-          children: [
-            Expanded(
-              child: GestureDetector(
-                onTap: () => _selectDate(context),
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLowest,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-                    border: Border.all(
-                      color: AppColors.outlineVariant,
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    _formatDate(_selectedDate),
-                    style: AppTypography.bodyMedium,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainer,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-              ),
-              child: GestureDetector(
-                onTap: () => _selectDate(context),
-                child: Icon(
-                  Icons.calendar_today,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTimeWindowDropdown() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'TIME WINDOW',
-          style: AppTypography.labelMedium.copyWith(
-            color: AppColors.textSecondary,
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today, color: AppColors.textSecondary),
+            label: 'BOOKINGS',
+            activeIcon: Icon(Icons.calendar_today, color: AppColors.primary),
           ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLowest,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-            border: Border.all(
-              color: AppColors.outlineVariant,
-              width: 1,
-            ),
-          ),
-          child: DropdownButton<String>(
-            value: _selectedTimeWindow,
-            isExpanded: true,
-            underline: const SizedBox(),
-            items: timeWindows.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(
-                  value,
-                  style: AppTypography.bodyMedium,
-                ),
-              );
-            }).toList(),
-            onChanged: (String? newValue) {
-              setState(() {
-                _selectedTimeWindow = newValue ?? _selectedTimeWindow;
-              });
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPromotionalCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF1a1a3f),
-            const Color(0xFF2d1b69),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Finding your perfect match',
-            style: AppTypography.displaySmall.copyWith(
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            'Setting a fair budget and clear timeline helps us attract the top 1% of talent for your specific needs.',
-            style: AppTypography.bodySmall.copyWith(
-              color: Colors.white70,
-              height: 1.5,
-            ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person, color: AppColors.textSecondary),
+            label: 'PROFILE',
+            activeIcon: Icon(Icons.person, color: AppColors.primary),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickSummary() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'QUICK SUMMARY',
-          style: AppTypography.labelMedium.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _buildSummaryItem('Project Type', 'Web Development'),
-        const SizedBox(height: AppSpacing.md),
-        _buildSummaryItem('Scope', '3-6 Months'),
-        const SizedBox(height: AppSpacing.md),
-        _buildSummaryItem('Est. Total', _formatCurrency(_projectBudget)),
-      ],
-    );
-  }
-
-  Widget _buildSummaryItem(String label, String value) {
+  Widget _buildSummaryRow(String label, String value, {bool isHighlight = false}) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: AppTypography.bodyMedium,
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+          ),
         ),
         Text(
           value,
-          style: AppTypography.bodyMedium.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+          style: AppTypography.labelLarge.copyWith(
+            fontWeight: FontWeight.w700,
+            color: isHighlight ? AppColors.primary : AppColors.textPrimary,
           ),
         ),
       ],

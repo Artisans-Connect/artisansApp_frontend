@@ -3,112 +3,100 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/secondary_button.dart';
 
 class JobPostSubcategoryScreen extends StatefulWidget {
-  final String? selectedCategory;
-  final Map<String, dynamic>? jobData;
-
-  const JobPostSubcategoryScreen({
-    Key? key,
-    this.selectedCategory,
-    this.jobData,
-  }) : super(key: key);
+  const JobPostSubcategoryScreen({Key? key, required jobData}) : super(key: key);
 
   @override
-  State<JobPostSubcategoryScreen> createState() =>
-      _JobPostSubcategoryScreenState();
+  State<JobPostSubcategoryScreen> createState() => _JobPostSubcategoryScreenState();
 }
 
 class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
-  late String _selectedSubcategory = '';
-  late TextEditingController _searchController;
+  String? _selectedSubcategory;
 
   final List<Map<String, dynamic>> subcategories = [
     {
-      'id': 'plumbing_leaks',
-      'name': 'Plumbing',
+      'id': 'plumbing',
+      'title': 'Plumbing',
       'description': 'Leaks, pipe installations, faucets, and drainage solutions.',
-      'icon': Icons.plumbing,
+      'icon': Icons.build,
       'isPopular': true,
     },
     {
-      'id': 'electrical_wiring',
-      'name': 'Electrician',
+      'id': 'electrician',
+      'title': 'Electrician',
       'description': 'Wiring, panels, lighting',
-      'icon': Icons.flash_on,
+      'icon': Icons.electric_bolt,
+      'isPopular': false,
     },
     {
-      'id': 'carpentry',
-      'name': 'Carpenter',
+      'id': 'carpenter',
+      'title': 'Carpenter',
       'description': 'Furniture, frames, repair',
       'icon': Icons.handyman,
+      'isPopular': false,
     },
     {
-      'id': 'painting',
-      'name': 'Painter',
+      'id': 'painter',
+      'title': 'Painter',
       'description': 'Interior, exterior, touch-ups',
       'icon': Icons.palette,
+      'isPopular': false,
     },
     {
       'id': 'cleaning',
-      'name': 'Cleaning',
+      'title': 'Cleaning',
       'description': 'Deep clean, move-in/out',
-      'icon': Icons.cleaning_services,
+      'icon': Icons.home_work,
+      'isPopular': false,
     },
     {
       'id': 'roofing',
-      'name': 'Roofing',
+      'title': 'Roofing',
       'description': 'Repairs, shingles, gutters',
-      'icon': Icons.roofing,
+      'icon': Icons.home_repair_service,
+      'isPopular': false,
     },
     {
       'id': 'hvac',
-      'name': 'HVAC',
+      'title': 'HVAC',
       'description': 'AC, heating systems',
-      'icon': Icons.cloud,
+      'icon': Icons.cloud_queue,
+      'isPopular': false,
     },
   ];
 
   @override
-  void initState() {
-    super.initState();
-    _searchController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  List<Map<String, dynamic>> _getFilteredSubcategories() {
-    if (_searchController.text.isEmpty) {
-      return subcategories;
-    }
-    return subcategories
-        .where((sub) =>
-            sub['name']
-                .toLowerCase()
-                .contains(_searchController.text.toLowerCase()) ||
-            sub['description']
-                .toLowerCase()
-                .contains(_searchController.text.toLowerCase()))
-        .toList();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final filtered = _getFilteredSubcategories();
-
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: CustomAppBar(
-        title: 'Post a Job',
-        onBackPressed: () => Navigator.pop(context),
-        centerTitle: false,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: AppColors.primary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Post a Job',
+              style: AppTypography.labelLarge.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
+            Text(
+              'ConnectFlow',
+              style: AppTypography.labelLarge.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -117,109 +105,166 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Progress Section
+              Text(
+                'STEP 2 OF 7',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.05,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'STEP 2 OF 7',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                    ],
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: 0.28,
+                      minHeight: 6,
+                      backgroundColor: AppColors.outlineVariant,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusXLarge),
-                    ),
-                    child: Text(
-                      '28% Complete',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                  const SizedBox(width: AppSpacing.md),
+                  Text(
+                    '28% Complete',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Progress Bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                child: LinearProgressIndicator(
-                  value: 0.28,
-                  minHeight: 6,
-                  backgroundColor: AppColors.outlineVariant,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
-                ),
-              ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Title
+              // Heading
               Text(
-                'What do you need help\nwith?',
-                style: AppTypography.displayMedium,
+                'What do you need help with?',
+                style: AppTypography.displayLarge.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 32,
+                ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.md),
-
-              // Subtitle
-              Text(
-                'Select the specific home service category that best describes your project.',
-                style: AppTypography.bodyMedium,
-                textAlign: TextAlign.left,
+              Center(
+                child: Text(
+                  'Select the specific home service category that best describes your project.',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
               const SizedBox(height: AppSpacing.lg),
 
               // Search Bar
-              Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText:
-                        'Search services (e.g. leaking pipe, rewiring...)',
-                    border: InputBorder.none,
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: AppColors.textSecondary,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.md,
-                    ),
-                    hintStyle: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
+              TextField(
+                style: AppTypography.bodyMedium,
+                decoration: InputDecoration(
+                  hintText: 'Search services (e.g. leaking pipe, rewiring...',
+                  hintStyle: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
                   ),
-                  onChanged: (value) {
-                    setState(() {});
-                  },
+                  prefixIcon: Icon(Icons.search, color: AppColors.textSecondary),
+                  filled: true,
+                  fillColor: AppColors.surfaceContainerLow,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Featured Category (if available)
-              if (filtered.isNotEmpty)
-                _buildFeaturedCategoryCard(filtered.first),
+              // Featured Service Card
+              Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                  border: Border.all(
+                    color: _selectedSubcategory == 'plumbing'
+                        ? AppColors.primary
+                        : AppColors.outlineVariant,
+                    width: _selectedSubcategory == 'plumbing' ? 2 : 0.5,
+                  ),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedSubcategory = 'plumbing';
+                    });
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.sm),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                            ),
+                            child: Icon(
+                              Icons.build,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Plumbing',
+                                  style: AppTypography.displaySmall.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 20,
+                                  ),
+                                ),
+                                const SizedBox(height: AppSpacing.xs),
+                                Text(
+                                  'Leaks, pipe installations, faucets, and drainage solutions.',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.trending_up,
+                            color: AppColors.primary,
+                            size: 16,
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Popular Choice',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Grid of Subcategories
+              // Subcategory Grid
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -227,43 +272,95 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
                   crossAxisCount: 2,
                   crossAxisSpacing: AppSpacing.md,
                   mainAxisSpacing: AppSpacing.md,
-                  childAspectRatio: 0.75,
+                  childAspectRatio: 0.9,
                 ),
-                itemCount: filtered.length > 1 ? filtered.length - 1 : 0,
+                itemCount: 6,
                 itemBuilder: (context, index) {
-                  final subcategory = filtered[index + 1];
-                  return _buildSubcategoryCard(subcategory);
+                  final subcategory = subcategories[index + 1];
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        _selectedSubcategory = subcategory['id'];
+                      });
+                    },
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                        border: Border.all(
+                          color: _selectedSubcategory == subcategory['id']
+                              ? AppColors.primary
+                              : AppColors.outlineVariant,
+                          width: _selectedSubcategory == subcategory['id'] ? 2 : 0.5,
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceContainer,
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                            ),
+                            child: Icon(
+                              subcategory['icon'],
+                              color: AppColors.primary,
+                              size: 28,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            subcategory['title'],
+                            style: AppTypography.labelLarge.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          Text(
+                            subcategory['description'],
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 11,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // View all button
+              // View All Subcategories Button
               Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.lg,
-                    vertical: AppSpacing.md,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.outlineVariant,
-                      width: 1,
+                child: OutlinedButton(
+                  onPressed: () {},
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(color: AppColors.outlineVariant),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
                     ),
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusXLarge),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.md,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         'View all 42 subcategories',
-                        style: AppTypography.bodyMedium,
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.sm),
-                      Icon(
-                        Icons.expand_more,
-                        color: AppColors.textPrimary,
-                      ),
+                      Icon(Icons.expand_more, color: AppColors.textPrimary),
                     ],
                   ),
                 ),
@@ -274,163 +371,50 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: SecondaryButton(
-                      label: 'Back',
+                    child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.outlineVariant),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Text(
+                        'Back',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    flex: 2,
-                    child: PrimaryButton(
-                      label: 'Next Step',
+                    child: ElevatedButton(
                       onPressed: () {
-                        if (_selectedSubcategory.isNotEmpty) {
-                          final jobData = widget.jobData ?? {};
-                          jobData['category'] = widget.selectedCategory;
-                          jobData['subcategory'] = _selectedSubcategory;
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.jobPostTitle,
-                            arguments: jobData,
-                          );
-                        }
+                        Navigator.pushNamed(context, AppRoutes.jobPostTitle);
                       },
-                      isEnabled: _selectedSubcategory.isNotEmpty,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Text(
+                        'Next Step',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFeaturedCategoryCard(Map<String, dynamic> category) {
-    final isSelected = _selectedSubcategory == category['id'];
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedSubcategory = category['id'];
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMedium),
-                  ),
-                  child: Icon(
-                    category['icon'],
-                    color: AppColors.onPrimary,
-                    size: AppSpacing.iconMedium,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category['name'],
-                        style: AppTypography.labelLarge,
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        category['description'],
-                        style: AppTypography.bodySmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Popular Choice ↗',
-              style: AppTypography.labelMedium.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubcategoryCard(Map<String, dynamic> category) {
-    final isSelected = _selectedSubcategory == category['id'];
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedSubcategory = category['id'];
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLowest,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : AppColors.outlineVariant,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary
-                    : AppColors.surfaceContainer,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-              ),
-              child: Icon(
-                category['icon'],
-                color: isSelected
-                    ? AppColors.onPrimary
-                    : AppColors.textSecondary,
-                size: AppSpacing.iconMedium,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              category['name'],
-              style: AppTypography.labelLarge,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              category['description'],
-              style: AppTypography.bodySmall,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
         ),
       ),
     );

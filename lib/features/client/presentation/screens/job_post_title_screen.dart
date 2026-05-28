@@ -3,17 +3,9 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/secondary_button.dart';
 
 class JobPostTitleScreen extends StatefulWidget {
-  final Map<String, dynamic>? jobData;
-
-  const JobPostTitleScreen({
-    Key? key,
-    this.jobData,
-  }) : super(key: key);
+  const JobPostTitleScreen({Key? key, required jobData}) : super(key: key);
 
   @override
   State<JobPostTitleScreen> createState() => _JobPostTitleScreenState();
@@ -21,16 +13,18 @@ class JobPostTitleScreen extends StatefulWidget {
 
 class _JobPostTitleScreenState extends State<JobPostTitleScreen> {
   late TextEditingController _titleController;
-  int _titleLength = 0;
-  final int _maxTitleLength = 80;
+  int _charCount = 0;
+  final int _maxChars = 80;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(
-      text: widget.jobData?['title'] ?? '',
-    );
-    _titleLength = _titleController.text.length;
+    _titleController = TextEditingController();
+    _titleController.addListener(() {
+      setState(() {
+        _charCount = _titleController.text.length;
+      });
+    });
   }
 
   @override
@@ -43,10 +37,39 @@ class _JobPostTitleScreenState extends State<JobPostTitleScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: CustomAppBar(
-        title: 'ConnectFlow',
-        onBackPressed: () => Navigator.pop(context),
-        centerTitle: false,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: AppColors.primary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'ConnectFlow',
+          style: AppTypography.displayMedium.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person,
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -55,72 +78,42 @@ class _JobPostTitleScreenState extends State<JobPostTitleScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Progress Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'STEP 3 OF 7',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusXLarge),
-                    ),
-                    child: Text(
-                      '42% Complete',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
+              Text(
+                'STEP 3 OF 7',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.05,
+                ),
               ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Title with Progress
+              const SizedBox(height: AppSpacing.sm),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    'Job Title',
-                    style: AppTypography.displayMedium,
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      value: 0.42,
+                      minHeight: 6,
+                      backgroundColor: AppColors.outlineVariant,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
                   ),
+                  const SizedBox(width: AppSpacing.md),
                   Text(
-                    '$_titleLength / $_maxTitleLength',
-                    style: AppTypography.labelSmall.copyWith(
+                    '42% Complete',
+                    style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: AppSpacing.lg),
 
-              // Progress Bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                child: LinearProgressIndicator(
-                  value: 0.42,
-                  minHeight: 6,
-                  backgroundColor: AppColors.outlineVariant,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
+              // Heading
+              Text(
+                'Job Title',
+                style: AppTypography.displayLarge.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 32,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -128,149 +121,132 @@ class _JobPostTitleScreenState extends State<JobPostTitleScreen> {
               // Description
               Text(
                 'What would you like to call your project?',
-                style: AppTypography.bodyLarge,
+                style: AppTypography.bodyLarge.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
                 'Keep it short and descriptive to attract the best artisans.',
-                style: AppTypography.bodySmall.copyWith(
+                style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
 
               // Title Input Field
+              TextField(
+                controller: _titleController,
+                maxLength: _maxChars,
+                style: AppTypography.bodyLarge,
+                decoration: InputDecoration(
+                  hintText: 'e.g., Fix leaking kitchen sink',
+                  hintStyle: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                  filled: true,
+                  fillColor: AppColors.surfaceContainerLow,
+                  contentPadding: const EdgeInsets.all(AppSpacing.md),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                    borderSide: BorderSide(
+                      color: AppColors.outlineVariant,
+                      width: 0.5,
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                    borderSide: BorderSide(
+                      color: AppColors.primary,
+                      width: 1,
+                    ),
+                  ),
+                  counterText: '',
+                  suffixIcon: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    child: Text(
+                      '$_charCount / $_maxChars',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Good Examples
               Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLowest,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-                  border: Border.all(
-                    color: _titleLength > 0
-                        ? AppColors.primary
-                        : AppColors.outlineVariant,
-                    width: 1,
-                  ),
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                 ),
-                child: TextField(
-                  controller: _titleController,
-                  maxLength: _maxTitleLength,
-                  style: AppTypography.bodyLarge,
-                  decoration: InputDecoration(
-                    hintText: 'e.g., Fix leaking kitchen...',
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.all(AppSpacing.md),
-                    counterText: '',
-                    hintStyle: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-                  onChanged: (value) {
-                    setState(() {
-                      _titleLength = value.length;
-                    });
-                  },
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Examples Section
-              _buildExampleCard(
-                icon: Icons.check_circle,
-                iconColor: AppColors.success,
-                title: 'Good Examples',
-                examples: ['"Repair oak dining table leg"'],
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              _buildExampleCard(
-                icon: Icons.cancel,
-                iconColor: AppColors.error,
-                title: 'Avoid',
-                examples: ['"URGENT HELP NEEDED!!!"'],
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Promotional Cards
-              _buildPromotionalCard(
-                title: 'Artisan Matching',
-                description:
-                    'We use your title to find specialists in your specific job type, ensuring you get the most accurate quotes.',
-                icon: Icons.people,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              _buildPromotionalCard(
-                title: 'Clarity is Key',
-                description:
-                    'A clear title results in 3x more engagement from top-level professionals in the first 24 hours.',
-                icon: Icons.lightbulb,
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              _buildBrandCard(),
-              const SizedBox(height: AppSpacing.lg),
-
-              _buildPromotionalCard(
-                title: 'Trusted Workflow',
-                description:
-                    'Our guided process ensures every detail of your request is captured perfectly for a smooth experience.',
-                icon: Icons.check_circle,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Footer
-              Center(
-                child: Text(
-                  'ConnectFlow',
-                  style: AppTypography.displaySmall.copyWith(
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        'Terms',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
+                    Row(
+                      children: [
+                        Icon(Icons.check_circle, color: AppColors.success),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(
+                          'Good Examples',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.md),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        'Privacy',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        'Support',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.primary,
-                        ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      '"Repair oak dining table leg"',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                        fontStyle: FontStyle.italic,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Center(
-                child: Text(
-                  '© 2024 ConnectFlow. All rights reserved.',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+              const SizedBox(height: AppSpacing.md),
+
+              // Avoid
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.cancel, color: Colors.red),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(
+                          'Avoid',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      '"URGENT HELP NEEDED!!!"',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.xl),
@@ -279,166 +255,251 @@ class _JobPostTitleScreenState extends State<JobPostTitleScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: SecondaryButton(
-                      label: 'Back',
-                      icon: Icons.arrow_back_ios,
+                    child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.outlineVariant),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Back',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    flex: 2,
-                    child: PrimaryButton(
-                      label: 'Next Step',
-                      icon: Icons.arrow_forward_ios,
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: ElevatedButton(
                       onPressed: () {
-                        if (_titleLength <= 0) return;
-                        final jobData = widget.jobData ?? {};
-                        jobData['title'] = _titleController.text;
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.jobPostDescription,
-                          arguments: jobData,
-                        );
+                        Navigator.pushNamed(context, AppRoutes.jobPostDescription);
                       },
-                      isEnabled: _titleLength > 0,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Next Step',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Icon(Icons.arrow_forward, color: Colors.white),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.xl),
+
+              // Info Cards
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.trending_up,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Weekly Earnings',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      '+\$1,240',
+                      style: AppTypography.displaySmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              Text(
+                'Artisan Matching',
+                style: AppTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'We use your title to find specialists in your specific job type, ensuring you get the most accurate quotes.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.verified,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Trusted Experts',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Vetted for quality',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: Colors.grey[400],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              Text(
+                'Clarity is Key',
+                style: AppTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'A clear title results in 3x more engagement from top-rated professionals in the first 24 hours.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              // Footer
+              Center(
+                child: Column(
+                  children: [
+                    Text(
+                      'ConnectFlow',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            'Terms',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(
+                          '•',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            'Privacy',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Text(
+                          '•',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            'Support',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      '© 2024 ConnectFlow. All rights reserved.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildExampleCard({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required List<String> examples,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            icon,
-            color: iconColor,
-            size: AppSpacing.iconMedium,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                ...examples
-                    .map(
-                      (example) => Text(
-                        example,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    )
-                    .toList(),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPromotionalCard({
-    required String title,
-    required String description,
-    required IconData icon,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: AppTypography.labelLarge,
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            description,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBrandCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF1a1a3f),
-            const Color(0xFF2d1b69),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Center(
-        child: Column(
-          children: [
-            Icon(
-              Icons.star,
-              color: Colors.purple,
-              size: 48,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              'Artisans',
-              style: AppTypography.displayMedium.copyWith(
-                color: Colors.purple,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              'ELITE CRAFTSMANSHIP ON DEMAND',
-              style: AppTypography.labelSmall.copyWith(
-                color: Colors.grey,
-                letterSpacing: 2,
-              ),
-            ),
-          ],
         ),
       ),
     );

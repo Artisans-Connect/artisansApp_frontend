@@ -15,68 +15,50 @@ class BookingHistoryScreen extends StatefulWidget {
 }
 
 class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
-  String _selectedFilter = 'All';
+  int _selectedTabIndex = 0;
 
-  final List<Map<String, dynamic>> bookingHistory = [
+  final List<Map<String, dynamic>> upcomingBookings = [
     {
       'id': 1,
-      'title': 'Fix leaking kitchen faucet',
-      'artisan': 'John Smith',
-      'profession': 'Professional Plumber',
-      'status': 'Completed',
-      'date': 'May 18, 2024',
-      'rating': 4.8,
-      'amount': '\$150',
-      'imageUrl': 'https://via.placeholder.com/100?text=John',
+      'title': 'Kitchen Cabinet Repair',
+      'artisan': 'David Miller',
+      'profession': 'Master Carpenter',
+      'status': 'CONFIRMED',
+      'date': 'Tomorrow, Oct 12 • 10:00 AM',
+      'imageUrl': 'https://via.placeholder.com/80?text=David',
     },
     {
       'id': 2,
-      'title': 'Install smart lighting system',
-      'artisan': 'Sarah Johnson',
-      'profession': 'Expert Electrician',
-      'status': 'In Progress',
-      'date': 'May 20, 2024',
-      'rating': null,
-      'amount': '\$280',
-      'imageUrl': 'https://via.placeholder.com/100?text=Sarah',
-    },
-    {
-      'id': 3,
-      'title': 'Paint bedroom walls',
-      'artisan': 'Mike Wilson',
-      'profession': 'Professional Painter',
-      'status': 'Cancelled',
-      'date': 'May 15, 2024',
-      'rating': null,
-      'amount': '\$200',
-      'imageUrl': 'https://via.placeholder.com/100?text=Mike',
-    },
-    {
-      'id': 4,
-      'title': 'Deep clean house',
-      'artisan': 'Emma Davis',
-      'profession': 'Professional Cleaner',
-      'status': 'Completed',
-      'date': 'May 10, 2024',
-      'rating': 4.9,
-      'amount': '\$120',
-      'imageUrl': 'https://via.placeholder.com/100?text=Emma',
+      'title': 'Smart Home Setup',
+      'artisan': 'Sarah Jenkins',
+      'profession': 'Tech Specialist',
+      'status': 'IN PROGRESS',
+      'date': 'Friday, Oct 15 • 2:30 PM',
+      'imageUrl': 'https://via.placeholder.com/80?text=Sarah',
     },
   ];
 
-  List<Map<String, dynamic>> get filteredBookings {
-    if (_selectedFilter == 'All') return bookingHistory;
-    return bookingHistory
-        .where((booking) => booking['status'] == _selectedFilter)
-        .toList();
-  }
+  final List<Map<String, dynamic>> recentHistory = [
+    {
+      'id': 3,
+      'title': 'Wall Painting',
+      'imageUrl': 'https://via.placeholder.com/80?text=Paint',
+      'date': 'Completed Sep 28',
+    },
+    {
+      'id': 4,
+      'title': 'Leaky Pipe Fix',
+      'imageUrl': 'https://via.placeholder.com/80?text=Plumb',
+      'date': 'Completed Sep 15',
+    },
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
-        title: 'Booking History',
+        title: 'My Bookings',
         showBackButton: !widget.embedInShell,
         onBackPressed: () => Navigator.pop(context),
       ),
@@ -86,245 +68,359 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              Text(
-                'Your Past & Ongoing Jobs',
-                style: AppTypography.displaySmall,
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Filter Chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
+              // Tab Selection
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                ),
                 child: Row(
-                  children: ['All', 'In Progress', 'Completed', 'Cancelled']
-                      .map((filter) {
-                    final isSelected = _selectedFilter == filter;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: AppSpacing.md),
-                      child: FilterChip(
-                        label: Text(filter),
-                        selected: isSelected,
-                        onSelected: (selected) {
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
                           setState(() {
-                            _selectedFilter = filter;
+                            _selectedTabIndex = 0;
                           });
                         },
-                        backgroundColor: AppColors.surfaceContainerLowest,
-                        selectedColor: AppColors.primaryContainer,
-                        labelStyle: AppTypography.labelMedium.copyWith(
-                          color: isSelected
-                              ? AppColors.onPrimary
-                              : AppColors.textPrimary,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _selectedTabIndex == 0
+                                ? AppColors.surfaceContainerLowest
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Upcoming',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: _selectedTabIndex == 0
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedTabIndex = 1;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.md,
+                            vertical: AppSpacing.sm,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _selectedTabIndex == 1
+                                ? AppColors.surfaceContainerLowest
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Past',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: _selectedTabIndex == 1
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Bookings List
-              if (filteredBookings.isEmpty)
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppSpacing.xl,
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.history,
-                          size: 64,
-                          color: AppColors.outlineVariant,
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          'No bookings found',
-                          style: AppTypography.labelLarge.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
+              if (_selectedTabIndex == 0) ...[
+                // Confirmed Jobs
+                Text(
+                  'Confirmed Jobs',
+                  style: AppTypography.displaySmall.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
-                )
-              else
-                Column(
-                  children: List.generate(filteredBookings.length, (index) {
-                    final booking = filteredBookings[index];
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: upcomingBookings.length,
+                  itemBuilder: (context, index) {
+                    final booking = upcomingBookings[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: GestureDetector(
-                        onTap: () {
-                          if (booking['status'] == 'In Progress') {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.liveTracking,
-                              arguments: booking,
-                            );
-                          } else if (booking['status'] == 'Completed' &&
-                              booking['rating'] == null) {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.rateService,
-                              arguments: booking,
-                            );
-                          }
-                        },
-                        child: _buildBookingCard(booking),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLowest,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                          border: Border.all(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: booking['status'] == 'CONFIRMED'
+                                        ? AppColors.success
+                                        : AppColors.primary,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    booking['status'],
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppColors.surfaceContainer,
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      booking['imageUrl'],
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Container(
+                                          color: AppColors.surfaceContainer,
+                                          child: const Icon(
+                                            Icons.person,
+                                            color: AppColors.outlineVariant,
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              booking['title'],
+                              style: AppTypography.displaySmall.copyWith(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 16,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Text(
+                                  booking['date'],
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  size: 16,
+                                  color: AppColors.textSecondary,
+                                ),
+                                const SizedBox(width: AppSpacing.sm),
+                                Text(
+                                  '${booking['artisan']} • ${booking['profession']}',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton(
+                                    onPressed: () {},
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Color(0xFFB8C0E0),
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Chat',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: AppColors.textPrimary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.pushNamed(
+                                        context,
+                                        AppRoutes.liveTracking,
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Manage Job',
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
-                  }),
+                  },
                 ),
+              ] else ...[
+                // Recent History
+                Text(
+                  'Recent History',
+                  style: AppTypography.displaySmall.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: recentHistory.length,
+                  itemBuilder: (context, index) {
+                    final booking = recentHistory[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12),
+                              color: AppColors.surfaceContainer,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: Image.network(
+                                booking['imageUrl'],
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Container(
+                                    color: AppColors.surfaceContainer,
+                                    child: const Icon(
+                                      Icons.image,
+                                      color: AppColors.outlineVariant,
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                booking['title'],
+                                style: AppTypography.labelLarge.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                booking['date'],
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildBookingCard(Map<String, dynamic> booking) {
-    final statusColor = _getStatusColor(booking['status']);
-    final canNavigate = booking['status'] == 'In Progress' ||
-        (booking['status'] == 'Completed' && booking['rating'] == null);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Artisan Avatar
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-                  child: Image.network(
-                    booking['imageUrl'],
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Icon(
-                        Icons.person,
-                        color: AppColors.onPrimary,
-                      );
-                    },
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-
-              // Job Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      booking['title'],
-                      style: AppTypography.labelLarge,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      booking['artisan'],
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      booking['date'],
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Status Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.md,
-                  vertical: AppSpacing.sm,
-                ),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusXLarge),
-                ),
-                child: Text(
-                  booking['status'],
-                  style: AppTypography.labelSmall.copyWith(
-                    color: statusColor,
-                  ),
-                ),
-              ),
-            ],
+      bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: AppColors.surface,
+        elevation: 1,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore, color: AppColors.textSecondary),
+            label: 'EXPLORE',
+            activeIcon: Icon(Icons.explore, color: AppColors.primary),
           ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Action Row
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                booking['amount'],
-                style: AppTypography.labelLarge.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-              if (booking['rating'] != null)
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.star_rounded,
-                      size: 16,
-                      color: Color(0xFFFFC107),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${booking['rating']}',
-                      style: AppTypography.labelMedium,
-                    ),
-                  ],
-                ),
-              if (canNavigate)
-                Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16,
-                  color: AppColors.textSecondary,
-                ),
-            ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.calendar_today, color: AppColors.primary),
+            label: 'BOOKINGS',
+            activeIcon: Icon(Icons.calendar_today, color: AppColors.primary),
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person, color: AppColors.textSecondary),
+            label: 'PROFILE',
+            activeIcon: Icon(Icons.person, color: AppColors.primary),
           ),
         ],
       ),
     );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'Completed':
-        return AppColors.success;
-      case 'In Progress':
-        return AppColors.primary;
-      case 'Cancelled':
-        return AppColors.error;
-      default:
-        return AppColors.textSecondary;
-    }
   }
 }

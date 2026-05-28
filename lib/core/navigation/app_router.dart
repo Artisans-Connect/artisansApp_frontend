@@ -49,52 +49,54 @@ class AppRouter {
 
       case AppRoutes.jobPostCategory:
         return MaterialPageRoute(
-          builder: (_) => JobPostCategoryScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
-          ),
+          builder: (_) => const JobPostCategoryScreen(),
         );
 
       case AppRoutes.jobPostSubcategory:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => JobPostSubcategoryScreen(
-            selectedCategory: args?['category'],
             jobData: args?['jobData'],
           ),
         );
 
       case AppRoutes.jobPostTitle:
+      final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => JobPostTitleScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: args?['jobData'],
           ),
         );
 
       case AppRoutes.jobPostDescription:
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => JobPostDescriptionScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: args?['jobData'],
           ),
         );
 
       case AppRoutes.jobPostLocation:
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => JobPostLocationScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: args?['jobData'],
           ),
         );
 
       case AppRoutes.jobPostUrgency:
+      final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => JobPostUrgencyScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: args?['jobData'],
           ),
         );
 
       case AppRoutes.jobPostSummary:
+        final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => JobPostSummaryScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: args?['jobData'],
           ),
         );
 
