@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/navigation/app_routes.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/filter_chip.dart';
 import '../../../../shared/widgets/search_bar.dart';
+import '../navigation/client_navigation.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
-  const ExploreArtisansScreen({Key? key}) : super(key: key);
+  const ExploreArtisansScreen({super.key});
 
   @override
   State<ExploreArtisansScreen> createState() => _ExploreArtisansScreenState();
@@ -14,342 +18,371 @@ class ExploreArtisansScreen extends StatefulWidget {
 
 class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   String _searchQuery = '';
-  String _selectedCategory = 'All';
+  String _selectedDistance = '';
+  String _selectedRating = '';
+  final Set<String> _savedArtisanNames = <String>{};
 
-  final List<String> categories = ['All', 'Home', 'Technical', 'Personal'];
-
-  final List<Map<String, dynamic>> allArtisans = [
+  final List<Map<String, dynamic>> allArtisans = <Map<String, dynamic>>[
     {
-      'name': 'Sarah Jenkins',
-      'profession': 'Master Electrician',
-      'rating': 4.9,
-      'skills': ['Wiring', 'Installations'],
-      'hourlyRate': '\$85',
-      'imageUrl': 'https://via.placeholder.com/200?text=Sarah',
-    },
-    {
-      'name': 'David Chen',
-      'profession': 'Custom Carpentry',
-      'rating': 5.0,
-      'skills': ['Furniture', 'Restoration'],
-      'hourlyRate': '\$120',
-      'imageUrl': 'https://via.placeholder.com/200?text=David',
-    },
-    {
-      'name': 'Marcus Chen',
-      'profession': 'Master Electrician',
-      'rating': 4.9,
-      'skills': ['Wiring', 'Repairs'],
-      'hourlyRate': '\$90',
-      'imageUrl': 'https://via.placeholder.com/200?text=Marcus',
-    },
-    {
-      'name': 'Amara Okafor',
-      'profession': 'Plumbing Expert',
+      'name': 'John Smith',
+      'profession': 'Professional Plumber',
       'rating': 4.8,
-      'skills': ['Repairs', 'Installation'],
-      'hourlyRate': '\$75',
-      'imageUrl': 'https://via.placeholder.com/200?text=Amara',
+      'reviewCount': 342,
+      'imageUrl': 'https://via.placeholder.com/200?text=John',
+      'location': 'Downtown Area',
+      'distance': '0.5 km',
+      'userId': 'worker-john',
+    },
+    {
+      'name': 'Sarah Johnson',
+      'profession': 'Expert Electrician',
+      'rating': 4.9,
+      'reviewCount': 567,
+      'imageUrl': 'https://via.placeholder.com/200?text=Sarah',
+      'location': 'Central District',
+      'distance': '1.2 km',
+      'userId': 'worker-sarah',
+    },
+    {
+      'name': 'Mike Wilson',
+      'profession': 'Master Carpenter',
+      'rating': 4.7,
+      'reviewCount': 234,
+      'imageUrl': 'https://via.placeholder.com/200?text=Mike',
+      'location': 'Riverside',
+      'distance': '2.1 km',
+      'userId': 'worker-mike',
+    },
+    {
+      'name': 'Emma Davis',
+      'profession': 'Professional Cleaner',
+      'rating': 4.9,
+      'reviewCount': 412,
+      'imageUrl': 'https://via.placeholder.com/200?text=Emma',
+      'location': 'North End',
+      'distance': '1.8 km',
+      'userId': 'worker-emma',
+    },
+    {
+      'name': 'Robert Brown',
+      'profession': 'HVAC Specialist',
+      'rating': 4.6,
+      'reviewCount': 289,
+      'imageUrl': 'https://via.placeholder.com/200?text=Robert',
+      'location': 'East Side',
+      'distance': '2.5 km',
+      'userId': 'worker-robert',
+    },
+    {
+      'name': 'Lisa Anderson',
+      'profession': 'Interior Designer',
+      'rating': 4.8,
+      'reviewCount': 198,
+      'imageUrl': 'https://via.placeholder.com/200?text=Lisa',
+      'location': 'West Point',
+      'distance': '3.0 km',
+      'userId': 'worker-lisa',
     },
   ];
 
+  List<Map<String, dynamic>> get _filteredArtisans {
+    return allArtisans.where((Map<String, dynamic> artisan) {
+      final String name = (artisan['name'] as String).toLowerCase();
+      final String profession =
+          (artisan['profession'] as String).toLowerCase();
+      if (_searchQuery.isNotEmpty) {
+        final String q = _searchQuery.toLowerCase();
+        if (!name.contains(q) && !profession.contains(q)) return false;
+      }
+      return true;
+    }).toList();
+  }
+
+  void _toggleSaved(String name) {
+    setState(() {
+      if (_savedArtisanNames.contains(name)) {
+        _savedArtisanNames.remove(name);
+      } else {
+        _savedArtisanNames.add(name);
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          _savedArtisanNames.contains(name)
+              ? 'Saved $name'
+              : 'Removed $name from saved',
+        ),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> artisans = _filteredArtisans;
+
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.primary,
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'ConnectFlow',
-          style: AppTypography.displayMedium.copyWith(
-            color: AppColors.primary,
+      appBar: CustomAppBar(
+        title: 'Explore Artisans',
+        onBackPressed: () => Navigator.pop(context),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'Map view',
+            onPressed: () =>
+                ClientNavigation.pushFlow(context, AppRoutes.mapDiscovery),
+            icon: const Icon(Icons.map_outlined, color: AppColors.textPrimary),
           ),
-        ),
+          IconButton(
+            tooltip: 'Messages',
+            onPressed: () => ClientNavigation.openMessages(context),
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              color: AppColors.textPrimary,
+            ),
+          ),
+          IconButton(
+            tooltip: 'My profile',
+            onPressed: () => ClientNavigation.openOwnProfile(context),
+            icon: const Icon(Icons.person_outline, color: AppColors.textPrimary),
+          ),
+          IconButton(
+            tooltip: 'Settings',
+            onPressed: () => ClientNavigation.openSettings(context),
+            icon: const Icon(Icons.settings_outlined, color: AppColors.textPrimary),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.gutter),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Search Bar
+            children: <Widget>[
               CustomSearchBar(
-                hintText: 'Search for artisans, skills, or services..',
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
+                hintText: 'Search by name or skill...',
+                onChanged: (String value) {
+                  setState(() => _searchQuery = value);
                 },
               ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Category Tabs
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: categories.map((category) {
-                    final isSelected = _selectedCategory == category;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: AppSpacing.md),
-                      child: GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _selectedCategory = category;
-                          });
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
+              const SizedBox(height: AppSpacing.md),
+              Text('Filters', style: AppTypography.labelLarge),
+              const SizedBox(height: AppSpacing.md),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('Distance', style: AppTypography.bodyMedium),
+                  const SizedBox(height: AppSpacing.sm),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: <String>[
+                        'Nearby',
+                        '< 5 km',
+                        '< 10 km',
+                        '< 20 km',
+                      ].map((String distance) {
+                        final bool isSelected = _selectedDistance == distance;
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(right: AppSpacing.sm),
+                          child: AppFilterChip(
+                            label: distance,
+                            isSelected: isSelected,
+                            onTap: () {
+                              setState(() {
+                                _selectedDistance =
+                                    isSelected ? '' : distance;
+                              });
+                            },
                           ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppColors.primary
-                                : AppColors.surfaceContainerLowest,
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                            border: !isSelected
-                                ? Border.all(color: AppColors.outlineVariant)
-                                : null,
-                          ),
-                          child: Text(
-                            category,
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppColors.textPrimary,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Featured Artisans Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Featured Artisans',
-                    style: AppTypography.displayMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      'View All',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-
-              // Artisans List
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: allArtisans.length,
-                itemBuilder: (context, index) {
-                  final artisan = allArtisans[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLowest,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                        border: Border.all(
-                          color: AppColors.outlineVariant,
-                          width: 0.5,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Text('Rating', style: AppTypography.bodyMedium),
+                  const SizedBox(height: AppSpacing.sm),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: <String>['4.5+', '4.7+', '4.9+']
+                          .map((String rating) {
+                        final bool isSelected = _selectedRating == rating;
+                        return Padding(
+                          padding:
+                              const EdgeInsets.only(right: AppSpacing.sm),
+                          child: AppFilterChip(
+                            label: rating,
+                            isSelected: isSelected,
+                            icon: Icons.star,
+                            onTap: () {
+                              setState(() {
+                                _selectedRating = isSelected ? '' : rating;
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                '${artisans.length} Artisans Found',
+                style: AppTypography.labelLarge,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              ...artisans.map((Map<String, dynamic> artisan) {
+                final String name = artisan['name'] as String;
+                final bool isSaved = _savedArtisanNames.contains(name);
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceContainerLowest,
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusLarge),
+                      border: Border.all(color: AppColors.borderSubtle),
+                    ),
+                    child: Row(
+                      children: <Widget>[
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pushNamed(
+                              context,
+                              AppRoutes.artisanProfile,
+                              arguments: artisan,
+                            );
+                          },
+                          child: SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: Image.network(
+                              artisan['imageUrl'] as String,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Container(
+                                color: AppColors.surfaceContainer,
+                                child: const Icon(Icons.person),
+                              ),
+                            ),
+                          ),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              // Artisan Image
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  color: AppColors.surfaceContainer,
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.network(
-                                    artisan['imageUrl'],
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: AppColors.surfaceContainer,
-                                        child: const Icon(
-                                          Icons.person,
-                                          size: 40,
-                                          color: AppColors.outlineVariant,
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.md),
-                              // Artisan Info
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      artisan['name'],
-                                      style: AppTypography.displaySmall.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSpacing.xs),
-                                    Text(
-                                      artisan['profession'],
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                    const SizedBox(height: AppSpacing.sm),
-                                    Wrap(
-                                      spacing: 8,
-                                      children: (artisan['skills'] as List<String>)
-                                          .map((skill) {
-                                        return Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: AppColors.surfaceContainerLow,
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: Text(
-                                            skill,
-                                            style: AppTypography.bodySmall.copyWith(
-                                              color: AppColors.primary,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        );
-                                      }).toList(),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.star,
-                                    size: 16,
-                                    color: const Color(0xFFFFA500),
-                                  ),
-                                  const SizedBox(width: 4),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.artisanProfile,
+                                arguments: artisan,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSpacing.md),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
                                   Text(
-                                    '${artisan['rating']}',
-                                    style: AppTypography.bodySmall.copyWith(
-                                      color: AppColors.textSecondary,
-                                    ),
+                                    name,
+                                    style: AppTypography.labelLarge,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    artisan['profession'] as String,
+                                    style: AppTypography.bodySmall,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Row(
+                                    children: <Widget>[
+                                      const Icon(
+                                        Icons.star_rounded,
+                                        size: 14,
+                                        color: Color(0xFFFFC107),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${artisan['rating']}',
+                                        style: AppTypography.labelMedium,
+                                      ),
+                                      const Spacer(),
+                                      Text(
+                                        artisan['distance'] as String,
+                                        style: AppTypography.bodySmall
+                                            .copyWith(
+                                          color: AppColors.textSecondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                              Text(
-                                artisan['hourlyRate'],
-                                style: AppTypography.bodyLarge.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.artisanProfile,
-                                    arguments: artisan,
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: AppColors.primary,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: AppSpacing.lg,
-                                    vertical: AppSpacing.sm,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                                  ),
-                                ),
-                                child: Text(
-                                  'Book Now',
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: Colors.white,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                        ],
-                      ),
+                        ),
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            IconButton(
+                              tooltip: 'Message',
+                              onPressed: () => ClientNavigation.openChatForArtisan(
+                                context,
+                                artisan,
+                              ),
+                              icon: const Icon(
+                                Icons.chat_bubble_outline,
+                                color: AppColors.primary,
+                                size: 22,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: isSaved ? 'Unsave' : 'Save',
+                              onPressed: () => _toggleSaved(name),
+                              icon: Icon(
+                                isSaved
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
+                                color: isSaved
+                                    ? AppColors.primary
+                                    : AppColors.outlineVariant,
+                                size: 22,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'View profile',
+                              onPressed: () {
+                                ClientNavigation.openArtisanProfile(
+                                  context,
+                                  userId: artisan['userId'] as String,
+                                  name: name,
+                                );
+                              },
+                              icon: const Icon(
+                                Icons.person_outline,
+                                color: AppColors.textSecondary,
+                                size: 22,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              }),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.surface,
-        elevation: 1,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore, color: AppColors.primary),
-            label: 'EXPLORE',
-            activeIcon: Icon(Icons.explore, color: AppColors.primary),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today, color: AppColors.textSecondary),
-            label: 'BOOKINGS',
-            activeIcon: Icon(Icons.calendar_today, color: AppColors.primary),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person, color: AppColors.textSecondary),
-            label: 'PROFILE',
-            activeIcon: Icon(Icons.person, color: AppColors.primary),
-          ),
-        ],
       ),
     );
   }

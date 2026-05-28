@@ -1,439 +1,349 @@
 import 'package:flutter/material.dart';
+
+import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../models/client_job_draft.dart';
+import '../models/job_post_wizard_step.dart';
+import '../navigation/client_navigation.dart';
+import '../widgets/job_post_wizard_scaffold.dart';
 
-class JobPostSummaryScreen extends StatelessWidget {
-  const JobPostSummaryScreen({Key? key, required jobData}) : super(key: key);
+class JobPostSummaryScreen extends StatefulWidget {
+  const JobPostSummaryScreen({super.key, this.jobData});
+
+  final Map<String, dynamic>? jobData;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.primary,
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Review & Post',
-              style: AppTypography.labelLarge.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Text(
-              'ConnectFlow',
-              style: AppTypography.labelLarge.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
+  State<JobPostSummaryScreen> createState() => _JobPostSummaryScreenState();
+}
+
+class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
+  late ClientJobDraft _draft;
+  bool _agreeToTerms = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _draft = ClientJobDraft.fromMap(widget.jobData);
+    _agreeToTerms = _draft.data['agreeToTerms'] as bool? ?? false;
+  }
+
+  void _showEditSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      body: SingleChildScrollView(
+      builder: (BuildContext ctx) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.gutter),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Progress Section
-              Text(
-                'STEP 7 OF 7',
-                style: AppTypography.labelSmall.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.05,
-                ),
+              Text('Edit section', style: AppTypography.displaySmall),
+              const SizedBox(height: AppSpacing.md),
+              ListTile(
+                leading: const Icon(Icons.category),
+                title: const Text('Service & type'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.popUntil(
+                    context,
+                    (Route<dynamic> r) =>
+                        r.settings.name == AppRoutes.jobPostCategory,
+                  );
+                },
               ),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: LinearProgressIndicator(
-                      value: 1.0,
-                      minHeight: 6,
-                      backgroundColor: AppColors.outlineVariant,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Text(
-                    'COMPLETION: 100%',
-                    style: AppTypography.labelSmall.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              ListTile(
+                leading: const Icon(Icons.title),
+                title: const Text('Title & description'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.popUntil(
+                    context,
+                    (Route<dynamic> r) =>
+                        r.settings.name == AppRoutes.jobPostTitle,
+                  );
+                },
               ),
-              const SizedBox(height: AppSpacing.xl),
+              ListTile(
+                leading: const Icon(Icons.location_on),
+                title: const Text('Location & budget'),
+                onTap: () {
+                  Navigator.pop(ctx);
+                  Navigator.popUntil(
+                    context,
+                    (Route<dynamic> r) =>
+                        r.settings.name == AppRoutes.jobPostLocation,
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-              // Job Summary Card
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                  border: Border.all(
-                    color: AppColors.outlineVariant,
-                    width: 0.5,
+  void _saveDraft() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Draft saved locally')),
+    );
+    ClientNavigation.popToShell(context);
+  }
+
+  void _postJob() {
+    if (!_agreeToTerms) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Job posted — finding an artisan…')),
+    );
+    ClientNavigation.startFindingArtisan(context, jobData: _draft.toMap());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String dateStr = _draft.preferredDate != null
+        ? '${_draft.preferredDate!.day}/${_draft.preferredDate!.month}/${_draft.preferredDate!.year}'
+        : '—';
+
+    return JobPostWizardScaffold(
+      step: JobPostWizardStep.summary,
+      appBarTitle: 'Review & Post',
+      headline: 'Review your job post',
+      primaryLabel: 'Post job',
+      primaryEnabled: _agreeToTerms,
+      onPrimary: _postJob,
+      secondaryLabel: 'Save draft',
+      onSecondary: _saveDraft,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Artisans — elite craftsmanship on demand',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+              letterSpacing: 0.5,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _SummaryCard(
+            onEdit: _showEditSheet,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(_draft.displayTitle, style: AppTypography.labelLarge),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  _draft.displayDescription,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
                   ),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Job Summary',
-                          style: AppTypography.displaySmall.copyWith(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 24,
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainer,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.settings,
-                            color: AppColors.textSecondary,
-                            size: 20,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Title
-                    Text(
-                      'TITLE',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Senior Full-Stack\nArchitect for AI\nPlatform',
-                      style: AppTypography.displaySmall.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 24,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Category and Location Pills
-                    Wrap(
-                      spacing: AppSpacing.md,
-                      runSpacing: AppSpacing.md,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.category,
-                                color: AppColors.primary,
-                                size: 16,
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                'Engineering & Tech',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.sm,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.location_on,
-                                color: AppColors.primary,
-                                size: 16,
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                'Remote, San Francisco',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Description
-                    Text(
-                      'DESCRIPTION',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'We are seeking a visionary Full-Stack Architect to lead the development of our next-generation AI flow platform. You will be responsible for designing high-performance distributed systems, mentoring senior engineers, and ensuring the seamless integration of LLM endpoints into our core UI components. The ideal candidate has 8+ years of experience and a passion for glossy, fluid user interfaces.',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textPrimary,
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Budget Range
-                    Text(
-                      'BUDGET RANGE',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '\$140,000 - \$180,000 / yr',
-                              style: AppTypography.displaySmall.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 20,
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              'Full-time • Equity included',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: AppColors.surfaceContainer,
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          ),
-                          child: Icon(
-                            Icons.image,
-                            color: AppColors.outlineVariant,
-                            size: 32,
-                          ),
-                        ),
-                      ],
-                    ),
+                    _Chip(_draft.displayCategory),
+                    if (_draft.displaySubcategory.isNotEmpty)
+                      _Chip(_draft.displaySubcategory),
+                    _Chip(_draft.displayLocation),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Company Preview Card
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                  border: Border.all(
-                    color: AppColors.outlineVariant,
-                    width: 0.5,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          _SummaryCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('BUDGET (GHS)', style: AppTypography.labelSmall),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  spacing: AppSpacing.sm,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    Container(
-                      width: double.infinity,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[800],
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                    Text(
+                      ClientJobDraft.formatGhs(_draft.budgetMin),
+                      style: AppTypography.displaySmall.copyWith(
+                        color: AppColors.primary,
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                        child: Image.network(
-                          'https://via.placeholder.com/400x150?text=Artisans',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              color: Colors.grey[800],
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.build,
-                                    color: AppColors.primary,
-                                    size: 48,
-                                  ),
-                                  const SizedBox(height: AppSpacing.md),
-                                  Text(
-                                    'Artisans',
-                                    style: AppTypography.labelLarge.copyWith(
-                                      color: AppColors.primary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
+                    ),
+                    if (_draft.budgetMin != _draft.budgetMax) ...[
+                      Text('-', style: AppTypography.bodyLarge),
+                      Text(
+                        ClientJobDraft.formatGhs(_draft.budgetMax),
+                        style: AppTypography.displaySmall.copyWith(
+                          color: AppColors.primary,
                         ),
                       ),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
+                    ],
                     Text(
-                      'Company Preview',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Your post will be featured on the main explorer tab with this aesthetic.',
+                      'estimated',
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Ready to Launch
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                  border: Border.all(
-                    color: AppColors.success.withOpacity(0.3),
-                    width: 0.5,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: AppColors.success,
-                      size: 28,
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Ready to Launch',
-                          style: AppTypography.labelLarge.copyWith(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
+                const SizedBox(height: AppSpacing.md),
+                _DetailLine('Urgency', _draft.displayUrgency),
+                if (_draft.urgency == 'scheduled') ...[
+                  _DetailLine('Date', dateStr),
+                  _DetailLine('Time', _draft.timeWindow ?? '—'),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.success.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.verified, color: AppColors.success),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ready to post on Artisans',
+                        style: AppTypography.labelLarge,
+                      ),
+                      Text(
+                        'Your request will be shared with matched artisans.',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
                         ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'Verified by ConnectFlow AI',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Post Job Button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Job Posted Successfully!')),
-                    );
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                    ),
-                  ),
-                  child: Text(
-                    'Post Job',
-                    style: AppTypography.labelLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
+                      ),
+                    ],
                   ),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Checkbox(
+                value: _agreeToTerms,
+                onChanged: (bool? v) =>
+                    setState(() => _agreeToTerms = v ?? false),
+                activeColor: AppColors.primary,
               ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Save as Draft Link
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Job Saved as Draft')),
-                    );
-                  },
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 12),
                   child: Text(
-                    'Save as Draft',
-                    style: AppTypography.labelMedium.copyWith(
+                    'I agree to the Terms & Conditions and confirm this information is accurate.',
+                    style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textSecondary,
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.xl),
             ],
           ),
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.child, this.onEdit});
+
+  final Widget child;
+  final VoidCallback? onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (onEdit != null)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Job summary', style: AppTypography.labelLarge),
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20),
+                  onPressed: onEdit,
+                  tooltip: 'Edit',
+                ),
+              ],
+            ),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.xs,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+      ),
+    );
+  }
+}
+
+class _DetailLine extends StatelessWidget {
+  const _DetailLine(this.label, this.value);
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 72,
+            child: Text(
+              label,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          Expanded(child: Text(value, style: AppTypography.bodyMedium)),
+        ],
       ),
     );
   }

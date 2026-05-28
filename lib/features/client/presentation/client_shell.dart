@@ -3,31 +3,33 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/presentation/screens/messages_list_screen.dart';
 import '../../../shared/presentation/screens/user_profile_screen.dart';
+import 'navigation/client_shell_scope.dart';
 import 'screens/booking_history_screen.dart';
 import 'screens/client_home_screen.dart';
 
 enum ClientNavTab { home, bookings, messages, profile }
 
 class ClientShell extends StatefulWidget {
-  const ClientShell({super.key});
+  const ClientShell({super.key, this.initialTab = ClientNavTab.home});
 
   static const String routeName = '/client-shell';
+
+  final ClientNavTab initialTab;
 
   @override
   State<ClientShell> createState() => _ClientShellState();
 }
 
 class _ClientShellState extends State<ClientShell> {
-  ClientNavTab _currentTab = ClientNavTab.home;
+  late ClientNavTab _currentTab;
 
-  final Map<ClientNavTab, Widget> _tabScreens = {
-    ClientNavTab.home: const ClientHomeScreen(),
-    ClientNavTab.bookings: const BookingHistoryScreen(embedInShell: true),
-    ClientNavTab.messages: const MessagesListScreen(embedInShell: true),
-    ClientNavTab.profile: const UserProfileScreen(embedInShell: true),
-  };
+  @override
+  void initState() {
+    super.initState();
+    _currentTab = widget.initialTab;
+  }
 
-  void _onTabSelected(ClientNavTab tab) {
+  void _selectTab(ClientNavTab tab) {
     setState(() {
       _currentTab = tab;
     });
@@ -35,14 +37,22 @@ class _ClientShellState extends State<ClientShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentTab.index,
-        children: _tabScreens.values.toList(),
-      ),
-      bottomNavigationBar: _ClientBottomNav(
-        currentTab: _currentTab,
-        onTabSelected: _onTabSelected,
+    return ClientShellScope(
+      selectTab: _selectTab,
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentTab.index,
+          children: const <Widget>[
+            ClientHomeScreen(),
+            BookingHistoryScreen(embedInShell: true),
+            MessagesListScreen(embedInShell: true),
+            UserProfileScreen(embedInShell: true),
+          ],
+        ),
+        bottomNavigationBar: _ClientBottomNav(
+          currentTab: _currentTab,
+          onTabSelected: _selectTab,
+        ),
       ),
     );
   }

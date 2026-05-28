@@ -44,7 +44,3 @@ app.*.map.json
 /android/app/release
 
 # referencing files
-
-# Android-specific build outputs
-/android/app/build/
-/android/app/.cxx/

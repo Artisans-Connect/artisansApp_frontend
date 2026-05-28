@@ -2,25 +2,51 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/navigation/app_routes.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/secondary_button.dart';
+import '../models/client_booking_stub.dart';
+import '../navigation/client_navigation.dart';
 
 class FindingArtisanScreen extends StatefulWidget {
-  const FindingArtisanScreen({Key? key}) : super(key: key);
+  const FindingArtisanScreen({
+    super.key,
+    this.jobData,
+    this.artisan,
+  });
+
+  final Map<String, dynamic>? jobData;
+  final Map<String, dynamic>? artisan;
 
   @override
   State<FindingArtisanScreen> createState() => _FindingArtisanScreenState();
 }
 
-class _FindingArtisanScreenState extends State<FindingArtisanScreen> with SingleTickerProviderStateMixin {
+class _FindingArtisanScreenState extends State<FindingArtisanScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
+
+    Future<void>.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      final booking = ClientBooking.fromJobPost(
+        jobData: widget.jobData ?? <String, dynamic>{},
+        artisan: widget.artisan,
+      );
+      ClientNavigation.openLiveTrackingFromMatch(context, booking: booking);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Artisan matched — track your job live.'),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    });
   }
 
   @override
@@ -33,238 +59,114 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen> with Single
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: AppBar(
-        backgroundColor: AppColors.surface,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.primary,
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'ConnectFlow',
-          style: AppTypography.displayMedium.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Container(
-              width: 50,
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.grey[800],
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.person,
-                color: Colors.grey[400],
-              ),
-            ),
-          ),
-        ],
+      appBar: CustomAppBar(
+        title: 'Finding Artisan',
+        showBackButton: true,
+        onBackPressed: () => Navigator.pop(context),
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.gutter),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: AppSpacing.lg),
-
-              // Searching Animation Section
+              SizedBox(height: MediaQuery.of(context).size.height * 0.1),
               Center(
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // Rotating circles with artisan images
                     RotationTransition(
                       turns: _animationController,
-                      child: SizedBox(
-                        width: 280,
-                        height: 280,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Top artisan icon
-                            Positioned(
-                              top: 0,
-                              child: Container(
-                                width: 70,
-                                height: 70,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.primary,
-                                    width: 3,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(35),
-                                  child: Image.network(
-                                    'https://via.placeholder.com/70?text=A1',
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: AppColors.surfaceContainer,
-                                        child: const Icon(Icons.person),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Left artisan icon
-                            Positioned(
-                              left: 0,
-                              child: Container(
-                                width: 70,
-                                height: 70,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.primary,
-                                    width: 3,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(35),
-                                  child: Image.network(
-                                    'https://via.placeholder.com/70?text=A2',
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: AppColors.surfaceContainer,
-                                        child: const Icon(Icons.person),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Right artisan icon
-                            Positioned(
-                              right: 0,
-                              child: Container(
-                                width: 70,
-                                height: 70,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.primary,
-                                    width: 3,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(35),
-                                  child: Image.network(
-                                    'https://via.placeholder.com/70?text=A3',
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: AppColors.surfaceContainer,
-                                        child: const Icon(Icons.person),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                            // Bottom artisan icon
-                            Positioned(
-                              bottom: 0,
-                              child: Container(
-                                width: 70,
-                                height: 70,
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: AppColors.primary,
-                                    width: 3,
-                                  ),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(35),
-                                  child: Image.network(
-                                    'https://via.placeholder.com/70?text=A4',
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        color: AppColors.surfaceContainer,
-                                        child: const Icon(Icons.person),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
+                      child: Container(
+                        width: 200,
+                        height: 200,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.3),
+                            width: 2,
+                          ),
+                          shape: BoxShape.circle,
                         ),
                       ),
                     ),
-
-                    // Central Circle with Logo
+                    RotationTransition(
+                      turns: Tween<double>(begin: 1, end: 0)
+                          .animate(_animationController),
+                      child: Container(
+                        width: 150,
+                        height: 150,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: AppColors.primary.withOpacity(0.5),
+                            width: 2,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
                     Container(
-                      width: 150,
-                      height: 150,
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
+                      width: 100,
+                      height: 100,
+                      decoration: const BoxDecoration(
+                        color: AppColors.primary,
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.surfaceContainerLow,
-                          width: 3,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 12,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.search,
-                            color: AppColors.primary,
-                            size: 48,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            'ORK',
-                            style: AppTypography.displayLarge.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 28,
-                            ),
-                          ),
-                        ],
+                      child: const Icon(
+                        Icons.person_search,
+                        color: AppColors.onPrimary,
+                        size: 50,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Finding Text
-              Center(
-                child: Text(
-                  'Finding your\nartisan...',
-                  style: AppTypography.displayMedium.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 28,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.08),
+              Text(
+                'Finding the Perfect Match',
+                style: AppTypography.displayMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'We\'re searching for the best artisan\nmatching your requirements...',
+                style: AppTypography.bodyLarge,
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppSpacing.xl),
-
-              // Current Location Section
+              Column(
+                children: [
+                  _buildProgressStep(
+                    number: '1',
+                    title: 'Job Details',
+                    subtitle: 'Analyzing your requirements',
+                    isCompleted: true,
+                  ),
+                  Container(
+                    width: 2,
+                    height: 30,
+                    color: AppColors.primary.withOpacity(0.3),
+                    margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  ),
+                  _buildProgressStep(
+                    number: '2',
+                    title: 'Matching',
+                    subtitle: 'Finding suitable artisans',
+                    isActive: true,
+                  ),
+                  Container(
+                    width: 2,
+                    height: 30,
+                    color: AppColors.outlineVariant,
+                    margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  ),
+                  _buildProgressStep(
+                    number: '3',
+                    title: 'Confirmation',
+                    subtitle: 'Awaiting artisan acceptance',
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
@@ -272,203 +174,95 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen> with Single
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          ),
-                          child: Icon(
-                            Icons.location_on,
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text(
-                          'CURRENT LOCATION',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.05,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
                     Text(
-                      'Downtown Metro Area',
-                      style: AppTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w500,
+                      'Estimated Wait Time',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: 0.55,
-                        minHeight: 4,
-                        backgroundColor: AppColors.outlineVariant,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      '2-3 minutes',
+                      style: AppTypography.displaySmall.copyWith(
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Requested Service Section
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: AppColors.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          ),
-                          child: Icon(
-                            Icons.build,
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text(
-                          'REQUESTED SERVICE',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.05,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Premium Cabinetry Repair',
-                      style: AppTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Safety Guarantee Section
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.sm),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          ),
-                          child: Icon(
-                            Icons.verified_user,
-                            color: AppColors.success,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.md),
-                        Text(
-                          'SAFETY GUARANTEE',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.05,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Vetted Professionals Only',
-                      style: AppTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Average Time Text
-              Center(
-                child: Text(
-                  'Average match time: 45 seconds',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Cancel Search Button
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.close),
-                  label: const Text('Cancel Search'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
-                    side: BorderSide(color: AppColors.outlineVariant),
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xl),
+              SizedBox(height: MediaQuery.of(context).size.height * 0.08),
             ],
           ),
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: AppColors.surface,
-        elevation: 1,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.explore, color: AppColors.primary),
-            label: 'EXPLORE',
-            activeIcon: Icon(Icons.explore, color: AppColors.primary),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today, color: AppColors.textSecondary),
-            label: 'BOOKINGS',
-            activeIcon: Icon(Icons.calendar_today, color: AppColors.primary),
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person, color: AppColors.textSecondary),
-            label: 'PROFILE',
-            activeIcon: Icon(Icons.person, color: AppColors.primary),
-          ),
-        ],
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.all(AppSpacing.gutter),
+        child: SecondaryButton(
+          label: 'Cancel Search',
+          onPressed: () => ClientNavigation.popToShell(context),
+        ),
       ),
+    );
+  }
+
+  Widget _buildProgressStep({
+    required String number,
+    required String title,
+    required String subtitle,
+    bool isCompleted = false,
+    bool isActive = false,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: isCompleted
+                ? AppColors.primary
+                : isActive
+                    ? AppColors.primaryContainer
+                    : AppColors.surfaceContainer,
+            shape: BoxShape.circle,
+            border: isActive
+                ? Border.all(color: AppColors.primary, width: 2)
+                : null,
+          ),
+          child: Center(
+            child: isCompleted
+                ? const Icon(
+                    Icons.check,
+                    color: AppColors.onPrimary,
+                    size: 24,
+                  )
+                : Text(
+                    number,
+                    style: AppTypography.displaySmall.copyWith(
+                      color: isActive
+                          ? AppColors.primary
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: AppTypography.labelLarge),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                subtitle,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
