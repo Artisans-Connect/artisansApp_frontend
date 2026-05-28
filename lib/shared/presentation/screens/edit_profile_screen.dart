@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -26,6 +29,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _locationController;
   late final TextEditingController _hourlyRateController;
   late final TextEditingController _serviceAreasController;
+
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   final List<String> _editableSkills = <String>[];
 
@@ -77,6 +83,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     session.fullName = _nameController.text.trim();
     session.bio = _bioController.text.trim();
     session.locationLabel = _locationController.text.trim();
+    if (_imageFile != null) {
+      session.avatarUrl = _imageFile!.path;
+    }
     if (_isWorker) {
       session.hourlyRateNote = _hourlyRateController.text.trim();
       session.selectedTrades
@@ -95,6 +104,55 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       const SnackBar(content: Text('Profile saved locally (stub).')),
     );
     Navigator.pop(context);
+  }
+
+  Future<void> _pickImage() async {
+    showModalBottomSheet<void>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.photo_library, color: AppColors.primary),
+                  title: const Text('Choose from Gallery'),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final XFile? image =
+                        await _picker.pickImage(source: ImageSource.gallery);
+                    if (image != null) {
+                      setState(() {
+                        _imageFile = File(image.path);
+                      });
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+                  title: const Text('Take a Photo'),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final XFile? image =
+                        await _picker.pickImage(source: ImageSource.camera);
+                    if (image != null) {
+                      setState(() {
+                        _imageFile = File(image.path);
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Future<void> _addSkill() async {
@@ -123,6 +181,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (skill != null && skill.isNotEmpty && !_editableSkills.contains(skill)) {
       setState(() => _editableSkills.add(skill));
     }
+  }
+
+  DecorationImage? _getAvatarImage() {
+    if (_imageFile != null) {
+      return DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover);
+    }
+    final String? sessionUrl = SharedUserContext.session.avatarUrl;
+    if (sessionUrl != null) {
+      if (sessionUrl.startsWith('http')) {
+        return DecorationImage(image: NetworkImage(sessionUrl), fit: BoxFit.cover);
+      } else {
+        return DecorationImage(image: FileImage(File(sessionUrl)), fit: BoxFit.cover);
+      }
+    }
+    return null;
   }
 
   @override
@@ -159,11 +232,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 children: <Widget>[
                   Stack(
                     children: <Widget>[
-                      const CircleAvatar(
-                        radius: 48,
-                        backgroundColor: AppColors.surfaceDim,
-                        child: Icon(Icons.person,
-                            size: 48, color: AppColors.primary),
+                      Container(
+                        width: 96,
+                        height: 96,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: AppColors.surfaceDim,
+                          image: _getAvatarImage(),
+                        ),
+                        child: _getAvatarImage() == null
+                            ? const Icon(Icons.person, size: 48, color: AppColors.primary)
+                            : null,
                       ),
                       Positioned(
                         bottom: 0,
@@ -174,7 +253,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           child: IconButton(
                             padding: EdgeInsets.zero,
                             iconSize: 16,
-                            onPressed: () {},
+                            onPressed: _pickImage,
                             icon: const Icon(Icons.edit,
                                 color: Colors.white, size: 14),
                           ),
@@ -183,7 +262,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     ],
                   ),
                   TextButton(
-                    onPressed: () {},
+                    onPressed: _pickImage,
                     child: const Text('Change photo'),
                   ),
                 ],

@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'core/navigation/app_router.dart';
-import 'features/auth/presentation/screens/complete_profile_step1_screen.dart';
-import 'features/auth/presentation/screens/complete_profile_step2_screen.dart';
 import 'features/auth/presentation/screens/onboarding_screen.dart';
 import 'features/auth/presentation/screens/role_selection_screen.dart';
 import 'features/auth/presentation/screens/sign_in_screen.dart';
 import 'features/auth/presentation/screens/sign_up_screen.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
-import 'features/auth/presentation/screens/worker_service_areas_screen.dart';
-import 'features/auth/presentation/screens/worker_trade_selection_screen.dart';
 import 'features/worker/presentation/worker_shell.dart';
 import 'features/client/presentation/client_shell.dart';
 import 'shared/presentation/screens/chat_detail_screen.dart';
@@ -35,14 +31,6 @@ class MyApp extends StatelessWidget {
         RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
         SignInScreen.routeName: (_) => const SignInScreen(),
         SignUpScreen.routeName: (_) => const SignUpScreen(),
-        WorkerTradeSelectionScreen.routeName: (_) =>
-            const WorkerTradeSelectionScreen(),
-        WorkerServiceAreasScreen.routeName: (_) =>
-            const WorkerServiceAreasScreen(),
-        CompleteProfileStep1Screen.routeName: (_) =>
-            const CompleteProfileStep1Screen(),
-        CompleteProfileStep2Screen.routeName: (_) =>
-            const CompleteProfileStep2Screen(),
         MessagesListScreen.routeName: (_) => const MessagesListScreen(),
         ChatDetailScreen.routeName: (_) => const ChatDetailScreen(),
         UserProfileScreen.routeName: (_) => const UserProfileScreen(),

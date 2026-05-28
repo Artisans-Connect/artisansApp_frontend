@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -12,7 +14,7 @@ import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
 
 /// Shared profile for clients and workers. Same route; sections vary by [UserProfileViewData.role].
-class UserProfileScreen extends StatelessWidget {
+class UserProfileScreen extends StatefulWidget {
   const UserProfileScreen({
     super.key,
     this.embedInShell = false,
@@ -30,6 +32,11 @@ class UserProfileScreen extends StatelessWidget {
   final VoidCallback? onOpenWorkerHistory;
 
   @override
+  State<UserProfileScreen> createState() => _UserProfileScreenState();
+}
+
+class _UserProfileScreenState extends State<UserProfileScreen> {
+  @override
   Widget build(BuildContext context) {
     final ProfileArgs? args =
         ModalRoute.of(context)?.settings.arguments as ProfileArgs?;
@@ -39,20 +46,18 @@ class UserProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: embedInShell
-          ? null
-          : CustomAppBar(
-              title: isOwnProfile ? 'My Profile' : 'Profile',
-              showBackButton: true,
-              actions: <Widget>[
-                if (isOwnProfile)
-                  IconButton(
-                    onPressed: () => Navigator.pushNamed(context, EditProfileScreen.routeName),
-                    icon: const Icon(Icons.edit_outlined, color: AppColors.textPrimary),
-                  ),
-                const SizedBox(width: 8),
-              ],
+      appBar: CustomAppBar(
+        title: isOwnProfile ? 'My Profile' : 'Profile',
+        showBackButton: !widget.embedInShell,
+        actions: <Widget>[
+          if (isOwnProfile)
+            IconButton(
+              onPressed: () => Navigator.pushNamed(context, EditProfileScreen.routeName).then((_) => setState(() {})),
+              icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
             ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -160,9 +165,9 @@ class UserProfileScreen extends StatelessWidget {
                   ),
                 ),
                 if (isOwnProfile &&
-                    (onOpenWorkerEarnings != null ||
-                        onOpenWorkerStats != null ||
-                        onOpenWorkerHistory != null)) ...<Widget>[
+                    (widget.onOpenWorkerEarnings != null ||
+                        widget.onOpenWorkerStats != null ||
+                        widget.onOpenWorkerHistory != null)) ...<Widget>[
                   const SizedBox(height: 14),
                   ProfileSectionCard(
                     title: 'Worker dashboard',
@@ -170,21 +175,21 @@ class UserProfileScreen extends StatelessWidget {
                       spacing: 8,
                       runSpacing: 8,
                       children: <Widget>[
-                        if (onOpenWorkerEarnings != null)
+                        if (widget.onOpenWorkerEarnings != null)
                           OutlinedButton.icon(
-                            onPressed: onOpenWorkerEarnings,
+                            onPressed: widget.onOpenWorkerEarnings,
                             icon: const Icon(Icons.account_balance_wallet_outlined),
                             label: const Text('Earnings'),
                           ),
-                        if (onOpenWorkerStats != null)
+                        if (widget.onOpenWorkerStats != null)
                           OutlinedButton.icon(
-                            onPressed: onOpenWorkerStats,
+                            onPressed: widget.onOpenWorkerStats,
                             icon: const Icon(Icons.query_stats_outlined),
                             label: const Text('Stats'),
                           ),
-                        if (onOpenWorkerHistory != null)
+                        if (widget.onOpenWorkerHistory != null)
                           OutlinedButton.icon(
-                            onPressed: onOpenWorkerHistory,
+                            onPressed: widget.onOpenWorkerHistory,
                             icon: const Icon(Icons.history),
                             label: const Text('History'),
                           ),
@@ -209,22 +214,20 @@ class UserProfileScreen extends StatelessWidget {
                   onPressed: () => Navigator.pushNamed(
                     context,
                     EditProfileScreen.routeName,
+                  ).then((_) => setState(() {})),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.pushNamed(
+                    context,
+                    SettingsScreen.routeName,
+                  ),
+                  child: Text(
+                    SharedUserContext.isWorker
+                        ? 'Account settings'
+                        : 'Settings & info',
                   ),
                 ),
-                if (!embedInShell || SharedUserContext.isClient) ...<Widget>[
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => Navigator.pushNamed(
-                      context,
-                      SettingsScreen.routeName,
-                    ),
-                    child: Text(
-                      SharedUserContext.isWorker
-                          ? 'Account settings'
-                          : 'Settings & info',
-                    ),
-                  ),
-                ],
               ] else
                 GradientButton(
                   label: 'Message',
@@ -259,7 +262,9 @@ class _ProfileHero extends StatelessWidget {
               if (profile.avatarUrl != null)
                 CircleAvatar(
                   radius: 52,
-                  backgroundImage: NetworkImage(profile.avatarUrl!),
+                  backgroundImage: profile.avatarUrl!.startsWith('http')
+                      ? NetworkImage(profile.avatarUrl!) as ImageProvider
+                      : FileImage(File(profile.avatarUrl!)),
                   backgroundColor: AppColors.surfaceDim,
                 )
               else
