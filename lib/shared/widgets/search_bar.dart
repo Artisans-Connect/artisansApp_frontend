@@ -40,56 +40,53 @@ class _SearchBarState extends State<CustomSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       height: AppSpacing.inputHeight,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        border: Border.all(color: AppColors.outlineVariant),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: AppSpacing.md),
-          Icon(
+      child: TextField(
+        controller: _controller,
+        onChanged: widget.onChanged,
+        onSubmitted: (_) => widget.onSearch?.call(),
+        textAlignVertical: TextAlignVertical.center,
+        decoration: InputDecoration(
+          hintText: widget.hintText,
+          hintStyle: AppTypography.bodyMedium.copyWith(
+            color: AppColors.outlineVariant,
+          ),
+          prefixIcon: const Icon(
             Icons.search,
             color: AppColors.outlineVariant,
             size: AppSpacing.iconMedium,
           ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              onChanged: widget.onChanged,
-              onSubmitted: (_) => widget.onSearch?.call(),
-              decoration: InputDecoration(
-                hintText: widget.hintText,
-                hintStyle: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.outlineVariant,
-                ),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.zero,
-              ),
-              style: AppTypography.bodyMedium,
-            ),
+          suffixIcon: _controller.text.isNotEmpty
+              ? GestureDetector(
+                  onTap: () {
+                    _controller.clear();
+                    widget.onChanged?.call('');
+                  },
+                  child: const Icon(
+                    Icons.close,
+                    color: AppColors.outlineVariant,
+                    size: AppSpacing.iconSmall,
+                  ),
+                )
+              : null,
+          filled: true,
+          fillColor: Colors.white,
+          contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+            borderSide: BorderSide(color: AppColors.outlineVariant),
           ),
-          if (_controller.text.isNotEmpty)
-            GestureDetector(
-              onTap: () {
-                _controller.clear();
-                widget.onChanged?.call('');
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-                child: Icon(
-                  Icons.close,
-                  color: AppColors.outlineVariant,
-                  size: AppSpacing.iconSmall,
-                ),
-              ),
-            )
-          else
-            const SizedBox(width: AppSpacing.md),
-        ],
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+            borderSide: BorderSide(color: AppColors.outline.withOpacity(0.3)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+            borderSide: const BorderSide(color: AppColors.primary),
+          ),
+        ),
+        style: AppTypography.bodyMedium,
       ),
     );
   }

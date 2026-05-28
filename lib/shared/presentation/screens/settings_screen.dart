@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../features/auth/presentation/screens/sign_in_screen.dart';
+import '../../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/settings_group_tile.dart';
@@ -43,7 +43,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.pop(context);
               Navigator.pushNamedAndRemoveUntil(
                 context,
-                SignInScreen.routeName,
+                RoleSelectionScreen.routeName,
                 (Route<dynamic> route) => false,
               );
               ScaffoldMessenger.of(context).showSnackBar(

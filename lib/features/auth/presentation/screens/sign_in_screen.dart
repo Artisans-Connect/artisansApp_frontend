@@ -48,19 +48,7 @@ class _SignInScreenState extends State<SignInScreen> {
           padding: const EdgeInsets.all(20),
           child: Column(
             children: <Widget>[
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: CircleAvatar(
-                  radius: 22,
-                  backgroundColor: Colors.white.withOpacity(0.6),
-                  child: IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.black87),
-                    onPressed: () => Navigator.maybePop(context),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 150),
+              const SizedBox(height: 50),
               Container(
                 padding: const EdgeInsets.all(22),
                 decoration: BoxDecoration(

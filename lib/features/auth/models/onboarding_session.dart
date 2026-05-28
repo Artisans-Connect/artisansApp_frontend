@@ -13,6 +13,7 @@ class OnboardingSession {
   final Set<String> serviceAreas = <String>{};
   String? experienceBand;
   String? locationLabel;
+  String? avatarUrl;
   String? bio;
   String? hourlyRateNote;
 
@@ -28,6 +29,7 @@ class OnboardingSession {
     serviceAreas.clear();
     experienceBand = null;
     locationLabel = null;
+    avatarUrl = null;
     bio = null;
     hourlyRateNote = null;
   }

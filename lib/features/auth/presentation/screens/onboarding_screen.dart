@@ -154,18 +154,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 onPressed: _nextPage,
               ),
             ),
-
-            if (_currentPage == _totalPages - 1)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 18),
-                child: Text(
-                  'FINAL STEP OF ONBOARDING',
-                  style: AppTextStyles.labelCaps.copyWith(
-                    color: AppColors.textSecondary.withOpacity(0.5),
-                  ),
-                ),
-              )
-            else
               const SizedBox(height: 28),
           ],
         ),
