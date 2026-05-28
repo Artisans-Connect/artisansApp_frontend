@@ -16,48 +16,40 @@ class ClientHomeScreen extends StatefulWidget {
 
 class _ClientHomeScreenState extends State<ClientHomeScreen> {
   String _searchQuery = '';
-  String _selectedCategory = '';
+  String _selectedCategory = 'Home Services';
 
   final List<Map<String, dynamic>> categories = [
-    {'label': 'Plumbing', 'icon': Icons.plumbing},
-    {'label': 'Electrical', 'icon': Icons.flash_on},
-    {'label': 'Carpentry', 'icon': Icons.handyman},
-    {'label': 'Cleaning', 'icon': Icons.cleaning_services},
-    {'label': 'Painting', 'icon': Icons.palette},
+    {'label': 'Home Services', 'icon': Icons.home_repair_service},
+    {'label': 'Technical', 'icon': Icons.build},
   ];
 
   final List<Map<String, dynamic>> featuredArtisans = [
     {
-      'name': 'John Smith',
-      'profession': 'Professional Plumber',
+      'name': 'Marcus Chen',
+      'profession': 'Master Electrician',
+      'rating': 4.9,
+      'reviewCount': 128,
+      'imageUrl': 'https://via.placeholder.com/200?text=Marcus',
+      'hourlyRate': 'C30',
+      'verified': true,
+    },
+    {
+      'name': 'Amara Okafor',
+      'profession': 'Plumbing Expert',
       'rating': 4.8,
-      'reviewCount': 342,
-      'imageUrl': 'https://via.placeholder.com/200?text=John',
-      'location': 'Downtown Area',
+      'reviewCount': 94,
+      'imageUrl': 'https://via.placeholder.com/200?text=Amara',
+      'hourlyRate': 'C25',
+      'verified': true,
     },
     {
-      'name': 'Sarah Johnson',
-      'profession': 'Expert Electrician',
-      'rating': 4.9,
-      'reviewCount': 567,
-      'imageUrl': 'https://via.placeholder.com/200?text=Sarah',
-      'location': 'Central District',
-    },
-    {
-      'name': 'Mike Wilson',
-      'profession': 'Master Carpenter',
-      'rating': 4.7,
-      'reviewCount': 234,
-      'imageUrl': 'https://via.placeholder.com/200?text=Mike',
-      'location': 'Riverside',
-    },
-    {
-      'name': 'Emma Davis',
-      'profession': 'Professional Cleaner',
-      'rating': 4.9,
-      'reviewCount': 412,
-      'imageUrl': 'https://via.placeholder.com/200?text=Emma',
-      'location': 'North End',
+      'name': 'David Appiah',
+      'profession': 'Wood Craftsman',
+      'rating': 5.0,
+      'reviewCount': 210,
+      'imageUrl': 'https://via.placeholder.com/200?text=David',
+      'hourlyRate': 'C45',
+      'verified': true,
     },
   ];
 
@@ -66,45 +58,91 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
+        preferredSize: const Size.fromHeight(70),
         child: AppBar(
           backgroundColor: AppColors.surface,
           elevation: 0,
           automaticallyImplyLeading: false,
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Good Morning',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+              // Artisans Logo
+              Row(
+                children: [
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.handshake,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Text(
+                    'Artisans',
+                    style: AppTypography.displayMedium.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
               ),
-              Text(
-                'Welcome back, Client',
-                style: AppTypography.displaySmall,
+              // Notification and Profile
+              Row(
+                children: [
+                  Stack(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.notifications_none,
+                          color: AppColors.textPrimary,
+                          size: 24,
+                        ),
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  // Profile Picture
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 24,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: AppSpacing.md),
-              child: Center(
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                  ),
-                  padding: const EdgeInsets.all(8),
-                  child: const Icon(
-                    Icons.notifications_none,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ),
-          ],
         ),
       ),
       body: SingleChildScrollView(
@@ -113,9 +151,25 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Greeting Section
+              Text(
+                'Hello, Kwabs',
+                style: AppTypography.displayLarge.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'What task do you need help with today?',
+                style: AppTypography.bodyLarge.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
               // Search Bar
               CustomSearchBar(
-                hintText: 'Search artisans or services...',
+                hintText: 'Search for plumbers, electricians...',
                 onChanged: (value) {
                   setState(() {
                     _searchQuery = value;
@@ -124,10 +178,136 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
+              // Action Cards
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.exploreArtisans);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.people,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              'Explore Workers',
+                              style: AppTypography.displaySmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Browse top-rated\nlocal artisans',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pushNamed(context, AppRoutes.jobPostCategory);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.edit_square,
+                                color: Colors.white,
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              'Post a Job',
+                              style: AppTypography.displaySmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              'Get custom quotes\nquickly',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
               // Categories Section
-              Text(
-                'Categories',
-                style: AppTypography.displaySmall,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Categories',
+                    style: AppTypography.displayMedium.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'VIEW ALL',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: AppSpacing.md),
               SingleChildScrollView(
@@ -143,7 +323,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                         isSelected: isSelected,
                         onTap: () {
                           setState(() {
-                            _selectedCategory = isSelected ? '' : category['label'];
+                            _selectedCategory = category['label'];
                           });
                         },
                       ),
@@ -159,184 +339,195 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                 children: [
                   Text(
                     'Featured Artisans',
-                    style: AppTypography.displaySmall,
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.exploreArtisans);
-                    },
-                    child: Text(
-                      'View All',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.primary,
-                      ),
+                    style: AppTypography.displayMedium.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
+                  ),
+                  Icon(
+                    Icons.tune,
+                    color: AppColors.primary,
+                    size: 24,
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                height: 320,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: featuredArtisans.length,
-                  itemBuilder: (context, index) {
-                    final artisan = featuredArtisans[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: AppSpacing.md),
-                      child: SizedBox(
-                        width: 200,
-                        child: ArtisanCard(
-                          name: artisan['name'],
-                          profession: artisan['profession'],
-                          rating: artisan['rating'],
-                          reviewCount: artisan['reviewCount'],
-                          imageUrl: artisan['imageUrl'],
-                          location: artisan['location'],
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.artisanProfile,
-                              arguments: artisan,
-                            );
-                          },
-                          onFavoriteTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Added to favorites'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: featuredArtisans.length,
+                itemBuilder: (context, index) {
+                  final artisan = featuredArtisans[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        border: Border.all(
+                          color: AppColors.outlineVariant,
+                          width: 0.5,
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              // Artisan Image
+                              Container(
+                                width: 80,
+                                height: 80,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: AppColors.surfaceContainer,
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.network(
+                                    artisan['imageUrl'],
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: AppColors.surfaceContainer,
+                                        child: const Icon(
+                                          Icons.person,
+                                          size: 40,
+                                          color: AppColors.outlineVariant,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              // Artisan Info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          artisan['name'],
+                                          style: AppTypography.displaySmall.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(width: AppSpacing.sm),
+                                        if (artisan['verified'] == true)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: AppColors.success,
+                                              borderRadius: BorderRadius.circular(4),
+                                            ),
+                                            child: Text(
+                                              'VERIFIED',
+                                              style: AppTypography.labelSmall.copyWith(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Text(
+                                      artisan['profession'],
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                    const SizedBox(height: AppSpacing.sm),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.star,
+                                          size: 16,
+                                          color: const Color(0xFFFFA500),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${artisan['rating']} (${artisan['reviewCount']} reviews)',
+                                          style: AppTypography.bodySmall.copyWith(
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${artisan['hourlyRate']}/hr',
+                                style: AppTypography.priceTag.copyWith(
+                                  fontSize: 16,
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.artisanProfile,
+                                    arguments: artisan,
+                                  );
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primary,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: AppSpacing.lg,
+                                    vertical: AppSpacing.sm,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                                  ),
+                                ),
+                                child: Text(
+                                  'VIEW PROFILE',
+                                  style: AppTypography.labelMedium.copyWith(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: AppSpacing.lg),
-
-              // Quick Actions Section
-              Text(
-                'Quick Actions',
-                style: AppTypography.displaySmall,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.jobPostCategory);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.add_circle_outline,
-                              color: AppColors.onPrimary,
-                              size: 32,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              'Post a Job',
-                              style: AppTypography.labelLarge.copyWith(
-                                color: AppColors.onPrimary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.mapDiscovery);
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondaryContainer,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                        ),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.map,
-                              color: AppColors.onSecondary,
-                              size: 32,
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              'Map View',
-                              style: AppTypography.labelLarge.copyWith(
-                                color: AppColors.onSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              GestureDetector(
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.bookingHistory);
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainerLow,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                    border: Border.all(color: AppColors.outlineVariant),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.history,
-                        color: AppColors.primary,
-                        size: 32,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Booking History',
-                              style: AppTypography.labelLarge,
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Text(
-                              'View past and ongoing jobs',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: AppColors.textSecondary,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to chat
+        },
+        backgroundColor: AppColors.primary,
+        child: const Icon(Icons.chat, color: Colors.white),
       ),
     );
   }

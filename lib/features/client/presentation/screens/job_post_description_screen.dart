@@ -3,36 +3,28 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/secondary_button.dart';
 
 class JobPostDescriptionScreen extends StatefulWidget {
-  final Map<String, dynamic>? jobData;
-
-  const JobPostDescriptionScreen({
-    Key? key,
-    this.jobData,
-  }) : super(key: key);
+  const JobPostDescriptionScreen({Key? key, required jobData}) : super(key: key);
 
   @override
-  State<JobPostDescriptionScreen> createState() =>
-      _JobPostDescriptionScreenState();
+  State<JobPostDescriptionScreen> createState() => _JobPostDescriptionScreenState();
 }
 
 class _JobPostDescriptionScreenState extends State<JobPostDescriptionScreen> {
   late TextEditingController _descriptionController;
-  int _descriptionLength = 0;
-  final int _maxDescriptionLength = 2000;
-  final List<String> _uploadedPhotos = [];
+  int _descCharCount = 0;
+  final int _descMaxChars = 2000;
 
   @override
   void initState() {
     super.initState();
-    _descriptionController = TextEditingController(
-      text: widget.jobData?['description'] ?? '',
-    );
-    _descriptionLength = _descriptionController.text.length;
+    _descriptionController = TextEditingController();
+    _descriptionController.addListener(() {
+      setState(() {
+        _descCharCount = _descriptionController.text.length;
+      });
+    });
   }
 
   @override
@@ -41,23 +33,33 @@ class _JobPostDescriptionScreenState extends State<JobPostDescriptionScreen> {
     super.dispose();
   }
 
-  void _addPhoto() {
-    // Simulate adding a photo
-    if (_uploadedPhotos.length < 5) {
-      setState(() {
-        _uploadedPhotos.add('photo_${_uploadedPhotos.length}');
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: CustomAppBar(
-        title: 'ConnectFlow',
-        onBackPressed: () => Navigator.pop(context),
-        centerTitle: false,
+      appBar: AppBar(
+        backgroundColor: AppColors.surface,
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: AppColors.primary,
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          'ConnectFlow',
+          style: AppTypography.displayMedium.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.close),
+            color: AppColors.primary,
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -65,425 +67,483 @@ class _JobPostDescriptionScreenState extends State<JobPostDescriptionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header Section
+              // Step Label
+              Text(
+                'JOB SETUP',
+                style: AppTypography.labelSmall.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.05,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              // Progress Section
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'JOB SETUP',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                    ],
+                  Text(
+                    'Details & Photos',
+                    style: AppTypography.displayLarge.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 32,
+                    ),
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                      vertical: AppSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLow,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusXLarge),
-                    ),
-                    child: Text(
-                      '4 / 7',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.primary,
-                      ),
+                  Text(
+                    '4 / 7',
+                    style: AppTypography.displayMedium.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-
-              // Title with Progress
-              Text(
-                'Details & Photos',
-                style: AppTypography.displayMedium,
+              LinearProgressIndicator(
+                value: 0.57,
+                minHeight: 6,
+                backgroundColor: AppColors.outlineVariant,
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
               ),
-              const SizedBox(height: AppSpacing.md),
-
-              // Progress Bar
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-                child: LinearProgressIndicator(
-                  value: 0.57,
-                  minHeight: 6,
-                  backgroundColor: AppColors.outlineVariant,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    AppColors.primary,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
 
               // Job Description Section
-              _buildDescriptionSection(),
-              const SizedBox(height: AppSpacing.lg),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                  border: Border.all(
+                    color: AppColors.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.description,
+                          color: AppColors.primary,
+                          size: 28,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Job Description',
+                                style: AppTypography.labelLarge.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                'Describe the scope, requirements, and any specific tools needed for this task.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Description TextField
+                    TextField(
+                      controller: _descriptionController,
+                      maxLines: 6,
+                      maxLength: _descMaxChars,
+                      style: AppTypography.bodyMedium,
+                      decoration: InputDecoration(
+                        hintText: 'Explain what needs to be done. For example: \'I need a professional to install 4 smart dimmers in the living room and troubleshoot a flickering light in the kitchen...\'',
+                        hintStyle: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surfaceContainer,
+                        contentPadding: const EdgeInsets.all(AppSpacing.md),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          borderSide: BorderSide(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          borderSide: BorderSide(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          borderSide: BorderSide(
+                            color: AppColors.primary,
+                            width: 1,
+                          ),
+                        ),
+                        counterText: '',
+                        suffixIcon: Padding(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          child: Text(
+                            '$_descCharCount / $_descMaxChars',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Chips
+                    Wrap(
+                      spacing: AppSpacing.md,
+                      children: [
+                        Chip(
+                          label: Text(
+                            'Mention deadlines',
+                            style: AppTypography.bodySmall,
+                          ),
+                          avatar: Icon(
+                            Icons.schedule,
+                            color: AppColors.textSecondary,
+                            size: 18,
+                          ),
+                          backgroundColor: AppColors.surfaceContainer,
+                          side: BorderSide(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
+                        Chip(
+                          label: Text(
+                            'Location access details',
+                            style: AppTypography.bodySmall,
+                          ),
+                          avatar: Icon(
+                            Icons.location_on,
+                            color: AppColors.textSecondary,
+                            size: 18,
+                          ),
+                          backgroundColor: AppColors.surfaceContainer,
+                          side: BorderSide(
+                            color: AppColors.outlineVariant,
+                            width: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
 
               // Add Photos Section
-              _buildPhotoSection(),
-              const SizedBox(height: AppSpacing.lg),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                  border: Border.all(
+                    color: AppColors.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.camera_alt,
+                          color: AppColors.primary,
+                          size: 28,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Add Photos',
+                                style: AppTypography.labelLarge.copyWith(
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                'Help experts understand the task better by showing the workspace or specific issues.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
 
-              // Pro Tip
-              _buildProTipCard(),
-              const SizedBox(height: AppSpacing.lg),
+                    // Photo Upload Buttons
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: AppColors.primary,
+                          width: 2,
+                          style: BorderStyle.solid,
+                        ),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {},
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.image,
+                                  color: AppColors.primary,
+                                  size: 40,
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  'Main View',
+                                  style: AppTypography.labelMedium.copyWith(
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
 
-              // Promotional Card
-              _buildPromotionalCard(),
+                    // Secondary Photo Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.primary,
+                                width: 2,
+                                style: BorderStyle.solid,
+                              ),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {},
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
+                                  child: Icon(
+                                    Icons.add,
+                                    color: AppColors.primary,
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: AppColors.primary,
+                                width: 2,
+                                style: BorderStyle.solid,
+                              ),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                onTap: () {},
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
+                                  child: Icon(
+                                    Icons.add,
+                                    color: AppColors.primary,
+                                    size: 32,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+
+                    // Pro Tip
+                    Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceContainer,
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.lightbulb,
+                            color: AppColors.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Text(
+                              'Pro Tip: Take clear photos in good lighting. For repair jobs, include a wide shot and a close-up of the issue.',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              // Info Card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey[800],
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                  image: DecorationImage(
+                    image: NetworkImage('https://via.placeholder.com/400x200'),
+                    fit: BoxFit.cover,
+                    colorFilter: ColorFilter.mode(
+                      Colors.black.withOpacity(0.3),
+                      BlendMode.darken,
+                    ),
+                  ),
+                ),
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.trending_up,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Weekly Earnings',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          '+\$1,240',
+                          style: AppTypography.displaySmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: AppSpacing.xl),
 
               // Action Buttons
               Row(
                 children: [
                   Expanded(
-                    child: SecondaryButton(
-                      label: 'Back',
+                    child: OutlinedButton(
                       onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: AppColors.outlineVariant),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Back',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    flex: 2,
-                    child: PrimaryButton(
-                      label: 'Next',
-                      icon: Icons.arrow_forward_ios,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: ElevatedButton(
                       onPressed: () {
-                        final jobData = widget.jobData ?? {};
-                        jobData['description'] = _descriptionController.text;
-                        jobData['photos'] = _uploadedPhotos;
-                        Navigator.pushNamed(
-                          context,
-                          AppRoutes.jobPostLocation,
-                          arguments: jobData,
-                        );
+                        Navigator.pushNamed(context, AppRoutes.jobPostLocation);
                       },
-                      isEnabled: _descriptionLength > 0,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDescriptionSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(
-          color: AppColors.outlineVariant,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.surfaceContainer,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMedium),
-                  ),
-                  child: Icon(
-                    Icons.description,
-                    color: AppColors.primary,
-                    size: AppSpacing.iconMedium,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Job Description',
-                      style: AppTypography.labelLarge,
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Describe the scope, requirements, and any specific\ntools needed for this task.',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Next',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Icon(Icons.arrow_forward, color: Colors.white),
+                        ],
                       ),
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainer,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-            ),
-            child: TextField(
-              controller: _descriptionController,
-              maxLength: _maxDescriptionLength,
-              maxLines: 6,
-              style: AppTypography.bodyMedium,
-              decoration: InputDecoration(
-                hintText:
-                    'Explain what needs to be done.\nFor example: \'I need a\nprofessional to install 4 smart\ndimmers in the living room and\ntroubleshoot a flickering light in\nthe kitchen...\'',
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(AppSpacing.md),
-                counterText: '',
-                hintStyle: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _descriptionLength = value.length;
-                });
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$_descriptionLength / $_maxDescriptionLength',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              children: [
-                _buildChip('Mention deadlines', Icons.schedule),
-                _buildChip('Location access details', Icons.location_on),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChip(String label, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            icon,
-            size: AppSpacing.iconSmall,
-            color: AppColors.textSecondary,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Text(
-            label,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPhotoSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(
-          color: AppColors.outlineVariant,
-          width: 1,
-        ),
-      ),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainer,
-                  borderRadius:
-                      BorderRadius.circular(AppSpacing.radiusMedium),
-                ),
-                child: Icon(
-                  Icons.camera_alt,
-                  color: AppColors.primary,
-                  size: AppSpacing.iconMedium,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Add Photos',
-                    style: AppTypography.labelLarge,
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    'Help experts understand the\ntask better by showing the\nworkspace or specific issues.',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
-          const SizedBox(height: AppSpacing.lg),
-          // Photo upload slots
-          ...[0, 1, 2].map((index) {
-            final hasPhoto = index < _uploadedPhotos.length;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: GestureDetector(
-                onTap: _addPhoto,
-                child: Container(
-                  height: 80,
-                  decoration: BoxDecoration(
-                    border: Border.all(
-                      color: AppColors.outlineVariant,
-                      width: 2,
-                      style: BorderStyle.solid,
-                    ),
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMedium),
-                    color: hasPhoto
-                        ? AppColors.primary.withOpacity(0.1)
-                        : Colors.transparent,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      hasPhoto
-                          ? Icons.check_circle
-                          : Icons.add_circle_outline,
-                      color: hasPhoto
-                          ? AppColors.primary
-                          : AppColors.outlineVariant,
-                      size: 32,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProTipCard() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainer,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(
-          color: AppColors.outlineVariant,
-          width: 1,
         ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(
-            Icons.lightbulb,
-            color: AppColors.accentBlue,
-            size: AppSpacing.iconMedium,
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Pro Tip: Take clear photos in good\nlighting. For repair jobs, include a\nwide shot and a close-up of the\nissue.',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPromotionalCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF1a1a3f),
-            const Color(0xFF2d1b69),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withOpacity(0.2),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Weekly Earnings',
-            style: AppTypography.bodySmall.copyWith(
-              color: Colors.white70,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            '+\$1,240',
-            style: AppTypography.displayLarge.copyWith(
-              color: Colors.white,
-            ),
-          ),
-        ],
       ),
     );
   }
