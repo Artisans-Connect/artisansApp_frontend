@@ -3,279 +3,509 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/primary_button.dart';
+import '../navigation/client_navigation.dart';
 
-class LiveTrackingScreen extends StatelessWidget {
+class LiveTrackingScreen extends StatefulWidget {
   final Map<String, dynamic>? job;
 
-  const LiveTrackingScreen({Key? key, this.job}) : super(key: key);
+  const LiveTrackingScreen({
+    Key? key,
+    this.job,
+  }) : super(key: key);
+
+  @override
+  State<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
+}
+
+class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
+  late PageController _pageController;
+  int _currentStep = 0;
+
+  final List<Map<String, dynamic>> steps = [
+    {
+      'title': 'Confirmed',
+      'description': 'Job accepted by artisan',
+      'icon': Icons.check_circle,
+      'status': 'completed',
+    },
+    {
+      'title': 'On the Way',
+      'description': 'Artisan is heading to your location',
+      'icon': Icons.navigation,
+      'status': 'in_progress',
+    },
+    {
+      'title': 'Arrived',
+      'description': 'Artisan has arrived at your location',
+      'icon': Icons.location_on,
+      'status': 'pending',
+    },
+    {
+      'title': 'Work in Progress',
+      'description': 'Artisan is working on your job',
+      'icon': Icons.build,
+      'status': 'pending',
+    },
+    {
+      'title': 'Completed',
+      'description': 'Job is done. Awaiting your approval',
+      'icon': Icons.done_all,
+      'status': 'pending',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final job = widget.job ?? {
+      'artisan': 'John Smith',
+      'profession': 'Professional Plumber',
+      'phone': '+233 24 123 4567',
+      'eta': '10 mins away',
+      'title': 'Fix leaking kitchen faucet',
+      'imageUrl': 'https://via.placeholder.com/200?text=John',
+    };
+
     return Scaffold(
-      backgroundColor: Colors.grey[700],
-      appBar: AppBar(
-        backgroundColor: Colors.grey[600],
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: AppColors.primary,
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Live Tracking',
-          style: AppTypography.displayMedium.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
+      backgroundColor: AppColors.surface,
+      appBar: CustomAppBar(
+        title: 'Live Tracking',
+        onBackPressed: () => Navigator.pop(context),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.gutter),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Job Info Card
+              _buildJobInfoCard(job),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Map Placeholder
+              Container(
+                height: 300,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainer,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.map,
+                      size: 64,
+                      color: AppColors.outlineVariant,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      'Live Map View',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      'Google Maps Integration',
+                      style: AppTypography.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Progress Timeline
+              Text(
+                'Job Progress',
+                style: AppTypography.displaySmall,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              _buildProgressTimeline(),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Artisan Info Card
+              _buildArtisanDetailCard(job),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Action Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        ClientNavigation.showCallPlaceholder(
+                          context,
+                          job['phone'] as String? ?? '+233 24 123 4567',
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
+                        side: const BorderSide(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.call, size: 18),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Call',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () {
+                        ClientNavigation.openChat(
+                          context,
+                          conversationId:
+                              job['conversationId'] as String? ?? 'conv-live',
+                          counterpartUserId: job['counterpartUserId'] as String? ??
+                              'worker-live',
+                          counterpartName: job['artisan'] as String? ?? 'Artisan',
+                          jobId: job['id']?.toString(),
+                          jobTitle: job['title'] as String?,
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.md,
+                        ),
+                        side: const BorderSide(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.message, size: 18),
+                          const SizedBox(width: AppSpacing.sm),
+                          Text(
+                            'Message',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Completion Progress Indicator
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+                  border: Border.all(
+                    color: AppColors.success.withOpacity(0.3),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Job Nearly Complete',
+                                style: AppTypography.labelLarge.copyWith(
+                                  color: AppColors.success,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                'Once finished, rate the service to complete the job',
+                                style: AppTypography.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Mark as Complete Button
+              PrimaryButton(
+                label: 'Job Complete - Proceed to Rating →',
+                onPressed: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.rateService,
+                    arguments: widget.job,
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // View Booking History Link
+              Center(
+                child: TextButton(
+                  onPressed: () => ClientNavigation.goToBookingsTab(context),
+                  child: Text(
+                    'View all bookings',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.primary,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-      body: Stack(
+    );
+  }
+
+  Widget _buildJobInfoCard(Map<String, dynamic> job) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.primaryContainer,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Map Background
-          Container(
-            color: Colors.black,
-            child: const Icon(
-              Icons.map,
-              color: Colors.grey,
-              size: 80,
+          Text(
+            job['title'],
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.onPrimary,
             ),
           ),
-
-          // Bottom Card with Artisan Info
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Notification Bubble
-                Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.gutter,
-                  ),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[400],
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info,
-                        color: AppColors.primary,
-                        size: 20,
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Text(
-                          'David is arriving with professional equipment.',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: Colors.grey[800],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-
-                // Main Card
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(AppSpacing.radiusXLarge),
-                      topRight: Radius.circular(AppSpacing.radiusXLarge),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ETA',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.onPrimary.withOpacity(0.7),
                     ),
                   ),
-                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    job['eta'] ?? '10 mins away',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.onPrimary,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withOpacity(0.2),
+                  borderRadius:
+                      BorderRadius.circular(AppSpacing.radiusXLarge),
+                ),
+                child: Text(
+                  'In Progress',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: AppColors.success,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressTimeline() {
+    return Column(
+      children: List.generate(steps.length, (index) {
+        final step = steps[index];
+        final isCompleted = index <= _currentStep;
+        final isCurrent = index == _currentStep;
+
+        return Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Timeline Circle
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: isCompleted
+                        ? AppColors.primary
+                        : AppColors.surfaceContainerLow,
+                    shape: BoxShape.circle,
+                    border: isCurrent
+                        ? Border.all(
+                            color: AppColors.primary,
+                            width: 2,
+                          )
+                        : null,
+                  ),
+                  child: Icon(
+                    step['icon'],
+                    color: isCompleted ? Colors.white : AppColors.textSecondary,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+
+                // Step Details
+                Expanded(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // ETA Section
-                      Row(
-                        children: [
-                          Container(
-                            width: 12,
-                            height: 12,
-                            decoration: BoxDecoration(
-                              color: AppColors.success,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Text(
-                            'ARRIVING IN 8 MINS',
-                            style: AppTypography.labelSmall.copyWith(
-                              color: Colors.grey[700],
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                              vertical: AppSpacing.sm,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '14:45 ETA',
-                              style: AppTypography.labelMedium.copyWith(
-                                color: AppColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        step['title'],
+                        style: AppTypography.labelLarge.copyWith(
+                          color: isCurrent
+                              ? AppColors.primary
+                              : AppColors.textPrimary,
+                        ),
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // Artisan Info
-                      Row(
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: AppColors.surfaceContainer,
-                            ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                'https://via.placeholder.com/80?text=David',
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return Container(
-                                    color: AppColors.surfaceContainer,
-                                    child: const Icon(
-                                      Icons.person,
-                                      color: AppColors.outlineVariant,
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'David Appiah',
-                                  style: AppTypography.displaySmall.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                const SizedBox(height: AppSpacing.xs),
-                                Row(
-                                  children: [
-                                    Icon(
-                                      Icons.star,
-                                      size: 16,
-                                      color: const Color(0xFFFFA500),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      '4.9 • Plumber Pro',
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: Colors.grey[700],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            width: 32,
-                            height: 32,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppColors.primary,
-                                width: 2,
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.check,
-                              color: AppColors.primary,
-                              size: 18,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // Action Buttons
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.phone, color: Colors.white),
-                              label: const Text('Call'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.chat),
-                              label: const Text('Message'),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: AppColors.primary,
-                                side: const BorderSide(color: Color(0xFFC7C4D7)),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                                ),
-                                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      // Finish Job Button
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.pushNamed(context, AppRoutes.rateService);
-                          },
-                          icon: const Icon(Icons.check_circle_outline),
-                          label: const Text('Finish Job & Leave Review'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: AppColors.textPrimary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                          ),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        step['description'],
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
                   ),
                 ),
               ],
+            ),
+            // Connector line
+            if (index < steps.length - 1)
+              Padding(
+                padding: const EdgeInsets.only(
+                  left: 20,
+                  top: AppSpacing.md,
+                  bottom: AppSpacing.md,
+                ),
+                child: Container(
+                  height: 40,
+                  width: 2,
+                  color: isCompleted
+                      ? AppColors.primary
+                      : AppColors.outlineVariant,
+                ),
+              ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildArtisanDetailCard(Map<String, dynamic> job) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Row(
+        children: [
+          // Avatar
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: AppColors.primaryContainer,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+              child: Image.network(
+                job['imageUrl'],
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.person,
+                    color: AppColors.onPrimary,
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  job['artisan'] ?? 'Artisan Name',
+                  style: AppTypography.labelLarge,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  job['profession'] ?? 'Professional',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  job['phone'] ?? '+233 24 123 4567',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Status indicator
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
             ),
           ),
         ],

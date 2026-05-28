@@ -147,14 +147,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
             // ── Action button ─────────────────────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 28, 24, 12),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                MediaQuery.sizeOf(context).height < 640 ? 16 : 24,
+                24,
+                8,
+              ),
               child: GradientButton(
                 label: _currentPage < _totalPages - 1 ? 'Next' : 'Get Started',
                 trailingIcon: Icons.arrow_forward,
                 onPressed: _nextPage,
               ),
             ),
-              const SizedBox(height: 28),
           ],
         ),
       ),
