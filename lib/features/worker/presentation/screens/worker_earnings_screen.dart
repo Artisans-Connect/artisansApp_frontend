@@ -15,11 +15,13 @@ class WorkerEarningsScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: WorkerColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
-          onPressed: () {},
-        ),
+        leading: Navigator.of(context).canPop()
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                color: WorkerColors.primary,
+                onPressed: () => Navigator.of(context).maybePop(),
+              )
+            : null,
         title: Text(
           'Earnings',
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
@@ -141,7 +143,13 @@ class WorkerEarningsScreen extends StatelessWidget {
                       const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.more_horiz),
-                        onPressed: () {},
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Weekly insights coming soon'),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

@@ -8,9 +8,14 @@ import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
 
 class WorkerCompletionSuccessScreen extends StatelessWidget {
-  const WorkerCompletionSuccessScreen({super.key, required this.job});
+  const WorkerCompletionSuccessScreen({
+    super.key,
+    required this.job,
+    required this.onDone,
+  });
 
   final MockWorkerJob job;
+  final VoidCallback onDone;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +59,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: WorkerSpacing.lg),
-            Text('Job Completed!', style: WorkerTextStyles.displayMd),
+            Text('Booking Completed!', style: WorkerTextStyles.displayMd),
             const SizedBox(height: WorkerSpacing.sm),
             Text(
               'The client has been notified and will rate you shortly.',
@@ -129,7 +134,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
             ),
             const SizedBox(height: WorkerSpacing.xl),
             GradientButton(
-              label: 'Back to Requests  →',
+              label: 'Back to Requests',
               onPressed: () => _goHome(context),
             ),
             TextButton.icon(
@@ -148,7 +153,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
   }
 
   void _goHome(BuildContext context) {
-    WorkerScope.of(context).completeJob();
+    onDone();
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }

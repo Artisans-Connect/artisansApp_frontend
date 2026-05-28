@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/mock_worker_job.dart';
+import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
 import '../theme/worker_text_styles.dart';
@@ -16,23 +17,23 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final session = WorkerScope.of(context);
+
     return Scaffold(
       backgroundColor: WorkerColors.background,
       appBar: AppBar(
         backgroundColor: WorkerColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
-          onPressed: () {},
-        ),
         title: Text(
           'In Progress',
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
         ),
         centerTitle: true,
         actions: [
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.more_vert),
+            onPressed: () => _stub(context, 'More actions'),
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -74,8 +75,8 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
                     ),
                   ),
                   ClientContactRow(
-                    onMessage: () => _stub(context),
-                    onCall: () => _stub(context),
+                    onMessage: () => _stub(context, 'Message'),
+                    onCall: () => _stub(context, 'Call'),
                   ),
                 ],
               ),
@@ -86,13 +87,13 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
                 children: [
                   _DetailRow(
                     icon: Icons.location_on_outlined,
-                    label: 'JOB LOCATION',
+                    label: 'BOOKING LOCATION',
                     value: job.addressLabel,
                   ),
                   const Divider(height: WorkerSpacing.lg),
                   _DetailRow(
                     icon: Icons.description_outlined,
-                    label: 'JOB DESCRIPTION',
+                    label: 'REQUEST DETAILS',
                     value: job.description,
                     maxLines: 2,
                   ),
@@ -105,14 +106,17 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
-                    builder: (_) => WorkerCompletionFormScreen(job: job),
+                    builder: (_) => WorkerCompletionFormScreen(
+                      job: job,
+                      onCompletionSubmitted: session.completeJob,
+                    ),
                   ),
                 );
               },
             ),
             const SizedBox(height: WorkerSpacing.md),
             TextButton.icon(
-              onPressed: () => _stub(context),
+              onPressed: () => _stub(context, 'Support'),
               icon: const Icon(Icons.support_agent_outlined, size: 18),
               label: const Text('Need help? Call support'),
             ),
@@ -122,9 +126,9 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
     );
   }
 
-  void _stub(BuildContext context) {
+  void _stub(BuildContext context, String action) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Support — integration later')),
+      SnackBar(content: Text('$action — integration later')),
     );
   }
 }

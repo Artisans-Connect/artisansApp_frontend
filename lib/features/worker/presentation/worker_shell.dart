@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../shared/presentation/screens/messages_list_screen.dart';
+import '../../../shared/presentation/screens/user_profile_screen.dart';
 import 'screens/worker_active_empty_screen.dart';
 import 'screens/worker_active_in_progress_screen.dart';
 import 'screens/worker_active_pre_start_screen.dart';
@@ -53,17 +54,6 @@ class _WorkerShellState extends State<WorkerShell> {
     }
   }
 
-  Widget _profileTab() {
-    switch (_session.profilePage) {
-      case WorkerProfilePage.stats:
-        return const WorkerStatsScreen();
-      case WorkerProfilePage.history:
-        return const WorkerBookingHistoryScreen();
-      case WorkerProfilePage.earnings:
-        return const WorkerEarningsScreen();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return WorkerScope(
@@ -75,7 +65,30 @@ class _WorkerShellState extends State<WorkerShell> {
             const WorkerRequestsScreen(),
             _bookingsTab(),
             const MessagesListScreen(embedInShell: true),
-            _profileTab(),
+            UserProfileScreen(
+              embedInShell: true,
+              onOpenWorkerEarnings: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WorkerEarningsScreen(),
+                  ),
+                );
+              },
+              onOpenWorkerStats: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WorkerStatsScreen(),
+                  ),
+                );
+              },
+              onOpenWorkerHistory: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WorkerBookingHistoryScreen(),
+                  ),
+                );
+              },
+            ),
           ],
         ),
         bottomNavigationBar: WorkerBottomNav(

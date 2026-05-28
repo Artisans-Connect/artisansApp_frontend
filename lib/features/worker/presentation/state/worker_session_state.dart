@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import '../models/mock_worker_job.dart';
+import '../models/worker_ui_contracts.dart';
 import '../widgets/worker_bottom_nav.dart';
 
 enum WorkerJobPhase { none, preStart, inProgress }
@@ -16,6 +17,11 @@ class WorkerSessionState extends ChangeNotifier {
 
   bool get hasActiveJob =>
       activeJob != null && jobPhase != WorkerJobPhase.none;
+
+  WorkerAvailabilityStatus get availabilityStatus =>
+      isAvailable
+          ? WorkerAvailabilityStatus.online
+          : WorkerAvailabilityStatus.offline;
 
   void setAvailable(bool value) {
     isAvailable = value;

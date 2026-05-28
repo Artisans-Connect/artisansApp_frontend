@@ -20,6 +20,10 @@ class WorkerStatsScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           color: WorkerColors.primary,
           onPressed: () {
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).maybePop();
+              return;
+            }
             WorkerScope.of(context).setProfilePage(WorkerProfilePage.earnings);
           },
         ),

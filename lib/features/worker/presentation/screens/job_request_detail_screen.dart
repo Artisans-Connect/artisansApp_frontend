@@ -12,9 +12,14 @@ import '../widgets/reference_photos_row.dart';
 import '../widgets/timing_estimate_row.dart';
 
 class JobRequestDetailScreen extends StatefulWidget {
-  const JobRequestDetailScreen({super.key, required this.job});
+  const JobRequestDetailScreen({
+    super.key,
+    required this.job,
+    required this.onAcceptRequest,
+  });
 
   final MockWorkerJob job;
+  final ValueChanged<MockWorkerJob> onAcceptRequest;
 
   @override
   State<JobRequestDetailScreen> createState() =>
@@ -26,16 +31,35 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
   bool _isAccepting = false;
 
   void _onAccept() async {
-    if (_acceptLocked) return;
+    if (_isAccepting || _acceptLocked) return;
     HapticFeedback.mediumImpact();
     setState(() {
       _acceptLocked = true;
       _isAccepting = true;
     });
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    WorkerScope.of(context).acceptJob(widget.job);
-    Navigator.of(context).pop();
+    try {
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      widget.onAcceptRequest(widget.job);
+      Navigator.of(context).maybePop();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Unable to accept request right now. Please try again.',
+          ),
+        ),
+      );
+      setState(() {
+        _acceptLocked = false;
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isAccepting = false;
+      });
+    }
   }
 
   void _onDecline() {
@@ -58,7 +82,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          'Job Detail',
+          'Request Details',
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
         ),
         centerTitle: true,
@@ -165,7 +189,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     addressLabel: job.mapLabel ?? job.addressLabel,
                   ),
                   const SizedBox(height: WorkerSpacing.lg),
-                  Text('JOB DESCRIPTION', style: WorkerTextStyles.labelCaps),
+                  Text('REQUEST DESCRIPTION', style: WorkerTextStyles.labelCaps),
                   const SizedBox(height: WorkerSpacing.sm),
                   Text(job.description, style: WorkerTextStyles.bodyMd),
                   if (job.referencePhotoLabels.isNotEmpty) ...[
@@ -244,9 +268,8 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     child: GradientButton(
                       label: 'Accept Job',
                       isLoading: _isAccepting,
-                      enabled: !_acceptLocked || _isAccepting,
-                      onPressed:
-                          _acceptLocked && !_isAccepting ? null : _onAccept,
+                      enabled: !_acceptLocked && !_isAccepting,
+                      onPressed: _acceptLocked ? null : _onAccept,
                     ),
                   ),
                 ],

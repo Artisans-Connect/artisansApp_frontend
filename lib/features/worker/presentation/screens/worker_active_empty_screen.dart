@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/worker_ui_contracts.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
@@ -17,44 +18,50 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: WorkerColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
-          onPressed: () {},
-        ),
         title: Text(
-          'Active Job',
+          'Active Booking',
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
         ),
         centerTitle: true,
         actions: [
-          Container(
-            margin: const EdgeInsets.only(right: WorkerSpacing.md),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: WorkerColors.success.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: WorkerColors.success,
-                    shape: BoxShape.circle,
-                  ),
+          Builder(
+            builder: (_) {
+              final isOnline = session.availabilityStatus.isOnline;
+              final badgeColor = isOnline
+                  ? WorkerColors.success
+                  : WorkerColors.outline;
+              final textColor = isOnline
+                  ? WorkerColors.successDark
+                  : WorkerColors.onSurfaceVariant;
+              return Container(
+                margin: const EdgeInsets.only(right: WorkerSpacing.md),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: badgeColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  'ONLINE',
-                  style: WorkerTextStyles.badge.copyWith(
-                    color: WorkerColors.successDark,
-                    fontSize: 10,
-                  ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: badgeColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isOnline ? 'ONLINE' : 'OFFLINE',
+                      style: WorkerTextStyles.badge.copyWith(
+                        color: textColor,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
