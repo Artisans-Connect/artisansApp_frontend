@@ -4,6 +4,7 @@ import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/services/jobs_service.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../navigation/client_navigation.dart';
@@ -21,6 +22,8 @@ class JobPostSummaryScreen extends StatefulWidget {
 class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
   late ClientJobDraft _draft;
   bool _agreeToTerms = false;
+  bool _isPosting = false;
+  final JobsService _jobsService = JobsService();
 
   @override
   void initState() {
@@ -94,12 +97,34 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
     ClientNavigation.popToShell(context);
   }
 
-  void _postJob() {
-    if (!_agreeToTerms) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Job posted — finding an artisan…')),
-    );
-    ClientNavigation.startFindingArtisan(context, jobData: _draft.toMap());
+  Future<void> _postJob() async {
+    if (!_agreeToTerms || _isPosting) return;
+
+    setState(() {
+      _isPosting = true;
+    });
+
+    try {
+      final jobData = _draft.toMap();
+      await _jobsService.createJob(jobData);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Job posted — finding an artisan…')),
+      );
+      ClientNavigation.startFindingArtisan(context, jobData: jobData);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to post job: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isPosting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -112,8 +137,8 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       step: JobPostWizardStep.summary,
       appBarTitle: 'Review & Post',
       headline: 'Review your job post',
-      primaryLabel: 'Post job',
-      primaryEnabled: _agreeToTerms,
+      primaryLabel: _isPosting ? 'Posting...' : 'Post job',
+      primaryEnabled: _agreeToTerms && !_isPosting,
       onPrimary: _postJob,
       secondaryLabel: 'Save draft',
       onSecondary: _saveDraft,

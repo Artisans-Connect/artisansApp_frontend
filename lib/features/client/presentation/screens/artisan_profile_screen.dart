@@ -7,6 +7,7 @@ import '../models/client_job_draft.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/rating_widget.dart';
+import '../../../../core/services/reviews_service.dart';
 
 class ArtisanProfileScreen extends StatefulWidget {
   final Map<String, dynamic>? artisan;
@@ -19,6 +20,35 @@ class ArtisanProfileScreen extends StatefulWidget {
 
 class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
   bool _isFavorite = false;
+  List<dynamic> _reviews = [];
+  bool _isLoadingReviews = true;
+  final ReviewsService _reviewsService = ReviewsService();
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchReviews();
+  }
+
+  Future<void> _fetchReviews() async {
+    final workerId = widget.artisan?['id'] ?? widget.artisan?['worker_id'];
+    if (workerId == null) {
+      setState(() => _isLoadingReviews = false);
+      return;
+    }
+    
+    try {
+      final reviews = await _reviewsService.getWorkerReviews(workerId);
+      setState(() {
+        _reviews = reviews;
+        _isLoadingReviews = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingReviews = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -200,67 +230,77 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                         'Reviews',
                         style: AppTypography.displaySmall,
                       ),
-                      TextButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Full reviews list (UI stub).'),
+                      if (!_isLoadingReviews && _reviews.isNotEmpty)
+                        TextButton(
+                          onPressed: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Full reviews list (UI stub).'),
+                              ),
+                            );
+                          },
+                          child: Text(
+                            'View All',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: AppColors.primary,
                             ),
-                          );
-                        },
-                        child: Text(
-                          'View All',
-                          style: AppTypography.labelMedium.copyWith(
-                            color: AppColors.primary,
                           ),
                         ),
-                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
 
                   // Review Cards
-                  ...List.generate(2, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLowest,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                          border: Border.all(color: AppColors.borderSubtle),
+                  if (_isLoadingReviews)
+                    const Center(child: CircularProgressIndicator())
+                  else if (_reviews.isEmpty)
+                    Text('No reviews yet.', style: AppTypography.bodyMedium)
+                  else
+                    ..._reviews.map((review) {
+                      final reviewerName = review['profiles']?['full_name'] ?? 'Client';
+                      final rating = review['rating'] as int? ?? 0;
+                      final comment = review['comment'] as String? ?? 'No comment provided.';
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.md),
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceContainerLowest,
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                            border: Border.all(color: AppColors.borderSubtle),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    reviewerName,
+                                    style: AppTypography.labelLarge,
+                                  ),
+                                  Row(
+                                    children: List.generate(5, (i) {
+                                      return Icon(
+                                        i < rating ? Icons.star_rounded : Icons.star_border,
+                                        size: 14,
+                                        color: const Color(0xFFFFC107),
+                                      );
+                                    }),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.sm),
+                              Text(
+                                comment,
+                                style: AppTypography.bodySmall,
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Client ${index + 1}',
-                                  style: AppTypography.labelLarge,
-                                ),
-                                Row(
-                                  children: List.generate(5, (i) {
-                                    return Icon(
-                                      i < (4 + index) ? Icons.star_rounded : Icons.star_border,
-                                      size: 14,
-                                      color: const Color(0xFFFFC107),
-                                    );
-                                  }),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.sm),
-                            Text(
-                              'Great work! Very professional and timely. Would definitely recommend.',
-                              style: AppTypography.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
+                      );
+                    }).toList(),
                 ],
               ),
             ),

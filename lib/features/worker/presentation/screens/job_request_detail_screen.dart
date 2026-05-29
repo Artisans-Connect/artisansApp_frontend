@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -27,6 +29,7 @@ class JobRequestDetailScreen extends StatefulWidget {
 }
 
 class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
+  final WorkersService _workersService = WorkersService();
   bool _acceptLocked = false;
   bool _isAccepting = false;
 
@@ -38,16 +41,16 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
       _isAccepting = true;
     });
     try {
-      await Future<void>.delayed(const Duration(milliseconds: 500));
+      await _workersService.acceptJob(widget.job.id);
       if (!mounted) return;
       widget.onAcceptRequest(widget.job);
       Navigator.of(context).maybePop();
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Unable to accept request right now. Please try again.',
+            'Unable to accept request right now. $e',
           ),
         ),
       );
@@ -62,9 +65,14 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     }
   }
 
-  void _onDecline() {
+  void _onDecline() async {
     HapticFeedback.lightImpact();
-    Navigator.of(context).pop();
+    try {
+      await _workersService.declineJob(widget.job.id);
+    } catch (_) {
+      // Ignore errors for now
+    }
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override

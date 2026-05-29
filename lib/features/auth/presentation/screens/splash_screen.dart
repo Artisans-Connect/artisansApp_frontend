@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/services/auth_service.dart';
+import '../../worker/presentation/worker_shell.dart';
+import '../../client/presentation/client_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -22,17 +26,26 @@ class _SplashScreenState extends State<SplashScreen> {
     // Simulate startup tasks
     await Future.wait([
       Future.delayed(const Duration(seconds: 3)),
-
-      // Add your real startup logic here:
-      // check authentication
-      // preload user data
-      // initialize services
-      // fetch remote config
     ]);
 
     if (!mounted) return;
 
-    Navigator.pushReplacementNamed(context, '/auth/onboarding');
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      try {
+        final user = await AuthService.instance.getCurrentUser();
+        if (!mounted) return;
+        if (user.role == 'artisan') {
+          Navigator.pushReplacementNamed(context, WorkerShell.routeName);
+        } else {
+          Navigator.pushReplacementNamed(context, ClientShell.routeName);
+        }
+      } catch (e) {
+        Navigator.pushReplacementNamed(context, '/auth/onboarding');
+      }
+    } else {
+      Navigator.pushReplacementNamed(context, '/auth/onboarding');
+    }
   }
 
   @override

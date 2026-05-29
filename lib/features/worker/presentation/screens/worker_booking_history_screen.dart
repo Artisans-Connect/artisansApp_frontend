@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/mock_worker_data.dart';
+
+import '../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -17,10 +18,50 @@ class WorkerBookingHistoryScreen extends StatefulWidget {
 }
 
 class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen> {
+  final WorkersService _workersService = WorkersService();
+  bool _isLoading = true;
   bool _showCompleted = true;
+  List<MockWorkerJob> _allJobs = [];
 
-  List<MockWorkerJob> get _filtered => MockWorkerData.historyJobs
-      .where((j) =>
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    setState(() => _isLoading = true);
+    try {
+      final dynamic response = await _workersService.getHistory();
+      if (!mounted) return;
+      final List<dynamic> data = response as List<dynamic>;
+      setState(() {
+        _allJobs = data.map((dynamic item) {
+          final Map<String, dynamic> json = item as Map<String, dynamic>;
+          return MockWorkerJob(
+            id: json['id'] as String,
+            title: json['title'] as String,
+            budget: '${json['budget_min']} - ${json['budget_max']} GHS',
+            distance: 'N/A',
+            timeAgo: 'Just now',
+            clientName: json['profiles']?['full_name'] as String? ?? 'Client',
+            clientAvatar: json['profiles']?['avatar_url'] as String?,
+            historyStatus: json['status'] == 'COMPLETED' ? HistoryStatus.completed : HistoryStatus.cancelled,
+          );
+        }).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load history: $e')),
+      );
+    }
+  }
+
+  List<MockWorkerJob> get _filtered => _allJobs
+      .where((MockWorkerJob j) =>
           _showCompleted
               ? j.historyStatus == HistoryStatus.completed
               : j.historyStatus == HistoryStatus.cancelled)
@@ -74,11 +115,20 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: WorkerSpacing.gutter),
-              itemCount: _filtered.length,
-              itemBuilder: (_, i) => HistoryJobCard(job: _filtered[i]),
-            ),
+            child: _isLoading 
+                ? const Center(child: CircularProgressIndicator())
+                : _filtered.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No history available',
+                          style: WorkerTextStyles.bodyLg,
+                        ),
+                      )
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: WorkerSpacing.gutter),
+                        itemCount: _filtered.length,
+                        itemBuilder: (_, int i) => HistoryJobCard(job: _filtered[i]),
+                      ),
           ),
         ],
       ),
