@@ -5,8 +5,8 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../worker/presentation/worker_shell.dart';
-import '../../client/presentation/client_shell.dart';
+import '../../../client/presentation/client_shell.dart';
+import '../../../worker/presentation/worker_shell.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-import '../../../core/services/workers_service.dart';
+import '../../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../models/worker_ui_contracts.dart';
 import '../widgets/worker_bottom_nav.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/services/workers_service.dart';
+import '../../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -41,11 +41,16 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
           return MockWorkerJob(
             id: json['id'] as String,
             title: json['title'] as String,
-            budget: '${json['budget_min']} - ${json['budget_max']} GHS',
-            distance: 'N/A',
-            timeAgo: 'Just now',
+            category: json['category']?['name'] as String? ?? 'General',
+            description: json['description'] as String? ?? '',
+            addressLabel: json['location_address'] as String? ?? 'Unknown',
+            latitude: 0.0,
+            longitude: 0.0,
             clientName: json['profiles']?['full_name'] as String? ?? 'Client',
-            clientAvatar: json['profiles']?['avatar_url'] as String?,
+            urgency: JobUrgency.scheduled,
+            estimatedBudgetLabel: '${json['budget_min']} - ${json['budget_max']} GHS',
+            distanceKm: null,
+            historyDate: json['completed_at'] != null ? json['completed_at'].toString().split('T')[0] : 'Just now',
             historyStatus: json['status'] == 'COMPLETED' ? HistoryStatus.completed : HistoryStatus.cancelled,
           );
         }).toList();

@@ -3,8 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../worker/presentation/worker_shell.dart';
-import '../../client/presentation/client_shell.dart';
+import '../../../client/presentation/client_shell.dart';
+import '../../../worker/presentation/worker_shell.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
