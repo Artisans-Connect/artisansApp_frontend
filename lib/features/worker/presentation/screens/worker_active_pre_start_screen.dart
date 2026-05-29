@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+import '../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -9,14 +11,23 @@ import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
 
-class WorkerActivePreStartScreen extends StatelessWidget {
+class WorkerActivePreStartScreen extends StatefulWidget {
   const WorkerActivePreStartScreen({super.key, required this.job});
 
   final MockWorkerJob job;
 
   @override
+  State<WorkerActivePreStartScreen> createState() => _WorkerActivePreStartScreenState();
+}
+
+class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen> {
+  final WorkersService _workersService = WorkersService();
+  bool _isStarting = false;
+
+  @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
+    final job = widget.job;
 
     return Scaffold(
       backgroundColor: WorkerColors.background,
@@ -187,9 +198,27 @@ class WorkerActivePreStartScreen extends StatelessWidget {
                   const SizedBox(height: WorkerSpacing.sm),
                   GradientButton(
                     label: 'Mark as Started',
-                    onPressed: () {
+                    isLoading: _isStarting,
+                    enabled: !_isStarting,
+                    onPressed: () async {
                       HapticFeedback.mediumImpact();
-                      session.markJobStarted();
+                      setState(() => _isStarting = true);
+                      try {
+                        await _workersService.startJob(job.id);
+                        if (mounted) {
+                          session.markJobStarted();
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to start job: $e')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isStarting = false);
+                        }
+                      }
                     },
                   ),
                   const SizedBox(height: WorkerSpacing.md),

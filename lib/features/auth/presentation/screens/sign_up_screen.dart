@@ -5,6 +5,7 @@ import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
+import '../../../../core/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -36,16 +37,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || !_agreed) return;
     setState(() => _isSubmitting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    final OnboardingSession session = OnboardingSession.instance;
-    session.fullName = _nameController.text.trim();
-    session.phone = _phoneController.text.trim();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sign-up is stubbed for this UI phase.')),
-    );
-    Navigator.pushNamed(context, '/auth/role-selection');
+
+    try {
+      await AuthService.instance.signUp(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        fullName: _nameController.text.trim(),
+        phone: _phoneController.text.trim(),
+      );
+      if (!mounted) return;
+      // After signup, we might want to let the user select their role or if role is already selected.
+      // Wait, let's just go to role selection since OnboardingSession might hold the role, or we update role there.
+      // Let's stick to the current flow of going to role-selection.
+      Navigator.pushNamed(context, '/auth/role-selection');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Sign up failed: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
   }
 
   @override

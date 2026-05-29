@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
+import '../../../core/services/chat_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../data/shared_stub_data.dart';
@@ -23,6 +25,7 @@ class MessagesListScreen extends StatefulWidget {
 }
 
 class _MessagesListScreenState extends State<MessagesListScreen> {
+  final ChatService _chatService = ChatService();
   bool _isLoading = true;
   List<ConversationSummary> _conversations = <ConversationSummary>[];
   String _searchQuery = '';
@@ -34,12 +37,40 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   }
 
   Future<void> _loadConversations() async {
-    await Future<void>.delayed(const Duration(milliseconds: 500));
-    if (!mounted) return;
-    setState(() {
-      _conversations = SharedStubData.conversations;
-      _isLoading = false;
-    });
+    setState(() => _isLoading = true);
+    try {
+      final dynamic response = await _chatService.getConversations();
+      if (!mounted) return;
+      
+      final List<dynamic> data = response as List<dynamic>;
+      final String currentUserId = SharedStubData.currentUserId;
+      
+      setState(() {
+        _conversations = data.map((dynamic item) {
+          final Map<String, dynamic> json = item as Map<String, dynamic>;
+          final String clientId = json['client_id'] as String? ?? '';
+          final String workerId = json['worker_id'] as String? ?? '';
+          final String counterpartId = clientId == currentUserId ? workerId : clientId;
+          
+          return ConversationSummary(
+            id: json['id'] as String,
+            jobId: json['id'] as String,
+            counterpartUserId: counterpartId,
+            counterpartName: 'User $counterpartId'.substring(0, 13), // Fallback name
+            lastMessagePreview: json['title'] as String? ?? 'Open Chat',
+            lastMessageAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
+            jobTitle: json['title'] as String?,
+          );
+        }).toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load chats: $e')),
+      );
+    }
   }
 
   List<ConversationSummary> get _filteredConversations {

@@ -1,13 +1,16 @@
 import 'package:flutter/widgets.dart';
+
+import '../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../models/worker_ui_contracts.dart';
 import '../widgets/worker_bottom_nav.dart';
 
 enum WorkerJobPhase { none, preStart, inProgress }
-
 enum WorkerProfilePage { earnings, stats, history }
 
 class WorkerSessionState extends ChangeNotifier {
+  final WorkersService _workersService = WorkersService();
+
   WorkerNavTab currentTab = WorkerNavTab.explore;
   WorkerProfilePage profilePage = WorkerProfilePage.earnings;
 
@@ -23,9 +26,16 @@ class WorkerSessionState extends ChangeNotifier {
           ? WorkerAvailabilityStatus.online
           : WorkerAvailabilityStatus.offline;
 
-  void setAvailable(bool value) {
+  Future<void> setAvailable(bool value) async {
     isAvailable = value;
     notifyListeners();
+    try {
+      await _workersService.toggleAvailability(value);
+    } catch (_) {
+      // Revert if API call fails
+      isAvailable = !value;
+      notifyListeners();
+    }
   }
 
   void setTab(WorkerNavTab tab) {

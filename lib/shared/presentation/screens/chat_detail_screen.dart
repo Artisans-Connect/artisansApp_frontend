@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/services/chat_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../data/shared_stub_data.dart';
@@ -19,11 +20,13 @@ class ChatDetailScreen extends StatefulWidget {
 }
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
+  final ChatService _chatService = ChatService();
   final TextEditingController _composerController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<ChatMessage> _messages = <ChatMessage>[];
   ChatDetailArgs? _args;
   bool _showAttachmentMenu = false;
+  bool _isLoading = false;
 
   @override
   void didChangeDependencies() {
@@ -31,36 +34,41 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final Object? routeArgs = ModalRoute.of(context)?.settings.arguments;
     if (routeArgs is ChatDetailArgs && _args == null) {
       _args = routeArgs;
-      _messages = List<ChatMessage>.from(
-        SharedStubData.messagesForConversation(routeArgs.conversationId),
-      );
+      _loadMessages(routeArgs.jobId ?? routeArgs.conversationId);
     }
   }
 
-  @override
-  void dispose() {
-    _composerController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
+  Future<void> _loadMessages(String jobId) async {
+    setState(() => _isLoading = true);
+    try {
+      final dynamic response = await _chatService.getMessages(jobId);
+      if (!mounted) return;
 
-  void _sendMessage() {
-    final String text = _composerController.text.trim();
-    if (text.isEmpty) return;
-
-    setState(() {
-      _messages.add(
-        ChatMessage(
-          id: 'local_${DateTime.now().millisecondsSinceEpoch}',
-          senderId: SharedStubData.currentUserId,
-          content: text,
-          sentAt: DateTime.now(),
-          isMine: true,
-        ),
+      final List<dynamic> data = response as List<dynamic>;
+      setState(() {
+        _messages = data.map((dynamic item) {
+          final Map<String, dynamic> json = item as Map<String, dynamic>;
+          return ChatMessage(
+            id: json['id'] as String,
+            senderId: json['sender_id'] as String,
+            content: json['content'] as String,
+            sentAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
+            isMine: json['sender_id'] == SharedStubData.currentUserId,
+          );
+        }).toList();
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load messages: $e')),
       );
-      _composerController.clear();
-    });
-
+    }
+  }
+  
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -70,6 +78,57 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         );
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _composerController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _sendMessage() async {
+    final String text = _composerController.text.trim();
+    if (text.isEmpty || _args == null) return;
+
+    final String jobId = _args!.jobId ?? _args!.conversationId;
+    final String tempId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+
+    setState(() {
+      _messages.add(
+        ChatMessage(
+          id: tempId,
+          senderId: SharedStubData.currentUserId,
+          content: text,
+          sentAt: DateTime.now(),
+          isMine: true,
+        ),
+      );
+      _composerController.clear();
+    });
+    _scrollToBottom();
+
+    try {
+      final dynamic response = await _chatService.sendMessage(jobId, text);
+      final Map<String, dynamic> json = response as Map<String, dynamic>;
+      
+      setState(() {
+        final int index = _messages.indexWhere((ChatMessage m) => m.id == tempId);
+        if (index != -1) {
+          _messages[index] = ChatMessage(
+            id: json['id'] as String,
+            senderId: json['sender_id'] as String,
+            content: json['content'] as String,
+            sentAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
+            isMine: true,
+          );
+        }
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send message: $e')),
+      );
+    }
   }
 
   @override
@@ -190,42 +249,44 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Column(
             children: <Widget>[
               Expanded(
-                child: _messages.isEmpty
-                    ? Center(
-                        child: Text(
-                          'Say hello to start the conversation.',
-                          style: AppTextStyles.bodyLg,
-                        ),
-                      )
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        itemCount: _messages.length + 1,
-                        itemBuilder: (BuildContext context, int index) {
-                          if (index == 0) {
-                            // Date separator
-                            return Center(
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: AppColors.surfaceContainerHigh,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  'Today',
-                                  style: AppTextStyles.bodyMd.copyWith(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
+                child: _isLoading 
+                    ? const Center(child: CircularProgressIndicator())
+                    : _messages.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Say hello to start the conversation.',
+                              style: AppTextStyles.bodyLg,
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            itemCount: _messages.length + 1,
+                            itemBuilder: (BuildContext context, int index) {
+                              if (index == 0) {
+                                // Date separator
+                                return Center(
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceContainerHigh,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      'Today',
+                                      style: AppTextStyles.bodyMd.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
-                          }
-                          return ChatBubble(message: _messages[index - 1]);
-                        },
-                      ),
+                                );
+                              }
+                              return ChatBubble(message: _messages[index - 1]);
+                            },
+                          ),
               ),
               _buildComposer(),
             ],

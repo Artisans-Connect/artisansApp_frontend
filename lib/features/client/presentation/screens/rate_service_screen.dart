@@ -6,6 +6,7 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 import '../client_shell.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../../core/services/reviews_service.dart';
 
 class RateServiceScreen extends StatefulWidget {
   final Map<String, dynamic>? service;
@@ -23,6 +24,8 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
   double _rating = 0;
   late TextEditingController _reviewController;
   final List<String> _selectedTags = [];
+  bool _isSubmitting = false;
+  final ReviewsService _reviewsService = ReviewsService();
 
   final List<String> reviewTags = [
     'Professional',
@@ -103,20 +106,42 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
 
               // Submit Button
               PrimaryButton(
-                label: 'Submit Rating & Complete →',
-                isEnabled: _rating > 0,
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Rating submitted successfully!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
+                label: _isSubmitting ? 'Submitting...' : 'Submit Rating & Complete →',
+                isEnabled: _rating > 0 && !_isSubmitting,
+                onPressed: () async {
+                  setState(() => _isSubmitting = true);
+                  try {
+                    final jobId = widget.service?['id'] ?? widget.service?['jobId'];
+                    final workerId = widget.service?['workerId'] ?? widget.service?['worker_id'];
+                    
+                    if (jobId != null && workerId != null) {
+                      await _reviewsService.createReview({
+                        'job_id': jobId,
+                        'worker_id': workerId,
+                        'rating': _rating.toInt(),
+                        'comment': _reviewController.text.trim(),
+                      });
+                    }
+                    
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Rating submitted successfully!'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
 
-                  ClientNavigation.popToShellAndSelectTab(
-                    context,
-                    ClientNavTab.bookings,
-                  );
+                    ClientNavigation.popToShellAndSelectTab(
+                      context,
+                      ClientNavTab.bookings,
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')),
+                    );
+                    setState(() => _isSubmitting = false);
+                  }
                 },
               ),
               const SizedBox(height: AppSpacing.xl),

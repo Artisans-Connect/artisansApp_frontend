@@ -4,6 +4,7 @@ import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/services/categories_service.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../navigation/client_navigation.dart';
@@ -21,6 +22,10 @@ class JobPostCategoryScreen extends StatefulWidget {
 class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
   String? _selectedCategoryId;
   late ClientJobDraft _draft;
+  List<dynamic> _categories = [];
+  bool _isLoading = true;
+  String? _error;
+  final CategoriesService _categoriesService = CategoriesService();
 
   final List<Map<String, dynamic>> categories = <Map<String, dynamic>>[
     {
@@ -86,12 +91,54 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
     super.initState();
     _draft = ClientJobDraft.fromMap(widget.jobData);
     _selectedCategoryId = _draft.categoryId;
+    _fetchCategories();
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final data = await _categoriesService.listCategories();
+      setState(() {
+        _categories = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
+  IconData _getIconForCategory(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('plumb')) return Icons.plumbing;
+    if (lower.contains('electr')) return Icons.flash_on;
+    if (lower.contains('carp')) return Icons.handyman;
+    if (lower.contains('clean')) return Icons.cleaning_services;
+    if (lower.contains('paint')) return Icons.palette;
+    if (lower.contains('construct')) return Icons.construction;
+    if (lower.contains('hvac')) return Icons.ac_unit;
+    if (lower.contains('landscap')) return Icons.landscape;
+    return Icons.category;
+  }
+
+  Color _getColorForCategory(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains('plumb')) return const Color(0xFF4648D4);
+    if (lower.contains('electr')) return const Color(0xFF0058BE);
+    if (lower.contains('carp')) return const Color(0xFFB55D00);
+    if (lower.contains('clean')) return const Color(0xFF00E676);
+    if (lower.contains('paint')) return const Color(0xFFF44336);
+    if (lower.contains('construct')) return const Color(0xFFFF9800);
+    if (lower.contains('hvac')) return const Color(0xFF2196F3);
+    if (lower.contains('landscap')) return const Color(0xFF4CAF50);
+    return Colors.grey;
   }
 
   Map<String, dynamic>? get _selectedCategory {
     if (_selectedCategoryId == null) return null;
-    for (final Map<String, dynamic> c in categories) {
-      if (c['id'] == _selectedCategoryId) return c;
+    for (final c in _categories) {
+      if (c['id'] == _selectedCategoryId) return c as Map<String, dynamic>;
     }
     return null;
   }
@@ -131,20 +178,27 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: AppSpacing.md,
-              mainAxisSpacing: AppSpacing.md,
-              childAspectRatio: 0.9,
-            ),
-            itemCount: categories.length,
-            itemBuilder: (BuildContext context, int index) {
-              final Map<String, dynamic> category = categories[index];
-              final bool isSelected = _selectedCategoryId == category['id'];
-              final Color color = category['color'] as Color;
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_error != null)
+            Center(child: Text('Error: $_error'))
+          else
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: AppSpacing.md,
+                mainAxisSpacing: AppSpacing.md,
+                childAspectRatio: 0.9,
+              ),
+              itemCount: _categories.length,
+              itemBuilder: (BuildContext context, int index) {
+                final category = _categories[index];
+                final bool isSelected = _selectedCategoryId == category['id'];
+                final String name = category['name'] ?? 'Unknown';
+                final Color color = _getColorForCategory(name);
+                final IconData icon = _getIconForCategory(name);
 
               return GestureDetector(
                 onTap: () => setState(() => _selectedCategoryId = category['id']),
@@ -160,10 +214,10 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(category['icon'] as IconData, color: color, size: 32),
+                      Icon(icon, color: color, size: 32),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        category['name'] as String,
+                        name,
                         style: AppTypography.labelLarge,
                         textAlign: TextAlign.center,
                       ),
@@ -172,7 +226,7 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
                           horizontal: AppSpacing.sm,
                         ),
                         child: Text(
-                          category['description'] as String,
+                          category['description'] ?? '',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textSecondary,
                           ),
