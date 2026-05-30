@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/navigation/auth_navigation.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/user_profile_view.dart';
-import '../../../client/presentation/client_shell.dart';
-import '../../../worker/presentation/worker_shell.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
@@ -137,19 +138,39 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     }
 
     setState(() => _isSubmitting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 700));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile completion saved locally (stub).')),
-    );
-    final String route =
-        _session.isClient ? ClientShell.routeName : WorkerShell.routeName;
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      route,
-      (Route<dynamic> route) => false,
-    );
+
+    try {
+      final String role = _session.isWorker ? 'worker' : 'client';
+      final Map<String, dynamic> body = <String, dynamic>{
+        'full_name': _session.fullName ?? 'User',
+        'phone': _session.phone ?? '',
+        'role': role,
+        if (_session.avatarUrl != null) 'avatar_url': _session.avatarUrl,
+        if (_session.bio != null && _session.bio!.isNotEmpty) 'bio': _session.bio,
+        if (_session.experienceBand != null)
+          'experience_band': _session.experienceBand,
+      };
+
+      if (_session.isWorker) {
+        body['skills'] = _session.selectedTrades.toList();
+        body['service_areas'] = _session.serviceAreas.toList();
+      }
+
+      await AuthService.instance.createProfile(body);
+
+      if (!mounted) return;
+      final String route = shellRouteForRole(role);
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        route,
+        (Route<dynamic> route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not save your profile.');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   Future<void> _pickImage() async {

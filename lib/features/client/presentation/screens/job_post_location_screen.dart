@@ -40,6 +40,8 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
   void _continue() {
     _draft.merge(<String, dynamic>{
       'address': _addressController.text.trim(),
+      'locationLat': 5.6037,
+      'locationLng': -0.1870,
     });
     Navigator.pushNamed(
       context,

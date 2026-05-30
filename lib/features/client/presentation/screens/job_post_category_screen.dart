@@ -4,7 +4,9 @@ import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/categories_service.dart';
+import '../../../../shared/widgets/error_state_view.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../navigation/client_navigation.dart';
@@ -103,7 +105,7 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString();
+        _error = userMessageFor(e, fallback: 'Could not load categories.');
         _isLoading = false;
       });
     }
@@ -181,7 +183,12 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
           else if (_error != null)
-            Center(child: Text('Error: $_error'))
+            ErrorStateView(
+              message: _error!,
+              title: 'Could not load categories',
+              compact: true,
+              onRetry: _fetchCategories,
+            )
           else
             GridView.builder(
               shrinkWrap: true,

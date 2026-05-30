@@ -3,6 +3,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../core/errors/error_messages.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../models/client_job_draft.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
@@ -22,6 +24,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
   bool _isFavorite = false;
   List<dynamic> _reviews = [];
   bool _isLoadingReviews = true;
+  String? _reviewError;
   final ReviewsService _reviewsService = ReviewsService();
 
   @override
@@ -45,6 +48,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
       });
     } catch (e) {
       setState(() {
+        _reviewError = userMessageFor(e, fallback: 'Could not load reviews.');
         _isLoadingReviews = false;
       });
     }
@@ -253,6 +257,11 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                   // Review Cards
                   if (_isLoadingReviews)
                     const Center(child: CircularProgressIndicator())
+                  else if (_reviewError != null)
+                    Text(_reviewError!,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.error,
+                        ))
                   else if (_reviews.isEmpty)
                     Text('No reviews yet.', style: AppTypography.bodyMedium)
                   else

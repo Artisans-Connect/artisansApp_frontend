@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
-import '../models/mock_worker_data.dart';
+
+import '../../../../core/errors/error_messages.dart';
+import '../../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
 import '../theme/worker_text_styles.dart';
+import '../utils/worker_job_mapper.dart';
 import '../widgets/availability_card.dart';
 import '../widgets/request_job_card.dart';
 import '../widgets/skeleton_box.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/error_state_view.dart';
 import 'job_request_detail_screen.dart';
 
-enum RequestsViewState { loading, loaded, empty }
+enum RequestsViewState { loading, loaded, empty, error }
 
 class WorkerRequestsScreen extends StatefulWidget {
   const WorkerRequestsScreen({super.key});
@@ -20,8 +25,10 @@ class WorkerRequestsScreen extends StatefulWidget {
 }
 
 class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
+  final WorkersService _workersService = WorkersService();
   RequestsViewState _viewState = RequestsViewState.loading;
-  List<MockWorkerJob> _jobs = [];
+  List<MockWorkerJob> _jobs = <MockWorkerJob>[];
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -30,14 +37,29 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() => _viewState = RequestsViewState.loading);
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
     setState(() {
-      _jobs = List.from(MockWorkerData.incomingJobs);
-      _viewState =
-          _jobs.isEmpty ? RequestsViewState.empty : RequestsViewState.loaded;
+      _viewState = RequestsViewState.loading;
+      _errorMessage = null;
     });
+    try {
+      final List<dynamic> data = await _workersService.getJobRequests();
+      if (!mounted) return;
+      setState(() {
+        _jobs = data
+            .map((dynamic item) =>
+                workerJobFromApi(item as Map<String, dynamic>))
+            .toList();
+        _viewState = _jobs.isEmpty
+            ? RequestsViewState.empty
+            : RequestsViewState.loaded;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = userMessageFor(e, fallback: 'Failed to load requests.');
+        _viewState = RequestsViewState.error;
+      });
+    }
   }
 
   void _openDetail(MockWorkerJob job) {
@@ -66,19 +88,6 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
           style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            color: WorkerColors.primary,
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Request filters coming soon'),
-                ),
-              );
-            },
-          ),
-        ],
       ),
       body: RefreshIndicator(
         onRefresh: _load,
@@ -91,62 +100,73 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
     if (_viewState == RequestsViewState.loading) {
       return ListView(
         padding: const EdgeInsets.all(WorkerSpacing.gutter),
-        children: const [
-          SkeletonBox(height: 80, borderRadius: 20),
-          SizedBox(height: 16),
-          SkeletonBox(height: 180, borderRadius: 20),
+        children: const <Widget>[
+          SkeletonBox(height: 120),
+          SizedBox(height: WorkerSpacing.md),
+          SkeletonBox(height: 160),
         ],
       );
     }
 
-    if (_viewState == RequestsViewState.empty) {
+    if (_viewState == RequestsViewState.error) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(WorkerSpacing.gutter),
-            child: AvailabilityCard(
-              isAvailable: session.isAvailable,
-              onChanged: session.setAvailable,
-            ),
-          ),
-          const SizedBox(height: 80),
-          Center(
-            child: Text(
-              'No open requests right now',
-              style: WorkerTextStyles.titleMd,
-            ),
+        children: <Widget>[
+          ErrorStateView(
+            message: _errorMessage!,
+            title: 'Could not load requests',
+            onRetry: _load,
           ),
         ],
       );
     }
 
-    return ListView.separated(
+    return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
         WorkerSpacing.gutter,
-        0,
+        WorkerSpacing.md,
         WorkerSpacing.gutter,
-        WorkerSpacing.xl,
+        WorkerSpacing.gutter,
       ),
-      itemCount: _jobs.length + 1,
-      separatorBuilder: (_, i) =>
-          SizedBox(height: i == 0 ? WorkerSpacing.md : 12),
-      itemBuilder: (context, index) {
-        if (index == 0) {
-          return AvailabilityCard(
-            isAvailable: session.isAvailable,
-            onChanged: session.setAvailable,
-          );
-        }
-        final job = _jobs[index - 1];
-        return RequestJobCard(
-          job: job,
-          onTap: () => _openDetail(job),
-          onAccept: () => _openDetail(job),
-          isAcceptEnabled: session.isAvailable,
-        );
-      },
+      children: <Widget>[
+        AvailabilityCard(
+          isAvailable: session.isAvailable,
+          onChanged: (bool value) async {
+            final bool ok = await session.setAvailable(value);
+            if (!ok && mounted) {
+              AppToast.showError(
+                context,
+                Exception('Could not update availability.'),
+                fallback: 'Could not update availability.',
+              );
+            }
+          },
+        ),
+        const SizedBox(height: WorkerSpacing.lg),
+        if (_viewState == RequestsViewState.empty)
+          Padding(
+            padding: const EdgeInsets.only(top: 48),
+            child: Text(
+              'No open requests right now.\nPull down to refresh.',
+              textAlign: TextAlign.center,
+              style: WorkerTextStyles.bodyLg.copyWith(
+                color: WorkerColors.onSurfaceVariant,
+              ),
+            ),
+          )
+        else
+          ..._jobs.map(
+            (MockWorkerJob job) => Padding(
+              padding: const EdgeInsets.only(bottom: WorkerSpacing.md),
+              child: RequestJobCard(
+                job: job,
+                onAccept: () => _openDetail(job),
+                onTap: () => _openDetail(job),
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

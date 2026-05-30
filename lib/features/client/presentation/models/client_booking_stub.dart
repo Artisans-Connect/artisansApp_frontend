@@ -46,9 +46,11 @@ class ClientBooking {
     this.imageUrl,
     this.conversationId,
     this.counterpartUserId,
+    this.jobUuid,
   });
 
   final int id;
+  final String? jobUuid;
   final String title;
   final String artisan;
   final String profession;
@@ -71,6 +73,8 @@ class ClientBooking {
 
   Map<String, dynamic> toMap() => {
         'id': id,
+        'jobId': jobUuid ?? id.toString(),
+        'job_id': jobUuid,
         'title': title,
         'artisan': artisan,
         'profession': profession,
@@ -100,6 +104,35 @@ class ClientBooking {
       imageUrl: map['imageUrl'] as String?,
       conversationId: map['conversationId'] as String?,
       counterpartUserId: map['counterpartUserId'] as String?,
+    );
+  }
+
+  static ClientBooking fromApiJob(Map<String, dynamic> json) {
+    final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
+    final ClientBookingStatus status = switch (statusRaw) {
+      'matched' => ClientBookingStatus.accepted,
+      'in_progress' => ClientBookingStatus.inProgress,
+      'completed' => ClientBookingStatus.completed,
+      'cancelled' || 'expired' => ClientBookingStatus.cancelled,
+      _ => ClientBookingStatus.requested,
+    };
+    final dynamic worker = json['profiles'];
+    final String artisanName = worker is Map<String, dynamic>
+        ? worker['full_name'] as String? ?? 'Artisan'
+        : 'Artisan';
+    return ClientBooking(
+      id: (json['id'] as String? ?? '').hashCode,
+      title: json['title'] as String? ?? 'Job',
+      artisan: artisanName,
+      profession: 'Artisan',
+      status: status,
+      date: json['created_at']?.toString().split('T').first ?? '',
+      amount: 'GHS ${json['budget_min'] ?? json['budget_fixed'] ?? '—'}',
+      imageUrl: worker is Map<String, dynamic>
+          ? worker['avatar_url'] as String?
+          : null,
+      counterpartUserId: json['worker_id'] as String?,
+      jobUuid: json['id'] as String?,
     );
   }
 

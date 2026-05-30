@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import '../../../../core/services/jobs_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/error_state_view.dart';
 import '../../../../shared/widgets/secondary_button.dart';
 import '../models/client_booking_stub.dart';
 import '../navigation/client_navigation.dart';
@@ -24,6 +29,10 @@ class FindingArtisanScreen extends StatefulWidget {
 class _FindingArtisanScreenState extends State<FindingArtisanScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+  final JobsService _jobsService = JobsService();
+  Timer? _pollTimer;
+  String? _errorMessage;
+  bool _isExpired = false;
 
   @override
   void initState() {
@@ -32,25 +41,71 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
+    _startPolling();
+  }
 
+  String? get _jobId => widget.jobData?['id'] as String?;
+
+  void _startPolling() {
+    if (_jobId == null) {
+      _scheduleFallbackMatch();
+      return;
+    }
+    _pollJob();
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) => _pollJob());
+  }
+
+  Future<void> _pollJob() async {
+    if (_jobId == null || !mounted) return;
+    try {
+      final dynamic job = await _jobsService.getJobById(_jobId!);
+      if (job is! Map<String, dynamic>) return;
+
+      final String status = (job['status'] as String? ?? '').toLowerCase();
+      if (status == 'matched' || status == 'in_progress') {
+        _pollTimer?.cancel();
+        if (!mounted) return;
+        _openTracking(job);
+      } else if (status == 'expired' || status == 'cancelled') {
+        _pollTimer?.cancel();
+        if (!mounted) return;
+        setState(() {
+          _isExpired = true;
+          _errorMessage = status == 'expired'
+              ? 'No artisans were available right now. Try posting again or adjust your location.'
+              : 'This job was cancelled.';
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _scheduleFallbackMatch() {
     Future<void>.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return;
+      if (!mounted || _isExpired) return;
       final booking = ClientBooking.fromJobPost(
         jobData: widget.jobData ?? <String, dynamic>{},
         artisan: widget.artisan,
       );
       ClientNavigation.openLiveTrackingFromMatch(context, booking: booking);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Artisan matched — track your job live.'),
-          duration: Duration(seconds: 2),
-        ),
-      );
     });
+  }
+
+  void _openTracking(Map<String, dynamic> job) {
+    final booking = ClientBooking.fromJobPost(
+      jobData: <String, dynamic>{
+        ...?widget.jobData,
+        'id': job['id'],
+        'title': job['title'],
+        'status': job['status'],
+      },
+      artisan: widget.artisan,
+    );
+    ClientNavigation.openLiveTrackingFromMatch(context, booking: booking);
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -64,205 +119,69 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
         showBackButton: true,
         onBackPressed: () => Navigator.pop(context),
       ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(height: MediaQuery.of(context).size.height * 0.1),
-              Center(
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
+      body: _errorMessage != null
+          ? ErrorStateView(
+              message: _errorMessage!,
+              title: _isExpired ? 'No match found' : 'Something went wrong',
+              onRetry: _isExpired
+                  ? () => Navigator.pop(context)
+                  : () {
+                      setState(() => _errorMessage = null);
+                      _startPolling();
+                    },
+            )
+          : SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
+                child: Column(
+                  children: <Widget>[
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                     RotationTransition(
                       turns: _animationController,
                       child: Container(
-                        width: 200,
-                        height: 200,
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
-                          border: Border.all(
-                            color: AppColors.primary.withOpacity(0.3),
-                            width: 2,
-                          ),
                           shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    RotationTransition(
-                      turns: Tween<double>(begin: 1, end: 0)
-                          .animate(_animationController),
-                      child: Container(
-                        width: 150,
-                        height: 150,
-                        decoration: BoxDecoration(
                           border: Border.all(
-                            color: AppColors.primary.withOpacity(0.5),
-                            width: 2,
+                            color: AppColors.primary.withValues(alpha: 0.3),
+                            width: 3,
                           ),
-                          shape: BoxShape.circle,
                         ),
+                        child: const Icon(Icons.search, color: AppColors.primary, size: 48),
                       ),
                     ),
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.person_search,
-                        color: AppColors.onPrimary,
-                        size: 50,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.08),
-              Text(
-                'Finding the Perfect Match',
-                style: AppTypography.displayMedium,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                'We\'re searching for the best artisan\nmatching your requirements...',
-                style: AppTypography.bodyLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Column(
-                children: [
-                  _buildProgressStep(
-                    number: '1',
-                    title: 'Job Details',
-                    subtitle: 'Analyzing your requirements',
-                    isCompleted: true,
-                  ),
-                  Container(
-                    width: 2,
-                    height: 30,
-                    color: AppColors.primary.withOpacity(0.3),
-                    margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                  ),
-                  _buildProgressStep(
-                    number: '2',
-                    title: 'Matching',
-                    subtitle: 'Finding suitable artisans',
-                    isActive: true,
-                  ),
-                  Container(
-                    width: 2,
-                    height: 30,
-                    color: AppColors.outlineVariant,
-                    margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                  ),
-                  _buildProgressStep(
-                    number: '3',
-                    title: 'Confirmation',
-                    subtitle: 'Awaiting artisan acceptance',
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xl),
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                ),
-                child: Column(
-                  children: [
+                    const SizedBox(height: AppSpacing.xl),
                     Text(
-                      'Estimated Wait Time',
-                      style: AppTypography.bodyMedium.copyWith(
+                      'Finding the best artisan…',
+                      style: AppTypography.displaySmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      widget.jobData?['title'] as String? ?? 'Your job request',
+                      style: AppTypography.bodyLarge.copyWith(
                         color: AppColors.textSecondary,
                       ),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      '2-3 minutes',
-                      style: AppTypography.displaySmall.copyWith(
-                        color: AppColors.primary,
+                      'We are notifying nearby verified artisans. This usually takes a minute or two.',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
                       ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    SecondaryButton(
+                      label: 'Cancel search',
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: MediaQuery.of(context).size.height * 0.08),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(AppSpacing.gutter),
-        child: SecondaryButton(
-          label: 'Cancel Search',
-          onPressed: () => ClientNavigation.popToShell(context),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgressStep({
-    required String number,
-    required String title,
-    required String subtitle,
-    bool isCompleted = false,
-    bool isActive = false,
-  }) {
-    return Row(
-      children: [
-        Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: isCompleted
-                ? AppColors.primary
-                : isActive
-                    ? AppColors.primaryContainer
-                    : AppColors.surfaceContainer,
-            shape: BoxShape.circle,
-            border: isActive
-                ? Border.all(color: AppColors.primary, width: 2)
-                : null,
-          ),
-          child: Center(
-            child: isCompleted
-                ? const Icon(
-                    Icons.check,
-                    color: AppColors.onPrimary,
-                    size: 24,
-                  )
-                : Text(
-                    number,
-                    style: AppTypography.displaySmall.copyWith(
-                      color: isActive
-                          ? AppColors.primary
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-          ),
-        ),
-        const SizedBox(width: AppSpacing.md),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: AppTypography.labelLarge),
-              const SizedBox(height: AppSpacing.xs),
-              Text(
-                subtitle,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+            ),
     );
   }
 }

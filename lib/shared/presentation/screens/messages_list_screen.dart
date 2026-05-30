@@ -1,13 +1,15 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 
+import '../../../core/errors/error_messages.dart';
+import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../data/shared_stub_data.dart';
+import '../../utils/shared_user_context.dart';
 import '../../models/conversation_summary.dart';
 import '../../widgets/conversation_tile.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../widgets/error_state_view.dart';
 import '../../widgets/search_bar.dart';
 import '../navigation/shared_route_args.dart';
 import 'chat_detail_screen.dart';
@@ -27,6 +29,7 @@ class MessagesListScreen extends StatefulWidget {
 class _MessagesListScreenState extends State<MessagesListScreen> {
   final ChatService _chatService = ChatService();
   bool _isLoading = true;
+  String? _loadError;
   List<ConversationSummary> _conversations = <ConversationSummary>[];
   String _searchQuery = '';
 
@@ -37,13 +40,16 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   }
 
   Future<void> _loadConversations() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final dynamic response = await _chatService.getConversations();
       if (!mounted) return;
       
       final List<dynamic> data = response as List<dynamic>;
-      final String currentUserId = SharedStubData.currentUserId;
+      final String currentUserId = CurrentUser.id ?? '';
       
       setState(() {
         _conversations = data.map((dynamic item) {
@@ -66,10 +72,10 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load chats: $e')),
-      );
+      setState(() {
+        _isLoading = false;
+        _loadError = userMessageFor(e, fallback: 'Failed to load conversations.');
+      });
     }
   }
 
@@ -131,6 +137,14 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   Widget _buildBody() {
     if (_isLoading) {
       return _buildSkeletonList();
+    }
+
+    if (_loadError != null) {
+      return ErrorStateView(
+        message: _loadError!,
+        title: 'Could not load messages',
+        onRetry: _loadConversations,
+      );
     }
 
     return Column(

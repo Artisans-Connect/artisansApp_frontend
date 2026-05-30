@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/errors/error_messages.dart';
+import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../widgets/app_toast.dart';
+import '../../widgets/error_state_view.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../data/shared_stub_data.dart';
+import '../../../core/utils/current_user.dart';
+import '../../utils/shared_user_context.dart';
 import '../../models/chat_message.dart';
 import '../../widgets/chat_bubble.dart';
 import '../../models/user_profile_view.dart';
@@ -27,6 +32,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   ChatDetailArgs? _args;
   bool _showAttachmentMenu = false;
   bool _isLoading = false;
+  String? _loadError;
 
   @override
   void didChangeDependencies() {
@@ -39,7 +45,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Future<void> _loadMessages(String jobId) async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final dynamic response = await _chatService.getMessages(jobId);
       if (!mounted) return;
@@ -53,7 +62,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             senderId: json['sender_id'] as String,
             content: json['content'] as String,
             sentAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
-            isMine: json['sender_id'] == SharedStubData.currentUserId,
+            isMine: json['sender_id'] == CurrentUser.id,
           );
         }).toList();
         _isLoading = false;
@@ -61,10 +70,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load messages: $e')),
-      );
+      setState(() {
+        _isLoading = false;
+        _loadError = userMessageFor(e, fallback: 'Failed to load messages.');
+      });
     }
   }
   
@@ -98,7 +107,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       _messages.add(
         ChatMessage(
           id: tempId,
-          senderId: SharedStubData.currentUserId,
+          senderId: CurrentUser.id ?? '',
           content: text,
           sentAt: DateTime.now(),
           isMine: true,
@@ -125,9 +134,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         }
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send message: $e')),
-      );
+      if (!mounted) return;
+      setState(() {
+        _messages.removeWhere((ChatMessage m) => m.id == tempId);
+      });
+      AppToast.showError(context, e, fallback: 'Failed to send message.');
     }
   }
 
@@ -160,7 +171,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             UserProfileScreen.routeName,
             arguments: ProfileArgs(
               userId: args.counterpartUserId,
-              viewAsWorker: SharedStubData.currentUserProfile.role == UserRole.client,
+              viewAsWorker: SharedUserContext.isClient,
             ),
           ),
           borderRadius: BorderRadius.circular(8),
@@ -249,8 +260,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           Column(
             children: <Widget>[
               Expanded(
-                child: _isLoading 
+                child: _isLoading
                     ? const Center(child: CircularProgressIndicator())
+                    : _loadError != null
+                        ? ErrorStateView(
+                            message: _loadError!,
+                            title: 'Could not load chat',
+                            compact: true,
+                            onRetry: () => _loadMessages(
+                              _args!.jobId ?? _args!.conversationId,
+                            ),
+                          )
                     : _messages.isEmpty
                         ? Center(
                             child: Text(

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/utils/current_user.dart';
 import '../../../../shared/presentation/navigation/shared_route_args.dart';
-import '../../../../shared/data/shared_stub_data.dart';
 import '../../../../shared/models/conversation_summary.dart';
 import '../../../../shared/presentation/screens/chat_detail_screen.dart';
 import '../../../../shared/presentation/screens/messages_list_screen.dart';
@@ -105,7 +105,7 @@ class ClientNavigation {
     Navigator.pushNamed(
       context,
       UserProfileScreen.routeName,
-      arguments: const ProfileArgs(userId: SharedStubData.currentUserId),
+      arguments: ProfileArgs(userId: CurrentUser.id ?? ''),
     );
   }
 
@@ -121,34 +121,17 @@ class ClientNavigation {
     );
   }
 
-  /// Opens chat for an artisan from explore/list rows.
   static void openChatForArtisan(
     BuildContext context,
     Map<String, dynamic> artisan,
   ) {
     final String name = artisan['name'] as String? ?? 'Artisan';
-    ConversationSummary? match;
-    for (final ConversationSummary c in SharedStubData.conversations) {
-      if (c.counterpartName == name) {
-        match = c;
-        break;
-      }
-    }
-    if (match != null) {
-      openChat(
-        context,
-        conversationId: match.id,
-        counterpartUserId: match.counterpartUserId,
-        counterpartName: match.counterpartName,
-        jobId: match.jobId,
-        jobTitle: match.jobTitle,
-      );
-      return;
-    }
+    final String workerId =
+        artisan['id'] as String? ?? artisan['worker_id'] as String? ?? '';
     openChat(
       context,
-      conversationId: 'conv-${name.toLowerCase().replaceAll(' ', '-')}',
-      counterpartUserId: 'worker-${name.toLowerCase().replaceAll(' ', '-')}',
+      conversationId: workerId.isNotEmpty ? workerId : 'conv-$name',
+      counterpartUserId: workerId.isNotEmpty ? workerId : 'worker-unknown',
       counterpartName: name,
       jobTitle: artisan['profession'] as String?,
     );

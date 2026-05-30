@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../../shared/widgets/error_state_view.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
 import '../theme/worker_text_styles.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../utils/worker_job_mapper.dart';
 import '../widgets/history_job_card.dart';
 import '../widgets/segment_toggle.dart';
 
@@ -20,6 +24,7 @@ class WorkerBookingHistoryScreen extends StatefulWidget {
 class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen> {
   final WorkersService _workersService = WorkersService();
   bool _isLoading = true;
+  String? _loadError;
   bool _showCompleted = true;
   List<MockWorkerJob> _allJobs = [];
 
@@ -30,38 +35,27 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
   }
 
   Future<void> _loadHistory() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
     try {
       final dynamic response = await _workersService.getHistory();
       if (!mounted) return;
       final List<dynamic> data = response as List<dynamic>;
       setState(() {
-        _allJobs = data.map((dynamic item) {
-          final Map<String, dynamic> json = item as Map<String, dynamic>;
-          return MockWorkerJob(
-            id: json['id'] as String,
-            title: json['title'] as String,
-            category: json['category']?['name'] as String? ?? 'General',
-            description: json['description'] as String? ?? '',
-            addressLabel: json['location_address'] as String? ?? 'Unknown',
-            latitude: 0.0,
-            longitude: 0.0,
-            clientName: json['profiles']?['full_name'] as String? ?? 'Client',
-            urgency: JobUrgency.scheduled,
-            estimatedBudgetLabel: '${json['budget_min']} - ${json['budget_max']} GHS',
-            distanceKm: null,
-            historyDate: json['completed_at'] != null ? json['completed_at'].toString().split('T')[0] : 'Just now',
-            historyStatus: json['status'] == 'COMPLETED' ? HistoryStatus.completed : HistoryStatus.cancelled,
-          );
-        }).toList();
+        _allJobs = data
+            .map((dynamic item) =>
+                workerHistoryJobFromApi(item as Map<String, dynamic>))
+            .toList();
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load history: $e')),
-      );
+      setState(() {
+        _isLoading = false;
+        _loadError = userMessageFor(e, fallback: 'Failed to load history.');
+      });
     }
   }
 
@@ -120,8 +114,14 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
             ),
           ),
           Expanded(
-            child: _isLoading 
+            child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
+                : _loadError != null
+                    ? ErrorStateView(
+                        message: _loadError!,
+                        title: 'Could not load history',
+                        onRetry: _loadHistory,
+                      )
                 : _filtered.isEmpty
                     ? Center(
                         child: Text(

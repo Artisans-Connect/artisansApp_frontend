@@ -7,6 +7,7 @@ import '../client_shell.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../core/services/reviews_service.dart';
+import '../../../../shared/widgets/app_toast.dart';
 
 class RateServiceScreen extends StatefulWidget {
   final Map<String, dynamic>? service;
@@ -124,12 +125,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                     }
                     
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Rating submitted successfully!'),
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    AppToast.showSuccess(context, 'Rating submitted successfully!');
 
                     ClientNavigation.popToShellAndSelectTab(
                       context,
@@ -137,9 +133,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                     );
                   } catch (e) {
                     if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')),
-                    );
+                    AppToast.showError(context, e, fallback: 'Could not submit rating.');
                     setState(() => _isSubmitting = false);
                   }
                 },

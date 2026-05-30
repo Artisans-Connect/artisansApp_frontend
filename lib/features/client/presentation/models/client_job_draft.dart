@@ -124,6 +124,43 @@ class ClientJobDraft {
   }
 
   static String formatGhs(double amount) => 'GH₵${amount.toStringAsFixed(0)}';
+
+  /// Maps wizard draft fields to the Express `POST /jobs/create` body.
+  Map<String, dynamic> toCreateJobPayload() {
+    const double defaultLat = 5.6037;
+    const double defaultLng = -0.1870;
+
+    final String urgencyValue = (urgency ?? 'asap').toLowerCase();
+    final String jobMode = switch (urgencyValue) {
+      'scheduled' => 'scheduled',
+      'flexible' => 'flexible',
+      _ => 'asap',
+    };
+
+    final double minBudget = budgetMin >= 50 ? budgetMin : 50;
+    final double maxBudget = budgetMax >= minBudget ? budgetMax : minBudget;
+
+    final Map<String, dynamic> payload = <String, dynamic>{
+      'category_id': categoryId,
+      'title': displayTitle,
+      'description': displayDescription,
+      'photo_urls': data['photoUrls'] as List<dynamic>? ?? <dynamic>[],
+      'location_lat': (data['locationLat'] as num?)?.toDouble() ?? defaultLat,
+      'location_lng': (data['locationLng'] as num?)?.toDouble() ?? defaultLng,
+      'address_label': displayLocation,
+      'job_mode': jobMode,
+      'budget_type': 'range',
+      'budget_min': minBudget,
+      'budget_max': maxBudget,
+      'service_type': 'home_visit',
+    };
+
+    if (jobMode == 'scheduled' && preferredDate != null) {
+      payload['scheduled_for'] = preferredDate!.toUtc().toIso8601String();
+    }
+
+    return payload;
+  }
 }
 
 /// Subcategory options keyed by parent category id.
