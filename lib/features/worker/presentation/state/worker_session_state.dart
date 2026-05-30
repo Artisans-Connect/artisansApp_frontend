@@ -26,15 +26,16 @@ class WorkerSessionState extends ChangeNotifier {
           ? WorkerAvailabilityStatus.online
           : WorkerAvailabilityStatus.offline;
 
-  Future<void> setAvailable(bool value) async {
+  Future<bool> setAvailable(bool value) async {
     isAvailable = value;
     notifyListeners();
     try {
       await _workersService.toggleAvailability(value);
+      return true;
     } catch (_) {
-      // Revert if API call fails
       isAvailable = !value;
       notifyListeners();
+      return false;
     }
   }
 

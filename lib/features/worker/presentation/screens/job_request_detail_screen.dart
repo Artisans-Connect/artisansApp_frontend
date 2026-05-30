@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/services/workers_service.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -47,13 +48,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
       Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Unable to accept request right now. $e',
-          ),
-        ),
-      );
+      AppToast.showError(context, e, fallback: 'Unable to accept this request.');
       setState(() {
         _acceptLocked = false;
       });
@@ -69,8 +64,10 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     HapticFeedback.lightImpact();
     try {
       await _workersService.declineJob(widget.job.id);
-    } catch (_) {
-      // Ignore errors for now
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not decline request.');
+      }
     }
     if (mounted) Navigator.of(context).pop();
   }

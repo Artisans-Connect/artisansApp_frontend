@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/errors/auth_failure.dart';
+import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../client/presentation/client_shell.dart';
-import '../../../worker/presentation/worker_shell.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import 'onboarding_screen.dart';
+import 'role_selection_screen.dart';
+import 'sign_in_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,10 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initializeApp() async {
-    // Simulate startup tasks
-    await Future.wait([
-      Future.delayed(const Duration(seconds: 3)),
-    ]);
+    await Future<void>.delayed(const Duration(milliseconds: 800));
 
     if (!mounted) return;
 
@@ -35,16 +35,20 @@ class _SplashScreenState extends State<SplashScreen> {
       try {
         final user = await AuthService.instance.getCurrentUser();
         if (!mounted) return;
-        if (user.role == 'artisan') {
-          Navigator.pushReplacementNamed(context, WorkerShell.routeName);
+        Navigator.pushReplacementNamed(context, shellRouteForRole(user.role));
+      } on AuthFailure catch (e) {
+        if (!mounted) return;
+        if (e.code == AuthFailureCode.profileNotFound) {
+          Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
         } else {
-          Navigator.pushReplacementNamed(context, ClientShell.routeName);
+          Navigator.pushReplacementNamed(context, SignInScreen.routeName);
         }
-      } catch (e) {
-        Navigator.pushReplacementNamed(context, '/auth/onboarding');
+      } catch (_) {
+        if (!mounted) return;
+        Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       }
     } else {
-      Navigator.pushReplacementNamed(context, '/auth/onboarding');
+      Navigator.pushReplacementNamed(context, OnboardingScreen.routeName);
     }
   }
 
@@ -53,103 +57,36 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         width: double.infinity,
+        height: double.infinity,
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: <Color>[
-              Color(0xFF5B66E8),
-              Color(0xFF4A79E6),
-            ],
+            colors: <Color>[Color(0xFF6366F1), Color(0xFF3B82F6)],
           ),
         ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Spacer(flex: 3),
-
-            // Logo container
             Container(
-              height: 132,
-              width: 132,
+              width: 88,
+              height: 88,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(42),
-                border: Border.all(
-                  color: Colors.white.withOpacity(0.18),
-                ),
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(24),
               ),
-              child: const Icon(
-                Icons.build_rounded,
-                color: Colors.white,
-                size: 52,
-              ),
+              child: const Icon(Icons.handyman, color: Colors.white, size: 44),
             ),
-
-            const SizedBox(height: 28),
-
-            // App title
+            const SizedBox(height: 24),
             Text(
               'Artisans',
-              style: AppTextStyles.displayLg.copyWith(
+              style: AppTextStyles.displayMd.copyWith(
                 color: Colors.white,
-                fontSize: 72 * 0.78,
+                fontSize: 42,
               ),
             ),
-
-            const SizedBox(height: 10),
-
-            // Subtitle
-            Text(
-              'ELITE CRAFTSMANSHIP ON DEMAND',
-              style: AppTextStyles.labelCaps.copyWith(
-                color: Colors.white70,
-                letterSpacing: 2,
-              ),
-            ),
-
-            const SizedBox(height: 92),
-
-            // Infinite flowing loading bar
-            SizedBox(
-              width: 224,
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: const LinearProgressIndicator(
-                  minHeight: 6,
-                  backgroundColor: Color.fromRGBO(
-                    255,
-                    255,
-                    255,
-                    0.2,
-                  ),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    Colors.white,
-                  ),
-                ),
-              ),
-            ),
-
-            const Spacer(flex: 4),
-
-            // Footer
-            Text(
-              'POWERED BY',
-              style: AppTextStyles.labelCaps.copyWith(
-                color: Colors.white54,
-              ),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              'ArtisansConnect •',
-              style: AppTextStyles.bodyLg.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-
-            const SizedBox(height: 38),
+            const SizedBox(height: 32),
+            const CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

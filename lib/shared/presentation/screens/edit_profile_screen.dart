@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/services/profile_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../data/shared_stub_data.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_input.dart';
+import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
 
@@ -41,13 +42,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void initState() {
     super.initState();
     final session = SharedUserContext.session;
-    final base = SharedStubData.currentUserProfile;
+    final profile = SharedUserContext.buildOwnProfile();
     _nameController = TextEditingController(
-      text: session.fullName ?? base.fullName,
+      text: session.fullName ?? profile.fullName,
     );
-    _bioController = TextEditingController(text: session.bio ?? base.bio ?? '');
+    _bioController = TextEditingController(text: session.bio ?? profile.bio ?? '');
     _locationController = TextEditingController(
-      text: session.locationLabel ?? base.locationLabel ?? '',
+      text: session.locationLabel ?? profile.locationLabel ?? '',
     );
     _hourlyRateController = TextEditingController(
       text: session.hourlyRateNote ?? 'To be discussed with client',
@@ -55,12 +56,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _serviceAreasController = TextEditingController(
       text: session.serviceAreas.isNotEmpty
           ? session.serviceAreas.join(', ')
-          : base.serviceAreas.join(', '),
+          : profile.serviceAreas.join(', '),
     );
     if (session.selectedTrades.isNotEmpty) {
       _editableSkills.addAll(session.selectedTrades);
     } else if (SharedUserContext.isWorker) {
-      _editableSkills.addAll(base.skills);
+      _editableSkills.addAll(profile.skills);
     }
     _bioController.addListener(_onBioChanged);
   }
@@ -78,32 +79,25 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool get _isWorker => SharedUserContext.isWorker;
 
-  void _save() {
+  Future<void> _save() async {
     final session = SharedUserContext.session;
     session.fullName = _nameController.text.trim();
     session.bio = _bioController.text.trim();
     session.locationLabel = _locationController.text.trim();
-    if (_imageFile != null) {
-      session.avatarUrl = _imageFile!.path;
+
+    try {
+      await ProfileService.instance.updateProfile(<String, dynamic>{
+        'full_name': _nameController.text.trim(),
+        if (_bioController.text.trim().isNotEmpty)
+          'bio': _bioController.text.trim(),
+      });
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Profile updated.');
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not save profile.');
     }
-    if (_isWorker) {
-      session.hourlyRateNote = _hourlyRateController.text.trim();
-      session.selectedTrades
-        ..clear()
-        ..addAll(_editableSkills);
-      session.serviceAreas
-        ..clear()
-        ..addAll(
-          _serviceAreasController.text
-              .split(',')
-              .map((String s) => s.trim())
-              .where((String s) => s.isNotEmpty),
-        );
-    }
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile saved locally (stub).')),
-    );
-    Navigator.pop(context);
   }
 
   Future<void> _pickImage() async {
@@ -201,7 +195,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final String phone =
-        SharedUserContext.session.phone ?? SharedStubData.currentUserProfile.phone ?? '';
+        SharedUserContext.session.phone ?? SharedUserContext.buildOwnProfile().phone ?? '';
 
     return Scaffold(
       backgroundColor: AppColors.surface,

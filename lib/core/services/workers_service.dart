@@ -28,6 +28,23 @@ class WorkersService {
     return await _api.get('/workers/me/history');
   }
 
+  Future<List<dynamic>> getJobRequests() async {
+    final response = await _api.get('/workers/me/job-requests');
+    return response as List<dynamic>;
+  }
+
+  Future<List<dynamic>> getNearby({
+    required String categoryId,
+    required double lat,
+    required double lng,
+    double radiusKm = 15,
+  }) async {
+    final response = await _api.get(
+      '/workers/nearby?category_id=$categoryId&lat=$lat&lng=$lng&radius_km=$radiusKm',
+    );
+    return response as List<dynamic>;
+  }
+
   Future<dynamic> acceptJob(String jobId) async {
     return await _api.post('/workers/accept/$jobId');
   }

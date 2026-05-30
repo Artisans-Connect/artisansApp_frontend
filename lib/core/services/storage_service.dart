@@ -2,6 +2,13 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_constants.dart';
 
+class StorageException implements Exception {
+  const StorageException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+
 class StorageService {
   static final StorageService instance = StorageService._();
   StorageService._();
@@ -18,19 +25,19 @@ class StorageService {
 
   Future<String?> _uploadFile(File file, String bucketName) async {
     try {
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
-      final String path = await _supabase.storage.from(bucketName).upload(
-        fileName,
-        file,
-        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
-      );
-      
-      // Get the public URL
-      final String publicUrl = _supabase.storage.from(bucketName).getPublicUrl(fileName);
-      return publicUrl;
+      final String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${file.path.split(Platform.pathSeparator).last}';
+      await _supabase.storage.from(bucketName).upload(
+            fileName,
+            file,
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+          );
+
+      return _supabase.storage.from(bucketName).getPublicUrl(fileName);
     } catch (e) {
-      print('Error uploading file to $bucketName: $e');
-      return null;
+      throw StorageException(
+        'Upload failed. Check your connection and try again.',
+      );
     }
   }
 }

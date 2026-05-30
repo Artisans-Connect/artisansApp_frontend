@@ -6,6 +6,7 @@ import 'features/auth/presentation/screens/role_selection_screen.dart';
 import 'features/auth/presentation/screens/sign_in_screen.dart';
 import 'features/auth/presentation/screens/sign_up_screen.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
+import 'features/auth/presentation/screens/verify_email_screen.dart';
 import 'features/worker/presentation/worker_shell.dart';
 import 'features/client/presentation/client_shell.dart';
 import 'shared/presentation/screens/chat_detail_screen.dart';
@@ -31,6 +32,10 @@ class MyApp extends StatelessWidget {
         RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
         SignInScreen.routeName: (_) => const SignInScreen(),
         SignUpScreen.routeName: (_) => const SignUpScreen(),
+        VerifyEmailScreen.routeName: (BuildContext context) {
+          final Object? args = ModalRoute.of(context)?.settings.arguments;
+          return VerifyEmailScreen(email: args is String ? args : '');
+        },
         MessagesListScreen.routeName: (_) => const MessagesListScreen(),
         ChatDetailScreen.routeName: (_) => const ChatDetailScreen(),
         UserProfileScreen.routeName: (_) => const UserProfileScreen(),

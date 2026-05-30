@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -127,9 +128,7 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
   }
 
   void _stub(BuildContext context, String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action — integration later')),
-    );
+    AppToast.showInfo(context, '$action — coming soon');
   }
 }
 

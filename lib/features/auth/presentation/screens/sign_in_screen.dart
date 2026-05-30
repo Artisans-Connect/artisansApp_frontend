@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/auth_failure.dart';
+import '../../../../core/navigation/auth_navigation.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_input.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
-import '../../../../core/services/auth_service.dart';
-import '../../../client/presentation/client_shell.dart';
-import '../../../worker/presentation/worker_shell.dart';
+import '../../widgets/auth_error_banner.dart';
+import 'role_selection_screen.dart';
 
 class SignInScreen extends StatefulWidget {
-  const SignInScreen({super.key});
+  const SignInScreen({super.key, this.initialEmail});
 
   static const String routeName = '/auth/sign-in';
+
+  final String? initialEmail;
 
   @override
   State<SignInScreen> createState() => _SignInScreenState();
@@ -19,9 +24,25 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  final TextEditingController _emailController = TextEditingController();
+  late final TextEditingController _emailController;
   final TextEditingController _passwordController = TextEditingController();
   bool _isSubmitting = false;
+  AuthFailure? _authError;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController = TextEditingController(text: widget.initialEmail);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final Object? args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String && _emailController.text.isEmpty) {
+      _emailController.text = args;
+    }
+  }
 
   @override
   void dispose() {
@@ -30,31 +51,46 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
+  Future<void> _resendVerification() async {
+    final String email = _emailController.text.trim();
+    if (email.isEmpty) return;
+    try {
+      await AuthService.instance.resendVerificationEmail(email);
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Confirmation email sent.');
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not resend email.');
+    }
+  }
+
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    setState(() => _isSubmitting = true);
+    setState(() {
+      _isSubmitting = true;
+      _authError = null;
+    });
 
     try {
       final user = await AuthService.instance.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-      
+
       if (!mounted) return;
-      if (user.role == 'artisan') {
-        Navigator.pushReplacementNamed(context, WorkerShell.routeName);
-      } else {
-        Navigator.pushReplacementNamed(context, ClientShell.routeName);
+      Navigator.pushReplacementNamed(context, shellRouteForRole(user.role));
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      if (e.code == AuthFailureCode.profileNotFound) {
+        Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
+        return;
       }
+      setState(() => _authError = e);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign in failed: $e')),
-      );
+      AppToast.showError(context, e, fallback: 'Sign in failed. Please try again.');
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -74,7 +110,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   border:
-                      Border.all(color: AppColors.outline.withOpacity(0.35)),
+                      Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
                 ),
                 child: Form(
                   key: _formKey,
@@ -104,6 +140,20 @@ class _SignInScreenState extends State<SignInScreen> {
                       Center(
                           child: Text('Sign in to continue to Artisans.',
                               style: AppTextStyles.bodyLg)),
+                      if (_authError != null) ...<Widget>[
+                        const SizedBox(height: 16),
+                        AuthErrorBanner(
+                          message: _authError!.message,
+                          actionLabel: _authError!.code ==
+                                  AuthFailureCode.emailNotConfirmed
+                              ? 'Resend confirmation email'
+                              : null,
+                          onAction: _authError!.code ==
+                                  AuthFailureCode.emailNotConfirmed
+                              ? _resendVerification
+                              : null,
+                        ),
+                      ],
                       const SizedBox(height: 22),
                       Text('Email Address',
                           style: AppTextStyles.bodyLg.copyWith(

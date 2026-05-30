@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/errors/auth_failure.dart';
+import '../../../../core/navigation/auth_navigation.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/widgets/app_input.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
-import '../../../../core/services/auth_service.dart';
+import '../../widgets/auth_error_banner.dart';
+import 'role_selection_screen.dart';
+import 'verify_email_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -24,6 +30,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _passwordController = TextEditingController();
   bool _agreed = false;
   bool _isSubmitting = false;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -36,29 +43,42 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate() || !_agreed) return;
-    setState(() => _isSubmitting = true);
+    setState(() {
+      _isSubmitting = true;
+      _errorMessage = null;
+    });
+
+    final String email = _emailController.text.trim();
+    final onboarding = OnboardingSession.instance;
+    onboarding.fullName = _nameController.text.trim();
+    onboarding.phone = _phoneController.text.trim();
 
     try {
-      await AuthService.instance.signUp(
-        email: _emailController.text.trim(),
+      final outcome = await AuthService.instance.signUp(
+        email: email,
         password: _passwordController.text,
-        fullName: _nameController.text.trim(),
-        phone: _phoneController.text.trim(),
       );
+
       if (!mounted) return;
-      // After signup, we might want to let the user select their role or if role is already selected.
-      // Wait, let's just go to role selection since OnboardingSession might hold the role, or we update role there.
-      // Let's stick to the current flow of going to role-selection.
-      Navigator.pushNamed(context, '/auth/role-selection');
+
+      if (outcome.needsEmailVerification) {
+        Navigator.pushReplacementNamed(
+          context,
+          VerifyEmailScreen.routeName,
+          arguments: email,
+        );
+        return;
+      }
+
+      Navigator.pushNamed(context, RoleSelectionScreen.routeName);
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      setState(() => _errorMessage = e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sign up failed: $e')),
-      );
+      AppToast.showError(context, e, fallback: 'Sign up failed. Please try again.');
     } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
+      if (mounted) setState(() => _isSubmitting = false);
     }
   }
 
@@ -86,7 +106,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.06),
+                        color: Colors.black.withValues(alpha: 0.06),
                         blurRadius: 18,
                         offset: const Offset(0, 8),
                       ),
@@ -103,7 +123,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                                color: AppColors.outline.withOpacity(0.3)),
+                                color: AppColors.outline.withValues(alpha: 0.3)),
                           ),
                           child: const Icon(Icons.brush_outlined,
                               color: AppColors.primary),
@@ -123,7 +143,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           style: AppTextStyles.bodyLg,
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      if (_errorMessage != null) ...<Widget>[
+                        const SizedBox(height: 16),
+                        AuthErrorBanner(message: _errorMessage!),
+                      ],
+                      const SizedBox(height: 22),
                       Text('Full Name',
                           style: AppTextStyles.bodyLg.copyWith(
                               color: AppColors.textPrimary,
@@ -131,14 +155,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 8),
                       AppInput(
                         controller: _nameController,
-                        hint: 'John Doe',
-                        prefixIcon: Icons.person_outline,
+                        hint: 'Your full name',
                         validator: (String? v) =>
-                            (v == null || v.trim().length < 3)
-                                ? 'Enter your full name.'
+                            (v == null || v.trim().isEmpty)
+                                ? 'Enter your name.'
                                 : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Text('Email Address',
                           style: AppTextStyles.bodyLg.copyWith(
                               color: AppColors.textPrimary,
@@ -146,34 +169,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 8),
                       AppInput(
                         controller: _emailController,
-                        hint: 'name@company.com',
-                        prefixIcon: Icons.mail_outline,
+                        hint: 'you@example.com',
                         keyboardType: TextInputType.emailAddress,
                         validator: (String? v) =>
                             (v == null || !v.contains('@'))
                                 ? 'Enter a valid email.'
                                 : null,
                       ),
-                      const SizedBox(height: 12),
-                      Text('Phone Number',
+                      const SizedBox(height: 14),
+                      Text('Phone',
                           style: AppTextStyles.bodyLg.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       AppInput(
                         controller: _phoneController,
-                        hint: '+1 (555) 000-0000',
-                        prefixIcon: Icons.phone_outlined,
+                        hint: '+233…',
                         keyboardType: TextInputType.phone,
-                        validator: (String? v) {
-                          final String value = (v ?? '').trim();
-                          if (value.isEmpty) return null;
-                          if (value.length < 10)
-                            return 'Enter a valid phone number.';
-                          return null;
-                        },
+                        validator: (String? v) =>
+                            (v == null || v.trim().length < 8)
+                                ? 'Enter a valid phone number.'
+                                : null,
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       Text('Password',
                           style: AppTextStyles.bodyLg.copyWith(
                               color: AppColors.textPrimary,
@@ -182,42 +200,26 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       AppInput(
                         controller: _passwordController,
                         hint: '••••••••',
-                        prefixIcon: Icons.lock_outline,
                         obscureText: true,
                         validator: (String? v) => (v == null || v.length < 6)
                             ? 'Enter at least 6 characters.'
                             : null,
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 14),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Checkbox(
                             value: _agreed,
-                            onChanged: (bool? value) =>
-                                setState(() => _agreed = value ?? false),
+                            onChanged: (bool? v) =>
+                                setState(() => _agreed = v ?? false),
                           ),
                           Expanded(
                             child: Padding(
-                              padding: const EdgeInsets.only(top: 11),
-                              child: RichText(
-                                text: TextSpan(
-                                  style: AppTextStyles.bodyLg,
-                                  children: const <TextSpan>[
-                                    TextSpan(text: 'I agree to the '),
-                                    TextSpan(
-                                        text: 'Terms of Service',
-                                        style: TextStyle(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w700)),
-                                    TextSpan(text: ' and '),
-                                    TextSpan(
-                                        text: 'Privacy Policy.',
-                                        style: TextStyle(
-                                            color: AppColors.primary,
-                                            fontWeight: FontWeight.w700)),
-                                  ],
-                                ),
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                'I agree to the Terms of Service and Privacy Policy.',
+                                style: AppTextStyles.bodyMd,
                               ),
                             ),
                           ),
@@ -225,8 +227,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 8),
                       GradientButton(
-                        label: 'Sign Up',
-                        trailingIcon: Icons.arrow_forward,
+                        label: 'Create Account',
                         isLoading: _isSubmitting,
                         onPressed: _submit,
                       ),
@@ -236,36 +237,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           onPressed: () =>
                               Navigator.pushNamed(context, '/auth/sign-in'),
                           child: const Text('Already have an account? Sign In'),
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                      Center(
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Container(
-                                width: 60,
-                                height: 2,
-                                color: AppColors.outline.withOpacity(0.5)),
-                            const SizedBox(width: 16),
-                            const CircleAvatar(
-                                radius: 4, backgroundColor: AppColors.primary),
-                            const SizedBox(width: 8),
-                            CircleAvatar(
-                                radius: 4,
-                                backgroundColor:
-                                    AppColors.primary.withOpacity(0.35)),
-                            const SizedBox(width: 8),
-                            CircleAvatar(
-                                radius: 4,
-                                backgroundColor:
-                                    AppColors.secondary.withOpacity(0.3)),
-                            const SizedBox(width: 16),
-                            Container(
-                                width: 60,
-                                height: 2,
-                                color: AppColors.outline.withOpacity(0.5)),
-                          ],
                         ),
                       ),
                     ],

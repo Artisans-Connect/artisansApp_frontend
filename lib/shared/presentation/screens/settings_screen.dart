@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../features/auth/presentation/screens/role_selection_screen.dart';
+import '../../../features/auth/presentation/screens/sign_in_screen.dart';
 import '../../utils/shared_user_context.dart';
+import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/settings_group_tile.dart';
 import 'edit_profile_screen.dart';
@@ -38,18 +40,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancel')),
           TextButton(
-            onPressed: () {
-              SharedUserContext.session.reset();
+            onPressed: () async {
               Navigator.pop(context);
+              await AuthService.instance.signOut();
+              SharedUserContext.session.reset();
+              if (!context.mounted) return;
               Navigator.pushNamedAndRemoveUntil(
                 context,
-                RoleSelectionScreen.routeName,
+                SignInScreen.routeName,
                 (Route<dynamic> route) => false,
               );
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Logout is stubbed for this UI phase.')),
-              );
+              AppToast.showSuccess(context, 'Signed out.');
             },
             child: const Text('Log out',
                 style: TextStyle(color: AppColors.error)),
@@ -60,9 +61,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showStub(String title) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$title will open here in a future release.')),
-    );
+    AppToast.showInfo(context, '$title — coming soon');
   }
 
   void _openNotificationPrefs() {
