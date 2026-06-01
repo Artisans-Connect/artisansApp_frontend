@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
 import '../../../core/utils/current_user.dart';
@@ -112,7 +113,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: AppColors.primary,
-        child: const Icon(Icons.edit_outlined, color: Colors.white),
+        child: Icon(PhosphorIcons.pencilSimple(), color: Colors.white),
       ),
     );
   }
@@ -126,7 +127,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
           IconButton(
             onPressed: () =>
                 Navigator.pushNamed(context, SettingsScreen.routeName),
-            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.dotsThreeVertical(), color: AppColors.textPrimary),
           ),
         ],
         const SizedBox(width: 4),
@@ -188,7 +189,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(Icons.chat_bubble_outline,
+            Icon(PhosphorIcons.chatCircle(),
                 size: 64, color: AppColors.outline),
             const SizedBox(height: 16),
             Text(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/mock_worker_job.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
@@ -19,11 +20,11 @@ class HistoryJobCard extends StatelessWidget {
     final isCompleted = job.historyStatus == HistoryStatus.completed;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: WorkerSpacing.md),
-      padding: const EdgeInsets.all(WorkerSpacing.md),
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: WorkerColors.surface,
-        borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppColors.cardRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -39,7 +40,7 @@ class HistoryJobCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(job.title, style: WorkerTextStyles.titleMd),
+                child: Text(job.title, style: AppTypography.titleMd),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -48,16 +49,16 @@ class HistoryJobCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? WorkerColors.success.withOpacity(0.15)
-                      : WorkerColors.errorContainer,
+                      ? AppColors.success.withOpacity(0.15)
+                      : AppColors.errorContainer,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   isCompleted ? 'Finished' : 'Cancelled',
-                  style: WorkerTextStyles.badge.copyWith(
+                  style: AppTypography.badge.copyWith(
                     color: isCompleted
-                        ? WorkerColors.successDark
-                        : WorkerColors.error,
+                        ? AppColors.successDark
+                        : AppColors.error,
                     fontSize: 10,
                   ),
                 ),
@@ -67,7 +68,7 @@ class HistoryJobCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Client: ${job.clientName}',
-            style: WorkerTextStyles.bodyMd,
+            style: AppTypography.bodyMd,
           ),
           if (job.historyRating != null) ...[
             const SizedBox(height: 8),
@@ -77,8 +78,8 @@ class HistoryJobCard extends StatelessWidget {
                   5,
                   (i) => Icon(
                     i < job.historyRating!.round()
-                        ? Icons.star_rounded
-                        : Icons.star_outline_rounded,
+                        ? PhosphorIcons.star()
+                        : PhosphorIcons.star(),
                     size: 16,
                     color: const Color(0xFFFFB800),
                   ),
@@ -86,23 +87,23 @@ class HistoryJobCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   job.historyRating!.toStringAsFixed(1),
-                  style: WorkerTextStyles.bodyMd,
+                  style: AppTypography.bodyMd,
                 ),
               ],
             ),
           ],
-          const SizedBox(height: WorkerSpacing.md),
+          const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              const Icon(
-                Icons.calendar_today_outlined,
+              Icon(
+                PhosphorIcons.calendarBlank(),
                 size: 14,
-                color: WorkerColors.outline,
+                color: AppColors.outline,
               ),
               const SizedBox(width: 4),
               Text(
                 job.historyDate ?? '—',
-                style: WorkerTextStyles.bodyMd,
+                style: AppTypography.bodyMd,
               ),
               const Spacer(),
               TextButton(
@@ -114,8 +115,8 @@ class HistoryJobCard extends StatelessWidget {
                     },
                 child: Text(
                   'View details >',
-                  style: WorkerTextStyles.bodyLg.copyWith(
-                    color: WorkerColors.accentBlue,
+                  style: AppTypography.bodyLg.copyWith(
+                    color: AppColors.accentBlue,
                     fontSize: 13,
                   ),
                 ),

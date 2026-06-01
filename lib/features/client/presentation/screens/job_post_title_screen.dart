@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -118,14 +119,14 @@ class _JobPostTitleScreenState extends State<JobPostTitleScreen> {
           ),
           const SizedBox(height: AppSpacing.lg),
           _TipRow(
-            icon: Icons.check_circle,
+            icon: PhosphorIcons.checkCircle(),
             color: AppColors.success,
             title: 'Good',
             example: 'Repair oak dining table leg',
           ),
           const SizedBox(height: AppSpacing.sm),
           _TipRow(
-            icon: Icons.cancel,
+            icon: PhosphorIcons.xCircle(),
             color: AppColors.error,
             title: 'Avoid',
             example: 'URGENT HELP NEEDED!!!',

@@ -35,17 +35,17 @@ class GradientButton extends StatelessWidget {
                 }
                 effectiveOnPressed();
               },
-        borderRadius: BorderRadius.circular(WorkerColors.inputRadius),
+        borderRadius: BorderRadius.circular(AppColors.inputRadius),
         child: Ink(
           height: 52,
           decoration: BoxDecoration(
             gradient: effectiveOnPressed != null
-                ? WorkerColors.primaryGradient
+                ? AppColors.primaryGradient
                 : null,
             color: effectiveOnPressed == null
-                ? WorkerColors.outlineVariant
+                ? AppColors.outlineVariant
                 : null,
-            borderRadius: BorderRadius.circular(WorkerColors.inputRadius),
+            borderRadius: BorderRadius.circular(AppColors.inputRadius),
           ),
           child: Center(
             child: isLoading
@@ -54,13 +54,13 @@ class GradientButton extends StatelessWidget {
                     height: 22,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: WorkerColors.onPrimary,
+                      color: AppColors.onPrimary,
                     ),
                   )
                 : Text(
                     label,
-                    style: WorkerTextStyles.bodyLg.copyWith(
-                      color: WorkerColors.onPrimary,
+                    style: AppTypography.bodyLg.copyWith(
+                      color: AppColors.onPrimary,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -94,15 +94,15 @@ class OutlineButton extends StatelessWidget {
             },
       style: OutlinedButton.styleFrom(
         minimumSize: const Size.fromHeight(52),
-        side: const BorderSide(color: WorkerColors.outline),
+        side: const BorderSide(color: AppColors.outline),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(WorkerColors.inputRadius),
+          borderRadius: BorderRadius.circular(AppColors.inputRadius),
         ),
       ),
       child: Text(
         label,
-        style: WorkerTextStyles.bodyLg.copyWith(
-          color: WorkerColors.onSurface,
+        style: AppTypography.bodyLg.copyWith(
+          color: AppColors.onSurface,
           fontWeight: FontWeight.w600,
         ),
       ),

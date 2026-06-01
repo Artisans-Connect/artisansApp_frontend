@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -29,6 +30,7 @@ class FindingArtisanScreen extends StatefulWidget {
 class _FindingArtisanScreenState extends State<FindingArtisanScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
+  late Animation<double> _curvedTurns;
   final JobsService _jobsService = JobsService();
   Timer? _pollTimer;
   String? _errorMessage;
@@ -41,6 +43,10 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat();
+    _curvedTurns = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOutCubic,
+    );
     _startPolling();
   }
 
@@ -137,7 +143,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                   children: <Widget>[
                     SizedBox(height: MediaQuery.of(context).size.height * 0.1),
                     RotationTransition(
-                      turns: _animationController,
+                      turns: _curvedTurns,
                       child: Container(
                         width: 120,
                         height: 120,
@@ -148,7 +154,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                             width: 3,
                           ),
                         ),
-                        child: const Icon(Icons.search, color: AppColors.primary, size: 48),
+                        child: Icon(PhosphorIcons.magnifyingGlass(), color: AppColors.primary, size: 48),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.xl),

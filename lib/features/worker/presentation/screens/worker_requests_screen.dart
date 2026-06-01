@@ -79,13 +79,13 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
     final session = WorkerScope.of(context);
 
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
           'Job Requests',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
+          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
       ),
@@ -99,10 +99,10 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
   Widget _buildBody(WorkerSessionState session) {
     if (_viewState == RequestsViewState.loading) {
       return ListView(
-        padding: const EdgeInsets.all(WorkerSpacing.gutter),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
         children: const <Widget>[
           SkeletonBox(height: 120),
-          SizedBox(height: WorkerSpacing.md),
+          SizedBox(height: AppSpacing.md),
           SkeletonBox(height: 160),
         ],
       );
@@ -124,10 +124,10 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
-        WorkerSpacing.gutter,
-        WorkerSpacing.md,
-        WorkerSpacing.gutter,
-        WorkerSpacing.gutter,
+        AppSpacing.gutter,
+        AppSpacing.md,
+        AppSpacing.gutter,
+        AppSpacing.gutter,
       ),
       children: <Widget>[
         AvailabilityCard(
@@ -143,22 +143,22 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
             }
           },
         ),
-        const SizedBox(height: WorkerSpacing.lg),
+        const SizedBox(height: AppSpacing.lg),
         if (_viewState == RequestsViewState.empty)
           Padding(
             padding: const EdgeInsets.only(top: 48),
             child: Text(
               'No open requests right now.\nPull down to refresh.',
               textAlign: TextAlign.center,
-              style: WorkerTextStyles.bodyLg.copyWith(
-                color: WorkerColors.onSurfaceVariant,
+              style: AppTypography.bodyLg.copyWith(
+                color: AppColors.onSurfaceVariant,
               ),
             ),
           )
         else
           ..._jobs.map(
             (MockWorkerJob job) => Padding(
-              padding: const EdgeInsets.only(bottom: WorkerSpacing.md),
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
               child: RequestJobCard(
                 job: job,
                 onAccept: () => _openDetail(job),

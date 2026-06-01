@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/services/workers_service.dart';
@@ -77,18 +78,18 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     final job = widget.job;
 
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
+          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          color: AppColors.primary,
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Request Details',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
+          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
       ),
@@ -97,10 +98,10 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(
-                WorkerSpacing.gutter,
+                AppSpacing.gutter,
                 0,
-                WorkerSpacing.gutter,
-                WorkerSpacing.md,
+                AppSpacing.gutter,
+                AppSpacing.md,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,7 +110,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(job.title, style: WorkerTextStyles.titleMd),
+                        child: Text(job.title, style: AppTypography.titleMd),
                       ),
                       if (job.isUrgent)
                         Container(
@@ -118,53 +119,53 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: WorkerColors.primaryFixed,
+                            color: AppColors.primaryFixed,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             'URGENT',
-                            style: WorkerTextStyles.badge.copyWith(
-                              color: WorkerColors.primary,
+                            style: AppTypography.badge.copyWith(
+                              color: AppColors.primary,
                               fontSize: 10,
                             ),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: WorkerSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
                       CircleAvatar(
                         radius: 24,
-                        backgroundColor: WorkerColors.primaryFixed,
+                        backgroundColor: AppColors.primaryFixed,
                         child: Text(
                           job.clientName.substring(0, 1),
-                          style: WorkerTextStyles.titleMd.copyWith(
-                            color: WorkerColors.primary,
+                          style: AppTypography.titleMd.copyWith(
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
-                      const SizedBox(width: WorkerSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             job.clientName,
-                            style: WorkerTextStyles.bodyLg.copyWith(
-                              color: WorkerColors.onSurface,
+                            style: AppTypography.bodyLg.copyWith(
+                              color: AppColors.onSurface,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
                           Row(
                             children: [
-                              const Icon(
-                                Icons.star_rounded,
+                              Icon(
+                                PhosphorIcons.star(),
                                 size: 16,
                                 color: Color(0xFFFFB800),
                               ),
                               Text(
                                 ' ${formatRating(job.clientRating)} (${job.reviewCount} Reviews)',
-                                style: WorkerTextStyles.bodyMd,
+                                style: AppTypography.bodyMd,
                               ),
                             ],
                           ),
@@ -172,52 +173,52 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: WorkerSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.place_outlined,
+                      Icon(
+                        PhosphorIcons.mapPin(),
                         size: 18,
-                        color: WorkerColors.outline,
+                        color: AppColors.outline,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '${job.distanceText} from your location',
-                        style: WorkerTextStyles.bodyMd,
+                        style: AppTypography.bodyMd,
                       ),
                     ],
                   ),
-                  const SizedBox(height: WorkerSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   MapPlaceholder(
                     height: 140,
                     compact: true,
                     addressLabel: job.mapLabel ?? job.addressLabel,
                   ),
-                  const SizedBox(height: WorkerSpacing.lg),
-                  Text('REQUEST DESCRIPTION', style: WorkerTextStyles.labelCaps),
-                  const SizedBox(height: WorkerSpacing.sm),
-                  Text(job.description, style: WorkerTextStyles.bodyMd),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('REQUEST DESCRIPTION', style: AppTypography.labelCaps),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(job.description, style: AppTypography.bodyMd),
                   if (job.referencePhotoLabels.isNotEmpty) ...[
-                    const SizedBox(height: WorkerSpacing.lg),
+                    const SizedBox(height: AppSpacing.lg),
                     Row(
                       children: [
-                        Text('SITE PHOTOS', style: WorkerTextStyles.labelCaps),
+                        Text('SITE PHOTOS', style: AppTypography.labelCaps),
                         const Spacer(),
                         Text(
                           '${job.photoCount} PHOTOS',
-                          style: WorkerTextStyles.labelCaps.copyWith(
-                            color: WorkerColors.accentBlue,
+                          style: AppTypography.labelCaps.copyWith(
+                            color: AppColors.accentBlue,
                             fontSize: 10,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: WorkerSpacing.sm),
+                    const SizedBox(height: AppSpacing.sm),
                     ReferencePhotosRow(labels: job.referencePhotoLabels),
                   ],
-                  const SizedBox(height: WorkerSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
                   TimingEstimateRow(job: job),
-                  const SizedBox(height: WorkerSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -226,7 +227,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.phone_outlined),
+                    icon: Icon(PhosphorIcons.phone()),
                     label: Text('Call ${job.clientName}'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(52),
@@ -235,20 +236,20 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: WorkerSpacing.lg),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),
           ),
           Container(
             padding: const EdgeInsets.fromLTRB(
-              WorkerSpacing.gutter,
+              AppSpacing.gutter,
               12,
-              WorkerSpacing.gutter,
-              WorkerSpacing.md,
+              AppSpacing.gutter,
+              AppSpacing.md,
             ),
             decoration: BoxDecoration(
-              color: WorkerColors.surface,
+              color: AppColors.surface,
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.06),

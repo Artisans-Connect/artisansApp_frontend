@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -26,7 +27,7 @@ class WorkerOnboardingHeader extends StatelessWidget {
             children: <Widget>[
               IconButton(
                 onPressed: onBack,
-                icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+                icon: Icon(PhosphorIcons.arrowLeft(), color: AppColors.primary),
               ),
               Expanded(
                 child: Text(

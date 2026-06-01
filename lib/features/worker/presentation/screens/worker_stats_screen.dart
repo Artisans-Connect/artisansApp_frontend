@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../models/mock_worker_data.dart';
 import '../state/worker_session_state.dart';
@@ -12,13 +13,13 @@ class WorkerStatsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
+          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          color: AppColors.primary,
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).maybePop();
@@ -29,11 +30,11 @@ class WorkerStatsScreen extends StatelessWidget {
         ),
         title: Text(
           'Your Stats',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
+          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings_outlined),
+            icon: Icon(PhosphorIcons.gear()),
             onPressed: () {
               Navigator.pushNamed(context, SettingsScreen.routeName);
             },
@@ -41,44 +42,44 @@ class WorkerStatsScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(WorkerSpacing.gutter),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Performance Overview', style: WorkerTextStyles.titleMd),
+            Text('Performance Overview', style: AppTypography.titleMd),
             const SizedBox(height: 4),
             Text(
               'Track your professional growth as an artisan.',
-              style: WorkerTextStyles.bodyMd,
+              style: AppTypography.bodyMd,
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
                 _StatCard(
-                  icon: Icons.check_circle,
+                  icon: PhosphorIcons.checkCircle(),
                   value: '${MockWorkerData.totalJobs}',
                   label: 'JOBS',
-                  iconColor: WorkerColors.primary,
+                  iconColor: AppColors.primary,
                 ),
-                const SizedBox(width: WorkerSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 _StatCard(
-                  icon: Icons.star_outline,
+                  icon: PhosphorIcons.star(),
                   value: '0.0',
                   label: 'RATING',
                 ),
-                const SizedBox(width: WorkerSpacing.sm),
+                const SizedBox(width: AppSpacing.sm),
                 _StatCard(
-                  icon: Icons.timer_outlined,
+                  icon: PhosphorIcons.timer(),
                   value: MockWorkerData.responseHoursLabel,
                   label: 'RESPONSE',
-                  iconColor: WorkerColors.secondary,
+                  iconColor: AppColors.secondary,
                 ),
               ],
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Row(
               children: [
-                Text('Recent Reviews', style: WorkerTextStyles.titleMd),
+                Text('Recent Reviews', style: AppTypography.titleMd),
                 const SizedBox(width: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -86,45 +87,45 @@ class WorkerStatsScreen extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: WorkerColors.primaryFixed,
+                    color: AppColors.primaryFixed,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     'New',
-                    style: WorkerTextStyles.badge.copyWith(
-                      color: WorkerColors.primary,
+                    style: AppTypography.badge.copyWith(
+                      color: AppColors.primary,
                       fontSize: 10,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: WorkerSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             Container(
-              padding: const EdgeInsets.all(WorkerSpacing.xl),
+              padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
-                color: WorkerColors.surface,
-                borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppColors.cardRadius),
               ),
               child: Column(
                 children: [
                   Icon(
-                    Icons.engineering_outlined,
+                    PhosphorIcons.hardHat(),
                     size: 64,
-                    color: WorkerColors.primary.withOpacity(0.4),
+                    color: AppColors.primary.withOpacity(0.4),
                   ),
-                  const SizedBox(height: WorkerSpacing.md),
-                  Text('No reviews yet.', style: WorkerTextStyles.titleMd),
+                  const SizedBox(height: AppSpacing.md),
+                  Text('No reviews yet.', style: AppTypography.titleMd),
                   const SizedBox(height: 8),
                   Text(
                     'Complete your first few jobs to receive feedback from your clients and build your profile.',
-                    style: WorkerTextStyles.bodyMd,
+                    style: AppTypography.bodyMd,
                     textAlign: TextAlign.center,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             OutlinedButton(
               onPressed: () {
                 WorkerScope.of(context).setProfilePage(WorkerProfilePage.history);
@@ -161,10 +162,10 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.all(WorkerSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: WorkerColors.surface,
-          borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppColors.cardRadius),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),
@@ -174,10 +175,10 @@ class _StatCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Icon(icon, color: iconColor ?? WorkerColors.outline),
-            const SizedBox(height: WorkerSpacing.sm),
-            Text(value, style: WorkerTextStyles.titleMd.copyWith(fontSize: 18)),
-            Text(label, style: WorkerTextStyles.labelCaps.copyWith(fontSize: 9)),
+            Icon(icon, color: iconColor ?? AppColors.outline),
+            const SizedBox(height: AppSpacing.sm),
+            Text(value, style: AppTypography.titleMd.copyWith(fontSize: 18)),
+            Text(label, style: AppTypography.labelCaps.copyWith(fontSize: 9)),
           ],
         ),
       ),

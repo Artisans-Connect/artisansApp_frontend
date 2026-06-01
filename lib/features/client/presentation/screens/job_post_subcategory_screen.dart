@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -98,7 +99,7 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
               hintText: 'Search service types…',
-              prefixIcon: const Icon(Icons.search),
+              prefixIcon: Icon(PhosphorIcons.magnifyingGlass()),
               filled: true,
               fillColor: AppColors.surfaceContainerLowest,
               border: OutlineInputBorder(

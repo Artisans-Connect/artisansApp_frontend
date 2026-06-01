@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
@@ -96,7 +97,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: <Widget>[
                 IconButton(
                   onPressed: () => Navigator.maybePop(context),
-                  icon: const Icon(Icons.arrow_back),
+                  icon: Icon(PhosphorIcons.arrowLeft()),
                 ),
                 const SizedBox(height: 6),
                 Container(
@@ -125,7 +126,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             border: Border.all(
                                 color: AppColors.outline.withValues(alpha: 0.3)),
                           ),
-                          child: const Icon(Icons.brush_outlined,
+                          child: Icon(PhosphorIcons.paintBrush(),
                               color: AppColors.primary),
                         ),
                       ),

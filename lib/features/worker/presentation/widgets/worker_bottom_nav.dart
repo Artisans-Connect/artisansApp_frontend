@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_text_styles.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:artisans_app/core/theme/index.dart';
 
 enum WorkerNavTab { explore, bookings, messages, profile }
 
@@ -18,7 +18,7 @@ class WorkerBottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: WorkerColors.surface,
+        color: AppColors.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
@@ -36,28 +36,28 @@ class WorkerBottomNav extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavItem(
-                icon: Icons.explore_outlined,
+                icon: PhosphorIcons.compass(),
                 label: 'EXPLORE',
                 tab: WorkerNavTab.explore,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _NavItem(
-                icon: Icons.calendar_month_outlined,
+                icon: PhosphorIcons.calendar(),
                 label: 'BOOKINGS',
                 tab: WorkerNavTab.bookings,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _NavItem(
-                icon: Icons.chat_bubble_outline_rounded,
+                icon: PhosphorIcons.chatCircle(),
                 label: 'MESSAGES',
                 tab: WorkerNavTab.messages,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _NavItem(
-                icon: Icons.person_outline_rounded,
+                icon: PhosphorIcons.user(),
                 label: 'PROFILE',
                 tab: WorkerNavTab.profile,
                 current: currentTab,
@@ -97,7 +97,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: isActive
             ? BoxDecoration(
-                color: WorkerColors.primaryFixed.withOpacity(0.6),
+                color: AppColors.primaryFixed.withOpacity(0.6),
                 borderRadius: BorderRadius.circular(16),
               )
             : null,
@@ -107,17 +107,17 @@ class _NavItem extends StatelessWidget {
             Icon(
               icon,
               color: isActive
-                  ? WorkerColors.primary
-                  : WorkerColors.onSurfaceVariant,
+                  ? AppColors.primary
+                  : AppColors.onSurfaceVariant,
               size: 24,
             ),
             const SizedBox(height: 4),
             Text(
               label,
-              style: WorkerTextStyles.badge.copyWith(
+              style: AppTypography.labelSmall.copyWith(
                 color: isActive
-                    ? WorkerColors.primary
-                    : WorkerColors.onSurfaceVariant,
+                    ? AppColors.primary
+                    : AppColors.onSurfaceVariant,
                 fontSize: 9,
                 letterSpacing: 0.2,
               ),

@@ -22,26 +22,26 @@ class WorkerDesignReferenceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
-        title: Text('Design reference', style: WorkerTextStyles.titleMd),
+        title: Text('Design reference', style: AppTypography.titleMd),
       ),
       body: ListView.separated(
-        padding: const EdgeInsets.all(WorkerSpacing.gutter),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
         itemCount: _assets.length,
-        separatorBuilder: (_, __) => const SizedBox(height: WorkerSpacing.lg),
+        separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.lg),
         itemBuilder: (context, index) {
           final (file, label) = _assets[index];
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(label, style: WorkerTextStyles.titleMd),
-              Text(file, style: WorkerTextStyles.bodyMd),
-              const SizedBox(height: WorkerSpacing.sm),
+              Text(label, style: AppTypography.titleMd),
+              Text(file, style: AppTypography.bodyMd),
+              const SizedBox(height: AppSpacing.sm),
               ClipRRect(
-                borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+                borderRadius: BorderRadius.circular(AppColors.cardRadius),
                 child: Image.asset(
                   'Artisans_Organized_ui/worker/$file',
                   fit: BoxFit.fitWidth,

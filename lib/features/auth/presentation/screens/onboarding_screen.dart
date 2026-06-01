@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -70,7 +71,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       },
-                      child: const Icon(Icons.arrow_back_ios_new,
+                      child: Icon(PhosphorIcons.caretLeft(),
                           color: AppColors.primary, size: 20),
                     ),
                   if (_currentPage > 0) const SizedBox(width: 8),
@@ -105,12 +106,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: const <Widget>[
                   // Page 1: Client value-proposition
                   OnboardingPageContent(
-                    heroIcon: Icons.verified_user_rounded,
+                    heroIcon: PhosphorIcons.shieldCheck(),
                     heroGradientColors: <Color>[
                       Color(0xFF1B1B2F),
                       Color(0xFF2D3561),
                     ],
-                    badgeIcon: Icons.shield_outlined,
+                    badgeIcon: PhosphorIcons.shield(),
                     badgeLabel: 'Trusted Experts',
                     badgeSubtitle: 'Vetted for quality',
                     title: 'Find help in minutes',
@@ -120,12 +121,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                   // Page 2: Worker value-proposition
                   OnboardingPageContent(
-                    heroIcon: Icons.trending_up_rounded,
+                    heroIcon: PhosphorIcons.trendUp(),
                     heroGradientColors: <Color>[
                       Color(0xFF0F2027),
                       Color(0xFF203A43),
                     ],
-                    badgeIcon: Icons.account_balance_wallet_outlined,
+                    badgeIcon: PhosphorIcons.wallet(),
                     badgeLabel: 'Weekly Earnings',
                     badgeSubtitle: 'Grow your revenue',
                     title: 'Earn as an Artisan',
@@ -155,7 +156,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: GradientButton(
                 label: _currentPage < _totalPages - 1 ? 'Next' : 'Get Started',
-                trailingIcon: Icons.arrow_forward,
+                trailingIcon: PhosphorIcons.arrowRight(),
                 onPressed: _nextPage,
               ),
             ),

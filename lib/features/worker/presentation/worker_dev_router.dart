@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'theme/worker_colors.dart';
+import 'package:artisans_app/core/theme/index.dart';
 import 'worker_shell.dart';
 
 class WorkerDevRouter extends StatelessWidget {
@@ -12,11 +12,11 @@ class WorkerDevRouter extends StatelessWidget {
       title: 'Artisans — Worker',
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: WorkerColors.background,
+        scaffoldBackgroundColor: AppColors.background,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: WorkerColors.primary,
-          primary: WorkerColors.primary,
-          surface: WorkerColors.surface,
+          seedColor: AppColors.primary,
+          primary: AppColors.primary,
+          surface: AppColors.surface,
         ),
         fontFamily: 'Inter',
       ),

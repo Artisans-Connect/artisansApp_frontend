@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../shared/presentation/screens/messages_list_screen.dart';
@@ -89,32 +90,32 @@ class _ClientBottomNav extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _ClientNavItem(
-                icon: Icons.home_outlined,
-                activeIcon: Icons.home_rounded,
+                icon: PhosphorIcons.house(),
+                activeIcon: PhosphorIcons.house(),
                 label: 'HOME',
                 tab: ClientNavTab.home,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _ClientNavItem(
-                icon: Icons.calendar_month_outlined,
-                activeIcon: Icons.calendar_month_rounded,
+                icon: PhosphorIcons.calendar(),
+                activeIcon: PhosphorIcons.calendar(),
                 label: 'BOOKINGS',
                 tab: ClientNavTab.bookings,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _ClientNavItem(
-                icon: Icons.chat_bubble_outline_rounded,
-                activeIcon: Icons.chat_bubble_rounded,
+                icon: PhosphorIcons.chatCircle(),
+                activeIcon: PhosphorIcons.chatCircle(),
                 label: 'MESSAGES',
                 tab: ClientNavTab.messages,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _ClientNavItem(
-                icon: Icons.person_outline_rounded,
-                activeIcon: Icons.person_rounded,
+                icon: PhosphorIcons.user(),
+                activeIcon: PhosphorIcons.user(),
                 label: 'PROFILE',
                 tab: ClientNavTab.profile,
                 current: currentTab,

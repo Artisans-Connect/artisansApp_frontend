@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -28,7 +29,7 @@ class AuthErrorBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Icon(Icons.error_outline, color: AppColors.error, size: 22),
+          Icon(PhosphorIcons.warningCircle(), color: AppColors.error, size: 22),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

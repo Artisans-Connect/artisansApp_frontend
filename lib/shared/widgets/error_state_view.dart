@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -25,7 +26,7 @@ class ErrorStateView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         Icon(
-          Icons.cloud_off_outlined,
+          PhosphorIcons.cloudSlash(),
           size: compact ? 48 : 64,
           color: AppColors.outline,
         ),

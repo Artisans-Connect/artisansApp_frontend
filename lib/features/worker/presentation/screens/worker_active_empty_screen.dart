@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/worker_ui_contracts.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -14,13 +15,13 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
     final session = WorkerScope.of(context);
 
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
           'Active Booking',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
+          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
         actions: [
@@ -28,13 +29,13 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
             builder: (_) {
               final isOnline = session.availabilityStatus.isOnline;
               final badgeColor = isOnline
-                  ? WorkerColors.success
-                  : WorkerColors.outline;
+                  ? AppColors.success
+                  : AppColors.outline;
               final textColor = isOnline
-                  ? WorkerColors.successDark
-                  : WorkerColors.onSurfaceVariant;
+                  ? AppColors.successDark
+                  : AppColors.onSurfaceVariant;
               return Container(
-                margin: const EdgeInsets.only(right: WorkerSpacing.md),
+                margin: const EdgeInsets.only(right: AppSpacing.md),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: badgeColor.withOpacity(0.15),
@@ -53,7 +54,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       isOnline ? 'ONLINE' : 'OFFLINE',
-                      style: WorkerTextStyles.badge.copyWith(
+                      style: AppTypography.badge.copyWith(
                         color: textColor,
                         fontSize: 10,
                       ),
@@ -66,15 +67,15 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(WorkerSpacing.gutter),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
         child: Column(
           children: [
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Container(
-              padding: const EdgeInsets.all(WorkerSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: WorkerColors.surface,
-                borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppColors.cardRadius),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -87,31 +88,31 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                   Container(
                     height: 120,
                     decoration: BoxDecoration(
-                      color: WorkerColors.surfaceContainer,
+                      color: AppColors.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Center(
-                      child: Icon(Icons.handyman_outlined, size: 48),
+                      child: Icon(PhosphorIcons.wrench(), size: 48),
                     ),
                   ),
-                  const SizedBox(height: WorkerSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   Icon(
-                    Icons.work_off_outlined,
+                    PhosphorIcons.briefcase(),
                     size: 40,
-                    color: WorkerColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withOpacity(0.5),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.xl),
-            Text('No active job', style: WorkerTextStyles.titleMd),
-            const SizedBox(height: WorkerSpacing.sm),
+            const SizedBox(height: AppSpacing.xl),
+            Text('No active job', style: AppTypography.titleMd),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'When you accept a request, it will appear here. Keep your status online to receive new opportunities.',
-              style: WorkerTextStyles.bodyMd,
+              style: AppTypography.bodyMd,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: WorkerSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             SizedBox(
               width: double.infinity,
               child: GradientButton(

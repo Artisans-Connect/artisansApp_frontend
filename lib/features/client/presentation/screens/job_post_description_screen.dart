@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -116,7 +117,7 @@ class _JobPostDescriptionScreenState extends State<JobPostDescriptionScreen> {
                     borderRadius:
                         BorderRadius.circular(AppSpacing.radiusMedium),
                   ),
-                  child: const Icon(Icons.image, color: AppColors.primary),
+                  child: Icon(PhosphorIcons.image(), color: AppColors.primary),
                 ),
               ),
               InkWell(
@@ -129,7 +130,7 @@ class _JobPostDescriptionScreenState extends State<JobPostDescriptionScreen> {
                     borderRadius:
                         BorderRadius.circular(AppSpacing.radiusMedium),
                   ),
-                  child: const Icon(Icons.add_a_photo_outlined),
+                  child: Icon(PhosphorIcons.cameraPlus()),
                 ),
               ),
             ],

@@ -16,8 +16,12 @@ class AppSpacing {
   static const double radiusSmall = 4.0;
   static const double radiusMedium = 8.0;
   static const double radiusLarge = 12.0;
-  static const double radiusXLarge = 20.0;
+  static const double radiusXLarge = 16.0; // Down from 20.0
   static const double radiusCircle = 9999.0;
+  
+  static const double radiusCard = 16.0;
+  static const double radiusInput = 12.0;
+  static const double radiusButton = 9999.0;
   
   // Component heights
   static const double buttonHeight = 48.0;

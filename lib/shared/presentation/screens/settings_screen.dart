@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -194,12 +195,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: '',
           children: <Widget>[
             SettingsTile(
-              icon: Icons.notifications_outlined,
+              icon: PhosphorIcons.bell(),
               title: 'Notification preferences',
               onTap: _openNotificationPrefs,
             ),
             SettingsTile(
-              icon: Icons.data_saver_on_outlined,
+              icon: PhosphorIcons.database(),
               title: 'Low data mode',
               trailing: Switch(
                 value: _lowDataMode,
@@ -250,19 +251,19 @@ class _LegalAndSupportGroup extends StatelessWidget {
           child: Column(
             children: <Widget>[
               SettingsTile(
-                icon: Icons.privacy_tip_outlined,
+                icon: PhosphorIcons.shieldCheck(),
                 title: 'Privacy Policy',
                 subtitle: 'How we handle your data',
                 onTap: onPrivacy,
               ),
               SettingsTile(
-                icon: Icons.description_outlined,
+                icon: PhosphorIcons.fileText(),
                 title: 'Terms of Service',
                 subtitle: 'Rules of the Artisans platform',
                 onTap: onTerms,
               ),
               SettingsTile(
-                icon: Icons.help_outline,
+                icon: PhosphorIcons.question(),
                 title: 'Help Center',
                 subtitle: 'Support and documentation',
                 onTap: onHelp,
@@ -279,7 +280,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
             border: Border.all(color: AppColors.outline.withOpacity(0.35)),
           ),
           child: SettingsTile(
-            icon: Icons.logout,
+            icon: PhosphorIcons.signOut(),
             title: 'Logout',
             subtitle: 'Sign out of your account',
             titleColor: AppColors.error,
@@ -304,15 +305,7 @@ class _ClientSettingsHero extends StatelessWidget {
       height: 160,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[
-            AppColors.primary,
-            AppColors.primary.withOpacity(0.7),
-            const Color(0xFF3D2E6B),
-          ],
-        ),
+        color: AppColors.primary,
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -377,7 +370,7 @@ class _CommunityPromoCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: <Widget>[
-              const Icon(Icons.handyman, color: AppColors.primary, size: 32),
+              Icon(PhosphorIcons.wrench(), color: AppColors.primary, size: 32),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -428,7 +421,7 @@ class _PremiumStatusCard extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          const Icon(Icons.star, color: AppColors.primary, size: 36),
+          Icon(PhosphorIcons.star(), color: AppColors.primary, size: 36),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

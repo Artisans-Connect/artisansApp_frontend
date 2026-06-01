@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -78,7 +79,7 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.map, size: 48, color: AppColors.primary),
+                Icon(PhosphorIcons.mapTrifold(), size: 48, color: AppColors.primary),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Map preview (UI stub)',
@@ -92,7 +93,7 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              const Icon(Icons.location_on, color: AppColors.primary),
+              Icon(PhosphorIcons.mapPin(), color: AppColors.primary),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -103,7 +104,7 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.edit),
+                icon: Icon(PhosphorIcons.pencilSimple()),
                 onPressed: () =>
                     setState(() => _showAddressEditor = !_showAddressEditor),
               ),

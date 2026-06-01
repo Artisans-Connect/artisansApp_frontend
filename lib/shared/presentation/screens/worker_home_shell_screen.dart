@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -36,23 +37,23 @@ class _WorkerHomeShellScreenState extends State<WorkerHomeShellScreen> {
         onDestinationSelected: (int value) => setState(() => _index = value),
         destinations: const <NavigationDestination>[
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(PhosphorIcons.house()),
+            selectedIcon: Icon(PhosphorIcons.house()),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble),
+            icon: Icon(PhosphorIcons.chatCircle()),
+            selectedIcon: Icon(PhosphorIcons.chatCircle()),
             label: 'Messages',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(PhosphorIcons.user()),
+            selectedIcon: Icon(PhosphorIcons.user()),
             label: 'Profile',
           ),
           NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
+            icon: Icon(PhosphorIcons.gear()),
+            selectedIcon: Icon(PhosphorIcons.gear()),
             label: 'Settings',
           ),
         ],
@@ -131,7 +132,7 @@ class _JobCard extends StatelessWidget {
             children: <Widget>[
               const CircleAvatar(
                 backgroundColor: AppColors.surfaceDim,
-                child: Icon(Icons.receipt_long, color: AppColors.primary),
+                child: Icon(PhosphorIcons.receipt(), color: AppColors.primary),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -146,7 +147,7 @@ class _JobCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+              Icon(PhosphorIcons.caretRight(), color: AppColors.textSecondary),
             ],
           ),
         ),

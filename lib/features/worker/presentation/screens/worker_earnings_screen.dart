@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -11,25 +12,25 @@ class WorkerEarningsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: Navigator.of(context).canPop()
             ? IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                color: WorkerColors.primary,
+                icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+                color: AppColors.primary,
                 onPressed: () => Navigator.of(context).maybePop(),
               )
             : null,
         title: Text(
           'Earnings',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
+          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: WorkerSpacing.md),
+            padding: const EdgeInsets.only(right: AppSpacing.md),
             child: InkWell(
               borderRadius: BorderRadius.circular(18),
               onTap: () {
@@ -37,23 +38,23 @@ class WorkerEarningsScreen extends StatelessWidget {
               },
               child: CircleAvatar(
                 radius: 18,
-                backgroundColor: WorkerColors.primaryFixed,
-                child: const Icon(Icons.person, color: WorkerColors.primary),
+                backgroundColor: AppColors.primaryFixed,
+                child: Icon(PhosphorIcons.user(), color: AppColors.primary),
               ),
             ),
           ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(WorkerSpacing.gutter),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Container(
-              padding: const EdgeInsets.all(WorkerSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: WorkerColors.surface,
-                borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppColors.cardRadius),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -64,34 +65,34 @@ class WorkerEarningsScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('TOTAL EARNED (DEMO)', style: WorkerTextStyles.labelCaps),
+                  Text('TOTAL EARNED (DEMO)', style: AppTypography.labelCaps),
                   const SizedBox(height: 8),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
                         '₵0.00',
-                        style: WorkerTextStyles.displayMd.copyWith(
-                          color: WorkerColors.accentBlue,
+                        style: AppTypography.displayMd.copyWith(
+                          color: AppColors.accentBlue,
                           fontSize: 28,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('Coming soon', style: WorkerTextStyles.bodyMd),
+                      Text('Coming soon', style: AppTypography.bodyMd),
                     ],
                   ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
-                        Icons.trending_up,
-                        color: WorkerColors.successDark,
+                      Icon(
+                        PhosphorIcons.trendUp(),
+                        color: AppColors.successDark,
                         size: 18,
                       ),
                       Text(
                         ' +0% this month',
-                        style: WorkerTextStyles.bodyMd.copyWith(
-                          color: WorkerColors.successDark,
+                        style: AppTypography.bodyMd.copyWith(
+                          color: AppColors.successDark,
                         ),
                       ),
                     ],
@@ -99,9 +100,9 @@ class WorkerEarningsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             Container(
-              padding: const EdgeInsets.all(WorkerSpacing.md),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: const Color(0xFFFFF8E6),
                 borderRadius: BorderRadius.circular(12),
@@ -110,12 +111,12 @@ class WorkerEarningsScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.info_outline, color: Color(0xFFB55D00)),
+                  Icon(PhosphorIcons.info(), color: Color(0xFFB55D00)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'Artisans does not process payments. Agree payment directly with each client.',
-                      style: WorkerTextStyles.bodyMd.copyWith(
+                      style: AppTypography.bodyMd.copyWith(
                         color: const Color(0xFF5D4037),
                         fontSize: 13,
                       ),
@@ -124,12 +125,12 @@ class WorkerEarningsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Container(
-              padding: const EdgeInsets.all(WorkerSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: WorkerColors.surface,
-                borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppColors.cardRadius),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,11 +139,11 @@ class WorkerEarningsScreen extends StatelessWidget {
                     children: [
                       Text(
                         'Weekly activity preview',
-                        style: WorkerTextStyles.titleMd.copyWith(fontSize: 16),
+                        style: AppTypography.titleMd.copyWith(fontSize: 16),
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: const Icon(Icons.more_horiz),
+                        icon: Icon(PhosphorIcons.dotsThree()),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -153,7 +154,7 @@ class WorkerEarningsScreen extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: WorkerSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   SizedBox(
                     height: 100,
                     child: Row(
@@ -173,7 +174,7 @@ class WorkerEarningsScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             TextButton(
               onPressed: () {
                 WorkerScope.of(context).setProfilePage(WorkerProfilePage.stats);
@@ -184,7 +185,7 @@ class WorkerEarningsScreen extends StatelessWidget {
               onPressed: () {
                 WorkerScope.of(context).setProfilePage(WorkerProfilePage.history);
               },
-              icon: const Icon(Icons.history),
+              icon: Icon(PhosphorIcons.clockCounterClockwise()),
               label: const Text('View history'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
@@ -193,10 +194,10 @@ class WorkerEarningsScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Text(
               'Payment integration coming in a future update. We\'re working on making secure in-app payments available for all Artisans soon.',
-              style: WorkerTextStyles.bodyMd.copyWith(
+              style: AppTypography.bodyMd.copyWith(
                 fontStyle: FontStyle.italic,
                 fontSize: 12,
               ),
@@ -230,13 +231,13 @@ class _Bar extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             color: highlight
-                ? WorkerColors.primaryFixed
-                : WorkerColors.surfaceContainer,
+                ? AppColors.primaryFixed
+                : AppColors.surfaceContainer,
             borderRadius: BorderRadius.circular(6),
           ),
         ),
         const SizedBox(height: 4),
-        Text(label, style: WorkerTextStyles.bodyMd.copyWith(fontSize: 11)),
+        Text(label, style: AppTypography.bodyMd.copyWith(fontSize: 11)),
       ],
     );
   }

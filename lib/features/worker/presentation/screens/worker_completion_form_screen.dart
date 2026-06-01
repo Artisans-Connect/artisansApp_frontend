@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
 import '../models/mock_worker_job.dart';
 import '../theme/worker_colors.dart';
@@ -64,27 +65,27 @@ class _WorkerCompletionFormScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
+          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          color: AppColors.primary,
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Complete Booking',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
+          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
-          WorkerSpacing.gutter,
+          AppSpacing.gutter,
           0,
-          WorkerSpacing.gutter,
-          WorkerSpacing.xl,
+          AppSpacing.gutter,
+          AppSpacing.xl,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,26 +94,26 @@ class _WorkerCompletionFormScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Booking Summary', style: WorkerTextStyles.titleMd),
+                  Text('Booking Summary', style: AppTypography.titleMd),
                   const SizedBox(height: 8),
                   Text(
                     'Confirm your work details to close this booking and notify the client.',
-                    style: WorkerTextStyles.bodyMd,
+                    style: AppTypography.bodyMd,
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
-            Text('TIME SPENT (HOURS)', style: WorkerTextStyles.labelCaps),
-            const SizedBox(height: WorkerSpacing.sm),
+            const SizedBox(height: AppSpacing.lg),
+            Text('TIME SPENT (HOURS)', style: AppTypography.labelCaps),
+            const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _hoursController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: _inputDecoration('e.g., 3.5'),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
-            Text('MATERIALS USED (OPTIONAL)', style: WorkerTextStyles.labelCaps),
-            const SizedBox(height: WorkerSpacing.sm),
+            const SizedBox(height: AppSpacing.lg),
+            Text('MATERIALS USED (OPTIONAL)', style: AppTypography.labelCaps),
+            const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _materialsController,
               maxLines: 3,
@@ -120,11 +121,11 @@ class _WorkerCompletionFormScreenState
                 'List any parts or supplies provided...',
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             const CompletionPhotoPicker(),
-            const SizedBox(height: WorkerSpacing.lg),
-            Text('NOTES FOR CLIENT (OPTIONAL)', style: WorkerTextStyles.labelCaps),
-            const SizedBox(height: WorkerSpacing.sm),
+            const SizedBox(height: AppSpacing.lg),
+            Text('NOTES FOR CLIENT (OPTIONAL)', style: AppTypography.labelCaps),
+            const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _notesController,
               maxLines: 4,
@@ -132,7 +133,7 @@ class _WorkerCompletionFormScreenState
                 'Describe the work completed or maintenance tips...',
               ),
             ),
-            const SizedBox(height: WorkerSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             GradientButton(
               label: 'Submit & Complete',
               isLoading: _isSubmitting,
@@ -142,8 +143,8 @@ class _WorkerCompletionFormScreenState
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel Completion',
-                style: WorkerTextStyles.bodyLg.copyWith(
-                  color: WorkerColors.primary,
+                style: AppTypography.bodyLg.copyWith(
+                  color: AppColors.primary,
                 ),
               ),
             ),
@@ -156,9 +157,9 @@ class _WorkerCompletionFormScreenState
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: WorkerTextStyles.bodyMd,
+      hintStyle: AppTypography.bodyMd,
       filled: true,
-      fillColor: WorkerColors.surfaceContainerLow,
+      fillColor: AppColors.surfaceContainerLow,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(16),
         borderSide: BorderSide.none,

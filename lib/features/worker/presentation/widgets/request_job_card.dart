@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/mock_worker_job.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
+import 'package:artisans_app/core/theme/index.dart';
 import '../utils/worker_formatters.dart';
 
 class RequestJobCard extends StatelessWidget {
@@ -27,12 +26,12 @@ class RequestJobCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+        borderRadius: BorderRadius.circular(16),
         child: Ink(
-          padding: const EdgeInsets.all(WorkerSpacing.md),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: WorkerColors.surface,
-            borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -48,7 +47,7 @@ class RequestJobCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(job.title, style: WorkerTextStyles.titleMd),
+                    child: Text(job.title, style: AppTypography.titleMd),
                   ),
                   _UrgencyPill(label: job.urgencyLabel, isAsap: isAsap),
                 ],
@@ -56,54 +55,54 @@ class RequestJobCard extends StatelessWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(
-                    Icons.place_outlined,
+                  Icon(
+                    PhosphorIcons.mapPin(),
                     size: 16,
-                    color: WorkerColors.outline,
+                    color: AppColors.outline,
                   ),
                   const SizedBox(width: 4),
                   Expanded(
-                    child: Text(job.locationLine, style: WorkerTextStyles.bodyMd),
+                    child: Text(job.locationLine, style: AppTypography.bodyMd),
                   ),
                 ],
               ),
-              const SizedBox(height: WorkerSpacing.md),
+              const SizedBox(height: AppSpacing.md),
               Row(
                 children: [
                   CircleAvatar(
                     radius: 22,
-                    backgroundColor: WorkerColors.primaryFixed,
+                    backgroundColor: AppColors.primaryFixed,
                     child: Text(
                       job.clientName.substring(0, 1),
-                      style: WorkerTextStyles.titleMd.copyWith(
-                        color: WorkerColors.primary,
+                      style: AppTypography.titleMd.copyWith(
+                        color: AppColors.primary,
                         fontSize: 16,
                       ),
                     ),
                   ),
-                  const SizedBox(width: WorkerSpacing.sm),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           job.clientName,
-                          style: WorkerTextStyles.bodyLg.copyWith(
-                            color: WorkerColors.onSurface,
+                          style: AppTypography.bodyLg.copyWith(
+                            color: AppColors.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Row(
                           children: [
-                            const Icon(
-                              Icons.star_rounded,
+                            Icon(
+                              PhosphorIcons.star(),
                               size: 14,
                               color: Color(0xFFFFB800),
                             ),
                             const SizedBox(width: 2),
                             Text(
                               '${formatRating(job.clientRating)} (${job.reviewCount} reviews)',
-                              style: WorkerTextStyles.bodyMd.copyWith(
+                              style: AppTypography.bodyMd.copyWith(
                                 fontSize: 12,
                               ),
                             ),
@@ -119,26 +118,26 @@ class RequestJobCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: WorkerColors.success.withOpacity(0.15),
+                        color: AppColors.success.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         'NEW CLIENT',
-                        style: WorkerTextStyles.badge.copyWith(
-                          color: WorkerColors.successDark,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.success,
                           fontSize: 9,
                         ),
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: WorkerSpacing.md),
+              const SizedBox(height: AppSpacing.md),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: isAcceptEnabled ? onAccept : null,
                   style: FilledButton.styleFrom(
-                    backgroundColor: WorkerColors.primaryContainer,
+                    backgroundColor: AppColors.primaryContainer,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
@@ -146,7 +145,7 @@ class RequestJobCard extends StatelessWidget {
                   ),
                   child: Text(
                     isAcceptEnabled ? 'VIEW REQUEST' : 'GO ONLINE TO ACCEPT',
-                    style: WorkerTextStyles.badge.copyWith(
+                    style: AppTypography.labelSmall.copyWith(
                       fontSize: 13,
                       letterSpacing: 0.8,
                     ),
@@ -174,13 +173,13 @@ class _UrgencyPill extends StatelessWidget {
       decoration: BoxDecoration(
         color: isAsap
             ? const Color(0xFFFFE4D6)
-            : WorkerColors.primaryFixed,
+            : AppColors.primaryFixed,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         label,
-        style: WorkerTextStyles.badge.copyWith(
-          color: isAsap ? const Color(0xFFB55D00) : WorkerColors.primary,
+        style: AppTypography.labelSmall.copyWith(
+          color: isAsap ? const Color(0xFFB55D00) : AppColors.primary,
           fontSize: 10,
         ),
       ),

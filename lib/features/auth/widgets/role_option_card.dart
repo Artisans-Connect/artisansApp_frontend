@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -80,6 +81,7 @@ class RoleOptionCard extends StatelessWidget {
                     const SizedBox(height: 16),
                     AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubic,
                       style: AppTextStyles.displayMd.copyWith(
                         fontSize: 32 * 0.75,
                         color: isSelected ? AppColors.primary : AppColors.textPrimary,
@@ -92,6 +94,7 @@ class RoleOptionCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 300),
+                      curve: Curves.easeInOutCubic,
                       style: AppTextStyles.bodyMd.copyWith(
                         color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                       ),
@@ -115,8 +118,8 @@ class RoleOptionCard extends StatelessWidget {
                       color: AppColors.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
-                      Icons.check,
+                    child: Icon(
+                      PhosphorIcons.check(),
                       color: AppColors.primary,
                       size: 16,
                     ),
