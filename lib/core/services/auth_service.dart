@@ -109,8 +109,13 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    await _supabaseAuth.signOut();
-    _session.clear();
+    try {
+      await _supabaseAuth.signOut();
+    } catch (_) {
+      // Ignore remote errors to ensure local session always clears
+    } finally {
+      _session.clear();
+    }
   }
 
   AppUser _appUserFromProfile(Map<String, dynamic> json) {

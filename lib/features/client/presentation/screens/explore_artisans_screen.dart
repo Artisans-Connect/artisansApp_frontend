@@ -9,6 +9,7 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/filter_chip.dart';
 import '../../../../shared/widgets/search_bar.dart';
 import '../navigation/client_navigation.dart';
+import '../../services/explore_service.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
   const ExploreArtisansScreen({super.key});
@@ -23,68 +24,54 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   String _selectedRating = '';
   final Set<String> _savedArtisanNames = <String>{};
 
-  final List<Map<String, dynamic>> allArtisans = <Map<String, dynamic>>[
-    {
-      'name': 'John Smith',
-      'profession': 'Professional Plumber',
-      'rating': 4.8,
-      'reviewCount': 342,
-      'imageUrl': 'https://via.placeholder.com/200?text=John',
-      'location': 'Downtown Area',
-      'distance': '0.5 km',
-      'userId': 'worker-john',
-    },
-    {
-      'name': 'Sarah Johnson',
-      'profession': 'Expert Electrician',
-      'rating': 4.9,
-      'reviewCount': 567,
-      'imageUrl': 'https://via.placeholder.com/200?text=Sarah',
-      'location': 'Central District',
-      'distance': '1.2 km',
-      'userId': 'worker-sarah',
-    },
-    {
-      'name': 'Mike Wilson',
-      'profession': 'Master Carpenter',
-      'rating': 4.7,
-      'reviewCount': 234,
-      'imageUrl': 'https://via.placeholder.com/200?text=Mike',
-      'location': 'Riverside',
-      'distance': '2.1 km',
-      'userId': 'worker-mike',
-    },
-    {
-      'name': 'Emma Davis',
-      'profession': 'Professional Cleaner',
-      'rating': 4.9,
-      'reviewCount': 412,
-      'imageUrl': 'https://via.placeholder.com/200?text=Emma',
-      'location': 'North End',
-      'distance': '1.8 km',
-      'userId': 'worker-emma',
-    },
-    {
-      'name': 'Robert Brown',
-      'profession': 'HVAC Specialist',
-      'rating': 4.6,
-      'reviewCount': 289,
-      'imageUrl': 'https://via.placeholder.com/200?text=Robert',
-      'location': 'East Side',
-      'distance': '2.5 km',
-      'userId': 'worker-robert',
-    },
-    {
-      'name': 'Lisa Anderson',
-      'profession': 'Interior Designer',
-      'rating': 4.8,
-      'reviewCount': 198,
-      'imageUrl': 'https://via.placeholder.com/200?text=Lisa',
-      'location': 'West Point',
-      'distance': '3.0 km',
-      'userId': 'worker-lisa',
-    },
-  ];
+  List<Map<String, dynamic>> allArtisans = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchArtisans();
+  }
+
+  Future<void> _fetchArtisans() async {
+    try {
+      final rawArtisans = await ExploreService.instance.getArtisans(limit: 50);
+      
+      final mappedArtisans = rawArtisans.map((raw) {
+        final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
+        final name = profile['full_name'] as String? ?? 'Artisan';
+        final imageUrl = profile['avatar_url'] as String? ?? 'https://via.placeholder.com/200?text=Artisan';
+        final skills = raw['skills'] as List<dynamic>? ?? [];
+        final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
+        final rating = (raw['rating'] as num?)?.toDouble() ?? 0.0;
+        final userId = raw['id'] as String;
+        
+        return {
+          'name': name,
+          'profession': profession,
+          'rating': rating,
+          'reviewCount': 0,
+          'imageUrl': imageUrl,
+          'location': 'Location not set',
+          'distance': raw['distance_km'] != null ? '${(raw['distance_km'] as num).toStringAsFixed(1)} km' : 'N/A',
+          'userId': userId,
+        };
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          allArtisans = mappedArtisans;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   List<Map<String, dynamic>> get _filteredArtisans {
     return allArtisans.where((Map<String, dynamic> artisan) {
@@ -237,13 +224,18 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.lg),
-              Text(
-                '${artisans.length} Artisans Found',
-                style: AppTypography.labelLarge,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ...artisans.map((Map<String, dynamic> artisan) {
-                final String name = artisan['name'] as String;
+              if (_isLoading)
+                const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              if (!_isLoading)
+                Text(
+                  '${artisans.length} Artisans Found',
+                  style: AppTypography.labelLarge,
+                ),
+              if (!_isLoading)
+                const SizedBox(height: AppSpacing.md),
+              if (!_isLoading)
+                ...artisans.map((Map<String, dynamic> artisan) {
+                  final String name = artisan['name'] as String;
                 final bool isSaved = _savedArtisanNames.contains(name);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.md),

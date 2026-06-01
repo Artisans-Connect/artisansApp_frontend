@@ -25,7 +25,7 @@ void main() {
           notifier: session,
           child: JobRequestDetailScreen(
             job: MockWorkerData.incomingJobs.first,
-            onAcceptRequest: () {},
+            onAcceptRequest: (_) {},
           ),
         ),
       ),

@@ -11,6 +11,7 @@ import '../navigation/client_shell_scope.dart';
 import '../widgets/artisan_card.dart';
 import '../widgets/category_chip.dart';
 import '../../../../shared/widgets/search_bar.dart';
+import '../../services/explore_service.dart';
 
 class ClientHomeScreen extends StatefulWidget {
   const ClientHomeScreen({Key? key}) : super(key: key);
@@ -23,47 +24,39 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   String _searchQuery = '';
   String _selectedCategory = '';
 
+  List<Map<String, dynamic>> featuredArtisans = [];
+  bool _isLoadingFeatured = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFeaturedArtisans();
+  }
+
+  Future<void> _fetchFeaturedArtisans() async {
+    try {
+      final artisans = await ExploreService.instance.getArtisans(limit: 5);
+      if (mounted) {
+        setState(() {
+          featuredArtisans = artisans;
+          _isLoadingFeatured = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingFeatured = false;
+        });
+      }
+    }
+  }
+
   final List<Map<String, dynamic>> categories = [
     {'label': 'Plumbing', 'icon': PhosphorIcons.drop()},
     {'label': 'Electrical', 'icon': PhosphorIcons.lightning()},
     {'label': 'Carpentry', 'icon': PhosphorIcons.wrench()},
     {'label': 'Cleaning', 'icon': PhosphorIcons.broom()},
     {'label': 'Painting', 'icon': PhosphorIcons.palette()},
-  ];
-
-  final List<Map<String, dynamic>> featuredArtisans = [
-    {
-      'name': 'John Smith',
-      'profession': 'Professional Plumber',
-      'rating': 4.8,
-      'reviewCount': 342,
-      'imageUrl': 'https://via.placeholder.com/200?text=John',
-      'location': 'Downtown Area',
-    },
-    {
-      'name': 'Sarah Johnson',
-      'profession': 'Expert Electrician',
-      'rating': 4.9,
-      'reviewCount': 567,
-      'imageUrl': 'https://via.placeholder.com/200?text=Sarah',
-      'location': 'Central District',
-    },
-    {
-      'name': 'Mike Wilson',
-      'profession': 'Master Carpenter',
-      'rating': 4.7,
-      'reviewCount': 234,
-      'imageUrl': 'https://via.placeholder.com/200?text=Mike',
-      'location': 'Riverside',
-    },
-    {
-      'name': 'Emma Davis',
-      'profession': 'Professional Cleaner',
-      'rating': 4.9,
-      'reviewCount': 412,
-      'imageUrl': 'https://via.placeholder.com/200?text=Emma',
-      'location': 'North End',
-    },
   ];
 
   @override
@@ -186,45 +179,82 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              SizedBox(
-                height: 320,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: featuredArtisans.length,
-                  itemBuilder: (context, index) {
-                    final artisan = featuredArtisans[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(right: AppSpacing.md),
-                      child: SizedBox(
-                        width: 200,
-                        child: ArtisanCard(
-                          name: artisan['name'],
-                          profession: artisan['profession'],
-                          rating: artisan['rating'],
-                          reviewCount: artisan['reviewCount'],
-                          imageUrl: artisan['imageUrl'],
-                          location: artisan['location'],
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.artisanProfile,
-                              arguments: artisan,
-                            );
-                          },
-                          onFavoriteTap: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Added to favorites'),
-                                duration: Duration(seconds: 1),
-                              ),
-                            );
-                          },
+              if (!_isLoadingFeatured && featuredArtisans.isEmpty)
+                Container(
+                  height: 120,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                    border: Border.all(color: AppColors.borderSubtle),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(PhosphorIcons.users(), color: AppColors.outlineVariant, size: 32),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text('No featured artisans available right now', style: AppTypography.bodyMedium),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 320,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _isLoadingFeatured ? 3 : featuredArtisans.length,
+                    itemBuilder: (context, index) {
+                      if (_isLoadingFeatured) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: AppSpacing.md),
+                          child: SizedBox(
+                            width: 200,
+                            child: Center(
+                              child: CircularProgressIndicator(color: AppColors.primary),
+                            ),
+                          ),
+                        );
+                      }
+                      final artisan = featuredArtisans[index];
+                      final profile = artisan['profiles'] as Map<String, dynamic>? ?? {};
+                      final name = profile['full_name'] as String? ?? 'Artisan';
+                      final imageUrl = profile['avatar_url'] as String? ?? 'https://via.placeholder.com/200?text=Artisan';
+                      final skills = artisan['skills'] as List<dynamic>? ?? [];
+                      final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
+                      final rating = (artisan['rating'] as num?)?.toDouble() ?? 0.0;
+                      
+                      return Padding(
+                        padding: const EdgeInsets.only(right: AppSpacing.md),
+                        child: SizedBox(
+                          width: 200,
+                          child: ArtisanCard(
+                            name: name,
+                            profession: profession,
+                            rating: rating,
+                            reviewCount: 0,
+                            imageUrl: imageUrl,
+                            location: 'Location not set',
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                AppRoutes.artisanProfile,
+                                arguments: artisan,
+                              );
+                            },
+                            onFavoriteTap: () {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Added to favorites'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
               const SizedBox(height: AppSpacing.lg),
 
               // Quick Actions Section
