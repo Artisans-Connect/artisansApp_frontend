@@ -1,8 +1,6 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_text_styles.dart';
-
 class GradientButton extends StatelessWidget {
   const GradientButton({
     super.key,
@@ -12,18 +10,15 @@ class GradientButton extends StatelessWidget {
     this.enabled = true,
     this.haptic = true,
   });
-
   final String label;
   final VoidCallback? onPressed;
   final bool isLoading;
   final bool enabled;
   final bool haptic;
-
   @override
   Widget build(BuildContext context) {
     final effectiveOnPressed =
         enabled && !isLoading ? onPressed : null;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -35,7 +30,7 @@ class GradientButton extends StatelessWidget {
                 }
                 effectiveOnPressed();
               },
-        borderRadius: BorderRadius.circular(AppColors.inputRadius),
+        borderRadius: BorderRadius.circular(12.0),
         child: Ink(
           height: 52,
           decoration: BoxDecoration(
@@ -45,7 +40,7 @@ class GradientButton extends StatelessWidget {
             color: effectiveOnPressed == null
                 ? AppColors.outlineVariant
                 : null,
-            borderRadius: BorderRadius.circular(AppColors.inputRadius),
+            borderRadius: BorderRadius.circular(12.0),
           ),
           child: Center(
             child: isLoading
@@ -70,7 +65,6 @@ class GradientButton extends StatelessWidget {
     );
   }
 }
-
 class OutlineButton extends StatelessWidget {
   const OutlineButton({
     super.key,
@@ -78,11 +72,9 @@ class OutlineButton extends StatelessWidget {
     required this.onPressed,
     this.haptic = true,
   });
-
   final String label;
   final VoidCallback? onPressed;
   final bool haptic;
-
   @override
   Widget build(BuildContext context) {
     return OutlinedButton(
@@ -96,7 +88,7 @@ class OutlineButton extends StatelessWidget {
         minimumSize: const Size.fromHeight(52),
         side: const BorderSide(color: AppColors.outline),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppColors.inputRadius),
+          borderRadius: BorderRadius.circular(12.0),
         ),
       ),
       child: Text(

@@ -1,37 +1,30 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
 import '../models/mock_worker_job.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
 import '../widgets/completion_photo_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/job_detail_card.dart';
 import 'worker_completion_success_screen.dart';
-
 class WorkerCompletionFormScreen extends StatefulWidget {
   const WorkerCompletionFormScreen({
     super.key,
     required this.job,
     required this.onCompletionSubmitted,
   });
-
   final MockWorkerJob job;
   final VoidCallback onCompletionSubmitted;
-
   @override
   State<WorkerCompletionFormScreen> createState() =>
       _WorkerCompletionFormScreenState();
 }
-
 class _WorkerCompletionFormScreenState
     extends State<WorkerCompletionFormScreen> {
   final _hoursController = TextEditingController();
   final _materialsController = TextEditingController();
   final _notesController = TextEditingController();
   bool _isSubmitting = false;
-
   @override
   void dispose() {
     _hoursController.dispose();
@@ -39,7 +32,6 @@ class _WorkerCompletionFormScreenState
     _notesController.dispose();
     super.dispose();
   }
-
   Future<void> _submit() async {
     if (_hoursController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -61,7 +53,6 @@ class _WorkerCompletionFormScreenState
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -153,7 +144,6 @@ class _WorkerCompletionFormScreenState
       ),
     );
   }
-
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,

@@ -103,7 +103,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 controller: _pageController,
                 onPageChanged: (int page) =>
                     setState(() => _currentPage = page),
-                children: const <Widget>[
+                children: <Widget>[
                   // Page 1: Client value-proposition
                   OnboardingPageContent(
                     heroIcon: PhosphorIcons.shieldCheck(),

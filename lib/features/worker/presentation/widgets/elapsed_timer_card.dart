@@ -1,20 +1,14 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
-
 class ElapsedTimerCard extends StatefulWidget {
   const ElapsedTimerCard({super.key});
-
   @override
   State<ElapsedTimerCard> createState() => _ElapsedTimerCardState();
 }
-
 class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
   Duration _elapsed = const Duration(hours: 0, minutes: 23, seconds: 47);
   Timer? _timer;
-
   @override
   void initState() {
     super.initState();
@@ -22,20 +16,17 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
       setState(() => _elapsed += const Duration(seconds: 1));
     });
   }
-
   @override
   void dispose() {
     _timer?.cancel();
     super.dispose();
   }
-
   String _format(Duration d) {
     final h = d.inHours.toString().padLeft(2, '0');
     final m = (d.inMinutes % 60).toString().padLeft(2, '0');
     final s = (d.inSeconds % 60).toString().padLeft(2, '0');
     return '$h:$m:$s';
   }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -43,7 +34,7 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppColors.cardRadius),
+        borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -79,7 +70,7 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
               Text(
                 'Active Session',
                 style: AppTypography.bodyMd.copyWith(
-                  color: AppColors.successDark,
+                  color: AppColors.success,
                   fontWeight: FontWeight.w600,
                 ),
               ),

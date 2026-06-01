@@ -1,40 +1,32 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/history_job_card.dart';
 import '../widgets/segment_toggle.dart';
-
 class WorkerBookingHistoryScreen extends StatefulWidget {
   const WorkerBookingHistoryScreen({super.key});
-
   @override
   State<WorkerBookingHistoryScreen> createState() =>
       _WorkerBookingHistoryScreenState();
 }
-
 class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen> {
   final WorkersService _workersService = WorkersService();
   bool _isLoading = true;
   String? _loadError;
   bool _showCompleted = true;
   List<MockWorkerJob> _allJobs = [];
-
   @override
   void initState() {
     super.initState();
     _loadHistory();
   }
-
   Future<void> _loadHistory() async {
     setState(() {
       _isLoading = true;
@@ -59,14 +51,12 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
       });
     }
   }
-
   List<MockWorkerJob> get _filtered => _allJobs
       .where((MockWorkerJob j) =>
           _showCompleted
               ? j.historyStatus == HistoryStatus.completed
               : j.historyStatus == HistoryStatus.cancelled)
       .toList();
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -1,14 +1,10 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
-
 class WorkerEarningsScreen extends StatelessWidget {
   const WorkerEarningsScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,7 +50,7 @@ class WorkerEarningsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppColors.cardRadius),
+                borderRadius: BorderRadius.circular(16.0),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -86,13 +82,13 @@ class WorkerEarningsScreen extends StatelessWidget {
                     children: [
                       Icon(
                         PhosphorIcons.trendUp(),
-                        color: AppColors.successDark,
+                        color: AppColors.success,
                         size: 18,
                       ),
                       Text(
                         ' +0% this month',
                         style: AppTypography.bodyMd.copyWith(
-                          color: AppColors.successDark,
+                          color: AppColors.success,
                         ),
                       ),
                     ],
@@ -130,7 +126,7 @@ class WorkerEarningsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppColors.cardRadius),
+                borderRadius: BorderRadius.circular(16.0),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,18 +205,15 @@ class WorkerEarningsScreen extends StatelessWidget {
     );
   }
 }
-
 class _Bar extends StatelessWidget {
   const _Bar({
     required this.height,
     required this.label,
     this.highlight = false,
   });
-
   final double height;
   final String label;
   final bool highlight;
-
   @override
   Widget build(BuildContext context) {
     return Column(

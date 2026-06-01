@@ -1,26 +1,20 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/elapsed_timer_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/job_detail_card.dart';
 import 'worker_completion_form_screen.dart';
-
 class WorkerActiveInProgressScreen extends StatelessWidget {
   const WorkerActiveInProgressScreen({super.key, required this.job});
-
   final MockWorkerJob job;
-
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -127,12 +121,10 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
       ),
     );
   }
-
   void _stub(BuildContext context, String action) {
     AppToast.showInfo(context, '$action — coming soon');
   }
 }
-
 class _DetailRow extends StatelessWidget {
   const _DetailRow({
     required this.icon,
@@ -140,12 +132,10 @@ class _DetailRow extends StatelessWidget {
     required this.value,
     this.maxLines,
   });
-
   final IconData icon;
   final String label;
   final String value;
   final int? maxLines;
-
   @override
   Widget build(BuildContext context) {
     return Row(

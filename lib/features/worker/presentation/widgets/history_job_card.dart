@@ -1,30 +1,24 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/mock_worker_job.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
-
 class HistoryJobCard extends StatelessWidget {
   const HistoryJobCard({
     super.key,
     required this.job,
     this.onViewDetails,
   });
-
   final MockWorkerJob job;
   final VoidCallback? onViewDetails;
-
   @override
   Widget build(BuildContext context) {
     final isCompleted = job.historyStatus == HistoryStatus.completed;
-
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppColors.cardRadius),
+        borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -55,9 +49,9 @@ class HistoryJobCard extends StatelessWidget {
                 ),
                 child: Text(
                   isCompleted ? 'Finished' : 'Cancelled',
-                  style: AppTypography.badge.copyWith(
+                  style: AppTypography.labelSmall.copyWith(
                     color: isCompleted
-                        ? AppColors.successDark
+                        ? AppColors.success
                         : AppColors.error,
                     fontSize: 10,
                   ),

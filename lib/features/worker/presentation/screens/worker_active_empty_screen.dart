@@ -1,19 +1,14 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/worker_ui_contracts.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
 import '../widgets/gradient_button.dart';
-
 class WorkerActiveEmptyScreen extends StatelessWidget {
   const WorkerActiveEmptyScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -32,7 +27,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                   ? AppColors.success
                   : AppColors.outline;
               final textColor = isOnline
-                  ? AppColors.successDark
+                  ? AppColors.success
                   : AppColors.onSurfaceVariant;
               return Container(
                 margin: const EdgeInsets.only(right: AppSpacing.md),
@@ -54,7 +49,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       isOnline ? 'ONLINE' : 'OFFLINE',
-                      style: AppTypography.badge.copyWith(
+                      style: AppTypography.labelSmall.copyWith(
                         color: textColor,
                         fontSize: 10,
                       ),
@@ -75,7 +70,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppColors.cardRadius),
+                borderRadius: BorderRadius.circular(16.0),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -91,8 +86,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                       color: AppColors.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Center(
-                      child: Icon(PhosphorIcons.wrench(), size: 48),
+                    child: Center(child: Icon(PhosphorIcons.wrench(), size: 48),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
