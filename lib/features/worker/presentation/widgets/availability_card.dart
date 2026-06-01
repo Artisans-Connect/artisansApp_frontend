@@ -16,10 +16,10 @@ class AvailabilityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(WorkerSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: WorkerColors.surface,
-        borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppColors.cardRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -36,12 +36,12 @@ class AvailabilityCard extends StatelessWidget {
               children: [
                 Text(
                   'Available for work',
-                  style: WorkerTextStyles.titleMd.copyWith(fontSize: 16),
+                  style: AppTypography.titleMd.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'When ON, you receive job requests.',
-                  style: WorkerTextStyles.bodyMd,
+                  style: AppTypography.bodyMd,
                 ),
               ],
             ),
@@ -49,7 +49,7 @@ class AvailabilityCard extends StatelessWidget {
           Switch(
             value: isAvailable,
             onChanged: onChanged,
-            activeColor: WorkerColors.success,
+            activeColor: AppColors.success,
           ),
         ],
       ),

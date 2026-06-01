@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -23,11 +24,11 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   String _selectedCategory = '';
 
   final List<Map<String, dynamic>> categories = [
-    {'label': 'Plumbing', 'icon': Icons.plumbing},
-    {'label': 'Electrical', 'icon': Icons.flash_on},
-    {'label': 'Carpentry', 'icon': Icons.handyman},
-    {'label': 'Cleaning', 'icon': Icons.cleaning_services},
-    {'label': 'Painting', 'icon': Icons.palette},
+    {'label': 'Plumbing', 'icon': PhosphorIcons.drop()},
+    {'label': 'Electrical', 'icon': PhosphorIcons.lightning()},
+    {'label': 'Carpentry', 'icon': PhosphorIcons.wrench()},
+    {'label': 'Cleaning', 'icon': PhosphorIcons.broom()},
+    {'label': 'Painting', 'icon': PhosphorIcons.palette()},
   ];
 
   final List<Map<String, dynamic>> featuredArtisans = [
@@ -106,8 +107,8 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                           BorderRadius.circular(AppSpacing.radiusLarge),
                     ),
                     padding: const EdgeInsets.all(8),
-                    child: const Icon(
-                      Icons.notifications_none,
+                    child: Icon(
+                      PhosphorIcons.bell(),
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -248,7 +249,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                         child: Column(
                           children: [
                             Icon(
-                              Icons.add_circle_outline,
+                              PhosphorIcons.plusCircle(),
                               color: AppColors.onPrimary,
                               size: 32,
                             ),
@@ -279,7 +280,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                         child: Column(
                           children: [
                             Icon(
-                              Icons.map,
+                              PhosphorIcons.mapTrifold(),
                               color: AppColors.onSecondary,
                               size: 32,
                             ),

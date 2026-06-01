@@ -7,7 +7,7 @@ class JobDetailCard extends StatelessWidget {
   const JobDetailCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(WorkerSpacing.md),
+    this.padding = const EdgeInsets.all(AppSpacing.md),
   });
 
   final Widget child;
@@ -18,10 +18,10 @@ class JobDetailCard extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: WorkerColors.surface,
-        borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppColors.cardRadius),
         border: Border.all(
-          color: WorkerColors.outlineVariant.withOpacity(0.35),
+          color: AppColors.outlineVariant.withOpacity(0.35),
         ),
         boxShadow: [
           BoxShadow(
@@ -52,10 +52,10 @@ class JobDetailSectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, color: WorkerColors.primary, size: 20),
-        const SizedBox(width: WorkerSpacing.sm),
+        Icon(icon, color: AppColors.primary, size: 20),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: Text(title, style: WorkerTextStyles.titleMd.copyWith(fontSize: 16)),
+          child: Text(title, style: AppTypography.titleMd.copyWith(fontSize: 16)),
         ),
         if (trailing != null) trailing!,
       ],

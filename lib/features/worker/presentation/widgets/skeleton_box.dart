@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/worker_colors.dart';
+import 'package:artisans_app/core/theme/index.dart';
 
 class SkeletonBox extends StatelessWidget {
   const SkeletonBox({
@@ -19,7 +19,7 @@ class SkeletonBox extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: WorkerColors.surfaceContainer,
+        color: AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
     );

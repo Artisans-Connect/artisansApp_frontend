@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/navigation/auth_navigation.dart';
@@ -187,7 +188,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 ListTile(
-                  leading: const Icon(Icons.photo_library, color: AppColors.primary),
+                  leading: Icon(PhosphorIcons.images(), color: AppColors.primary),
                   title: const Text('Choose from Gallery'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -202,7 +203,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.camera_alt, color: AppColors.primary),
+                  leading: Icon(PhosphorIcons.camera(), color: AppColors.primary),
                   title: const Text('Take a Photo'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -219,7 +220,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 if (_imageFile != null) ...<Widget>[
                   const Divider(),
                   ListTile(
-                    leading: const Icon(Icons.delete, color: AppColors.error),
+                    leading: Icon(PhosphorIcons.trash(), color: AppColors.error),
                     title: const Text('Remove Photo',
                         style: TextStyle(color: AppColors.error)),
                     onTap: () {
@@ -265,7 +266,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 children: <Widget>[
                   IconButton(
                     onPressed: _onBack,
-                    icon: const Icon(Icons.arrow_back, color: AppColors.primary),
+                    icon: Icon(PhosphorIcons.arrowLeft(), color: AppColors.primary),
                   ),
                   const SizedBox(width: 4),
                   Text('Artisans',
@@ -312,7 +313,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         : 'Continue',
                     trailingIcon: _currentIndex == _totalDots - 1
                         ? null
-                        : Icons.chevron_right,
+                        : PhosphorIcons.caretRight(),
                     isLoading: _isSubmitting,
                     onPressed: _canProceed() ? _onNext : null,
                   ),
@@ -346,7 +347,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           RoleOptionCard(
             title: 'I need a worker',
             subtitle: 'Find skilled professionals for your next project.',
-            icon: Icons.desktop_windows_outlined,
+            icon: PhosphorIcons.desktop(),
             isSelected: _session.isClient,
             onTap: () {
               setState(() => _session.setRole(UserRole.client));
@@ -356,7 +357,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           RoleOptionCard(
             title: 'I offer services',
             subtitle: 'Showcase your skills and find new clients.',
-            icon: Icons.work_outline,
+            icon: PhosphorIcons.briefcase(),
             isSelected: _session.isWorker,
             onTap: () {
               setState(() => _session.setRole(UserRole.worker));
@@ -496,7 +497,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         ),
                       ),
                       if (selected)
-                        const Icon(Icons.check_circle, color: AppColors.primary),
+                        Icon(PhosphorIcons.checkCircle(), color: AppColors.primary),
                     ],
                   ),
                 ),
@@ -513,7 +514,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Icon(Icons.info_outline,
+                Icon(PhosphorIcons.info(),
                     color: AppColors.primary, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
@@ -580,7 +581,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                     fit: BoxFit.cover,
                                   ),
                                 )
-                              : const Icon(Icons.add_a_photo_outlined,
+                              : Icon(PhosphorIcons.cameraPlus(),
                                   color: AppColors.textSecondary, size: 42),
                         ),
                         Positioned(
@@ -589,7 +590,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           child: CircleAvatar(
                             radius: 20,
                             backgroundColor: AppColors.secondary,
-                            child: const Icon(Icons.edit,
+                            child: Icon(PhosphorIcons.pencilSimple(),
                                 color: Colors.white, size: 16),
                           ),
                         ),
@@ -628,8 +629,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                             : AppColors.secondary,
                         child: Icon(
                           _session.isClient
-                              ? Icons.desktop_windows_outlined
-                              : Icons.badge_outlined,
+                              ? PhosphorIcons.desktop()
+                              : PhosphorIcons.identificationCard(),
                           color: _session.isClient
                               ? AppColors.primary
                               : Colors.white,
@@ -659,7 +660,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.check_circle,
+                      Icon(PhosphorIcons.checkCircle(),
                           color: AppColors.success, size: 20),
                     ],
                   ),
@@ -673,7 +674,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 AppInput(
                   controller: _locationController,
                   hint: 'e.g., East Legon, Accra',
-                  prefixIcon: Icons.location_on_outlined,
+                  prefixIcon: PhosphorIcons.mapPin(),
                 ),
               ],
             ),

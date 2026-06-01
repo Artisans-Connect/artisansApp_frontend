@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import 'package:artisans_app/core/theme/index.dart';
 
 /// A single onboarding page rendered inside the [PageView] of the
 /// onboarding screen.
@@ -68,7 +67,7 @@ class OnboardingPageContent extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.displayMd.copyWith(
+                  style: AppTypography.displayMd.copyWith(
                     fontSize: titleSize,
                     height: 1.2,
                   ),
@@ -79,7 +78,7 @@ class OnboardingPageContent extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodyLg.copyWith(
+                  style: AppTypography.bodyLg.copyWith(
                     fontSize: maxHeight < 520 ? 14.0 : null,
                     height: 1.4,
                   ),
@@ -128,11 +127,7 @@ class _HeroSection extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: heroGradientColors,
-            ),
+            color: heroGradientColors.first,
             boxShadow: <BoxShadow>[
               BoxShadow(
                 color: heroGradientColors.last.withOpacity(0.35),
@@ -215,7 +210,7 @@ class _HeroSection extends StatelessWidget {
                         badgeLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyLg.copyWith(
+                        style: AppTypography.bodyLg.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
@@ -225,7 +220,7 @@ class _HeroSection extends StatelessWidget {
                         badgeSubtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyMd.copyWith(fontSize: 12),
+                        style: AppTypography.bodyMd.copyWith(fontSize: 12),
                       ),
                     ],
                   ),

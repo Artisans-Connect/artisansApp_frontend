@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
@@ -21,56 +22,56 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
     final session = WorkerScope.of(context);
 
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(
           'In Progress',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.primary),
+          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert),
+            icon: Icon(PhosphorIcons.dotsThreeVertical()),
             onPressed: () => _stub(context, 'More actions'),
           ),
         ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
-          WorkerSpacing.gutter,
+          AppSpacing.gutter,
           0,
-          WorkerSpacing.gutter,
-          WorkerSpacing.xl,
+          AppSpacing.gutter,
+          AppSpacing.xl,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const ElapsedTimerCard(),
-            const SizedBox(height: WorkerSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             JobDetailCard(
               child: Row(
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundColor: WorkerColors.primaryFixed,
+                    backgroundColor: AppColors.primaryFixed,
                     child: Text(
                       job.clientName.substring(0, 1),
-                      style: WorkerTextStyles.titleMd.copyWith(
-                        color: WorkerColors.primary,
+                      style: AppTypography.titleMd.copyWith(
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
-                  const SizedBox(width: WorkerSpacing.md),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(job.clientName, style: WorkerTextStyles.titleMd),
+                        Text(job.clientName, style: AppTypography.titleMd),
                         Text(
                           'Residential Client',
-                          style: WorkerTextStyles.bodyMd,
+                          style: AppTypography.bodyMd,
                         ),
                       ],
                     ),
@@ -82,18 +83,18 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             JobDetailCard(
               child: Column(
                 children: [
                   _DetailRow(
-                    icon: Icons.location_on_outlined,
+                    icon: PhosphorIcons.mapPin(),
                     label: 'BOOKING LOCATION',
                     value: job.addressLabel,
                   ),
-                  const Divider(height: WorkerSpacing.lg),
+                  const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    icon: Icons.description_outlined,
+                    icon: PhosphorIcons.fileText(),
                     label: 'REQUEST DETAILS',
                     value: job.description,
                     maxLines: 2,
@@ -101,7 +102,7 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             GradientButton(
               label: 'Mark as Complete',
               onPressed: () {
@@ -115,10 +116,10 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
                 );
               },
             ),
-            const SizedBox(height: WorkerSpacing.md),
+            const SizedBox(height: AppSpacing.md),
             TextButton.icon(
               onPressed: () => _stub(context, 'Support'),
-              icon: const Icon(Icons.support_agent_outlined, size: 18),
+              icon: Icon(PhosphorIcons.headset(), size: 18),
               label: const Text('Need help? Call support'),
             ),
           ],
@@ -150,18 +151,18 @@ class _DetailRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, color: WorkerColors.primary, size: 20),
-        const SizedBox(width: WorkerSpacing.sm),
+        Icon(icon, color: AppColors.primary, size: 20),
+        const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: WorkerTextStyles.labelCaps.copyWith(fontSize: 9)),
+              Text(label, style: AppTypography.labelCaps.copyWith(fontSize: 9)),
               const SizedBox(height: 4),
               Text(
                 value,
-                style: WorkerTextStyles.bodyMd.copyWith(
-                  color: WorkerColors.onSurface,
+                style: AppTypography.bodyMd.copyWith(
+                  color: AppColors.onSurface,
                 ),
                 maxLines: maxLines,
                 overflow: TextOverflow.ellipsis,

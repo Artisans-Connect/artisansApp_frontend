@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/jobs_service.dart';
@@ -178,7 +179,7 @@ class _BookingCard extends StatelessWidget {
       child: ListTile(
         title: Text(booking.title),
         subtitle: Text('${booking.artisan} · ${booking.status.displayLabel}'),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: Icon(PhosphorIcons.caretRight()),
         onTap: onTap,
       ),
     );

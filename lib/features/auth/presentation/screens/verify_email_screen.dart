@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -68,7 +69,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         color: AppColors.primary.withValues(alpha: 0.12),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.mark_email_unread_outlined,
+                      child: Icon(PhosphorIcons.envelopeSimpleOpen(),
                           color: AppColors.primary, size: 36),
                     ),
                     const SizedBox(height: 20),

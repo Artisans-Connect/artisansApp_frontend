@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
@@ -69,13 +70,13 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
+          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          color: AppColors.primary,
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).maybePop();
@@ -86,16 +87,16 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
         ),
         title: Text(
           'History',
-          style: WorkerTextStyles.titleMd.copyWith(color: WorkerColors.onSurface),
+          style: AppTypography.titleMd.copyWith(color: AppColors.onSurface),
         ),
         centerTitle: true,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: WorkerSpacing.md),
+            padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Text(
               'Artisans',
-              style: WorkerTextStyles.titleMd.copyWith(
-                color: WorkerColors.primary,
+              style: AppTypography.titleMd.copyWith(
+                color: AppColors.primary,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -105,7 +106,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(WorkerSpacing.gutter),
+            padding: const EdgeInsets.all(AppSpacing.gutter),
             child: SegmentToggle(
               leftLabel: 'Completed',
               rightLabel: 'Cancelled',
@@ -126,11 +127,11 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
                     ? Center(
                         child: Text(
                           'No history available',
-                          style: WorkerTextStyles.bodyLg,
+                          style: AppTypography.bodyLg,
                         ),
                       )
                     : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: WorkerSpacing.gutter),
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
                         itemCount: _filtered.length,
                         itemBuilder: (_, int i) => HistoryJobCard(job: _filtered[i]),
                       ),

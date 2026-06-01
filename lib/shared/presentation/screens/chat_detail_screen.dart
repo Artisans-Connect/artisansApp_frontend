@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
 import '../../../core/utils/current_user.dart';
@@ -161,7 +162,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           padding: const EdgeInsets.only(left: 8),
           child: IconButton(
             onPressed: () => Navigator.maybePop(context),
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.arrowLeft(), color: AppColors.textPrimary),
           ),
         ),
         titleSpacing: 4,
@@ -247,11 +248,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         actions: <Widget>[
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.videocam_outlined, color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.videoCamera(), color: AppColors.textPrimary),
           ),
           IconButton(
             onPressed: () {},
-            icon: const Icon(Icons.more_vert, color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.dotsThreeVertical(), color: AppColors.textPrimary),
           ),
         ],
       ),
@@ -341,17 +342,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         children: <Widget>[
           IconButton(
             onPressed: () => setState(() => _showAttachmentMenu = false),
-            icon: const Icon(Icons.insert_drive_file_outlined, color: AppColors.primary),
+            icon: Icon(PhosphorIcons.file(), color: AppColors.primary),
             tooltip: 'Document',
           ),
           IconButton(
             onPressed: () => setState(() => _showAttachmentMenu = false),
-            icon: const Icon(Icons.camera_alt_outlined, color: AppColors.primary),
+            icon: Icon(PhosphorIcons.camera(), color: AppColors.primary),
             tooltip: 'Camera',
           ),
           IconButton(
             onPressed: () => setState(() => _showAttachmentMenu = false),
-            icon: const Icon(Icons.image_outlined, color: AppColors.primary),
+            icon: Icon(PhosphorIcons.image(), color: AppColors.primary),
             tooltip: 'Gallery',
           ),
         ],
@@ -386,7 +387,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               borderRadius: BorderRadius.circular(99),
               child: const Padding(
                 padding: EdgeInsets.all(10),
-                child: Icon(Icons.add, color: AppColors.textSecondary, size: 22),
+                child: Icon(PhosphorIcons.plus(), color: AppColors.textSecondary, size: 22),
               ),
             ),
           ),
@@ -420,7 +421,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   IconButton(
                     onPressed: () {},
                     icon: Icon(
-                      Icons.emoji_emotions_outlined,
+                      PhosphorIcons.smiley(),
                       color: AppColors.outline,
                       size: 22,
                     ),
@@ -439,7 +440,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               borderRadius: BorderRadius.circular(99),
               child: const Padding(
                 padding: EdgeInsets.all(12),
-                child: Icon(Icons.send_rounded, color: Colors.white, size: 22),
+                child: Icon(PhosphorIcons.paperPlaneRight(), color: Colors.white, size: 22),
               ),
             ),
           ),

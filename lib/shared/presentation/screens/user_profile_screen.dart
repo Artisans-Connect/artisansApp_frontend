@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -53,7 +54,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           if (isOwnProfile)
             IconButton(
               onPressed: () => Navigator.pushNamed(context, EditProfileScreen.routeName).then((_) => setState(() {})),
-              icon: const Icon(Icons.edit_outlined, color: AppColors.primary),
+              icon: Icon(PhosphorIcons.pencilSimple(), color: AppColors.primary),
             ),
           const SizedBox(width: 8),
         ],
@@ -71,7 +72,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ProfileSectionCard(
                   title: 'Location',
                   child: _InfoRow(
-                    icon: Icons.location_on_outlined,
+                    icon: PhosphorIcons.mapPin(),
                     label: profile.locationLabel!,
                   ),
                 ),
@@ -81,7 +82,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 title: 'Contact',
                 child: profile.phone != null
                     ? _InfoRow(
-                        icon: Icons.phone_outlined,
+                        icon: PhosphorIcons.phone(),
                         label: profile.phone!,
                       )
                     : Text('No phone added yet.', style: AppTextStyles.bodyMd),
@@ -178,19 +179,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         if (widget.onOpenWorkerEarnings != null)
                           OutlinedButton.icon(
                             onPressed: widget.onOpenWorkerEarnings,
-                            icon: const Icon(Icons.account_balance_wallet_outlined),
+                            icon: Icon(PhosphorIcons.wallet()),
                             label: const Text('Earnings'),
                           ),
                         if (widget.onOpenWorkerStats != null)
                           OutlinedButton.icon(
                             onPressed: widget.onOpenWorkerStats,
-                            icon: const Icon(Icons.query_stats_outlined),
+                            icon: Icon(PhosphorIcons.chartLineUp()),
                             label: const Text('Stats'),
                           ),
                         if (widget.onOpenWorkerHistory != null)
                           OutlinedButton.icon(
                             onPressed: widget.onOpenWorkerHistory,
-                            icon: const Icon(Icons.history),
+                            icon: Icon(PhosphorIcons.clockCounterClockwise()),
                             label: const Text('History'),
                           ),
                       ],
@@ -284,7 +285,7 @@ class _ProfileHero extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 14,
                     backgroundColor: AppColors.success,
-                    child: Icon(Icons.verified, color: Colors.white, size: 16),
+                    child: Icon(PhosphorIcons.sealCheck(), color: Colors.white, size: 16),
                   ),
                 ),
             ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
 import '../theme/worker_text_styles.dart';
@@ -11,31 +12,31 @@ class CompletionPhotoPicker extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('ADD PHOTOS', style: WorkerTextStyles.labelCaps),
-        const SizedBox(height: WorkerSpacing.sm),
+        Text('ADD PHOTOS', style: AppTypography.labelCaps),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
-            _PhotoSlot(filled: true, icon: Icons.handyman_outlined),
-            const SizedBox(width: WorkerSpacing.sm),
+            _PhotoSlot(filled: true, icon: PhosphorIcons.wrench()),
+            const SizedBox(width: AppSpacing.sm),
             _PhotoSlot(dashed: true),
-            const SizedBox(width: WorkerSpacing.sm),
+            const SizedBox(width: AppSpacing.sm),
             _PhotoSlot(dashed: true),
-            const SizedBox(width: WorkerSpacing.sm),
+            const SizedBox(width: AppSpacing.sm),
             _PhotoSlot(add: true),
           ],
         ),
-        const SizedBox(height: WorkerSpacing.sm),
+        const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
             Icon(
-              Icons.cloud_outlined,
+              PhosphorIcons.cloud(),
               size: 16,
-              color: WorkerColors.outline,
+              color: AppColors.outline,
             ),
             const SizedBox(width: 6),
             Text(
               'Photos will sync when online',
-              style: WorkerTextStyles.bodyMd.copyWith(fontSize: 12),
+              style: AppTypography.bodyMd.copyWith(fontSize: 12),
             ),
           ],
         ),
@@ -65,24 +66,24 @@ class _PhotoSlot extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             color: add
-                ? WorkerColors.primary
+                ? AppColors.primary
                 : filled
-                    ? WorkerColors.surfaceContainer
-                    : WorkerColors.surfaceContainerLow,
+                    ? AppColors.surfaceContainer
+                    : AppColors.surfaceContainerLow,
             borderRadius: BorderRadius.circular(12),
             border: dashed
                 ? Border.all(
-                    color: WorkerColors.outlineVariant,
+                    color: AppColors.outlineVariant,
                     style: BorderStyle.solid,
                     width: 1.5,
                   )
                 : null,
           ),
           child: add
-              ? const Icon(Icons.add, color: WorkerColors.onPrimary, size: 28)
+              ? Icon(PhosphorIcons.plus(), color: AppColors.onPrimary, size: 28)
               : Icon(
-                  icon ?? Icons.image_outlined,
-                  color: WorkerColors.outline.withOpacity(0.5),
+                  icon ?? PhosphorIcons.image(),
+                  color: AppColors.outline.withOpacity(0.5),
                 ),
         ),
       ),

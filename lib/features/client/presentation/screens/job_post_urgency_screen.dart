@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -163,7 +164,7 @@ class _JobPostUrgencyScreenState extends State<JobPostUrgencyScreen> {
               subtitle: Text(
                 '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
               ),
-              trailing: const Icon(Icons.calendar_today),
+              trailing: Icon(PhosphorIcons.calendarBlank()),
               onTap: _selectDate,
             ),
             DropdownButtonFormField<String>(
@@ -262,7 +263,7 @@ class _UrgencyTile extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              selected ? PhosphorIcons.radioButton() : PhosphorIcons.circle(),
               color: AppColors.primary,
             ),
             const SizedBox(width: AppSpacing.md),

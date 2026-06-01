@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -52,8 +53,8 @@ class _SearchBarState extends State<CustomSearchBar> {
           hintStyle: AppTypography.bodyMedium.copyWith(
             color: AppColors.outlineVariant,
           ),
-          prefixIcon: const Icon(
-            Icons.search,
+          prefixIcon: Icon(
+            PhosphorIcons.magnifyingGlass(),
             color: AppColors.outlineVariant,
             size: AppSpacing.iconMedium,
           ),
@@ -63,8 +64,8 @@ class _SearchBarState extends State<CustomSearchBar> {
                     _controller.clear();
                     widget.onChanged?.call('');
                   },
-                  child: const Icon(
-                    Icons.close,
+                  child: Icon(
+                    PhosphorIcons.x(),
                     color: AppColors.outlineVariant,
                     size: AppSpacing.iconSmall,
                   ),

@@ -40,10 +40,10 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(WorkerSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: WorkerColors.surface,
-        borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppColors.cardRadius),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -54,16 +54,16 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
       ),
       child: Column(
         children: [
-          Text('TIME ELAPSED', style: WorkerTextStyles.labelCaps),
-          const SizedBox(height: WorkerSpacing.sm),
+          Text('TIME ELAPSED', style: AppTypography.labelCaps),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             _format(_elapsed),
-            style: WorkerTextStyles.displayMd.copyWith(
+            style: AppTypography.displayMd.copyWith(
               fontSize: 36,
-              color: WorkerColors.primary,
+              color: AppColors.primary,
             ),
           ),
-          const SizedBox(height: WorkerSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -71,15 +71,15 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: WorkerColors.success,
+                  color: AppColors.success,
                   shape: BoxShape.circle,
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 'Active Session',
-                style: WorkerTextStyles.bodyMd.copyWith(
-                  color: WorkerColors.successDark,
+                style: AppTypography.bodyMd.copyWith(
+                  color: AppColors.successDark,
                   fontWeight: FontWeight.w600,
                 ),
               ),

@@ -4,7 +4,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+import '../../../../core/theme/index.dart';
 import 'onboarding_screen.dart';
 import 'role_selection_screen.dart';
 import 'sign_in_screen.dart';
@@ -59,11 +61,7 @@ class _SplashScreenState extends State<SplashScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: <Color>[Color(0xFF6366F1), Color(0xFF3B82F6)],
-          ),
+          color: AppColors.primary,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -75,12 +73,12 @@ class _SplashScreenState extends State<SplashScreen> {
                 color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(24),
               ),
-              child: const Icon(Icons.handyman, color: Colors.white, size: 44),
+              child: Icon(PhosphorIcons.wrench(), color: Colors.white, size: 44),
             ),
             const SizedBox(height: 24),
             Text(
               'Artisans',
-              style: AppTextStyles.displayMd.copyWith(
+              style: AppTypography.displayMd.copyWith(
                 color: Colors.white,
                 fontSize: 42,
               ),

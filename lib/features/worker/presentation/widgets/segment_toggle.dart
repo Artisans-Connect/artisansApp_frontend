@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_text_styles.dart';
+import 'package:artisans_app/core/theme/index.dart';
 
 class SegmentToggle extends StatelessWidget {
   const SegmentToggle({
@@ -21,7 +20,7 @@ class SegmentToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: WorkerColors.primaryFixed.withOpacity(0.4),
+        color: AppColors.primaryFixed.withOpacity(0.4),
         borderRadius: BorderRadius.circular(28),
       ),
       child: Row(
@@ -63,16 +62,17 @@ class _SegmentChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? WorkerColors.primary : Colors.transparent,
+          color: selected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(24),
         ),
         alignment: Alignment.center,
         child: Text(
           label,
-          style: WorkerTextStyles.bodyLg.copyWith(
-            color: selected ? WorkerColors.onPrimary : WorkerColors.onSurface,
+          style: AppTypography.bodyLg.copyWith(
+            color: selected ? AppColors.onPrimary : AppColors.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: 14,
           ),

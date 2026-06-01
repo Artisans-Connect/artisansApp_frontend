@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
 
 import '../../../../core/services/workers_service.dart';
@@ -31,26 +32,26 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
     final job = widget.job;
 
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         title: Column(
           children: [
             Text(
               'ACTIVE BOOKING',
-              style: WorkerTextStyles.labelCaps.copyWith(fontSize: 9),
+              style: AppTypography.labelCaps.copyWith(fontSize: 9),
             ),
             Text(
               job.title,
-              style: WorkerTextStyles.titleMd.copyWith(fontSize: 14),
+              style: AppTypography.titleMd.copyWith(fontSize: 14),
             ),
           ],
         ),
         centerTitle: true,
         actions: [
           IconButton(
-            icon: const Icon(Icons.more_vert),
+            icon: Icon(PhosphorIcons.dotsThreeVertical()),
             onPressed: () => _stub(context, 'More actions'),
           ),
         ],
@@ -71,12 +72,12 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
               offset: const Offset(0, -40),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: WorkerSpacing.gutter,
+                  horizontal: AppSpacing.gutter,
                 ),
                 child: Container(
-                  padding: const EdgeInsets.all(WorkerSpacing.md),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: WorkerColors.surface,
+                    color: AppColors.surface,
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
@@ -91,11 +92,11 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                         children: [
                           CircleAvatar(
                             radius: 28,
-                            backgroundColor: WorkerColors.primaryFixed,
+                            backgroundColor: AppColors.primaryFixed,
                             child: Text(
                               job.clientName.substring(0, 1),
-                              style: WorkerTextStyles.titleMd.copyWith(
-                                color: WorkerColors.primary,
+                              style: AppTypography.titleMd.copyWith(
+                                color: AppColors.primary,
                               ),
                             ),
                           ),
@@ -106,10 +107,10 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                               width: 12,
                               height: 12,
                               decoration: BoxDecoration(
-                                color: WorkerColors.success,
+                                color: AppColors.success,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: WorkerColors.surface,
+                                  color: AppColors.surface,
                                   width: 2,
                                 ),
                               ),
@@ -117,22 +118,22 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(width: WorkerSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(job.clientName, style: WorkerTextStyles.titleMd),
+                            Text(job.clientName, style: AppTypography.titleMd),
                             Row(
                               children: [
-                                const Icon(
-                                  Icons.star_rounded,
+                                Icon(
+                                  PhosphorIcons.star(),
                                   size: 14,
                                   color: Color(0xFFFFB800),
                                 ),
                                 Text(
                                   ' ${job.clientRating}',
-                                  style: WorkerTextStyles.bodyMd,
+                                  style: AppTypography.bodyMd,
                                 ),
                               ],
                             ),
@@ -150,44 +151,44 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                WorkerSpacing.gutter,
+                AppSpacing.gutter,
                 0,
-                WorkerSpacing.gutter,
-                WorkerSpacing.xl,
+                AppSpacing.gutter,
+                AppSpacing.xl,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('BOOKING ADDRESS', style: WorkerTextStyles.labelCaps),
-                  const SizedBox(height: WorkerSpacing.sm),
+                  Text('BOOKING ADDRESS', style: AppTypography.labelCaps),
+                  const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
-                      const Icon(Icons.place_outlined, color: WorkerColors.outline),
+                      Icon(PhosphorIcons.mapPin(), color: AppColors.outline),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           job.addressLabel,
-                          style: WorkerTextStyles.bodyLg.copyWith(
-                            color: WorkerColors.onSurface,
+                          style: AppTypography.bodyLg.copyWith(
+                            color: AppColors.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: WorkerSpacing.lg),
-                  Text('REQUEST DETAILS', style: WorkerTextStyles.labelCaps),
-                  const SizedBox(height: WorkerSpacing.sm),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('REQUEST DETAILS', style: AppTypography.labelCaps),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     job.description,
-                    style: WorkerTextStyles.bodyMd,
+                    style: AppTypography.bodyMd,
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: WorkerSpacing.xl),
+                  const SizedBox(height: AppSpacing.xl),
                   OutlinedButton.icon(
                     onPressed: () => _stub(context, 'Directions'),
-                    icon: const Icon(Icons.navigation_outlined),
+                    icon: Icon(PhosphorIcons.navigationArrow()),
                     label: const Text('Get Directions'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(52),
@@ -196,7 +197,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: WorkerSpacing.sm),
+                  const SizedBox(height: AppSpacing.sm),
                   GradientButton(
                     label: 'Mark as Started',
                     isLoading: _isStarting,
@@ -220,15 +221,15 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                       }
                     },
                   ),
-                  const SizedBox(height: WorkerSpacing.md),
+                  const SizedBox(height: AppSpacing.md),
                   TextButton(
                     onPressed: () {
                       session.cancelActiveJob();
                     },
                     child: Text(
                       'Cancel Booking',
-                      style: WorkerTextStyles.bodyLg.copyWith(
-                        color: WorkerColors.error,
+                      style: AppTypography.bodyLg.copyWith(
+                        color: AppColors.error,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

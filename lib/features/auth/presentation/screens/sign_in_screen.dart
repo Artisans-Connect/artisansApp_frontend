@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
@@ -124,7 +125,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           decoration: BoxDecoration(
                               color: AppColors.primary,
                               borderRadius: BorderRadius.circular(20)),
-                          child: const Icon(Icons.palette_outlined,
+                          child: Icon(PhosphorIcons.palette(),
                               color: Colors.white, size: 34),
                         ),
                       ),

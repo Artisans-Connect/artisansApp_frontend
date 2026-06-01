@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
+import 'package:artisans_app/core/theme/index.dart';
 import '../models/chat_message.dart';
 
 class ChatBubble extends StatelessWidget {
@@ -31,14 +31,7 @@ class ChatBubble extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                gradient: message.isMine
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: <Color>[Color(0xFF6366F1), Color(0xFF3B82F6)],
-                      )
-                    : null,
-                color: message.isMine ? null : const Color(0xFFEEECF5),
+                color: message.isMine ? AppColors.primary : const Color(0xFFEEECF5),
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(20),
                   topRight: const Radius.circular(20),
@@ -70,7 +63,7 @@ class ChatBubble extends StatelessWidget {
                     ),
                   Text(
                     message.content,
-                    style: AppTextStyles.bodyLg.copyWith(
+                    style: AppTypography.bodyLg.copyWith(
                       color: message.isMine ? Colors.white : AppColors.textPrimary,
                       height: 1.4,
                     ),
@@ -85,7 +78,7 @@ class ChatBubble extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     _formatTime(message.sentAt),
-                    style: AppTextStyles.bodyMd.copyWith(
+                    style: AppTypography.bodyMd.copyWith(
                       color: AppColors.textSecondary,
                       fontSize: 11,
                     ),
@@ -93,7 +86,7 @@ class ChatBubble extends StatelessWidget {
                   if (message.isMine) ...<Widget>[
                     const SizedBox(width: 4),
                     Icon(
-                      Icons.done_all,
+                      PhosphorIcons.checks(),
                       size: 14,
                       color: AppColors.primary,
                     ),

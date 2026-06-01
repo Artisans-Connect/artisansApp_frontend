@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -67,7 +68,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(
-                  Icons.map,
+                  PhosphorIcons.mapTrifold(),
                   size: 64,
                   color: AppColors.outlineVariant,
                 ),
@@ -173,7 +174,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                               borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                                             ),
                                             child: Icon(
-                                              Icons.person,
+                                              PhosphorIcons.user(),
                                               color: AppColors.onPrimary,
                                             ),
                                           ),
@@ -223,7 +224,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                     Row(
                                                       children: [
                                                         Icon(
-                                                          Icons.location_on,
+                                                          PhosphorIcons.mapPin(),
                                                           size: 14,
                                                           color: AppColors.outlineVariant,
                                                         ),
@@ -241,7 +242,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                           ),
                                           // View Profile Icon
                                           Icon(
-                                            Icons.arrow_forward_ios,
+                                            PhosphorIcons.caretRight(),
                                             size: 16,
                                             color: AppColors.primary,
                                           ),

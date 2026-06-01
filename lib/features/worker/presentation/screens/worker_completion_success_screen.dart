@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../theme/worker_colors.dart';
@@ -22,57 +23,57 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
     final earned = job.earnedAmount ?? 145;
 
     return Scaffold(
-      backgroundColor: WorkerColors.background,
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: WorkerColors.background,
+        backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          color: WorkerColors.primary,
+          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          color: AppColors.primary,
           onPressed: () => _goHome(context),
         ),
         title: Text(
           'Artisans',
-          style: WorkerTextStyles.titleMd.copyWith(
-            color: WorkerColors.primary,
+          style: AppTypography.titleMd.copyWith(
+            color: AppColors.primary,
             fontWeight: FontWeight.w800,
           ),
         ),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(WorkerSpacing.gutter),
+        padding: const EdgeInsets.all(AppSpacing.gutter),
         child: Column(
           children: [
-            const SizedBox(height: WorkerSpacing.lg),
+            const SizedBox(height: AppSpacing.lg),
             Container(
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: WorkerColors.success.withOpacity(0.15),
+                color: AppColors.success.withOpacity(0.15),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.check_circle_rounded,
+              child: Icon(
+                PhosphorIcons.checkCircle(),
                 size: 64,
-                color: WorkerColors.successDark,
+                color: AppColors.successDark,
               ),
             ),
-            const SizedBox(height: WorkerSpacing.lg),
-            Text('Booking Completed!', style: WorkerTextStyles.displayMd),
-            const SizedBox(height: WorkerSpacing.sm),
+            const SizedBox(height: AppSpacing.lg),
+            Text('Booking Completed!', style: AppTypography.displayMd),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               'The client has been notified and will rate you shortly.',
-              style: WorkerTextStyles.bodyMd,
+              style: AppTypography.bodyMd,
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: WorkerSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(WorkerSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
-                color: WorkerColors.surface,
-                borderRadius: BorderRadius.circular(WorkerColors.cardRadius),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppColors.cardRadius),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -85,42 +86,42 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('EARNED TOTAL', style: WorkerTextStyles.labelCaps),
+                      Text('EARNED TOTAL', style: AppTypography.labelCaps),
                       Text(
                         formatCedis(earned),
-                        style: WorkerTextStyles.titleMd.copyWith(
-                          color: WorkerColors.successDark,
+                        style: AppTypography.titleMd.copyWith(
+                          color: AppColors.successDark,
                           fontSize: 22,
                         ),
                       ),
                     ],
                   ),
-                  const Divider(height: WorkerSpacing.lg),
+                  const Divider(height: AppSpacing.lg),
                   Row(
                     children: [
                       CircleAvatar(
-                        backgroundColor: WorkerColors.primaryFixed,
+                        backgroundColor: AppColors.primaryFixed,
                         child: Text(
                           job.clientName.substring(0, 1),
-                          style: WorkerTextStyles.titleMd.copyWith(
-                            color: WorkerColors.primary,
+                          style: AppTypography.titleMd.copyWith(
+                            color: AppColors.primary,
                           ),
                         ),
                       ),
-                      const SizedBox(width: WorkerSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               job.clientName,
-                              style: WorkerTextStyles.titleMd.copyWith(
+                              style: AppTypography.titleMd.copyWith(
                                 fontSize: 16,
                               ),
                             ),
                             Text(
                               job.title.toUpperCase(),
-                              style: WorkerTextStyles.labelCaps.copyWith(
+                              style: AppTypography.labelCaps.copyWith(
                                 fontSize: 10,
                               ),
                             ),
@@ -132,7 +133,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(height: WorkerSpacing.xl),
+            const SizedBox(height: AppSpacing.xl),
             GradientButton(
               label: 'Back to Requests',
               onPressed: () => _goHome(context),
@@ -143,7 +144,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                   const SnackBar(content: Text('Share — coming soon')),
                 );
               },
-              icon: const Icon(Icons.share_outlined, size: 18),
+              icon: Icon(PhosphorIcons.shareNetwork(), size: 18),
               label: const Text('Share this job to your portfolio'),
             ),
           ],

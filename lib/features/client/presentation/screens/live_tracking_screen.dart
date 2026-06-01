@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -27,31 +28,31 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     {
       'title': 'Confirmed',
       'description': 'Job accepted by artisan',
-      'icon': Icons.check_circle,
+      'icon': PhosphorIcons.checkCircle(),
       'status': 'completed',
     },
     {
       'title': 'On the Way',
       'description': 'Artisan is heading to your location',
-      'icon': Icons.navigation,
+      'icon': PhosphorIcons.navigationArrow(),
       'status': 'in_progress',
     },
     {
       'title': 'Arrived',
       'description': 'Artisan has arrived at your location',
-      'icon': Icons.location_on,
+      'icon': PhosphorIcons.mapPin(),
       'status': 'pending',
     },
     {
       'title': 'Work in Progress',
       'description': 'Artisan is working on your job',
-      'icon': Icons.build,
+      'icon': PhosphorIcons.wrench(),
       'status': 'pending',
     },
     {
       'title': 'Completed',
       'description': 'Job is done. Awaiting your approval',
-      'icon': Icons.done_all,
+      'icon': PhosphorIcons.checks(),
       'status': 'pending',
     },
   ];
@@ -106,7 +107,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.map,
+                      PhosphorIcons.mapTrifold(),
                       size: 64,
                       color: AppColors.outlineVariant,
                     ),
@@ -162,7 +163,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.call, size: 18),
+                          Icon(PhosphorIcons.phone(), size: 18),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
                             'Call',
@@ -200,7 +201,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.message, size: 18),
+                          Icon(PhosphorIcons.chatTeardrop(), size: 18),
                           const SizedBox(width: AppSpacing.sm),
                           Text(
                             'Message',
@@ -231,7 +232,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     Row(
                       children: [
                         Icon(
-                          Icons.check_circle,
+                          PhosphorIcons.checkCircle(),
                           color: AppColors.success,
                         ),
                         const SizedBox(width: AppSpacing.md),
@@ -463,7 +464,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
-                    Icons.person,
+                    PhosphorIcons.user(),
                     color: AppColors.onPrimary,
                   );
                 },

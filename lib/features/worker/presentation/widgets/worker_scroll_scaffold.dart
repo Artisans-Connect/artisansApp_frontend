@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/worker_colors.dart';
+import 'package:artisans_app/core/theme/index.dart';
 
 /// Shared scaffold: optional top bar, scrollable body, optional bottom bars.
 class WorkerScrollScaffold extends StatelessWidget {
@@ -9,7 +9,7 @@ class WorkerScrollScaffold extends StatelessWidget {
     required this.body,
     this.bottomNavigationBar,
     this.bottomSheet,
-    this.backgroundColor = WorkerColors.background,
+    this.backgroundColor = AppColors.background,
   });
 
   final Widget? topBar;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_text_styles.dart';
 
@@ -30,8 +31,8 @@ class MapPlaceholder extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            WorkerColors.secondaryFixed.withOpacity(0.5),
-            WorkerColors.surfaceContainer,
+            AppColors.secondaryFixed.withOpacity(0.5),
+            AppColors.surfaceContainer,
           ],
         ),
       ),
@@ -40,9 +41,9 @@ class MapPlaceholder extends StatelessWidget {
           if (!compact)
             Center(
               child: Icon(
-                Icons.map_outlined,
+                PhosphorIcons.mapTrifold(),
                 size: 72,
-                color: WorkerColors.outline.withOpacity(0.35),
+                color: AppColors.outline.withOpacity(0.35),
               ),
             ),
           if (showPin && clientPinLabel != null)
@@ -51,10 +52,10 @@ class MapPlaceholder extends StatelessWidget {
               right: 32,
               child: Column(
                 children: [
-                  const Icon(
-                    Icons.location_on,
+                  Icon(
+                    PhosphorIcons.mapPin(),
                     size: 40,
-                    color: WorkerColors.error,
+                    color: AppColors.error,
                   ),
                   const SizedBox(height: 4),
                   Container(
@@ -63,7 +64,7 @@ class MapPlaceholder extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: WorkerColors.surface,
+                      color: AppColors.surface,
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
@@ -74,8 +75,8 @@ class MapPlaceholder extends StatelessWidget {
                     ),
                     child: Text(
                       clientPinLabel!,
-                      style: WorkerTextStyles.badge.copyWith(
-                        color: WorkerColors.error,
+                      style: AppTypography.badge.copyWith(
+                        color: AppColors.error,
                         fontSize: 11,
                       ),
                     ),
@@ -86,9 +87,9 @@ class MapPlaceholder extends StatelessWidget {
           else if (showPin)
             const Center(
               child: Icon(
-                Icons.location_on,
+                PhosphorIcons.mapPin(),
                 size: 36,
-                color: WorkerColors.error,
+                color: AppColors.error,
               ),
             ),
           if (addressLabel != null && clientPinLabel == null)
@@ -102,22 +103,22 @@ class MapPlaceholder extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: WorkerColors.surface.withOpacity(0.95),
+                  color: AppColors.surface.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.place_outlined,
+                    Icon(
+                      PhosphorIcons.mapPin(),
                       size: 18,
-                      color: WorkerColors.primary,
+                      color: AppColors.primary,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         addressLabel!,
-                        style: WorkerTextStyles.bodyMd.copyWith(
-                          color: WorkerColors.onSurface,
+                        style: AppTypography.bodyMd.copyWith(
+                          color: AppColors.onSurface,
                           fontWeight: FontWeight.w500,
                         ),
                         maxLines: 2,
@@ -138,7 +139,7 @@ class MapPlaceholder extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(
-        compact ? 12 : WorkerColors.cardRadius,
+        compact ? 12 : AppColors.cardRadius,
       ),
       child: map,
     );

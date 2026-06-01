@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -40,7 +41,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: elevation,
       leading: showBackButton
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios),
+              icon: Icon(PhosphorIcons.caretLeft()),
               color: AppColors.textPrimary,
               onPressed: onBackPressed ?? () => Navigator.pop(context),
             )

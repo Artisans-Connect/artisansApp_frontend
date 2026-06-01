@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../theme/worker_colors.dart';
 import '../theme/worker_spacing.dart';
 
@@ -18,9 +19,9 @@ class ClientContactRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _ActionButton(icon: Icons.chat_bubble_outline_rounded, onTap: onMessage),
-        const SizedBox(width: WorkerSpacing.sm),
-        _ActionButton(icon: Icons.phone_outlined, onTap: onCall),
+        _ActionButton(icon: PhosphorIcons.chatCircle(), onTap: onMessage),
+        const SizedBox(width: AppSpacing.sm),
+        _ActionButton(icon: PhosphorIcons.phone(), onTap: onCall),
       ],
     );
   }
@@ -35,14 +36,14 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: WorkerColors.primaryFixed,
+      color: AppColors.primaryFixed,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Icon(icon, color: WorkerColors.primary, size: 22),
+          child: Icon(icon, color: AppColors.primary, size: 22),
         ),
       ),
     );
