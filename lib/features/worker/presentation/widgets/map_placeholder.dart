@@ -1,8 +1,6 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_text_styles.dart';
-
 class MapPlaceholder extends StatelessWidget {
   const MapPlaceholder({
     super.key,
@@ -13,14 +11,12 @@ class MapPlaceholder extends StatelessWidget {
     this.clientPinLabel,
     this.fillHeight = false,
   });
-
   final double height;
   final String? addressLabel;
   final bool showPin;
   final bool compact;
   final String? clientPinLabel;
   final bool fillHeight;
-
   @override
   Widget build(BuildContext context) {
     final map = Container(
@@ -75,7 +71,7 @@ class MapPlaceholder extends StatelessWidget {
                     ),
                     child: Text(
                       clientPinLabel!,
-                      style: AppTypography.badge.copyWith(
+                      style: AppTypography.labelSmall.copyWith(
                         color: AppColors.error,
                         fontSize: 11,
                       ),
@@ -85,9 +81,7 @@ class MapPlaceholder extends StatelessWidget {
               ),
             )
           else if (showPin)
-            const Center(
-              child: Icon(
-                PhosphorIcons.mapPin(),
+            Center(child: Icon(PhosphorIcons.mapPin(),
                 size: 36,
                 color: AppColors.error,
               ),
@@ -132,14 +126,12 @@ class MapPlaceholder extends StatelessWidget {
         ],
       ),
     );
-
     if (fillHeight) {
       return map;
     }
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(
-        compact ? 12 : AppColors.cardRadius,
+        compact ? 12 : 16.0,
       ),
       child: map,
     );

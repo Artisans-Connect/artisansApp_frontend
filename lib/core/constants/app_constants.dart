@@ -5,7 +5,7 @@ class AppConstants {
   static String get supabaseAnonKey => dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? '';
   
   // Assuming localhost for now as requested by user
-  static const String expressApiBaseUrl = 'http://10.0.2.2:3000/api'; 
+  static const String expressApiBaseUrl = 'http://localhost:3000/api'; 
   // Note: 10.0.2.2 is the alias for localhost in Android Emulator. 
   // For iOS Simulator, it would be 127.0.0.1 or localhost.
   

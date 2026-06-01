@@ -385,9 +385,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 setState(() => _showAttachmentMenu = !_showAttachmentMenu);
               },
               borderRadius: BorderRadius.circular(99),
-              child: const Padding(
-                padding: EdgeInsets.all(10),
-                child: Icon(PhosphorIcons.plus(), color: AppColors.textSecondary, size: 22),
+              child: Padding(padding: const EdgeInsets.all(10), child: Icon(PhosphorIcons.plus(), color: AppColors.textSecondary, size: 22),
               ),
             ),
           ),
@@ -438,9 +436,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             child: InkWell(
               onTap: _sendMessage,
               borderRadius: BorderRadius.circular(99),
-              child: const Padding(
-                padding: EdgeInsets.all(12),
-                child: Icon(PhosphorIcons.paperPlaneRight(), color: Colors.white, size: 22),
+              child: Padding(padding: const EdgeInsets.all(12), child: Icon(PhosphorIcons.paperPlaneRight(), color: Colors.white, size: 22),
               ),
             ),
           ),

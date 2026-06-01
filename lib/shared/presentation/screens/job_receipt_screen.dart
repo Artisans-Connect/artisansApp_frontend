@@ -81,7 +81,7 @@ class JobReceiptScreen extends StatelessWidget {
                 Expanded(
                   child: _ReceiptSection(
                     title: 'Time spent',
-                    rows: const <_ReceiptRow>[
+                    rows: <_ReceiptRow>[
                       _ReceiptRow(PhosphorIcons.clock(), '2h 30m'),
                     ],
                   ),

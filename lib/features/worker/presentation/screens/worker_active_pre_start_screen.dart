@@ -1,36 +1,27 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
-
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
-
 class WorkerActivePreStartScreen extends StatefulWidget {
   const WorkerActivePreStartScreen({super.key, required this.job});
-
   final MockWorkerJob job;
-
   @override
   State<WorkerActivePreStartScreen> createState() => _WorkerActivePreStartScreenState();
 }
-
 class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen> {
   final WorkersService _workersService = WorkersService();
   bool _isStarting = false;
-
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
     final job = widget.job;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -242,7 +233,6 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
       ),
     );
   }
-
   void _stub(BuildContext context, String action) {
     AppToast.showInfo(context, '$action — coming soon');
   }

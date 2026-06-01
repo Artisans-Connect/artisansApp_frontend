@@ -13,7 +13,7 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
-import '../../widgets/dot_indicator.dart';
+
 import '../../widgets/role_option_card.dart';
 
 class RoleSelectionScreen extends StatefulWidget {
@@ -78,19 +78,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   int get _totalDots => _session.isWorker ? 5 : 2;
 
-  String get _stepLabel {
-    if (_currentIndex == 0) return 'Step 1 of $_totalDots';
-    if (_session.isClient) {
-      if (_currentIndex == 1) return 'Step 2 of 3';
-      if (_currentIndex == 2) return 'Step 3 of 3';
-    } else {
-      if (_currentIndex == 1) return 'Step 2 of 5';
-      if (_currentIndex == 2) return 'Step 3 of 5';
-      if (_currentIndex == 3) return 'Step 4 of 5';
-      if (_currentIndex == 4) return 'Step 5 of 5';
-    }
-    return '';
-  }
+
 
   void _onNext() {
     if (_session.isClient) {
@@ -121,16 +109,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     );
   }
 
-  void _onBack() {
-    if (_currentIndex == 0) {
-      Navigator.maybePop(context);
-    } else {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
+
 
   Future<void> _finishProfile() async {
     if (_session.isWorker) {
@@ -143,10 +122,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     try {
       final String role = _session.isWorker ? 'worker' : 'client';
       final Map<String, dynamic> body = <String, dynamic>{
-        'full_name': _session.fullName ?? 'User',
-        'phone': _session.phone ?? '',
+        'full_name': _session.fullName?.isNotEmpty == true ? _session.fullName : 'User',
+        'phone': _session.phone?.isNotEmpty == true ? _session.phone : '0000000000',
         'role': role,
-        if (_session.avatarUrl != null) 'avatar_url': _session.avatarUrl,
+        // Only send avatar_url if it's actually a web URL, not a local file path
+        if (_session.avatarUrl != null && _session.avatarUrl!.startsWith('http')) 
+          'avatar_url': _session.avatarUrl,
         if (_session.bio != null && _session.bio!.isNotEmpty) 'bio': _session.bio,
         if (_session.experienceBand != null)
           'experience_band': _session.experienceBand,
@@ -258,23 +239,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       body: SafeArea(
         child: Column(
           children: <Widget>[
-            // ── Header bar ─────────────────────────────────────────
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              color: Colors.white,
-              child: Row(
-                children: <Widget>[
-                  IconButton(
-                    onPressed: _onBack,
-                    icon: Icon(PhosphorIcons.arrowLeft(), color: AppColors.primary),
-                  ),
-                  const SizedBox(width: 4),
-                  Text('Artisans',
-                      style: AppTextStyles.bodyLg.copyWith(
-                          color: AppColors.primary, fontWeight: FontWeight.w700)),
-                ],
-              ),
-            ),
 
             // ── Content PageView ───────────────────────────────────
             Expanded(
@@ -401,7 +365,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     }
                   });
                 },
-                selectedColor: AppColors.primary.withOpacity(0.12),
+                selectedColor: AppColors.primary.withValues(alpha: 0.12),
                 checkmarkColor: AppColors.primary,
                 labelStyle: TextStyle(
                   color: selected ? AppColors.primary : AppColors.textPrimary,
@@ -454,7 +418,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     }
                   });
                 },
-                selectedColor: AppColors.primary.withOpacity(0.12),
+                selectedColor: AppColors.primary.withValues(alpha: 0.12),
                 checkmarkColor: AppColors.primary,
                 side: BorderSide(
                   color: selected ? AppColors.primary : AppColors.outline,
@@ -508,7 +472,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
+              color: AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -625,7 +589,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: _session.isClient
-                            ? AppColors.primary.withOpacity(0.15)
+                            ? AppColors.primary.withValues(alpha: 0.15)
                             : AppColors.secondary,
                         child: Icon(
                           _session.isClient

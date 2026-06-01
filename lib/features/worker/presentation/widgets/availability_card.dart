@@ -1,25 +1,20 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
-
 class AvailabilityCard extends StatelessWidget {
   const AvailabilityCard({
     super.key,
     required this.isAvailable,
     required this.onChanged,
   });
-
   final bool isAvailable;
   final ValueChanged<bool> onChanged;
-
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppColors.cardRadius),
+        borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),

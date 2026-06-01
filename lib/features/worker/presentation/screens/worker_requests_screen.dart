@@ -1,12 +1,9 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/availability_card.dart';
 import '../widgets/request_job_card.dart';
@@ -14,28 +11,22 @@ import '../widgets/skeleton_box.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import 'job_request_detail_screen.dart';
-
 enum RequestsViewState { loading, loaded, empty, error }
-
 class WorkerRequestsScreen extends StatefulWidget {
   const WorkerRequestsScreen({super.key});
-
   @override
   State<WorkerRequestsScreen> createState() => _WorkerRequestsScreenState();
 }
-
 class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
   final WorkersService _workersService = WorkersService();
   RequestsViewState _viewState = RequestsViewState.loading;
   List<MockWorkerJob> _jobs = <MockWorkerJob>[];
   String? _errorMessage;
-
   @override
   void initState() {
     super.initState();
     _load();
   }
-
   Future<void> _load() async {
     setState(() {
       _viewState = RequestsViewState.loading;
@@ -61,7 +52,6 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
       });
     }
   }
-
   void _openDetail(MockWorkerJob job) {
     final session = WorkerScope.of(context);
     Navigator.of(context).push(
@@ -73,11 +63,9 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
       ),
     );
   }
-
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -95,7 +83,6 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
       ),
     );
   }
-
   Widget _buildBody(WorkerSessionState session) {
     if (_viewState == RequestsViewState.loading) {
       return ListView(
@@ -107,7 +94,6 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
         ],
       );
     }
-
     if (_viewState == RequestsViewState.error) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -120,7 +106,6 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
         ],
       );
     }
-
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(

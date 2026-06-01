@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../models/mock_worker_job.dart';
-import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
+import 'package:artisans_app/core/theme/index.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
 
@@ -56,7 +53,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
               child: Icon(
                 PhosphorIcons.checkCircle(),
                 size: 64,
-                color: AppColors.successDark,
+                color: AppColors.success,
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -73,7 +70,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppColors.cardRadius),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withOpacity(0.05),
@@ -90,7 +87,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                       Text(
                         formatCedis(earned),
                         style: AppTypography.titleMd.copyWith(
-                          color: AppColors.successDark,
+                          color: AppColors.success,
                           fontSize: 22,
                         ),
                       ),

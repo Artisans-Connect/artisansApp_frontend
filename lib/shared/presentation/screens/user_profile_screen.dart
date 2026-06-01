@@ -279,13 +279,7 @@ class _ProfileHero extends StatelessWidget {
                   ),
                 ),
               if (profile.isVerified)
-                const Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: CircleAvatar(
-                    radius: 14,
-                    backgroundColor: AppColors.success,
-                    child: Icon(PhosphorIcons.sealCheck(), color: Colors.white, size: 16),
+                Positioned(bottom: 0, right: 0, child: CircleAvatar(radius: 14, backgroundColor: AppColors.success, child: Icon(PhosphorIcons.sealCheck(), color: Colors.white, size: 16),
                   ),
                 ),
             ],

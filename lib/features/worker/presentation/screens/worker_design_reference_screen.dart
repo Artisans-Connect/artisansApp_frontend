@@ -1,11 +1,7 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
-
 class WorkerDesignReferenceScreen extends StatelessWidget {
   const WorkerDesignReferenceScreen({super.key});
-
   static const _assets = [
     ('40_worker_requests.png', 'Requests'),
     ('41_worker_job_detail.png', 'Job detail'),
@@ -18,7 +14,6 @@ class WorkerDesignReferenceScreen extends StatelessWidget {
     ('62_worker_stats.png', 'Stats'),
     ('63_worker_booking_history.png', 'Booking history'),
   ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -41,7 +36,7 @@ class WorkerDesignReferenceScreen extends StatelessWidget {
               Text(file, style: AppTypography.bodyMd),
               const SizedBox(height: AppSpacing.sm),
               ClipRRect(
-                borderRadius: BorderRadius.circular(AppColors.cardRadius),
+                borderRadius: BorderRadius.circular(16.0),
                 child: Image.asset(
                   'Artisans_Organized_ui/worker/$file',
                   fit: BoxFit.fitWidth,

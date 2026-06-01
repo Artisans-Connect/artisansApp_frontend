@@ -1,8 +1,6 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-
 class ClientContactRow extends StatelessWidget {
   const ClientContactRow({
     super.key,
@@ -10,11 +8,9 @@ class ClientContactRow extends StatelessWidget {
     required this.onCall,
     this.showOnlineDot = true,
   });
-
   final VoidCallback onMessage;
   final VoidCallback onCall;
   final bool showOnlineDot;
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -26,13 +22,10 @@ class ClientContactRow extends StatelessWidget {
     );
   }
 }
-
 class _ActionButton extends StatelessWidget {
   const _ActionButton({required this.icon, required this.onTap});
-
   final IconData icon;
   final VoidCallback onTap;
-
   @override
   Widget build(BuildContext context) {
     return Material(

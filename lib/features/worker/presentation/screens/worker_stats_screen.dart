@@ -1,15 +1,11 @@
+import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../models/mock_worker_data.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
-
 class WorkerStatsScreen extends StatelessWidget {
   const WorkerStatsScreen({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,7 +88,7 @@ class WorkerStatsScreen extends StatelessWidget {
                   ),
                   child: Text(
                     'New',
-                    style: AppTypography.badge.copyWith(
+                    style: AppTypography.labelSmall.copyWith(
                       color: AppColors.primary,
                       fontSize: 10,
                     ),
@@ -105,7 +101,7 @@ class WorkerStatsScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.xl),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppColors.cardRadius),
+                borderRadius: BorderRadius.circular(16.0),
               ),
               child: Column(
                 children: [
@@ -144,7 +140,6 @@ class WorkerStatsScreen extends StatelessWidget {
     );
   }
 }
-
 class _StatCard extends StatelessWidget {
   const _StatCard({
     required this.icon,
@@ -152,12 +147,10 @@ class _StatCard extends StatelessWidget {
     required this.label,
     this.iconColor,
   });
-
   final IconData icon;
   final String value;
   final String label;
   final Color? iconColor;
-
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -165,7 +158,7 @@ class _StatCard extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppColors.cardRadius),
+          borderRadius: BorderRadius.circular(16.0),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.04),

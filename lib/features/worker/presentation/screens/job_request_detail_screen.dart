@@ -1,40 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:flutter/services.dart';
-
+import 'package:artisans_app/core/theme/index.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
-import '../theme/worker_colors.dart';
-import '../theme/worker_spacing.dart';
-import '../theme/worker_text_styles.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
 import '../widgets/reference_photos_row.dart';
 import '../widgets/timing_estimate_row.dart';
-
 class JobRequestDetailScreen extends StatefulWidget {
   const JobRequestDetailScreen({
     super.key,
     required this.job,
     required this.onAcceptRequest,
   });
-
   final MockWorkerJob job;
   final ValueChanged<MockWorkerJob> onAcceptRequest;
-
   @override
   State<JobRequestDetailScreen> createState() =>
       _JobRequestDetailScreenState();
 }
-
 class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
   final WorkersService _workersService = WorkersService();
   bool _acceptLocked = false;
   bool _isAccepting = false;
-
   void _onAccept() async {
     if (_isAccepting || _acceptLocked) return;
     HapticFeedback.mediumImpact();
@@ -60,7 +52,6 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
       });
     }
   }
-
   void _onDecline() async {
     HapticFeedback.lightImpact();
     try {
@@ -72,11 +63,9 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     }
     if (mounted) Navigator.of(context).pop();
   }
-
   @override
   Widget build(BuildContext context) {
     final job = widget.job;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -124,7 +113,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                           ),
                           child: Text(
                             'URGENT',
-                            style: AppTypography.badge.copyWith(
+                            style: AppTypography.labelSmall.copyWith(
                               color: AppColors.primary,
                               fontSize: 10,
                             ),

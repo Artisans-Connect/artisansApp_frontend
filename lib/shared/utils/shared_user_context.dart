@@ -47,18 +47,18 @@ class SharedUserContext {
         fullName: appUser.fullName,
         role: role,
         phone: appUser.phone ?? session.phone,
-        bio: session.bio,
+        bio: appUser.bio ?? session.bio,
         avatarUrl: appUser.avatarUrl,
-        locationLabel: session.locationLabel,
+        locationLabel: appUser.locationLabel ?? session.locationLabel,
         rating: role == UserRole.worker ? 4.8 : null,
         totalJobs: role == UserRole.worker ? 0 : null,
-        skills: session.selectedTrades.isNotEmpty
-            ? session.selectedTrades.toList()
-            : const <String>[],
-        serviceAreas: session.serviceAreas.isNotEmpty
-            ? session.serviceAreas.toList()
-            : const <String>[],
-        experienceBand: session.experienceBand,
+        skills: appUser.skills.isNotEmpty
+            ? appUser.skills
+            : session.selectedTrades.toList(),
+        serviceAreas: appUser.serviceAreas.isNotEmpty
+            ? appUser.serviceAreas
+            : session.serviceAreas.toList(),
+        experienceBand: appUser.experienceBand ?? session.experienceBand,
         isVerified: false,
       );
     }
