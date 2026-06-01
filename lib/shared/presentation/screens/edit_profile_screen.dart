@@ -26,6 +26,17 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   static const int _bioMaxLength = 150;
 
+  static const List<String> _trades = <String>[
+    'Electrician',
+    'Plumber',
+    'Carpenter',
+    'Mason',
+    'Painter',
+    'Welder',
+    'Appliance Repair',
+    'Other',
+  ];
+
   late final TextEditingController _nameController;
   late final TextEditingController _bioController;
   late final TextEditingController _locationController;
@@ -150,13 +161,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Future<void> _addSkill() async {
+  Future<void> _addCustomSkill() async {
     final String? skill = await showDialog<String>(
       context: context,
       builder: (BuildContext ctx) {
         final TextEditingController controller = TextEditingController();
         return AlertDialog(
-          title: const Text('Add skill'),
+          title: const Text('Add Custom Skill'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(hintText: 'e.g. Electrical'),
@@ -279,43 +290,46 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 spacing: 8,
                 runSpacing: 8,
                 children: <Widget>[
-                  ..._editableSkills.map(
+                  ..._trades.map((String trade) {
+                    final bool selected = _editableSkills.contains(trade);
+                    return FilterChip(
+                      label: Text(trade),
+                      selected: selected,
+                      onSelected: (_) {
+                        setState(() {
+                          if (selected) {
+                            _editableSkills.remove(trade);
+                          } else {
+                            if (trade == 'Other') {
+                              _addCustomSkill();
+                            } else {
+                              _editableSkills.add(trade);
+                            }
+                          }
+                        });
+                      },
+                      selectedColor: AppColors.primary.withValues(alpha: 0.12),
+                      checkmarkColor: AppColors.primary,
+                      labelStyle: TextStyle(
+                        color: selected ? AppColors.primary : AppColors.textPrimary,
+                        fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                      ),
+                      side: BorderSide(
+                        color: selected ? AppColors.primary : AppColors.outline,
+                      ),
+                    );
+                  }),
+                  ..._editableSkills.where((String s) => !_trades.contains(s) && s != 'Other').map(
                     (String skill) => InputChip(
                       label: Text(skill),
                       labelStyle: AppTextStyles.bodyMd.copyWith(color: AppColors.primary),
-                      backgroundColor: AppColors.surfaceDim,
+                      backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                       deleteIconColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: BorderSide.none,
+                        side: const BorderSide(color: AppColors.primary),
                       ),
                       onDeleted: () => setState(() => _editableSkills.remove(skill)),
-                    ),
-                  ),
-                  InkWell(
-                    onTap: _addSkill,
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.5),
-                          style: BorderStyle.none,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        color: Colors.transparent,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
-                          Icon(PhosphorIcons.plus(), size: 16, color: AppColors.primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            'Add skill',
-                            style: AppTextStyles.bodyMd.copyWith(color: AppColors.primary),
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                 ],

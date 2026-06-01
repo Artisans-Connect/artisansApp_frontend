@@ -35,7 +35,7 @@ class _WorkerHomeShellScreenState extends State<WorkerHomeShellScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (int value) => setState(() => _index = value),
-        destinations: const <NavigationDestination>[
+        destinations: <NavigationDestination>[
           NavigationDestination(
             icon: Icon(PhosphorIcons.house()),
             selectedIcon: Icon(PhosphorIcons.house()),
@@ -130,7 +130,7 @@ class _JobCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: <Widget>[
-              const CircleAvatar(
+              CircleAvatar(
                 backgroundColor: AppColors.surfaceDim,
                 child: Icon(PhosphorIcons.receipt(), color: AppColors.primary),
               ),

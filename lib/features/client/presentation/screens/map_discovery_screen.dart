@@ -5,6 +5,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../services/explore_service.dart';
 
 class MapDiscoveryScreen extends StatefulWidget {
   const MapDiscoveryScreen({Key? key}) : super(key: key);
@@ -14,40 +15,61 @@ class MapDiscoveryScreen extends StatefulWidget {
 }
 
 class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
-  final List<Map<String, dynamic>> nearbyWorkers = [
-    {
-      'name': 'John Smith',
-      'profession': 'Plumber',
-      'lat': 40.7128,
-      'lng': -74.0060,
-      'distance': '0.5 km',
-      'available': true,
-    },
-    {
-      'name': 'Sarah Johnson',
-      'profession': 'Electrician',
-      'lat': 40.7200,
-      'lng': -74.0080,
-      'distance': '1.2 km',
-      'available': true,
-    },
-    {
-      'name': 'Mike Wilson',
-      'profession': 'Carpenter',
-      'lat': 40.7050,
-      'lng': -74.0100,
-      'distance': '2.1 km',
-      'available': false,
-    },
-    {
-      'name': 'Emma Davis',
-      'profession': 'Cleaner',
-      'lat': 40.7300,
-      'lng': -74.0020,
-      'distance': '1.8 km',
-      'available': true,
-    },
-  ];
+  List<Map<String, dynamic>> nearbyWorkers = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNearbyWorkers();
+  }
+
+  Future<void> _fetchNearbyWorkers() async {
+    try {
+      const double mockUserLat = 5.6037;
+      const double mockUserLng = -0.1870;
+
+      final rawArtisans = await ExploreService.instance.getArtisans(
+        lat: mockUserLat,
+        lng: mockUserLng,
+        radiusKm: 20,
+        limit: 15,
+      );
+      
+      final mappedWorkers = rawArtisans.map((raw) {
+        final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
+        final name = profile['full_name'] as String? ?? 'Artisan';
+        final imageUrl = profile['avatar_url'] as String? ?? 'https://via.placeholder.com/200?text=Artisan';
+        final skills = raw['skills'] as List<dynamic>? ?? [];
+        final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
+        final distanceKm = raw['distance_km'] as num?;
+        
+        return {
+          'name': name,
+          'profession': profession,
+          'lat': raw['current_lat'] ?? 0.0,
+          'lng': raw['current_lng'] ?? 0.0,
+          'distance': distanceKm != null ? '${distanceKm.toStringAsFixed(1)} km' : 'N/A',
+          'available': raw['is_available'] == true,
+          'imageUrl': imageUrl,
+          'userId': raw['id'],
+        };
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          nearbyWorkers = mappedWorkers;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -135,14 +157,29 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                         const SizedBox(height: AppSpacing.md),
 
                         // Workers List
-                        Column(
-                          children: [
-                            ...List.generate(
-                              nearbyWorkers.length,
-                              (index) {
-                                final worker = nearbyWorkers[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                        if (_isLoading)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(AppSpacing.xl),
+                              child: CircularProgressIndicator(color: AppColors.primary),
+                            ),
+                          ),
+                        if (!_isLoading && nearbyWorkers.isEmpty)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(AppSpacing.xl),
+                              child: Text('No workers found nearby.'),
+                            ),
+                          ),
+                        if (!_isLoading && nearbyWorkers.isNotEmpty)
+                          Column(
+                            children: [
+                              ...List.generate(
+                                nearbyWorkers.length,
+                                (index) {
+                                  final worker = nearbyWorkers[index];
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
                                   child: GestureDetector(
                                     onTap: () {
                                       Navigator.pushNamed(
@@ -151,8 +188,9 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                         arguments: {
                                           'name': worker['name'],
                                           'profession': worker['profession'],
-                                          'location': worker['profession'],
-                                          'imageUrl': 'https://via.placeholder.com/400?text=${worker['name']}',
+                                          'location': 'Nearby',
+                                          'imageUrl': worker['imageUrl'],
+                                          'userId': worker['userId'],
                                         },
                                       );
                                     },
