@@ -6,6 +6,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../../shared/widgets/worker_tracking_map.dart';
 import '../navigation/client_navigation.dart';
 
 class LiveTrackingScreen extends StatefulWidget {
@@ -23,6 +24,7 @@ class LiveTrackingScreen extends StatefulWidget {
 class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   late PageController _pageController;
   int _currentStep = 0;
+  String _etaLabel = 'Calculating ETA…';
 
   final List<Map<String, dynamic>> steps = [
     {
@@ -75,7 +77,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
       'artisan': 'John Smith',
       'profession': 'Professional Plumber',
       'phone': '+233 24 123 4567',
-      'eta': '10 mins away',
+      'eta': _etaLabel,
       'title': 'Fix leaking kitchen faucet',
       'imageUrl': 'https://via.placeholder.com/200?text=John',
     };
@@ -96,36 +98,26 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
               _buildJobInfoCard(job),
               const SizedBox(height: AppSpacing.lg),
 
-              // Map Placeholder
-              Container(
-                height: 300,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceContainer,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+              if ((job['worker_id'] as String?) != null &&
+                  job['location_lat'] != null &&
+                  job['location_lng'] != null)
+                WorkerTrackingMap(
+                  workerId: job['worker_id'] as String,
+                  jobLat: (job['location_lat'] as num).toDouble(),
+                  jobLng: (job['location_lng'] as num).toDouble(),
+                  onEtaChanged: (eta) => setState(() => _etaLabel = eta),
+                )
+              else
+                Container(
+                  height: 300,
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Waiting for artisan location…',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      PhosphorIcons.mapTrifold(),
-                      size: 64,
-                      color: AppColors.outlineVariant,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      'Live Map View',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Google Maps Integration',
-                      style: AppTypography.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
               const SizedBox(height: AppSpacing.lg),
 
               // Progress Timeline

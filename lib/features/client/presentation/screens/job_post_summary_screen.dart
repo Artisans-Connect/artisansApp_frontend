@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:uuid/uuid.dart';
+
+import '../../../../core/errors/api_exception.dart';
+import '../../../../core/errors/error_messages.dart';
+import '../../../../core/offline/job_post_queue.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -41,8 +46,14 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
 
     setState(() => _isPosting = true);
 
+    final payload = _draft.toCreateJobPayload();
+    final idempotencyKey = const Uuid().v4();
+
     try {
-      final dynamic created = await _jobsService.createJob(_draft.toCreateJobPayload());
+      final dynamic created = await _jobsService.createJob(
+        payload,
+        idempotencyKey: idempotencyKey,
+      );
       final Map<String, dynamic> jobData = _draft.toMap();
       if (created is Map<String, dynamic>) {
         jobData['id'] = created['id'];
@@ -54,7 +65,18 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       ClientNavigation.startFindingArtisan(context, jobData: jobData);
     } catch (e) {
       if (!mounted) return;
-      AppToast.showError(context, e, fallback: 'Failed to post job. Please try again.');
+      final bool offline = e is NetworkException;
+      if (offline) {
+        await JobPostQueue.instance.enqueue(payload);
+        if (!mounted) return;
+        AppToast.showInfo(
+          context,
+          'You are offline. Job queued and will post when connection returns.',
+        );
+        ClientNavigation.popToShell(context);
+      } else {
+        AppToast.showError(context, e, fallback: 'Failed to post job. Please try again.');
+      }
     } finally {
       if (mounted) setState(() => _isPosting = false);
     }

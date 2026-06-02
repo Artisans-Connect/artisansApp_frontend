@@ -3,8 +3,17 @@ import '../network/api_client.dart';
 class JobsService {
   final ApiClient _apiClient = ApiClient.instance;
 
-  Future<dynamic> createJob(Map<String, dynamic> body) async {
-    return await _apiClient.post('/jobs/create', body: body);
+  Future<dynamic> createJob(
+    Map<String, dynamic> body, {
+    String? idempotencyKey,
+  }) async {
+    return await _apiClient.post(
+      '/jobs/create',
+      body: body,
+      extraHeaders: idempotencyKey != null
+          ? {'Idempotency-Key': idempotencyKey}
+          : null,
+    );
   }
 
   Future<List<dynamic>> getMyJobs({String? status}) async {

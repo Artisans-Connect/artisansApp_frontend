@@ -214,8 +214,9 @@ class ClientBooking {
     final artisanName = artisan?['name'] as String? ?? 'Sarah Johnson';
     final profession =
         artisan?['profession'] as String? ?? draft.displayCategory;
-    return ClientBooking(
+    final map = ClientBooking(
       id: DateTime.now().millisecondsSinceEpoch,
+      jobUuid: jobData['id'] as String?,
       title: draft.displayTitle,
       artisan: artisanName,
       profession: profession,
@@ -224,7 +225,11 @@ class ClientBooking {
       amount: '\$${draft.budgetMax.toStringAsFixed(0)}',
       imageUrl: artisan?['imageUrl'] as String?,
       conversationId: 'conv-new',
-      counterpartUserId: 'worker-match',
+      counterpartUserId: jobData['worker_id'] as String? ?? 'worker-match',
     ).toMap();
+    map['worker_id'] = jobData['worker_id'];
+    map['location_lat'] = jobData['locationLat'] ?? jobData['location_lat'];
+    map['location_lng'] = jobData['locationLng'] ?? jobData['location_lng'];
+    return map;
   }
 }

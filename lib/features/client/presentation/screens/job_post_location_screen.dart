@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../core/location/device_location_service.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/job_location_map.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../widgets/job_post_wizard_scaffold.dart';
@@ -22,6 +25,11 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
   late ClientJobDraft _draft;
   late TextEditingController _addressController;
   bool _showAddressEditor = false;
+  bool _loadingLocation = true;
+  LatLng _pin = LatLng(
+    DeviceLocation.accraDefault.latitude,
+    DeviceLocation.accraDefault.longitude,
+  );
 
   @override
   void initState() {
@@ -30,6 +38,16 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
     _addressController = TextEditingController(
       text: _draft.address ?? '123 Osu St, Accra, Ghana',
     );
+    _initLocation();
+  }
+
+  Future<void> _initLocation() async {
+    final loc = await DeviceLocationService.getCurrentOrDefault();
+    if (!mounted) return;
+    setState(() {
+      _pin = LatLng(loc.latitude, loc.longitude);
+      _loadingLocation = false;
+    });
   }
 
   @override
@@ -41,8 +59,8 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
   void _continue() {
     _draft.merge(<String, dynamic>{
       'address': _addressController.text.trim(),
-      'locationLat': 5.6037,
-      'locationLng': -0.1870,
+      'locationLat': _pin.latitude,
+      'locationLng': _pin.longitude,
     });
     Navigator.pushNamed(
       context,
@@ -57,7 +75,7 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
       step: JobPostWizardStep.location,
       headline: 'Where is the job?',
       primaryLabel: 'Next',
-      primaryEnabled: _addressController.text.trim().isNotEmpty,
+      primaryEnabled: _addressController.text.trim().isNotEmpty && !_loadingLocation,
       onPrimary: _continue,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,27 +87,18 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Container(
-            height: 200,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+          if (_loadingLocation)
+            Container(
+              height: 200,
+              alignment: Alignment.center,
+              child: const CircularProgressIndicator(),
+            )
+          else
+            JobLocationMap(
+              initial: _pin,
+              height: 200,
+              onPositionChanged: (latLng) => setState(() => _pin = latLng),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(PhosphorIcons.mapTrifold(), size: 48, color: AppColors.primary),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Map preview (UI stub)',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [

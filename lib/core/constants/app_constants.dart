@@ -11,4 +11,7 @@ class AppConstants {
   
   static const String avatarsBucket = 'avatars';
   static const String jobPhotosBucket = 'job-photos';
+
+  /// Set GOOGLE_MAPS_API_KEY in .env; also configure native Android/iOS manifests.
+  static String get googleMapsApiKey => dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
 }

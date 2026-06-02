@@ -94,13 +94,21 @@ class ApiClient {
     return _request(() async => http.get(uri, headers: await _getHeaders()));
   }
 
-  Future<dynamic> post(String endpoint, {dynamic body}) {
+  Future<dynamic> post(
+    String endpoint, {
+    dynamic body,
+    Map<String, String>? extraHeaders,
+  }) {
     final uri = Uri.parse('$baseUrl$endpoint');
-    return _request(() async => http.post(
-          uri,
-          headers: await _getHeaders(),
-          body: body != null ? jsonEncode(body) : null,
-        ));
+    return _request(() async {
+      final headers = await _getHeaders();
+      if (extraHeaders != null) headers.addAll(extraHeaders);
+      return http.post(
+        uri,
+        headers: headers,
+        body: body != null ? jsonEncode(body) : null,
+      );
+    });
   }
 
   Future<dynamic> put(String endpoint, {dynamic body}) {

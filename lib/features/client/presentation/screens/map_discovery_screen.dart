@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/location/device_location_service.dart';
+import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/navigation/app_routes.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../services/explore_service.dart';
 
@@ -17,6 +21,11 @@ class MapDiscoveryScreen extends StatefulWidget {
 class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
   List<Map<String, dynamic>> nearbyWorkers = [];
   bool _isLoading = true;
+  LatLng _userPosition = LatLng(
+    DeviceLocation.accraDefault.latitude,
+    DeviceLocation.accraDefault.longitude,
+  );
+  Set<Marker> _markers = {};
 
   @override
   void initState() {
@@ -24,15 +33,37 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     _fetchNearbyWorkers();
   }
 
+  void _rebuildMarkers() {
+    final markers = <Marker>{
+      Marker(
+        markerId: const MarkerId('you'),
+        position: _userPosition,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+        infoWindow: const InfoWindow(title: 'You'),
+      ),
+    };
+    for (var i = 0; i < nearbyWorkers.length; i++) {
+      final w = nearbyWorkers[i];
+      markers.add(
+        Marker(
+          markerId: MarkerId('worker_$i'),
+          position: LatLng(w['lat'] as double, w['lng'] as double),
+          infoWindow: InfoWindow(title: w['name'] as String? ?? 'Artisan'),
+        ),
+      );
+    }
+    _markers = markers;
+  }
+
   Future<void> _fetchNearbyWorkers() async {
     try {
-      const double mockUserLat = 5.6037;
-      const double mockUserLng = -0.1870;
+      final loc = await DeviceLocationService.getCurrentOrDefault();
+      _userPosition = LatLng(loc.latitude, loc.longitude);
 
       final rawArtisans = await ExploreService.instance.getArtisans(
-        lat: mockUserLat,
-        lng: mockUserLng,
-        radiusKm: 20,
+        lat: loc.latitude,
+        lng: loc.longitude,
+        radiusKm: 5,
         limit: 15,
       );
       
@@ -60,6 +91,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
         setState(() {
           nearbyWorkers = mappedWorkers;
           _isLoading = false;
+          _rebuildMarkers();
         });
       }
     } catch (e) {
@@ -81,33 +113,25 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
       ),
       body: Stack(
         children: [
-          // Map Placeholder
-          Container(
+          SizedBox(
             width: double.infinity,
             height: MediaQuery.of(context).size.height * 0.5,
-            color: AppColors.surfaceContainer,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  PhosphorIcons.mapTrifold(),
-                  size: 64,
-                  color: AppColors.outlineVariant,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Google Maps Integration',
-                  style: AppTypography.labelLarge.copyWith(
-                    color: AppColors.textSecondary,
+            child: AppConstants.googleMapsApiKey.isEmpty
+                ? Center(
+                    child: Text(
+                      'Configure GOOGLE_MAPS_API_KEY for map view.',
+                      style: AppTypography.bodySmall,
+                    ),
+                  )
+                : GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: _userPosition,
+                      zoom: 13,
+                    ),
+                    markers: _markers,
+                    myLocationEnabled: true,
+                    zoomControlsEnabled: false,
                   ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  'Map view will be displayed here',
-                  style: AppTypography.bodySmall,
-                ),
-              ],
-            ),
           ),
 
           // Bottom Sheet - Nearby Workers

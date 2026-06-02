@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../../../../core/location/worker_location_service.dart';
 import '../../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../models/worker_ui_contracts.dart';
@@ -31,12 +32,30 @@ class WorkerSessionState extends ChangeNotifier {
     notifyListeners();
     try {
       await _workersService.toggleAvailability(value);
+      if (value) {
+        await WorkerLocationService.instance.start();
+      } else {
+        await WorkerLocationService.instance.stop();
+      }
       return true;
     } catch (_) {
       isAvailable = !value;
       notifyListeners();
       return false;
     }
+  }
+
+  /// Call when worker shell mounts if already available.
+  Future<void> syncLocationTracking() async {
+    if (isAvailable) {
+      await WorkerLocationService.instance.start();
+    }
+  }
+
+  @override
+  void dispose() {
+    WorkerLocationService.instance.stop();
+    super.dispose();
   }
 
   void setTab(WorkerNavTab tab) {

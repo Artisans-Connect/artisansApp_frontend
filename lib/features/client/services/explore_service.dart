@@ -10,7 +10,7 @@ class ExploreService {
     String? categoryId,
     double? lat,
     double? lng,
-    double radiusKm = 15,
+    double radiusKm = 5,
     int limit = 20,
   }) async {
     final queryParams = <String, String>{

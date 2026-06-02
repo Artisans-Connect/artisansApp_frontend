@@ -182,16 +182,20 @@ class ClientNavigation {
           );
         }
       case ClientBookingStatus.requested:
-      case ClientBookingStatus.accepted:
         startFindingArtisan(
           context,
-          jobData: <String, dynamic>{'title': booking.title},
+          jobData: <String, dynamic>{
+            if (booking.jobUuid != null) 'id': booking.jobUuid,
+            'title': booking.title,
+          },
           artisan: <String, dynamic>{
             'name': booking.artisan,
             'profession': booking.profession,
             'imageUrl': booking.imageUrl,
           },
         );
+      case ClientBookingStatus.accepted:
+        pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.cancelled:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${booking.title} was cancelled.')),

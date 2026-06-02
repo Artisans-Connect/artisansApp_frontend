@@ -8,7 +8,7 @@ import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
-import '../widgets/map_placeholder.dart';
+import '../../../../shared/widgets/job_site_map.dart';
 class WorkerActivePreStartScreen extends StatefulWidget {
   const WorkerActivePreStartScreen({super.key, required this.job});
   final MockWorkerJob job;
@@ -51,13 +51,10 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SizedBox(
-              height: 220,
-              child: MapPlaceholder(
-                fillHeight: true,
-                showPin: true,
-                clientPinLabel: 'Client Home',
-              ),
+            JobSiteMap(
+              latitude: job.latitude,
+              longitude: job.longitude,
+              label: job.addressLabel,
             ),
             Transform.translate(
               offset: const Offset(0, -40),
