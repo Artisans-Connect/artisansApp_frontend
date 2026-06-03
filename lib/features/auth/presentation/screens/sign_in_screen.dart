@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
@@ -79,7 +79,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, shellRouteForRole(user.role));
+      Navigator.pushReplacementNamed(context, shellRouteForUser(user));
     } on AuthFailure catch (e) {
       if (!mounted) return;
       if (e.code == AuthFailureCode.profileNotFound) {
@@ -146,7 +146,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Sign in to continue to Artisans.',
+                          'Sign in to continue to ArtisansConnect.',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyLg,
                         ),

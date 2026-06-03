@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../models/worker_ui_contracts.dart';
 import '../state/worker_session_state.dart';
 import '../widgets/gradient_button.dart';
@@ -86,12 +86,12 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                       color: AppColors.surfaceContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Center(child: Icon(PhosphorIcons.wrench(), size: 48),
+                    child: Center(child: Icon(PhosphorIcons.wrench, size: 48),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Icon(
-                    PhosphorIcons.briefcase(),
+                    PhosphorIcons.briefcase,
                     size: 40,
                     color: AppColors.primary.withOpacity(0.5),
                   ),

@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import '../models/mock_worker_job.dart';
 import '../widgets/completion_photo_picker.dart';
@@ -61,7 +61,7 @@ class _WorkerCompletionFormScreenState
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          icon: Icon(PhosphorIcons.caretLeft, size: 20),
           color: AppColors.primary,
           onPressed: () => Navigator.of(context).pop(),
         ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -12,6 +13,8 @@ export '../errors/api_exception.dart';
 class ApiClient {
   static final ApiClient instance = ApiClient._();
   ApiClient._();
+
+  static const Duration requestTimeout = Duration(seconds: 12);
 
   final String baseUrl = AppConstants.expressApiBaseUrl;
 
@@ -76,10 +79,13 @@ class ApiClient {
 
   Future<dynamic> _request(Future<http.Response> Function() send) async {
     try {
-      final http.Response response = await send();
+      final http.Response response =
+          await send().timeout(requestTimeout);
       return _handleResponse(response);
     } on ApiException {
       rethrow;
+    } on TimeoutException catch (e) {
+      throw NetworkException(e);
     } on SocketException catch (e) {
       throw NetworkException(e);
     } on http.ClientException catch (e) {

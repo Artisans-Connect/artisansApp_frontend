@@ -69,6 +69,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: AppColors.background,
         elevation: 0,
         title: Text(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
 import '../../../core/utils/current_user.dart';
@@ -40,37 +40,22 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
     _loadConversations();
   }
 
-  Future<void> _loadConversations() async {
+  Future<void> _loadConversations({bool forceRefresh = false}) async {
     setState(() {
       _isLoading = true;
       _loadError = null;
     });
     try {
-      final dynamic response = await _chatService.getConversations();
+      final dynamic response = await _chatService.getConversations(
+        forceRefresh: forceRefresh,
+        onRefreshed: (dynamic fresh) {
+          if (!mounted) return;
+          _applyConversationsResponse(fresh);
+        },
+      );
       if (!mounted) return;
-      
-      final List<dynamic> data = response as List<dynamic>;
-      final String currentUserId = CurrentUser.id ?? '';
-      
-      setState(() {
-        _conversations = data.map((dynamic item) {
-          final Map<String, dynamic> json = item as Map<String, dynamic>;
-          final String clientId = json['client_id'] as String? ?? '';
-          final String workerId = json['worker_id'] as String? ?? '';
-          final String counterpartId = clientId == currentUserId ? workerId : clientId;
-          
-          return ConversationSummary(
-            id: json['id'] as String,
-            jobId: json['id'] as String,
-            counterpartUserId: counterpartId,
-            counterpartName: 'User $counterpartId'.substring(0, 13), // Fallback name
-            lastMessagePreview: json['title'] as String? ?? 'Open Chat',
-            lastMessageAt: DateTime.tryParse(json['updated_at'] as String? ?? '') ?? DateTime.now(),
-            jobTitle: json['title'] as String?,
-          );
-        }).toList();
-        _isLoading = false;
-      });
+      _applyConversationsResponse(response);
+      setState(() => _isLoading = false);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -78,6 +63,38 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         _loadError = userMessageFor(e, fallback: 'Failed to load conversations.');
       });
     }
+  }
+
+  void _applyConversationsResponse(dynamic response) {
+    final List<dynamic> data = response as List<dynamic>;
+    final String currentUserId = CurrentUser.id ?? '';
+
+    setState(() {
+      _conversations = data.map((dynamic item) {
+        final Map<String, dynamic> json = item as Map<String, dynamic>;
+        final String clientId = json['client_id'] as String? ?? '';
+        final String workerId = json['worker_id'] as String? ?? '';
+        final String counterpartId = json['counterpart_id'] as String? ??
+            (clientId == currentUserId ? workerId : clientId);
+
+        return ConversationSummary(
+          id: json['id'] as String,
+          jobId: json['id'] as String,
+          counterpartUserId: counterpartId,
+          counterpartName: json['counterpart_name'] as String? ?? 'User',
+          lastMessagePreview: json['last_message_preview'] as String? ??
+              json['title'] as String? ??
+              'Open chat',
+          lastMessageAt: DateTime.tryParse(
+                json['last_message_at'] as String? ??
+                    json['updated_at'] as String? ??
+                    '',
+              ) ??
+              DateTime.now(),
+          jobTitle: json['title'] as String?,
+        );
+      }).toList();
+    });
   }
 
   List<ConversationSummary> get _filteredConversations {
@@ -113,7 +130,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {},
         backgroundColor: AppColors.primary,
-        child: Icon(PhosphorIcons.pencilSimple(), color: Colors.white),
+        child: Icon(PhosphorIcons.pencilSimple, color: Colors.white),
       ),
     );
   }
@@ -127,7 +144,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
           IconButton(
             onPressed: () =>
                 Navigator.pushNamed(context, SettingsScreen.routeName),
-            icon: Icon(PhosphorIcons.dotsThreeVertical(), color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
           ),
         ],
         const SizedBox(width: 4),
@@ -144,7 +161,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       return ErrorStateView(
         message: _loadError!,
         title: 'Could not load messages',
-        onRetry: _loadConversations,
+        onRetry: () => _loadConversations(forceRefresh: true),
       );
     }
 
@@ -163,7 +180,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
           child: _filteredConversations.isEmpty
               ? _buildEmptyState()
               : RefreshIndicator(
-                  onRefresh: _loadConversations,
+                  onRefresh: () => _loadConversations(forceRefresh: true),
                   child: ListView.builder(
                     padding: const EdgeInsets.only(top: 8, bottom: 80),
                     itemCount: _filteredConversations.length,
@@ -189,7 +206,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(PhosphorIcons.chatCircle(),
+            Icon(PhosphorIcons.chatCircle,
                 size: 64, color: AppColors.outline),
             const SizedBox(height: 16),
             Text(

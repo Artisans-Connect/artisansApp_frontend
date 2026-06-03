@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../models/mock_worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
 import '../utils/worker_formatters.dart';
@@ -25,12 +25,12 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          icon: Icon(PhosphorIcons.caretLeft, size: 20),
           color: AppColors.primary,
           onPressed: () => _goHome(context),
         ),
         title: Text(
-          'Artisans',
+          'ArtisansConnect',
           style: AppTypography.titleMd.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w800,
@@ -51,7 +51,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                PhosphorIcons.checkCircle(),
+                PhosphorIcons.checkCircle,
                 size: 64,
                 color: AppColors.success,
               ),
@@ -141,7 +141,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                   const SnackBar(content: Text('Share — coming soon')),
                 );
               },
-              icon: Icon(PhosphorIcons.shareNetwork(), size: 18),
+              icon: Icon(PhosphorIcons.shareNetwork, size: 18),
               label: const Text('Share this job to your portfolio'),
             ),
           ],

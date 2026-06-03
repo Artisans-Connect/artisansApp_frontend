@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -71,8 +71,8 @@ class JobReceiptScreen extends StatelessWidget {
             _ReceiptSection(
               title: 'Client',
               rows: <_ReceiptRow>[
-                _ReceiptRow(PhosphorIcons.user(), receipt.clientName),
-                _ReceiptRow(PhosphorIcons.mapPin(), receipt.location),
+                _ReceiptRow(PhosphorIcons.user, receipt.clientName),
+                _ReceiptRow(PhosphorIcons.mapPin, receipt.location),
               ],
             ),
             const SizedBox(height: 16),
@@ -82,7 +82,7 @@ class JobReceiptScreen extends StatelessWidget {
                   child: _ReceiptSection(
                     title: 'Time spent',
                     rows: <_ReceiptRow>[
-                      _ReceiptRow(PhosphorIcons.clock(), '2h 30m'),
+                      _ReceiptRow(PhosphorIcons.clock, '2h 30m'),
                     ],
                   ),
                 ),
@@ -92,7 +92,7 @@ class JobReceiptScreen extends StatelessWidget {
                     title: 'Earnings',
                     rows: <_ReceiptRow>[
                       _ReceiptRow(
-                        PhosphorIcons.money(),
+                        PhosphorIcons.money,
                         'GHS ${receipt.amountGhs.toStringAsFixed(2)}',
                       ),
                     ],
@@ -132,7 +132,7 @@ class JobReceiptScreen extends StatelessWidget {
                       color: AppColors.surfaceDim,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(PhosphorIcons.image(), color: AppColors.outline),
+                    child: Icon(PhosphorIcons.image, color: AppColors.outline),
                   ),
                 ],
               ),
@@ -144,9 +144,9 @@ class JobReceiptScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: ListTile(
-                leading: Icon(PhosphorIcons.warning(), color: AppColors.error),
+                leading: Icon(PhosphorIcons.warning, color: AppColors.error),
                 title: Text('Report an issue', style: AppTextStyles.bodyLg.copyWith(color: AppColors.error)),
-                trailing: Icon(PhosphorIcons.caretRight(), color: AppColors.outline),
+                trailing: Icon(PhosphorIcons.caretRight, color: AppColors.outline),
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Issue reporting opens here.')),

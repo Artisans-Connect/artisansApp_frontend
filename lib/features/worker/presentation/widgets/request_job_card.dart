@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../models/mock_worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
 import '../utils/worker_formatters.dart';
@@ -56,7 +56,7 @@ class RequestJobCard extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    PhosphorIcons.mapPin(),
+                    PhosphorIcons.mapPin,
                     size: 16,
                     color: AppColors.outline,
                   ),
@@ -95,7 +95,7 @@ class RequestJobCard extends StatelessWidget {
                         Row(
                           children: [
                             Icon(
-                              PhosphorIcons.star(),
+                              PhosphorIcons.star,
                               size: 14,
                               color: Color(0xFFFFB800),
                             ),

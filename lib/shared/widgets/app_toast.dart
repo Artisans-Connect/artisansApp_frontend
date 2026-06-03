@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../core/errors/error_messages.dart';
 import '../../core/theme/app_colors.dart';
@@ -66,11 +66,11 @@ class AppToast {
   static IconData _iconFor(AppToastType type) {
     switch (type) {
       case AppToastType.error:
-        return PhosphorIcons.warningCircle();
+        return PhosphorIcons.warningCircle;
       case AppToastType.success:
-        return PhosphorIcons.checkCircle();
+        return PhosphorIcons.checkCircle;
       case AppToastType.info:
-        return PhosphorIcons.info();
+        return PhosphorIcons.info;
     }
   }
 

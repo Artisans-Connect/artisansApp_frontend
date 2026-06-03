@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -120,25 +120,25 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
             tooltip: 'Map view',
             onPressed: () =>
                 ClientNavigation.pushFlow(context, AppRoutes.mapDiscovery),
-            icon: Icon(PhosphorIcons.mapTrifold(), color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.mapTrifold, color: AppColors.textPrimary),
           ),
           IconButton(
             tooltip: 'Messages',
             onPressed: () => ClientNavigation.openMessages(context),
             icon: Icon(
-              PhosphorIcons.chatCircle(),
+              PhosphorIcons.chatCircle,
               color: AppColors.textPrimary,
             ),
           ),
           IconButton(
             tooltip: 'My profile',
             onPressed: () => ClientNavigation.openOwnProfile(context),
-            icon: Icon(PhosphorIcons.user(), color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.user, color: AppColors.textPrimary),
           ),
           IconButton(
             tooltip: 'Settings',
             onPressed: () => ClientNavigation.openSettings(context),
-            icon: Icon(PhosphorIcons.gear(), color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.gear, color: AppColors.textPrimary),
           ),
           const SizedBox(width: 4),
         ],
@@ -210,7 +210,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                           child: AppFilterChip(
                             label: rating,
                             isSelected: isSelected,
-                            icon: PhosphorIcons.star(),
+                            icon: PhosphorIcons.star,
                             onTap: () {
                               setState(() {
                                 _selectedRating = isSelected ? '' : rating;
@@ -264,7 +264,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => Container(
                                 color: AppColors.surfaceContainer,
-                                child: Icon(PhosphorIcons.user()),
+                                child: Icon(PhosphorIcons.user),
                               ),
                             ),
                           ),
@@ -299,7 +299,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                                   Row(
                                     children: <Widget>[
                                       Icon(
-                                        PhosphorIcons.star(),
+                                        PhosphorIcons.star,
                                         size: 14,
                                         color: Color(0xFFFFC107),
                                       ),
@@ -333,7 +333,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                                 artisan,
                               ),
                               icon: Icon(
-                                PhosphorIcons.chatCircle(),
+                                PhosphorIcons.chatCircle,
                                 color: AppColors.primary,
                                 size: 22,
                               ),
@@ -343,8 +343,8 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                               onPressed: () => _toggleSaved(name),
                               icon: Icon(
                                 isSaved
-                                    ? PhosphorIcons.bookmark()
-                                    : PhosphorIcons.bookmark(),
+                                    ? PhosphorIcons.bookmark
+                                    : PhosphorIcons.bookmark,
                                 color: isSaved
                                     ? AppColors.primary
                                     : AppColors.outlineVariant,
@@ -361,7 +361,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                                 );
                               },
                               icon: Icon(
-                                PhosphorIcons.user(),
+                                PhosphorIcons.user,
                                 color: AppColors.textSecondary,
                                 size: 22,
                               ),

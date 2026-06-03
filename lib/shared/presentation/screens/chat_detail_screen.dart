@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
 import '../../../core/utils/current_user.dart';
@@ -8,7 +11,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/error_state_view.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../../core/utils/current_user.dart';
+import '../../../features/client/presentation/navigation/client_navigation.dart';
 import '../../utils/shared_user_context.dart';
 import '../../models/chat_message.dart';
 import '../../widgets/chat_bubble.dart';
@@ -34,6 +37,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   bool _showAttachmentMenu = false;
   bool _isLoading = false;
   String? _loadError;
+  RealtimeChannel? _realtimeChannel;
+  Timer? _pollTimer;
+  String? _activeJobId;
 
   @override
   void didChangeDependencies() {
@@ -41,15 +47,70 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final Object? routeArgs = ModalRoute.of(context)?.settings.arguments;
     if (routeArgs is ChatDetailArgs && _args == null) {
       _args = routeArgs;
-      _loadMessages(routeArgs.jobId ?? routeArgs.conversationId);
+      final String jobId = routeArgs.jobId ?? routeArgs.conversationId;
+      if (!ClientNavigation.isValidJobChatId(jobId)) {
+        setState(() {
+          _loadError =
+              'Invalid conversation. Open chat from an active job or booking.';
+        });
+        return;
+      }
+      _activeJobId = jobId;
+      _loadMessages(jobId);
+      _subscribeToMessages(jobId);
+      _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+        if (_activeJobId != null) _loadMessages(_activeJobId!, silent: true);
+      });
     }
   }
 
-  Future<void> _loadMessages(String jobId) async {
-    setState(() {
-      _isLoading = true;
-      _loadError = null;
-    });
+  void _subscribeToMessages(String jobId) {
+    _realtimeChannel?.unsubscribe();
+    _realtimeChannel = Supabase.instance.client
+        .channel('chat-messages-$jobId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'job_id',
+            value: jobId,
+          ),
+          callback: (PostgresChangePayload payload) {
+            final Map<String, dynamic> record = payload.newRecord;
+            final String? id = record['id'] as String?;
+            if (id == null || _messages.any((ChatMessage m) => m.id == id)) {
+              return;
+            }
+            final String? senderId = record['sender_id'] as String?;
+            if (senderId == CurrentUser.id) return;
+            if (!mounted) return;
+            setState(() {
+              _messages.add(
+                ChatMessage(
+                  id: id,
+                  senderId: senderId ?? '',
+                  content: record['content'] as String? ?? '',
+                  sentAt: DateTime.tryParse(record['created_at'] as String? ?? '') ??
+                      DateTime.now(),
+                  isMine: false,
+                ),
+              );
+            });
+            _scrollToBottom();
+          },
+        )
+        .subscribe();
+  }
+
+  Future<void> _loadMessages(String jobId, {bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _isLoading = true;
+        _loadError = null;
+      });
+    }
     try {
       final dynamic response = await _chatService.getMessages(jobId);
       if (!mounted) return;
@@ -68,13 +129,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         }).toList();
         _isLoading = false;
       });
-      _scrollToBottom();
+      if (!silent) _scrollToBottom();
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _loadError = userMessageFor(e, fallback: 'Failed to load messages.');
-      });
+      if (!silent) {
+        setState(() {
+          _isLoading = false;
+          _loadError = userMessageFor(e, fallback: 'Failed to load messages.');
+        });
+      }
     }
   }
   
@@ -92,6 +155,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
+    _realtimeChannel?.unsubscribe();
     _composerController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -101,7 +166,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final String text = _composerController.text.trim();
     if (text.isEmpty || _args == null) return;
 
-    final String jobId = _args!.jobId ?? _args!.conversationId;
+    final String jobId = _activeJobId ?? _args!.jobId ?? _args!.conversationId;
+    if (!ClientNavigation.isValidJobChatId(jobId)) {
+      AppToast.showError(
+        context,
+        Exception('No job linked to this chat.'),
+        fallback: 'No job linked to this chat.',
+      );
+      return;
+    }
     final String tempId = 'local_${DateTime.now().millisecondsSinceEpoch}';
 
     setState(() {
@@ -162,7 +235,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           padding: const EdgeInsets.only(left: 8),
           child: IconButton(
             onPressed: () => Navigator.maybePop(context),
-            icon: Icon(PhosphorIcons.arrowLeft(), color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.arrowLeft, color: AppColors.textPrimary),
           ),
         ),
         titleSpacing: 4,
@@ -248,11 +321,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         actions: <Widget>[
           IconButton(
             onPressed: () {},
-            icon: Icon(PhosphorIcons.videoCamera(), color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.videoCamera, color: AppColors.textPrimary),
           ),
           IconButton(
             onPressed: () {},
-            icon: Icon(PhosphorIcons.dotsThreeVertical(), color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
           ),
         ],
       ),
@@ -342,17 +415,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         children: <Widget>[
           IconButton(
             onPressed: () => setState(() => _showAttachmentMenu = false),
-            icon: Icon(PhosphorIcons.file(), color: AppColors.primary),
+            icon: Icon(PhosphorIcons.file, color: AppColors.primary),
             tooltip: 'Document',
           ),
           IconButton(
             onPressed: () => setState(() => _showAttachmentMenu = false),
-            icon: Icon(PhosphorIcons.camera(), color: AppColors.primary),
+            icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
             tooltip: 'Camera',
           ),
           IconButton(
             onPressed: () => setState(() => _showAttachmentMenu = false),
-            icon: Icon(PhosphorIcons.image(), color: AppColors.primary),
+            icon: Icon(PhosphorIcons.image, color: AppColors.primary),
             tooltip: 'Gallery',
           ),
         ],
@@ -385,7 +458,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 setState(() => _showAttachmentMenu = !_showAttachmentMenu);
               },
               borderRadius: BorderRadius.circular(99),
-              child: Padding(padding: const EdgeInsets.all(10), child: Icon(PhosphorIcons.plus(), color: AppColors.textSecondary, size: 22),
+              child: Padding(padding: const EdgeInsets.all(10), child: Icon(PhosphorIcons.plus, color: AppColors.textSecondary, size: 22),
               ),
             ),
           ),
@@ -419,7 +492,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   IconButton(
                     onPressed: () {},
                     icon: Icon(
-                      PhosphorIcons.smiley(),
+                      PhosphorIcons.smiley,
                       color: AppColors.outline,
                       size: 22,
                     ),
@@ -436,7 +509,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             child: InkWell(
               onTap: _sendMessage,
               borderRadius: BorderRadius.circular(99),
-              child: Padding(padding: const EdgeInsets.all(12), child: Icon(PhosphorIcons.paperPlaneRight(), color: Colors.white, size: 22),
+              child: Padding(padding: const EdgeInsets.all(12), child: Icon(PhosphorIcons.paperPlaneRight, color: Colors.white, size: 22),
               ),
             ),
           ),

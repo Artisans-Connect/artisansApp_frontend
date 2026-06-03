@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:artisans_app/core/theme/index.dart';
 import '../../../../core/services/workers_service.dart';
@@ -72,7 +72,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          icon: Icon(PhosphorIcons.caretLeft, size: 20),
           color: AppColors.primary,
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -148,7 +148,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                           Row(
                             children: [
                               Icon(
-                                PhosphorIcons.star(),
+                                PhosphorIcons.star,
                                 size: 16,
                                 color: Color(0xFFFFB800),
                               ),
@@ -166,7 +166,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                   Row(
                     children: [
                       Icon(
-                        PhosphorIcons.mapPin(),
+                        PhosphorIcons.mapPin,
                         size: 18,
                         color: AppColors.outline,
                       ),
@@ -216,7 +216,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                         ),
                       );
                     },
-                    icon: Icon(PhosphorIcons.phone()),
+                    icon: Icon(PhosphorIcons.phone),
                     label: Text('Call ${job.clientName}'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(52),

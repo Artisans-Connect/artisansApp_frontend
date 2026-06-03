@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../models/mock_worker_data.dart';
 import '../state/worker_session_state.dart';
@@ -14,7 +14,7 @@ class WorkerStatsScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          icon: Icon(PhosphorIcons.caretLeft, size: 20),
           color: AppColors.primary,
           onPressed: () {
             if (Navigator.of(context).canPop()) {
@@ -30,7 +30,7 @@ class WorkerStatsScreen extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(PhosphorIcons.gear()),
+            icon: Icon(PhosphorIcons.gear),
             onPressed: () {
               Navigator.pushNamed(context, SettingsScreen.routeName);
             },
@@ -52,20 +52,20 @@ class WorkerStatsScreen extends StatelessWidget {
             Row(
               children: [
                 _StatCard(
-                  icon: PhosphorIcons.checkCircle(),
+                  icon: PhosphorIcons.checkCircle,
                   value: '${MockWorkerData.totalJobs}',
                   label: 'JOBS',
                   iconColor: AppColors.primary,
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 _StatCard(
-                  icon: PhosphorIcons.star(),
+                  icon: PhosphorIcons.star,
                   value: '0.0',
                   label: 'RATING',
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 _StatCard(
-                  icon: PhosphorIcons.timer(),
+                  icon: PhosphorIcons.timer,
                   value: MockWorkerData.responseHoursLabel,
                   label: 'RESPONSE',
                   iconColor: AppColors.secondary,
@@ -106,7 +106,7 @@ class WorkerStatsScreen extends StatelessWidget {
               child: Column(
                 children: [
                   Icon(
-                    PhosphorIcons.hardHat(),
+                    PhosphorIcons.hardHat,
                     size: 64,
                     color: AppColors.primary.withOpacity(0.4),
                   ),

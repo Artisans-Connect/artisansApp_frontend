@@ -47,6 +47,11 @@ class ClientBooking {
     this.conversationId,
     this.counterpartUserId,
     this.jobUuid,
+    this.backendStatus,
+    this.workerId,
+    this.locationLat,
+    this.locationLng,
+    this.phone,
   });
 
   final int id;
@@ -61,9 +66,19 @@ class ClientBooking {
   final String? imageUrl;
   final String? conversationId;
   final String? counterpartUserId;
+  final String? backendStatus;
+  final String? workerId;
+  final double? locationLat;
+  final double? locationLng;
+  final String? phone;
 
   bool get canRate =>
       status == ClientBookingStatus.completed && rating == null;
+
+  bool get isTrackable {
+    final String raw = (backendStatus ?? '').toLowerCase();
+    return raw == 'matched' || raw == 'in_progress';
+  }
 
   bool get isNavigable =>
       status == ClientBookingStatus.inProgress ||
@@ -71,20 +86,27 @@ class ClientBooking {
       status == ClientBookingStatus.accepted ||
       canRate;
 
-  Map<String, dynamic> toMap() => {
-        'id': id,
+  Map<String, dynamic> toMap() => toTrackingMap();
+
+  Map<String, dynamic> toTrackingMap() => {
+        'id': jobUuid ?? id.toString(),
         'jobId': jobUuid ?? id.toString(),
         'job_id': jobUuid,
         'title': title,
         'artisan': artisan,
         'profession': profession,
-        'status': status.displayLabel,
+        'status': backendStatus ?? status.displayLabel,
         'date': date,
         'amount': amount,
         'rating': rating,
-        'imageUrl': imageUrl ?? 'https://via.placeholder.com/100?text=Artisan',
-        'conversationId': conversationId,
-        'counterpartUserId': counterpartUserId,
+        'imageUrl': imageUrl,
+        'conversationId': jobUuid ?? conversationId,
+        'counterpartUserId': workerId ?? counterpartUserId,
+        'worker_id': workerId,
+        'location_lat': locationLat,
+        'location_lng': locationLng,
+        'phone': phone,
+        'eta': 'Calculating ETA…',
       };
 
   static ClientBooking fromMap(Map<String, dynamic> map) {
@@ -93,7 +115,8 @@ class ClientBooking {
         ) ??
         ClientBookingStatus.requested;
     return ClientBooking(
-      id: map['id'] as int? ?? 0,
+      id: map['id'] is int ? map['id'] as int : 0,
+      jobUuid: map['job_id'] as String? ?? map['jobId'] as String?,
       title: map['title'] as String? ?? '',
       artisan: map['artisan'] as String? ?? 'Artisan',
       profession: map['profession'] as String? ?? '',
@@ -104,6 +127,11 @@ class ClientBooking {
       imageUrl: map['imageUrl'] as String?,
       conversationId: map['conversationId'] as String?,
       counterpartUserId: map['counterpartUserId'] as String?,
+      backendStatus: map['status'] as String?,
+      workerId: map['worker_id'] as String?,
+      locationLat: (map['location_lat'] as num?)?.toDouble(),
+      locationLng: (map['location_lng'] as num?)?.toDouble(),
+      phone: map['phone'] as String?,
     );
   }
 
@@ -120,8 +148,12 @@ class ClientBooking {
     final String artisanName = worker is Map<String, dynamic>
         ? worker['full_name'] as String? ?? 'Artisan'
         : 'Artisan';
+    final String? phone = worker is Map<String, dynamic>
+        ? worker['phone'] as String?
+        : null;
+    final String? jobId = json['id'] as String?;
     return ClientBooking(
-      id: (json['id'] as String? ?? '').hashCode,
+      id: jobId?.hashCode ?? 0,
       title: json['title'] as String? ?? 'Job',
       artisan: artisanName,
       profession: 'Artisan',
@@ -132,8 +164,25 @@ class ClientBooking {
           ? worker['avatar_url'] as String?
           : null,
       counterpartUserId: json['worker_id'] as String?,
-      jobUuid: json['id'] as String?,
+      jobUuid: jobId,
+      conversationId: jobId,
+      backendStatus: statusRaw,
+      workerId: json['worker_id'] as String?,
+      locationLat: (json['location_lat'] as num?)?.toDouble(),
+      locationLng: (json['location_lng'] as num?)?.toDouble(),
+      phone: phone,
     );
+  }
+
+  /// First matched or in-progress job from API list.
+  static ClientBooking? pickActiveTrackable(Iterable<Map<String, dynamic>> jobs) {
+    for (final Map<String, dynamic> json in jobs) {
+      final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
+      if (statusRaw == 'matched' || statusRaw == 'in_progress') {
+        return ClientBooking.fromApiJob(json);
+      }
+    }
+    return null;
   }
 
   static List<ClientBooking> get sampleBookings => [
@@ -161,6 +210,7 @@ class ClientBooking {
           imageUrl: 'https://via.placeholder.com/100?text=Sarah',
           conversationId: 'conv-2',
           counterpartUserId: 'worker-sarah',
+          backendStatus: 'in_progress',
         ),
         const ClientBooking(
           id: 3,
@@ -196,40 +246,35 @@ class ClientBooking {
         ),
       ];
 
-  static ClientBooking? get activeInProgress {
-    for (final ClientBooking booking in sampleBookings) {
-      if (booking.status == ClientBookingStatus.inProgress) {
-        return booking;
-      }
-    }
-    return null;
-  }
-
   /// Stub booking created after posting a job or hiring from profile.
   static Map<String, dynamic> fromJobPost({
     required Map<String, dynamic> jobData,
     Map<String, dynamic>? artisan,
   }) {
     final draft = ClientJobDraft.fromMap(jobData);
-    final artisanName = artisan?['name'] as String? ?? 'Sarah Johnson';
+    final artisanName = artisan?['name'] as String? ?? 'Artisan';
     final profession =
         artisan?['profession'] as String? ?? draft.displayCategory;
+    final String? jobId = jobData['id'] as String?;
     final map = ClientBooking(
       id: DateTime.now().millisecondsSinceEpoch,
-      jobUuid: jobData['id'] as String?,
+      jobUuid: jobId,
       title: draft.displayTitle,
       artisan: artisanName,
       profession: profession,
       status: ClientBookingStatus.inProgress,
       date: 'Today',
-      amount: '\$${draft.budgetMax.toStringAsFixed(0)}',
+      amount: 'GHS ${draft.budgetMax.toStringAsFixed(0)}',
       imageUrl: artisan?['imageUrl'] as String?,
-      conversationId: 'conv-new',
-      counterpartUserId: jobData['worker_id'] as String? ?? 'worker-match',
-    ).toMap();
-    map['worker_id'] = jobData['worker_id'];
-    map['location_lat'] = jobData['locationLat'] ?? jobData['location_lat'];
-    map['location_lng'] = jobData['locationLng'] ?? jobData['location_lng'];
+      conversationId: jobId,
+      counterpartUserId: jobData['worker_id'] as String?,
+      backendStatus: (jobData['status'] as String?) ?? 'matched',
+      workerId: jobData['worker_id'] as String?,
+      locationLat: (jobData['locationLat'] as num?)?.toDouble() ??
+          (jobData['location_lat'] as num?)?.toDouble(),
+      locationLng: (jobData['locationLng'] as num?)?.toDouble() ??
+          (jobData['location_lng'] as num?)?.toDouble(),
+    ).toTrackingMap();
     return map;
   }
 }

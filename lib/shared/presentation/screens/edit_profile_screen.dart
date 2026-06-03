@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/services/profile_service.dart';
@@ -126,7 +126,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 ListTile(
-                  leading: Icon(PhosphorIcons.images(), color: AppColors.primary),
+                  leading: Icon(PhosphorIcons.images, color: AppColors.primary),
                   title: const Text('Choose from Gallery'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -140,7 +140,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(PhosphorIcons.camera(), color: AppColors.primary),
+                  leading: Icon(PhosphorIcons.camera, color: AppColors.primary),
                   title: const Text('Take a Photo'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -247,7 +247,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           image: _getAvatarImage(),
                         ),
                         child: _getAvatarImage() == null
-                            ? Icon(PhosphorIcons.user(), size: 48, color: AppColors.primary)
+                            ? Icon(PhosphorIcons.user, size: 48, color: AppColors.primary)
                             : null,
                       ),
                       Positioned(
@@ -260,7 +260,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             padding: EdgeInsets.zero,
                             iconSize: 16,
                             onPressed: _pickImage,
-                            icon: Icon(PhosphorIcons.pencilSimple(),
+                            icon: Icon(PhosphorIcons.pencilSimple,
                                 color: Colors.white, size: 14),
                           ),
                         ),
@@ -340,7 +340,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               AppInput(
                 controller: _hourlyRateController,
                 hint: 'To be discussed with client',
-                prefixIcon: PhosphorIcons.money(),
+                prefixIcon: PhosphorIcons.money,
               ),
               const SizedBox(height: 6),
               Text(
@@ -353,7 +353,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               AppInput(
                 controller: _serviceAreasController,
                 hint: 'Adum, Bantama, Suame',
-                prefixIcon: PhosphorIcons.mapPin(),
+                prefixIcon: PhosphorIcons.mapPin,
               ),
             ] else ...<Widget>[
               const SizedBox(height: 16),
@@ -362,7 +362,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               AppInput(
                 controller: _locationController,
                 hint: 'Neighborhood or city',
-                prefixIcon: PhosphorIcons.mapPin(),
+                prefixIcon: PhosphorIcons.mapPin,
               ),
             ],
             const SizedBox(height: 16),
@@ -391,7 +391,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               AppInput(
                 controller: _locationController,
                 hint: 'Where you are based',
-                prefixIcon: PhosphorIcons.house(),
+                prefixIcon: PhosphorIcons.house,
               ),
             ],
             const SizedBox(height: 28),
@@ -432,7 +432,7 @@ class _LockedField extends StatelessWidget {
       decoration: InputDecoration(
         filled: true,
         fillColor: AppColors.surfaceDim.withOpacity(0.5),
-        suffixIcon: Icon(PhosphorIcons.lock(), color: AppColors.outline),
+        suffixIcon: Icon(PhosphorIcons.lock, color: AppColors.outline),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,

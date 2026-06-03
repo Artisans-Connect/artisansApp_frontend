@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 class MapPlaceholder extends StatelessWidget {
   const MapPlaceholder({
     super.key,
@@ -37,7 +37,7 @@ class MapPlaceholder extends StatelessWidget {
           if (!compact)
             Center(
               child: Icon(
-                PhosphorIcons.mapTrifold(),
+                PhosphorIcons.mapTrifold,
                 size: 72,
                 color: AppColors.outline.withOpacity(0.35),
               ),
@@ -49,7 +49,7 @@ class MapPlaceholder extends StatelessWidget {
               child: Column(
                 children: [
                   Icon(
-                    PhosphorIcons.mapPin(),
+                    PhosphorIcons.mapPin,
                     size: 40,
                     color: AppColors.error,
                   ),
@@ -81,7 +81,7 @@ class MapPlaceholder extends StatelessWidget {
               ),
             )
           else if (showPin)
-            Center(child: Icon(PhosphorIcons.mapPin(),
+            Center(child: Icon(PhosphorIcons.mapPin,
                 size: 36,
                 color: AppColors.error,
               ),
@@ -103,7 +103,7 @@ class MapPlaceholder extends StatelessWidget {
                 child: Row(
                   children: [
                     Icon(
-                      PhosphorIcons.mapPin(),
+                      PhosphorIcons.mapPin,
                       size: 18,
                       color: AppColors.primary,
                     ),

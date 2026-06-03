@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -175,7 +175,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(
-                    PhosphorIcons.user(),
+                    PhosphorIcons.user,
                     color: AppColors.onPrimary,
                   );
                 },
@@ -243,7 +243,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                     });
                   },
                   child: Icon(
-                    index < _rating ? PhosphorIcons.star() : PhosphorIcons.star(),
+                    index < _rating ? PhosphorIcons.star : PhosphorIcons.star,
                     size: 48,
                     color: index < _rating
                         ? const Color(0xFFFFC107)
@@ -371,7 +371,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
           Row(
             children: [
               Icon(
-                PhosphorIcons.info(),
+                PhosphorIcons.info,
                 color: AppColors.primary,
                 size: 20,
               ),
@@ -458,13 +458,13 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
         ),
         if (isCompleted)
           Icon(
-            PhosphorIcons.checkCircle(),
+            PhosphorIcons.checkCircle,
             color: AppColors.success,
             size: 20,
           )
         else
           Icon(
-            PhosphorIcons.circle(),
+            PhosphorIcons.circle,
             color: AppColors.outlineVariant,
             size: 20,
           ),

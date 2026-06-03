@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -37,23 +37,23 @@ class _WorkerHomeShellScreenState extends State<WorkerHomeShellScreen> {
         onDestinationSelected: (int value) => setState(() => _index = value),
         destinations: <NavigationDestination>[
           NavigationDestination(
-            icon: Icon(PhosphorIcons.house()),
-            selectedIcon: Icon(PhosphorIcons.house()),
+            icon: Icon(PhosphorIcons.house),
+            selectedIcon: Icon(PhosphorIcons.house),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(PhosphorIcons.chatCircle()),
-            selectedIcon: Icon(PhosphorIcons.chatCircle()),
+            icon: Icon(PhosphorIcons.chatCircle),
+            selectedIcon: Icon(PhosphorIcons.chatCircle),
             label: 'Messages',
           ),
           NavigationDestination(
-            icon: Icon(PhosphorIcons.user()),
-            selectedIcon: Icon(PhosphorIcons.user()),
+            icon: Icon(PhosphorIcons.user),
+            selectedIcon: Icon(PhosphorIcons.user),
             label: 'Profile',
           ),
           NavigationDestination(
-            icon: Icon(PhosphorIcons.gear()),
-            selectedIcon: Icon(PhosphorIcons.gear()),
+            icon: Icon(PhosphorIcons.gear),
+            selectedIcon: Icon(PhosphorIcons.gear),
             label: 'Settings',
           ),
         ],
@@ -132,7 +132,7 @@ class _JobCard extends StatelessWidget {
             children: <Widget>[
               CircleAvatar(
                 backgroundColor: AppColors.surfaceDim,
-                child: Icon(PhosphorIcons.receipt(), color: AppColors.primary),
+                child: Icon(PhosphorIcons.receipt, color: AppColors.primary),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -147,7 +147,7 @@ class _JobCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(PhosphorIcons.caretRight(), color: AppColors.textSecondary),
+              Icon(PhosphorIcons.caretRight, color: AppColors.textSecondary),
             ],
           ),
         ),

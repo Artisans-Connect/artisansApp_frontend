@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
@@ -83,7 +83,7 @@ class SettingsTile extends StatelessWidget {
               ? null
               : Text(subtitle!, style: AppTextStyles.bodyMd),
           trailing: trailing ??
-              Icon(PhosphorIcons.caretRight(), color: AppColors.textSecondary),
+              Icon(PhosphorIcons.caretRight, color: AppColors.textSecondary),
         ),
         if (showDivider)
           Divider(

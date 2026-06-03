@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/services/job_realtime_service.dart';
 import '../../../../core/services/jobs_service.dart';
@@ -144,7 +144,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                           ),
                         ),
                         child: Icon(
-                          PhosphorIcons.magnifyingGlass(),
+                          PhosphorIcons.magnifyingGlass,
                           color: AppColors.primary,
                           size: 48,
                         ),

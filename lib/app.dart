@@ -23,11 +23,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Artisans',
+      title: 'ArtisansConnect',
       theme: buildAppTheme(),
-      initialRoute: SplashScreen.routeName,
+      initialRoute: '/',
       routes: <String, WidgetBuilder>{
-        SplashScreen.routeName: (_) => const SplashScreen(),
+        '/': (_) => const SplashScreen(),
+        '/auth/splash': (_) => const SplashScreen(),
         OnboardingScreen.routeName: (_) => const OnboardingScreen(),
         RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
         SignInScreen.routeName: (_) => const SignInScreen(),

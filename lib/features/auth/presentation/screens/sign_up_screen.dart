@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/services/auth_service.dart';
@@ -96,7 +96,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               children: <Widget>[
                 IconButton(
                   onPressed: () => Navigator.maybePop(context),
-                  icon: Icon(PhosphorIcons.arrowLeft()),
+                  icon: Icon(PhosphorIcons.arrowLeft),
                 ),
                 const SizedBox(height: 6),
                 Container(
@@ -128,7 +128,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
                       Center(
                         child: Text(
-                          'Join Artisans',
+                          'Join ArtisansConnect',
                           style: AppTextStyles.displayMd.copyWith(
                             fontSize: 44,
                             fontWeight: FontWeight.bold,

@@ -1,3 +1,5 @@
+import '../../../core/cache/cache_keys.dart';
+import '../../../core/cache/cached_fetch.dart';
 import '../../../core/network/api_client.dart';
 
 class ExploreService {
@@ -12,12 +14,48 @@ class ExploreService {
     double? lng,
     double radiusKm = 5,
     int limit = 20,
+    bool forceRefresh = false,
+    void Function(List<Map<String, dynamic>> fresh)? onRefreshed,
+  }) async {
+    final String cacheKey = CacheKeys.exploreNearby(
+      categoryId: categoryId,
+      lat: lat,
+      lng: lng,
+      radiusKm: radiusKm,
+      limit: limit,
+    );
+
+    final List<dynamic> raw = await CachedFetch.staleWhileRevalidate<List<dynamic>>(
+      key: cacheKey,
+      ttl: CacheKeys.exploreTtl,
+      forceRefresh: forceRefresh,
+      fetch: () => _fetchArtisansRaw(
+        categoryId: categoryId,
+        lat: lat,
+        lng: lng,
+        radiusKm: radiusKm,
+        limit: limit,
+      ),
+      onRefreshed: onRefreshed == null
+          ? null
+          : (List<dynamic> fresh) => onRefreshed(_castArtisanList(fresh)),
+    );
+
+    return _castArtisanList(raw);
+  }
+
+  Future<List<dynamic>> _fetchArtisansRaw({
+    String? categoryId,
+    double? lat,
+    double? lng,
+    required double radiusKm,
+    required int limit,
   }) async {
     final queryParams = <String, String>{
       'radius_km': radiusKm.toString(),
       'limit': limit.toString(),
     };
-    
+
     if (categoryId != null && categoryId.isNotEmpty) {
       queryParams['category_id'] = categoryId;
     }
@@ -28,11 +66,14 @@ class ExploreService {
 
     final queryStr = Uri(queryParameters: queryParams).query;
     final dynamic response = await _apiClient.get('/workers/nearby?$queryStr');
-    
-    if (response is List) {
-      // Cast the dynamic items to Map<String, dynamic> safely
-      return response.map((e) => Map<String, dynamic>.from(e as Map)).toList();
-    }
-    return <Map<String, dynamic>>[];
+
+    if (response is List) return response;
+    return <dynamic>[];
+  }
+
+  List<Map<String, dynamic>> _castArtisanList(List<dynamic> raw) {
+    return raw
+        .map((dynamic e) => Map<String, dynamic>.from(e as Map))
+        .toList();
   }
 }

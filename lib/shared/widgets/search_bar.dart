@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
@@ -54,7 +54,7 @@ class _SearchBarState extends State<CustomSearchBar> {
             color: AppColors.outlineVariant,
           ),
           prefixIcon: Icon(
-            PhosphorIcons.magnifyingGlass(),
+            PhosphorIcons.magnifyingGlass,
             color: AppColors.outlineVariant,
             size: AppSpacing.iconMedium,
           ),
@@ -65,7 +65,7 @@ class _SearchBarState extends State<CustomSearchBar> {
                     widget.onChanged?.call('');
                   },
                   child: Icon(
-                    PhosphorIcons.x(),
+                    PhosphorIcons.x,
                     color: AppColors.outlineVariant,
                     size: AppSpacing.iconSmall,
                   ),

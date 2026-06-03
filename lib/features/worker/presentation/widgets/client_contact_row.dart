@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 class ClientContactRow extends StatelessWidget {
   const ClientContactRow({
     super.key,
@@ -15,9 +15,9 @@ class ClientContactRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _ActionButton(icon: PhosphorIcons.chatCircle(), onTap: onMessage),
+        _ActionButton(icon: PhosphorIcons.chatCircle, onTap: onMessage),
         const SizedBox(width: AppSpacing.sm),
-        _ActionButton(icon: PhosphorIcons.phone(), onTap: onCall),
+        _ActionButton(icon: PhosphorIcons.phone, onTap: onCall),
       ],
     );
   }

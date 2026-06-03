@@ -1,10 +1,15 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../../core/navigation/auth_navigation.dart';
+import '../../../core/services/auth_service.dart';
+import '../../../core/session/app_user_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../features/auth/presentation/screens/role_selection_screen.dart';
+import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/profile_section_card.dart';
@@ -37,6 +42,21 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
+  Future<void> _switchView(String targetMode) async {
+    try {
+      await AuthService.instance.updateActiveMode(targetMode);
+      if (!mounted) return;
+      final String route = shellRouteForMode(
+        targetMode,
+        AppUserSession.instance.isWorkerCapable,
+      );
+      Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not switch view.');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ProfileArgs? args =
@@ -54,7 +74,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           if (isOwnProfile)
             IconButton(
               onPressed: () => Navigator.pushNamed(context, EditProfileScreen.routeName).then((_) => setState(() {})),
-              icon: Icon(PhosphorIcons.pencilSimple(), color: AppColors.primary),
+              icon: Icon(PhosphorIcons.pencilSimple, color: AppColors.primary),
             ),
           const SizedBox(width: 8),
         ],
@@ -72,7 +92,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ProfileSectionCard(
                   title: 'Location',
                   child: _InfoRow(
-                    icon: PhosphorIcons.mapPin(),
+                    icon: PhosphorIcons.mapPin,
                     label: profile.locationLabel!,
                   ),
                 ),
@@ -82,7 +102,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 title: 'Contact',
                 child: profile.phone != null
                     ? _InfoRow(
-                        icon: PhosphorIcons.phone(),
+                        icon: PhosphorIcons.phone,
                         label: profile.phone!,
                       )
                     : Text('No phone added yet.', style: AppTextStyles.bodyMd),
@@ -179,19 +199,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         if (widget.onOpenWorkerEarnings != null)
                           OutlinedButton.icon(
                             onPressed: widget.onOpenWorkerEarnings,
-                            icon: Icon(PhosphorIcons.wallet()),
+                            icon: Icon(PhosphorIcons.wallet),
                             label: const Text('Earnings'),
                           ),
                         if (widget.onOpenWorkerStats != null)
                           OutlinedButton.icon(
                             onPressed: widget.onOpenWorkerStats,
-                            icon: Icon(PhosphorIcons.chartLineUp()),
+                            icon: Icon(PhosphorIcons.chartLineUp),
                             label: const Text('Stats'),
                           ),
                         if (widget.onOpenWorkerHistory != null)
                           OutlinedButton.icon(
                             onPressed: widget.onOpenWorkerHistory,
-                            icon: Icon(PhosphorIcons.clockCounterClockwise()),
+                            icon: Icon(PhosphorIcons.clockCounterClockwise),
                             label: const Text('History'),
                           ),
                       ],
@@ -217,6 +237,29 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     EditProfileScreen.routeName,
                   ).then((_) => setState(() {})),
                 ),
+                if (SharedUserContext.isViewingAsWorker) ...<Widget>[
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () => _switchView('client'),
+                    child: const Text('Switch to Client View'),
+                  ),
+                ] else if (SharedUserContext.canSwitchToWorker) ...<Widget>[
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () => _switchView('worker'),
+                    child: const Text('Switch to Worker View'),
+                  ),
+                ] else if (!SharedUserContext.isWorkerCapable) ...<Widget>[
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pushNamed(
+                      context,
+                      RoleSelectionScreen.routeName,
+                      arguments: <String, dynamic>{'isBecomingWorker': true},
+                    ),
+                    child: const Text('Become a Worker'),
+                  ),
+                ],
                 const SizedBox(height: 12),
                 TextButton(
                   onPressed: () => Navigator.pushNamed(
@@ -279,7 +322,7 @@ class _ProfileHero extends StatelessWidget {
                   ),
                 ),
               if (profile.isVerified)
-                Positioned(bottom: 0, right: 0, child: CircleAvatar(radius: 14, backgroundColor: AppColors.success, child: Icon(PhosphorIcons.sealCheck(), color: Colors.white, size: 16),
+                Positioned(bottom: 0, right: 0, child: CircleAvatar(radius: 14, backgroundColor: AppColors.success, child: Icon(PhosphorIcons.sealCheck, color: Colors.white, size: 16),
                   ),
                 ),
             ],

@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../state/worker_session_state.dart';
 class WorkerEarningsScreen extends StatelessWidget {
@@ -14,7 +14,7 @@ class WorkerEarningsScreen extends StatelessWidget {
         elevation: 0,
         leading: Navigator.of(context).canPop()
             ? IconButton(
-                icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+                icon: Icon(PhosphorIcons.caretLeft, size: 20),
                 color: AppColors.primary,
                 onPressed: () => Navigator.of(context).maybePop(),
               )
@@ -35,7 +35,7 @@ class WorkerEarningsScreen extends StatelessWidget {
               child: CircleAvatar(
                 radius: 18,
                 backgroundColor: AppColors.primaryFixed,
-                child: Icon(PhosphorIcons.user(), color: AppColors.primary),
+                child: Icon(PhosphorIcons.user, color: AppColors.primary),
               ),
             ),
           ),
@@ -81,7 +81,7 @@ class WorkerEarningsScreen extends StatelessWidget {
                   Row(
                     children: [
                       Icon(
-                        PhosphorIcons.trendUp(),
+                        PhosphorIcons.trendUp,
                         color: AppColors.success,
                         size: 18,
                       ),
@@ -107,11 +107,11 @@ class WorkerEarningsScreen extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(PhosphorIcons.info(), color: Color(0xFFB55D00)),
+                  Icon(PhosphorIcons.info, color: Color(0xFFB55D00)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Artisans does not process payments. Agree payment directly with each client.',
+                      'ArtisansConnect does not process payments. Agree payment directly with each client.',
                       style: AppTypography.bodyMd.copyWith(
                         color: const Color(0xFF5D4037),
                         fontSize: 13,
@@ -139,7 +139,7 @@ class WorkerEarningsScreen extends StatelessWidget {
                       ),
                       const Spacer(),
                       IconButton(
-                        icon: Icon(PhosphorIcons.dotsThree()),
+                        icon: Icon(PhosphorIcons.dotsThree),
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
@@ -181,7 +181,7 @@ class WorkerEarningsScreen extends StatelessWidget {
               onPressed: () {
                 WorkerScope.of(context).setProfilePage(WorkerProfilePage.history);
               },
-              icon: Icon(PhosphorIcons.clockCounterClockwise()),
+              icon: Icon(PhosphorIcons.clockCounterClockwise),
               label: const Text('View history'),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(52),
@@ -192,7 +192,7 @@ class WorkerEarningsScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Payment integration coming in a future update. We\'re working on making secure in-app payments available for all Artisans soon.',
+              'Payment integration coming in a future update. We\'re working on making secure in-app payments available on ArtisansConnect soon.',
               style: AppTypography.bodyMd.copyWith(
                 fontStyle: FontStyle.italic,
                 fontSize: 12,

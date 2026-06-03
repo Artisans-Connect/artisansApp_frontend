@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -27,11 +27,11 @@ class WorkerOnboardingHeader extends StatelessWidget {
             children: <Widget>[
               IconButton(
                 onPressed: onBack,
-                icon: Icon(PhosphorIcons.arrowLeft(), color: AppColors.primary),
+                icon: Icon(PhosphorIcons.arrowLeft, color: AppColors.primary),
               ),
               Expanded(
                 child: Text(
-                  'Artisans',
+                  'ArtisansConnect',
                   textAlign: TextAlign.center,
                   style: AppTextStyles.bodyLg.copyWith(
                     color: AppColors.primary,

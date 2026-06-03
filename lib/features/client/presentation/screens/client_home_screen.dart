@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -11,6 +11,7 @@ import '../navigation/client_shell_scope.dart';
 import '../widgets/artisan_card.dart';
 import '../widgets/category_chip.dart';
 import '../../../../shared/widgets/search_bar.dart';
+import '../../../../core/services/jobs_service.dart';
 import '../../services/explore_service.dart';
 
 class ClientHomeScreen extends StatefulWidget {
@@ -26,16 +27,45 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
 
   List<Map<String, dynamic>> featuredArtisans = [];
   bool _isLoadingFeatured = true;
+  final JobsService _jobsService = JobsService();
+  ClientBooking? _activeTrackableJob;
+  bool _loadingActiveJob = true;
 
   @override
   void initState() {
     super.initState();
     _fetchFeaturedArtisans();
+    _loadActiveJob();
+  }
+
+  Future<void> _loadActiveJob() async {
+    try {
+      final List<dynamic> data = await _jobsService.getMyJobs();
+      if (!mounted) return;
+      setState(() {
+        _activeTrackableJob = ClientBooking.pickActiveTrackable(
+          data.cast<Map<String, dynamic>>(),
+        );
+        _loadingActiveJob = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingActiveJob = false);
+    }
   }
 
   Future<void> _fetchFeaturedArtisans() async {
     try {
-      final artisans = await ExploreService.instance.getArtisans(limit: 5);
+      final artisans = await ExploreService.instance.getArtisans(
+        limit: 5,
+        onRefreshed: (List<Map<String, dynamic>> fresh) {
+          if (!mounted) return;
+          setState(() {
+            featuredArtisans = fresh;
+            _isLoadingFeatured = false;
+          });
+        },
+      );
       if (mounted) {
         setState(() {
           featuredArtisans = artisans;
@@ -52,11 +82,11 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   }
 
   final List<Map<String, dynamic>> categories = [
-    {'label': 'Plumbing', 'icon': PhosphorIcons.drop()},
-    {'label': 'Electrical', 'icon': PhosphorIcons.lightning()},
-    {'label': 'Carpentry', 'icon': PhosphorIcons.wrench()},
-    {'label': 'Cleaning', 'icon': PhosphorIcons.broom()},
-    {'label': 'Painting', 'icon': PhosphorIcons.palette()},
+    {'label': 'Plumbing', 'icon': PhosphorIcons.drop},
+    {'label': 'Electrical', 'icon': PhosphorIcons.lightning},
+    {'label': 'Carpentry', 'icon': PhosphorIcons.wrench},
+    {'label': 'Cleaning', 'icon': PhosphorIcons.broom},
+    {'label': 'Painting', 'icon': PhosphorIcons.palette},
   ];
 
   @override
@@ -101,7 +131,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                     ),
                     padding: const EdgeInsets.all(8),
                     child: Icon(
-                      PhosphorIcons.bell(),
+                      PhosphorIcons.bell,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -191,7 +221,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(PhosphorIcons.users(), color: AppColors.outlineVariant, size: 32),
+                      Icon(PhosphorIcons.users, color: AppColors.outlineVariant, size: 32),
                       const SizedBox(height: AppSpacing.sm),
                       Text('No featured artisans available right now', style: AppTypography.bodyMedium),
                     ],
@@ -279,7 +309,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                         child: Column(
                           children: [
                             Icon(
-                              PhosphorIcons.plusCircle(),
+                              PhosphorIcons.plusCircle,
                               color: AppColors.onPrimary,
                               size: 32,
                             ),
@@ -310,7 +340,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                         child: Column(
                           children: [
                             Icon(
-                              PhosphorIcons.mapTrifold(),
+                              PhosphorIcons.mapTrifold,
                               color: AppColors.onSecondary,
                               size: 32,
                             ),
@@ -328,19 +358,30 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   ),
                 ],
               ),
-              if (ClientBooking.activeInProgress != null) ...[
+              if (!_loadingActiveJob && _activeTrackableJob != null) ...[
                 const SizedBox(height: AppSpacing.md),
                 _ActiveJobBanner(
-                  booking: ClientBooking.activeInProgress!,
+                  booking: _activeTrackableJob!,
                   onViewJob: () {
                     ClientShellScope.of(context)
                         .selectTab(ClientNavTab.bookings);
                   },
-                  onTrack: () {
+                  onTrack: () async {
+                    ClientBooking booking = _activeTrackableJob!;
+                    if (booking.jobUuid != null) {
+                      try {
+                        final dynamic job =
+                            await _jobsService.getJobById(booking.jobUuid!);
+                        if (job is Map<String, dynamic> && mounted) {
+                          booking = ClientBooking.fromApiJob(job);
+                        }
+                      } catch (_) {}
+                    }
+                    if (!mounted) return;
                     ClientNavigation.pushFlow(
                       context,
                       AppRoutes.liveTracking,
-                      arguments: ClientBooking.activeInProgress!.toMap(),
+                      arguments: booking.toTrackingMap(),
                     );
                   },
                 ),

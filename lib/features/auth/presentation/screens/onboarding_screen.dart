@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -71,12 +71,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           curve: Curves.easeInOut,
                         );
                       },
-                      child: Icon(PhosphorIcons.caretLeft(),
+                      child: Icon(PhosphorIcons.caretLeft,
                           color: AppColors.primary, size: 20),
                     ),
                   if (_currentPage > 0) const SizedBox(width: 8),
                   Text(
-                    'Artisans',
+                    'ArtisansConnect',
                     style: AppTextStyles.displayMd.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w800,
@@ -106,12 +106,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: <Widget>[
                   // Page 1: Client value-proposition
                   OnboardingPageContent(
-                    heroIcon: PhosphorIcons.magnifyingGlass(),
+                    heroIcon: PhosphorIcons.magnifyingGlass,
                     heroGradientColors: <Color>[
                       Color(0xFF1B1B2F),
                       Color(0xFF2D3561),
                     ],
-                    badgeIcon: PhosphorIcons.shield(),
+                    badgeIcon: PhosphorIcons.shield,
                     badgeLabel: 'Trusted Experts',
                     badgeSubtitle: 'Vetted for quality',
                     title: 'Find help in minutes',
@@ -122,12 +122,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                   // Page 2: Worker value-proposition
                   OnboardingPageContent(
-                    heroIcon: PhosphorIcons.handshake(),
+                    heroIcon: PhosphorIcons.handshake,
                     heroGradientColors: <Color>[
                       Color(0xFF0F2027),
                       Color(0xFF203A43),
                     ],
-                    badgeIcon: PhosphorIcons.wallet(),
+                    badgeIcon: PhosphorIcons.wallet,
                     badgeLabel: 'Weekly Earnings',
                     badgeSubtitle: 'Grow your revenue',
                     title: 'Earn as an Artisan',
@@ -158,7 +158,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               child: GradientButton(
                 label: _currentPage < _totalPages - 1 ? 'Next' : 'Get Started',
-                trailingIcon: PhosphorIcons.arrowRight(),
+                trailingIcon: PhosphorIcons.arrowRight,
                 onPressed: _nextPage,
               ),
             ),

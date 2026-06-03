@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:artisans_app/core/theme/index.dart';
 
 class CompletionPhotoPicker extends StatelessWidget {
@@ -14,7 +14,7 @@ class CompletionPhotoPicker extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
-            _PhotoSlot(filled: true, icon: PhosphorIcons.wrench()),
+            _PhotoSlot(filled: true, icon: PhosphorIcons.wrench),
             const SizedBox(width: AppSpacing.sm),
             _PhotoSlot(dashed: true),
             const SizedBox(width: AppSpacing.sm),
@@ -27,7 +27,7 @@ class CompletionPhotoPicker extends StatelessWidget {
         Row(
           children: [
             Icon(
-              PhosphorIcons.cloud(),
+              PhosphorIcons.cloud,
               size: 16,
               color: AppColors.outline,
             ),
@@ -78,9 +78,9 @@ class _PhotoSlot extends StatelessWidget {
                 : null,
           ),
           child: add
-              ? Icon(PhosphorIcons.plus(), color: AppColors.onPrimary, size: 28)
+              ? Icon(PhosphorIcons.plus, color: AppColors.onPrimary, size: 28)
               : Icon(
-                  icon ?? PhosphorIcons.image(),
+                  icon ?? PhosphorIcons.image,
                   color: AppColors.outline.withOpacity(0.5),
                 ),
         ),

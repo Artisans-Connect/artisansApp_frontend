@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/location/device_location_service.dart';
@@ -118,9 +118,13 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
             height: MediaQuery.of(context).size.height * 0.5,
             child: AppConstants.googleMapsApiKey.isEmpty
                 ? Center(
-                    child: Text(
-                      'Configure GOOGLE_MAPS_API_KEY for map view.',
-                      style: AppTypography.bodySmall,
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Text(
+                        'Add GOOGLE_MAPS_API_KEY to .env (Maps JavaScript API enabled for web).',
+                        style: AppTypography.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   )
                 : GoogleMap(
@@ -236,7 +240,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                               borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                                             ),
                                             child: Icon(
-                                              PhosphorIcons.user(),
+                                              PhosphorIcons.user,
                                               color: AppColors.onPrimary,
                                             ),
                                           ),
@@ -286,7 +290,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                     Row(
                                                       children: [
                                                         Icon(
-                                                          PhosphorIcons.mapPin(),
+                                                          PhosphorIcons.mapPin,
                                                           size: 14,
                                                           color: AppColors.outlineVariant,
                                                         ),
@@ -304,7 +308,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                           ),
                                           // View Profile Icon
                                           Icon(
-                                            PhosphorIcons.caretRight(),
+                                            PhosphorIcons.caretRight,
                                             size: 16,
                                             color: AppColors.primary,
                                           ),

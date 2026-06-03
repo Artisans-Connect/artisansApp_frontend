@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:artisans_app/core/theme/index.dart';
 
 enum WorkerNavTab { explore, bookings, messages, profile }
@@ -36,28 +36,28 @@ class WorkerBottomNav extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _NavItem(
-                icon: PhosphorIcons.compass(),
+                icon: PhosphorIcons.compass,
                 label: 'EXPLORE',
                 tab: WorkerNavTab.explore,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _NavItem(
-                icon: PhosphorIcons.calendar(),
+                icon: PhosphorIcons.calendar,
                 label: 'BOOKINGS',
                 tab: WorkerNavTab.bookings,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _NavItem(
-                icon: PhosphorIcons.chatCircle(),
+                icon: PhosphorIcons.chatCircle,
                 label: 'MESSAGES',
                 tab: WorkerNavTab.messages,
                 current: currentTab,
                 onTap: onTabSelected,
               ),
               _NavItem(
-                icon: PhosphorIcons.user(),
+                icon: PhosphorIcons.user,
                 label: 'PROFILE',
                 tab: WorkerNavTab.profile,
                 current: currentTab,

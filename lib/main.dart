@@ -4,7 +4,9 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/cache/cache_store.dart';
 import 'core/constants/app_constants.dart';
+import 'core/maps/google_maps_loader.dart';
 import 'core/offline/job_post_queue.dart';
 import 'features/worker/presentation/worker_dev_router.dart';
 
@@ -15,12 +17,15 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
 
   await Hive.initFlutter();
+  await CacheStore.instance.init();
   await JobPostQueue.instance.init();
 
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
-    anonKey: AppConstants.supabaseAnonKey,
+    anonKey: AppConstants.supabasePublishableKey,
   );
+
+  await ensureGoogleMapsLoaded(AppConstants.googleMapsApiKey);
 
   const workerDev = bool.fromEnvironment('WORKER_DEV', defaultValue: false);
   runApp(workerDev ? const WorkerDevRouter() : const MyApp());

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/theme/index.dart';
 import '../models/chat_message.dart';
@@ -86,7 +86,7 @@ class ChatBubble extends StatelessWidget {
                   if (message.isMine) ...<Widget>[
                     const SizedBox(width: 4),
                     Icon(
-                      PhosphorIcons.checks(),
+                      PhosphorIcons.checks,
                       size: 14,
                       color: AppColors.primary,
                     ),

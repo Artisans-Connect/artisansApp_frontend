@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -64,7 +64,7 @@ class ArtisanCard extends StatelessWidget {
                         return Container(
                           color: AppColors.surfaceContainer,
                           child: Icon(
-                            PhosphorIcons.user(),
+                            PhosphorIcons.user,
                             size: 80,
                             color: AppColors.outlineVariant,
                           ),
@@ -91,7 +91,7 @@ class ArtisanCard extends StatelessWidget {
                         ),
                         padding: const EdgeInsets.all(8),
                         child: Icon(
-                          isFavorite ? PhosphorIcons.heart() : PhosphorIcons.heart(),
+                          isFavorite ? PhosphorIcons.heart : PhosphorIcons.heart,
                           color: isFavorite ? Colors.red : AppColors.outlineVariant,
                           size: 20,
                         ),
@@ -123,7 +123,7 @@ class ArtisanCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          PhosphorIcons.star(),
+                          PhosphorIcons.star,
                           size: 16,
                           color: const Color(0xFFFFC107),
                         ),
@@ -143,7 +143,7 @@ class ArtisanCard extends StatelessWidget {
                     Row(
                       children: [
                         Icon(
-                          PhosphorIcons.mapPin(),
+                          PhosphorIcons.mapPin,
                           size: 14,
                           color: AppColors.outlineVariant,
                         ),

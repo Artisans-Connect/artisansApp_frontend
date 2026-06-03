@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -90,7 +90,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                       return Container(
                         color: AppColors.surfaceContainer,
                         child: Icon(
-                          PhosphorIcons.user(),
+                          PhosphorIcons.user,
                           size: 100,
                           color: AppColors.outlineVariant,
                         ),
@@ -121,7 +121,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                       ),
                       padding: const EdgeInsets.all(12),
                       child: Icon(
-                        _isFavorite ? PhosphorIcons.heart() : PhosphorIcons.heart(),
+                        _isFavorite ? PhosphorIcons.heart : PhosphorIcons.heart,
                         color: _isFavorite ? Colors.red : AppColors.outlineVariant,
                         size: 24,
                       ),
@@ -160,7 +160,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                       Row(
                         children: [
                           Icon(
-                            PhosphorIcons.mapPin(),
+                            PhosphorIcons.mapPin,
                             size: 16,
                             color: AppColors.outlineVariant,
                           ),
@@ -293,7 +293,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                                   Row(
                                     children: List.generate(5, (i) {
                                       return Icon(
-                                        i < rating ? PhosphorIcons.star() : PhosphorIcons.star(),
+                                        i < rating ? PhosphorIcons.star : PhosphorIcons.star,
                                         size: 14,
                                         color: const Color(0xFFFFC107),
                                       );
@@ -350,7 +350,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            PhosphorIcons.phone(),
+                            PhosphorIcons.phone,
                             color: AppColors.primary,
                             size: 20,
                           ),
@@ -392,7 +392,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(
-                            PhosphorIcons.chatTeardrop(),
+                            PhosphorIcons.chatTeardrop,
                             color: AppColors.primary,
                             size: 20,
                           ),

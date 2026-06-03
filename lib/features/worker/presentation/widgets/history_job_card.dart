@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../models/mock_worker_job.dart';
 class HistoryJobCard extends StatelessWidget {
   const HistoryJobCard({
@@ -72,8 +72,8 @@ class HistoryJobCard extends StatelessWidget {
                   5,
                   (i) => Icon(
                     i < job.historyRating!.round()
-                        ? PhosphorIcons.star()
-                        : PhosphorIcons.star(),
+                        ? PhosphorIcons.star
+                        : PhosphorIcons.star,
                     size: 16,
                     color: const Color(0xFFFFB800),
                   ),
@@ -90,7 +90,7 @@ class HistoryJobCard extends StatelessWidget {
           Row(
             children: [
               Icon(
-                PhosphorIcons.calendarBlank(),
+                PhosphorIcons.calendarBlank,
                 size: 14,
                 color: AppColors.outline,
               ),

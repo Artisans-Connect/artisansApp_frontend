@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -42,7 +42,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(PhosphorIcons.dotsThreeVertical()),
+            icon: Icon(PhosphorIcons.dotsThreeVertical),
             onPressed: () => _stub(context, 'More actions'),
           ),
         ],
@@ -115,7 +115,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                             Row(
                               children: [
                                 Icon(
-                                  PhosphorIcons.star(),
+                                  PhosphorIcons.star,
                                   size: 14,
                                   color: Color(0xFFFFB800),
                                 ),
@@ -151,7 +151,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                   const SizedBox(height: AppSpacing.sm),
                   Row(
                     children: [
-                      Icon(PhosphorIcons.mapPin(), color: AppColors.outline),
+                      Icon(PhosphorIcons.mapPin, color: AppColors.outline),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
@@ -176,7 +176,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                   const SizedBox(height: AppSpacing.xl),
                   OutlinedButton.icon(
                     onPressed: () => _stub(context, 'Directions'),
-                    icon: Icon(PhosphorIcons.navigationArrow()),
+                    icon: Icon(PhosphorIcons.navigationArrow),
                     label: const Text('Get Directions'),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size.fromHeight(52),

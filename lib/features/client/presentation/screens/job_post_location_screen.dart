@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/location/device_location_service.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -102,7 +102,7 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              Icon(PhosphorIcons.mapPin(), color: AppColors.primary),
+              Icon(PhosphorIcons.mapPin, color: AppColors.primary),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
@@ -113,7 +113,7 @@ class _JobPostLocationScreenState extends State<JobPostLocationScreen> {
                 ),
               ),
               IconButton(
-                icon: Icon(PhosphorIcons.pencilSimple()),
+                icon: Icon(PhosphorIcons.pencilSimple),
                 onPressed: () =>
                     setState(() => _showAddressEditor = !_showAddressEditor),
               ),

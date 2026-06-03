@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
@@ -27,7 +27,7 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           IconButton(
-            icon: Icon(PhosphorIcons.dotsThreeVertical()),
+            icon: Icon(PhosphorIcons.dotsThreeVertical),
             onPressed: () => _stub(context, 'More actions'),
           ),
         ],
@@ -82,13 +82,13 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
               child: Column(
                 children: [
                   _DetailRow(
-                    icon: PhosphorIcons.mapPin(),
+                    icon: PhosphorIcons.mapPin,
                     label: 'BOOKING LOCATION',
                     value: job.addressLabel,
                   ),
                   const Divider(height: AppSpacing.lg),
                   _DetailRow(
-                    icon: PhosphorIcons.fileText(),
+                    icon: PhosphorIcons.fileText,
                     label: 'REQUEST DETAILS',
                     value: job.description,
                     maxLines: 2,
@@ -113,7 +113,7 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.md),
             TextButton.icon(
               onPressed: () => _stub(context, 'Support'),
-              icon: Icon(PhosphorIcons.headset(), size: 18),
+              icon: Icon(PhosphorIcons.headset, size: 18),
               label: const Text('Need help? Call support'),
             ),
           ],

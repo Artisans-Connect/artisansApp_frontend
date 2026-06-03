@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../worker/presentation/worker_shell.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
 import '../../../../shared/models/user_profile_view.dart';
@@ -38,6 +39,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   bool _isSubmitting = false;
 
   int _currentIndex = 0;
+  bool _isBecomingWorker = false;
+  bool _parsedRouteArgs = false;
 
   static const List<String> _trades = <String>[
     'Electrician',
@@ -69,6 +72,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   ];
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_parsedRouteArgs) return;
+    _parsedRouteArgs = true;
+    final Object? args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic> && args['isBecomingWorker'] == true) {
+      _isBecomingWorker = true;
+      _session.setRole(UserRole.worker);
+    }
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     _locationController.dispose();
@@ -76,12 +91,28 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     super.dispose();
   }
 
-  int get _totalDots => _session.isWorker ? 5 : 2;
+  int get _totalDots {
+    if (_isBecomingWorker) return 4;
+    return _session.isWorker ? 5 : 2;
+  }
 
 
 
   void _onNext() {
-    if (_session.isClient) {
+    if (_isBecomingWorker) {
+      if (_currentIndex == 0 && _session.selectedTrades.isEmpty) return;
+      if (_currentIndex == 1 &&
+          (_session.serviceAreas.isEmpty || _session.experienceBand == null)) {
+        return;
+      }
+      if (_currentIndex == 2) {
+        _session.locationLabel = _locationController.text.trim();
+      }
+      if (_currentIndex == 3) {
+        _finishProfile();
+        return;
+      }
+    } else if (_session.isClient) {
       if (_currentIndex == 0 && _session.role == null) return;
       if (_currentIndex == 1) {
         _session.locationLabel = _locationController.text.trim();
@@ -121,12 +152,33 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
     try {
       final String role = _session.isWorker ? 'worker' : 'client';
+      if (_isBecomingWorker) {
+        final Map<String, dynamic> workerBody = <String, dynamic>{
+          'skills': _session.selectedTrades.toList(),
+          'service_areas': _session.serviceAreas.toList(),
+          if (_session.experienceBand != null)
+            'experience_band': _session.experienceBand,
+          if (_session.bio != null && _session.bio!.isNotEmpty) 'bio': _session.bio,
+          if (_session.locationLabel != null && _session.locationLabel!.isNotEmpty)
+            'location_label': _session.locationLabel,
+          if (_session.avatarUrl != null && _session.avatarUrl!.startsWith('http'))
+            'avatar_url': _session.avatarUrl,
+        };
+        await AuthService.instance.becomeWorker(workerBody);
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          WorkerShell.routeName,
+          (Route<dynamic> route) => false,
+        );
+        return;
+      }
+
       final Map<String, dynamic> body = <String, dynamic>{
         'full_name': _session.fullName?.isNotEmpty == true ? _session.fullName : 'User',
         'phone': _session.phone?.isNotEmpty == true ? _session.phone : '0000000000',
-        'role': role,
-        // Only send avatar_url if it's actually a web URL, not a local file path
-        if (_session.avatarUrl != null && _session.avatarUrl!.startsWith('http')) 
+        'signup_type': role,
+        if (_session.avatarUrl != null && _session.avatarUrl!.startsWith('http'))
           'avatar_url': _session.avatarUrl,
         if (_session.bio != null && _session.bio!.isNotEmpty) 'bio': _session.bio,
         if (_session.experienceBand != null)
@@ -138,13 +190,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         body['service_areas'] = _session.serviceAreas.toList();
       }
 
-      await AuthService.instance.createProfile(body);
+      final user = await AuthService.instance.createProfile(body);
 
       if (!mounted) return;
-      final String route = shellRouteForRole(role);
       Navigator.pushNamedAndRemoveUntil(
         context,
-        route,
+        shellRouteForUser(user),
         (Route<dynamic> route) => false,
       );
     } catch (e) {
@@ -169,7 +220,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 ListTile(
-                  leading: Icon(PhosphorIcons.images(), color: AppColors.primary),
+                  leading: Icon(PhosphorIcons.images, color: AppColors.primary),
                   title: const Text('Choose from Gallery'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -184,7 +235,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(PhosphorIcons.camera(), color: AppColors.primary),
+                  leading: Icon(PhosphorIcons.camera, color: AppColors.primary),
                   title: const Text('Take a Photo'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -201,7 +252,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 if (_imageFile != null) ...<Widget>[
                   const Divider(),
                   ListTile(
-                    leading: Icon(PhosphorIcons.trash(), color: AppColors.error),
+                    leading: Icon(PhosphorIcons.trash, color: AppColors.error),
                     title: const Text('Remove Photo',
                         style: TextStyle(color: AppColors.error)),
                     onTap: () {
@@ -222,6 +273,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   bool _canProceed() {
+    if (_isBecomingWorker) {
+      if (_currentIndex == 0) return _session.selectedTrades.isNotEmpty;
+      if (_currentIndex == 1) {
+        return _session.serviceAreas.isNotEmpty && _session.experienceBand != null;
+      }
+      return true;
+    }
     if (_currentIndex == 0) return _session.role != null;
     if (_session.isWorker) {
       if (_currentIndex == 1) return _session.selectedTrades.isNotEmpty;
@@ -229,7 +287,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         return _session.serviceAreas.isNotEmpty && _session.experienceBand != null;
       }
     }
-    return true; // Other steps have optional fields or are validated on submit
+    return true;
   }
 
   @override
@@ -250,18 +308,25 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     _currentIndex = index;
                   });
                 },
-                children: _session.isClient
+                children: _isBecomingWorker
                     ? <Widget>[
-                        _buildRoleSelectionPage(),
-                        _buildPhotoLocationPage(),
-                      ]
-                    : <Widget>[
-                        _buildRoleSelectionPage(),
                         _buildTradeSelectionPage(),
                         _buildServiceAreasPage(),
                         _buildPhotoLocationPage(),
                         _buildBioPage(),
-                      ],
+                      ]
+                    : _session.isClient
+                        ? <Widget>[
+                            _buildRoleSelectionPage(),
+                            _buildPhotoLocationPage(),
+                          ]
+                        : <Widget>[
+                            _buildRoleSelectionPage(),
+                            _buildTradeSelectionPage(),
+                            _buildServiceAreasPage(),
+                            _buildPhotoLocationPage(),
+                            _buildBioPage(),
+                          ],
               ),
             ),
 
@@ -277,7 +342,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         : 'Continue',
                     trailingIcon: _currentIndex == _totalDots - 1
                         ? null
-                        : PhosphorIcons.caretRight(),
+                        : PhosphorIcons.caretRight,
                     isLoading: _isSubmitting,
                     onPressed: _canProceed() ? _onNext : null,
                   ),
@@ -297,7 +362,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         children: <Widget>[
           const SizedBox(height: 14),
           Text(
-            'How will you use\nArtisans?',
+            'How will you use\nArtisansConnect?',
             textAlign: TextAlign.center,
             style: AppTextStyles.displayMd.copyWith(fontSize: 50 * 0.78),
           ),
@@ -311,7 +376,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           RoleOptionCard(
             title: 'I need a worker',
             subtitle: 'Find skilled professionals for your next project.',
-            icon: PhosphorIcons.desktop(),
+            icon: PhosphorIcons.desktop,
             isSelected: _session.isClient,
             onTap: () {
               setState(() => _session.setRole(UserRole.client));
@@ -321,7 +386,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           RoleOptionCard(
             title: 'I offer services',
             subtitle: 'Showcase your skills and find new clients.',
-            icon: PhosphorIcons.briefcase(),
+            icon: PhosphorIcons.briefcase,
             isSelected: _session.isWorker,
             onTap: () {
               setState(() => _session.setRole(UserRole.worker));
@@ -461,7 +526,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         ),
                       ),
                       if (selected)
-                        Icon(PhosphorIcons.checkCircle(), color: AppColors.primary),
+                        Icon(PhosphorIcons.checkCircle, color: AppColors.primary),
                     ],
                   ),
                 ),
@@ -478,7 +543,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Icon(PhosphorIcons.info(),
+                Icon(PhosphorIcons.info,
                     color: AppColors.primary, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
@@ -545,7 +610,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                     fit: BoxFit.cover,
                                   ),
                                 )
-                              : Icon(PhosphorIcons.cameraPlus(),
+                              : Icon(PhosphorIcons.cameraPlus,
                                   color: AppColors.textSecondary, size: 42),
                         ),
                         Positioned(
@@ -554,7 +619,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           child: CircleAvatar(
                             radius: 20,
                             backgroundColor: AppColors.secondary,
-                            child: Icon(PhosphorIcons.pencilSimple(),
+                            child: Icon(PhosphorIcons.pencilSimple,
                                 color: Colors.white, size: 16),
                           ),
                         ),
@@ -593,8 +658,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                             : AppColors.secondary,
                         child: Icon(
                           _session.isClient
-                              ? PhosphorIcons.desktop()
-                              : PhosphorIcons.identificationCard(),
+                              ? PhosphorIcons.desktop
+                              : PhosphorIcons.identificationCard,
                           color: _session.isClient
                               ? AppColors.primary
                               : Colors.white,
@@ -624,7 +689,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           ],
                         ),
                       ),
-                      Icon(PhosphorIcons.checkCircle(),
+                      Icon(PhosphorIcons.checkCircle,
                           color: AppColors.success, size: 20),
                     ],
                   ),
@@ -638,7 +703,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 AppInput(
                   controller: _locationController,
                   hint: 'e.g., East Legon, Accra',
-                  prefixIcon: PhosphorIcons.mapPin(),
+                  prefixIcon: PhosphorIcons.mapPin,
                 ),
               ],
             ),

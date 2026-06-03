@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -34,56 +34,56 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
     {
       'id': 'plumbing',
       'name': 'Plumbing',
-      'icon': PhosphorIcons.drop(),
+      'icon': PhosphorIcons.drop,
       'description': 'Repairs, installation, maintenance',
       'color': Color(0xFF4648D4),
     },
     {
       'id': 'electrical',
       'name': 'Electrical',
-      'icon': PhosphorIcons.lightning(),
+      'icon': PhosphorIcons.lightning,
       'description': 'Wiring, repairs, installations',
       'color': Color(0xFF0058BE),
     },
     {
       'id': 'carpentry',
       'name': 'Carpentry',
-      'icon': PhosphorIcons.wrench(),
+      'icon': PhosphorIcons.wrench,
       'description': 'Furniture, repairs, custom work',
       'color': Color(0xFFB55D00),
     },
     {
       'id': 'cleaning',
       'name': 'Cleaning',
-      'icon': PhosphorIcons.broom(),
+      'icon': PhosphorIcons.broom,
       'description': 'Home, office, deep cleaning',
       'color': Color(0xFF00E676),
     },
     {
       'id': 'painting',
       'name': 'Painting',
-      'icon': PhosphorIcons.palette(),
+      'icon': PhosphorIcons.palette,
       'description': 'Interior, exterior, decorative',
       'color': Color(0xFFF44336),
     },
     {
       'id': 'construction',
       'name': 'Construction',
-      'icon': PhosphorIcons.barricade(),
+      'icon': PhosphorIcons.barricade,
       'description': 'Building, renovation, repairs',
       'color': Color(0xFFFF9800),
     },
     {
       'id': 'hvac',
       'name': 'HVAC',
-      'icon': PhosphorIcons.snowflake(),
+      'icon': PhosphorIcons.snowflake,
       'description': 'Cooling, heating, ventilation',
       'color': Color(0xFF2196F3),
     },
     {
       'id': 'landscaping',
       'name': 'Landscaping',
-      'icon': PhosphorIcons.mountains(),
+      'icon': PhosphorIcons.mountains,
       'description': 'Lawn, garden, outdoor design',
       'color': Color(0xFF4CAF50),
     },
@@ -114,15 +114,15 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
 
   IconData _getIconForCategory(String name) {
     final lower = name.toLowerCase();
-    if (lower.contains('plumb')) return PhosphorIcons.drop();
-    if (lower.contains('electr')) return PhosphorIcons.lightning();
-    if (lower.contains('carp')) return PhosphorIcons.wrench();
-    if (lower.contains('clean')) return PhosphorIcons.broom();
-    if (lower.contains('paint')) return PhosphorIcons.palette();
-    if (lower.contains('construct')) return PhosphorIcons.barricade();
-    if (lower.contains('hvac')) return PhosphorIcons.snowflake();
-    if (lower.contains('landscap')) return PhosphorIcons.mountains();
-    return PhosphorIcons.squaresFour();
+    if (lower.contains('plumb')) return PhosphorIcons.drop;
+    if (lower.contains('electr')) return PhosphorIcons.lightning;
+    if (lower.contains('carp')) return PhosphorIcons.wrench;
+    if (lower.contains('clean')) return PhosphorIcons.broom;
+    if (lower.contains('paint')) return PhosphorIcons.palette;
+    if (lower.contains('construct')) return PhosphorIcons.barricade;
+    if (lower.contains('hvac')) return PhosphorIcons.snowflake;
+    if (lower.contains('landscap')) return PhosphorIcons.mountains;
+    return PhosphorIcons.squaresFour;
   }
 
   Color _getColorForCategory(String name) {

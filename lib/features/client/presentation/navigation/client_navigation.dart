@@ -48,6 +48,14 @@ class ClientNavigation {
     );
   }
 
+  static final RegExp _jobIdPattern = RegExp(
+    r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+    caseSensitive: false,
+  );
+
+  static bool isValidJobChatId(String? id) =>
+      id != null && id.isNotEmpty && _jobIdPattern.hasMatch(id);
+
   static void openChat(
     BuildContext context, {
     required String conversationId,
@@ -56,14 +64,25 @@ class ClientNavigation {
     String? jobId,
     String? jobTitle,
   }) {
+    final String effectiveJobId = jobId ?? conversationId;
+    if (!isValidJobChatId(effectiveJobId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Start or accept a job before messaging. Chat opens from an active booking.',
+          ),
+        ),
+      );
+      return;
+    }
     Navigator.pushNamed(
       context,
       ChatDetailScreen.routeName,
       arguments: ChatDetailArgs(
-        conversationId: conversationId,
+        conversationId: effectiveJobId,
         counterpartUserId: counterpartUserId,
         counterpartName: counterpartName,
-        jobId: jobId,
+        jobId: effectiveJobId,
         jobTitle: jobTitle,
       ),
     );
@@ -125,14 +144,26 @@ class ClientNavigation {
     BuildContext context,
     Map<String, dynamic> artisan,
   ) {
+    final String? jobId = artisan['job_id'] as String? ?? artisan['jobId'] as String?;
+    if (!isValidJobChatId(jobId)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Post a job and get matched before messaging this artisan.',
+          ),
+        ),
+      );
+      return;
+    }
     final String name = artisan['name'] as String? ?? 'Artisan';
     final String workerId =
         artisan['id'] as String? ?? artisan['worker_id'] as String? ?? '';
     openChat(
       context,
-      conversationId: workerId.isNotEmpty ? workerId : 'conv-$name',
+      conversationId: jobId!,
       counterpartUserId: workerId.isNotEmpty ? workerId : 'worker-unknown',
       counterpartName: name,
+      jobId: jobId,
       jobTitle: artisan['profession'] as String?,
     );
   }

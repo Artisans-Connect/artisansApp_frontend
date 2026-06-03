@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../../core/navigation/auth_navigation.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/session/app_user_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../../features/auth/presentation/screens/sign_in_screen.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_toast.dart';
@@ -30,35 +33,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   bool get _isWorker => SharedUserContext.isWorker;
 
-  void _logout() {
-    showDialog<void>(
+  Future<void> _logout() async {
+    final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (BuildContext context) => AlertDialog(
+      builder: (BuildContext ctx) => AlertDialog(
         title: const Text('Log out?'),
-        content: const Text('You will need to sign in again to use Artisans.'),
+        content: const Text('You will need to sign in again to use ArtisansConnect.'),
         actions: <Widget>[
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
           TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await AuthService.instance.signOut();
-              SharedUserContext.session.reset();
-              if (!context.mounted) return;
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                SignInScreen.routeName,
-                (Route<dynamic> route) => false,
-              );
-              AppToast.showSuccess(context, 'Signed out.');
-            },
-            child: const Text('Log out',
-                style: TextStyle(color: AppColors.error)),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Log out', style: TextStyle(color: AppColors.error)),
           ),
         ],
       ),
     );
+
+    if (confirmed != true) return;
+    await AuthService.instance.signOut();
+    SharedUserContext.session.reset();
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      SignInScreen.routeName,
+      (_) => false,
+    );
+    AppToast.showSuccess(context, 'Signed out.');
+  }
+
+  Future<void> _switchView(String targetMode) async {
+    try {
+      await AuthService.instance.updateActiveMode(targetMode);
+      if (!mounted) return;
+      final String route = shellRouteForMode(
+        targetMode,
+        AppUserSession.instance.isWorkerCapable,
+      );
+      Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not switch view.');
+    }
+  }
+
+  void _becomeWorker() {
+    Navigator.pushNamed(
+      context,
+      RoleSelectionScreen.routeName,
+      arguments: <String, dynamic>{'isBecomingWorker': true},
+    );
+  }
+
+  VoidCallback? get _onSwitchOrBecomeWorker {
+    if (SharedUserContext.isViewingAsWorker) {
+      return () => _switchView('client');
+    }
+    if (SharedUserContext.canSwitchToWorker) {
+      return () => _switchView('worker');
+    }
+    if (!SharedUserContext.isWorkerCapable) {
+      return _becomeWorker;
+    }
+    return null;
+  }
+
+  String get _switchViewLabel {
+    if (SharedUserContext.isViewingAsWorker) return 'Switch to Client View';
+    if (SharedUserContext.canSwitchToWorker) return 'Switch to Worker View';
+    return 'Become a Worker';
+  }
+
+  String get _switchViewSubtitle {
+    if (SharedUserContext.isViewingAsWorker) {
+      return 'Return to the client dashboard';
+    }
+    if (SharedUserContext.canSwitchToWorker) {
+      return 'Open the worker dashboard';
+    }
+    return 'Offer services and find jobs';
   }
 
   void _showStub(String title) {
@@ -130,7 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.only(right: 12),
                   child: Center(
                     child: Text(
-                      'Artisans',
+                      'ArtisansConnect',
                       style: AppTextStyles.bodyLg.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
@@ -165,6 +220,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onPrivacy: () => _showStub('Privacy Policy'),
           onTerms: () => _showStub('Terms of Service'),
           onHelp: () => _showStub('Help Center'),
+          onSwitchView: _onSwitchOrBecomeWorker,
+          switchViewLabel: _switchViewLabel,
+          switchViewSubtitle: _switchViewSubtitle,
           onLogout: _logout,
         ),
         const SizedBox(height: 20),
@@ -195,12 +253,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: '',
           children: <Widget>[
             SettingsTile(
-              icon: PhosphorIcons.bell(),
+              icon: PhosphorIcons.bell,
               title: 'Notification preferences',
               onTap: _openNotificationPrefs,
             ),
             SettingsTile(
-              icon: PhosphorIcons.database(),
+              icon: PhosphorIcons.database,
               title: 'Low data mode',
               trailing: Switch(
                 value: _lowDataMode,
@@ -216,6 +274,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onPrivacy: () => _showStub('Privacy Policy'),
           onTerms: () => _showStub('Terms of Service'),
           onHelp: () => _showStub('Help Center'),
+          onSwitchView: _onSwitchOrBecomeWorker,
+          switchViewLabel: _switchViewLabel,
+          switchViewSubtitle: _switchViewSubtitle,
           onLogout: _logout,
         ),
         const SizedBox(height: 28),
@@ -231,12 +292,18 @@ class _LegalAndSupportGroup extends StatelessWidget {
     required this.onTerms,
     required this.onHelp,
     required this.onLogout,
+    this.onSwitchView,
+    this.switchViewLabel,
+    this.switchViewSubtitle,
   });
 
   final VoidCallback onPrivacy;
   final VoidCallback onTerms;
   final VoidCallback onHelp;
   final VoidCallback onLogout;
+  final VoidCallback? onSwitchView;
+  final String? switchViewLabel;
+  final String? switchViewSubtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -251,19 +318,19 @@ class _LegalAndSupportGroup extends StatelessWidget {
           child: Column(
             children: <Widget>[
               SettingsTile(
-                icon: PhosphorIcons.shieldCheck(),
+                icon: PhosphorIcons.shieldCheck,
                 title: 'Privacy Policy',
                 subtitle: 'How we handle your data',
                 onTap: onPrivacy,
               ),
               SettingsTile(
-                icon: PhosphorIcons.fileText(),
+                icon: PhosphorIcons.fileText,
                 title: 'Terms of Service',
-                subtitle: 'Rules of the Artisans platform',
+                subtitle: 'Rules of the ArtisansConnect platform',
                 onTap: onTerms,
               ),
               SettingsTile(
-                icon: PhosphorIcons.question(),
+                icon: PhosphorIcons.question,
                 title: 'Help Center',
                 subtitle: 'Support and documentation',
                 onTap: onHelp,
@@ -272,6 +339,23 @@ class _LegalAndSupportGroup extends StatelessWidget {
             ],
           ),
         ),
+        if (onSwitchView != null && switchViewLabel != null) ...<Widget>[
+          const SizedBox(height: 16),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.outline.withOpacity(0.35)),
+            ),
+            child: SettingsTile(
+              icon: PhosphorIcons.arrowsLeftRight,
+              title: switchViewLabel!,
+              subtitle: switchViewSubtitle,
+              onTap: onSwitchView,
+              showDivider: false,
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(
@@ -280,7 +364,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
             border: Border.all(color: AppColors.outline.withOpacity(0.35)),
           ),
           child: SettingsTile(
-            icon: PhosphorIcons.signOut(),
+            icon: PhosphorIcons.signOut,
             title: 'Logout',
             subtitle: 'Sign out of your account',
             titleColor: AppColors.error,
@@ -320,7 +404,7 @@ class _ClientSettingsHero extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Manage your Artisans experience',
+              'Manage your ArtisansConnect experience',
               style: AppTextStyles.bodyLg.copyWith(color: Colors.white70),
             ),
             const SizedBox(height: 10),
@@ -370,7 +454,7 @@ class _CommunityPromoCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: <Widget>[
-              Icon(PhosphorIcons.wrench(), color: AppColors.primary, size: 32),
+              Icon(PhosphorIcons.wrench, color: AppColors.primary, size: 32),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -421,7 +505,7 @@ class _PremiumStatusCard extends StatelessWidget {
       ),
       child: Row(
         children: <Widget>[
-          Icon(PhosphorIcons.star(), color: AppColors.primary, size: 36),
+          Icon(PhosphorIcons.star, color: AppColors.primary, size: 36),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -434,7 +518,7 @@ class _PremiumStatusCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'You are an Artisans Elite member. Enjoy exclusive benefits.',
+                  'You are an ArtisansConnect Elite member. Enjoy exclusive benefits.',
                   style: AppTextStyles.bodyMd,
                 ),
               ],
@@ -454,7 +538,7 @@ class _SettingsFooter extends StatelessWidget {
     return Column(
       children: <Widget>[
         Text(
-          'ARTISANS',
+          'ARTISANSCONNECT',
           style: AppTextStyles.labelCaps.copyWith(
             color: AppColors.textSecondary,
             letterSpacing: 2,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../features/client/presentation/client_shell.dart';
 import '../../features/client/presentation/screens/explore_artisans_screen.dart';
 import '../../features/client/presentation/screens/map_discovery_screen.dart';
@@ -13,7 +14,11 @@ import '../../features/client/presentation/screens/job_post_urgency_screen.dart'
 import '../../features/client/presentation/screens/job_post_summary_screen.dart';
 import '../../features/client/presentation/screens/live_tracking_screen.dart';
 import '../../features/client/presentation/screens/rate_service_screen.dart';
+import '../session/app_user_session.dart';
+import '../theme/app_colors.dart';
+import '../theme/app_text_styles.dart';
 import 'app_routes.dart';
+import 'auth_navigation.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -136,11 +141,82 @@ class AppRouter {
         );
 
       default:
+        debugPrint('⚠️ 404: Route not found: ${settings.name}');
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text("Route not found")),
-          ),
+          builder: (_) => _NotFoundScreen(routeName: settings.name),
         );
     }
+  }
+}
+
+class _NotFoundScreen extends StatefulWidget {
+  const _NotFoundScreen({this.routeName});
+
+  final String? routeName;
+
+  @override
+  State<_NotFoundScreen> createState() => _NotFoundScreenState();
+}
+
+class _NotFoundScreenState extends State<_NotFoundScreen> {
+  bool _redirected = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future<void>.delayed(const Duration(seconds: 2), _goHome);
+  }
+
+  void _goHome() {
+    if (!mounted || _redirected) return;
+    _redirected = true;
+    final session = AppUserSession.instance;
+    final String route = shellRouteForMode(
+      session.activeMode,
+      session.isWorkerCapable,
+    );
+    Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Icon(Icons.explore_off, size: 64, color: AppColors.primary),
+              const SizedBox(height: 24),
+              Text(
+                'Page not found',
+                style: AppTextStyles.displayMd.copyWith(fontSize: 28),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                widget.routeName != null
+                    ? 'The route "${widget.routeName}" does not exist.'
+                    : 'This page does not exist.',
+                style: AppTextStyles.bodyLg,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Taking you home…',
+                style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
+              ),
+              const SizedBox(height: 32),
+              FilledButton(
+                onPressed: _goHome,
+                child: const Text('Go Home'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -5,7 +5,7 @@ import '../data/shared_stub_data.dart';
 import '../models/user_profile_view.dart';
 import '../presentation/navigation/shared_route_args.dart';
 
-/// Resolves the logged-in user's role and merged profile for shared screens.
+/// Resolves the logged-in user's active mode and merged profile for shared screens.
 class SharedUserContext {
   SharedUserContext._();
 
@@ -17,8 +17,17 @@ class SharedUserContext {
     return SharedStubData.currentUserProfile.role;
   }
 
-  static bool get isWorker => currentRole == UserRole.worker;
-  static bool get isClient => currentRole == UserRole.client;
+  static bool get isViewingAsWorker =>
+      CurrentUser.activeMode == 'worker' && CurrentUser.isWorkerCapable;
+
+  static bool get canSwitchToWorker =>
+      CurrentUser.isWorkerCapable && !isViewingAsWorker;
+
+  static bool get isWorkerCapable => CurrentUser.isWorkerCapable;
+
+  static bool get isWorker => isViewingAsWorker;
+
+  static bool get isClient => true;
 
   static String? get currentUserId => CurrentUser.id;
 
@@ -38,10 +47,7 @@ class SharedUserContext {
   static UserProfileViewData buildOwnProfile() {
     final AppUser? appUser = AppUserSession.instance.currentUser;
     if (appUser != null) {
-      final UserRole role =
-          appUser.role == 'worker' || appUser.role == 'artisan'
-              ? UserRole.worker
-              : UserRole.client;
+      final UserRole role = isViewingAsWorker ? UserRole.worker : UserRole.client;
       return UserProfileViewData(
         id: appUser.id,
         fullName: appUser.fullName,

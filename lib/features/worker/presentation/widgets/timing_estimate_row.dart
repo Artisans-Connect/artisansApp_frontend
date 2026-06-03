@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../models/mock_worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
 
@@ -15,7 +15,7 @@ class TimingEstimateRow extends StatelessWidget {
         Expanded(
           child: _InfoCard(
             label: 'TIMING',
-            icon: PhosphorIcons.lightning(),
+            icon: PhosphorIcons.lightning,
             value: job.urgency == JobUrgency.asap ? 'ASAP' : job.urgencyLabel,
             valueColor: AppColors.accentBlue,
           ),
@@ -24,7 +24,7 @@ class TimingEstimateRow extends StatelessWidget {
         Expanded(
           child: _InfoCard(
             label: 'ESTIMATE',
-            icon: PhosphorIcons.money(),
+            icon: PhosphorIcons.money,
             value: job.estimateDisplay,
             valueColor: AppColors.onSurface,
           ),

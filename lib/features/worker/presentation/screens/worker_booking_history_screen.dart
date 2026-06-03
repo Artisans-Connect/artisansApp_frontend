@@ -1,6 +1,6 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/error_state_view.dart';
@@ -65,7 +65,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft(), size: 20),
+          icon: Icon(PhosphorIcons.caretLeft, size: 20),
           color: AppColors.primary,
           onPressed: () {
             if (Navigator.of(context).canPop()) {
@@ -84,7 +84,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Text(
-              'Artisans',
+              'ArtisansConnect',
               style: AppTypography.titleMd.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w800,
