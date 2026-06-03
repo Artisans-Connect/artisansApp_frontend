@@ -46,3 +46,9 @@ app.*.map.json
 #secrets
 .env
 ios/Runner/Secrets.plist
+
+# Android Kotlin/Gradle build files
+.kotlin/
+.gradle/
+/android/.kotlin/
+/android/.gradle/

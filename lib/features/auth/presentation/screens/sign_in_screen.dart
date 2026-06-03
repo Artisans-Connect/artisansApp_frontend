@@ -126,15 +126,11 @@ class _SignInScreenState extends State<SignInScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Center(
-                        child: Container(
+                        child: Image.asset(
+                          'assets/ArtisanConnect Logo - 1.png',
                           width: 76,
                           height: 76,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(22),
-                          ),
-                          child: Icon(PhosphorIcons.handshake(),
-                              color: Colors.white, size: 34),
+                          fit: BoxFit.contain,
                         ),
                       ),
                       const SizedBox(height: 16),
