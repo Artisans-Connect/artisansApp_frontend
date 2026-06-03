@@ -98,20 +98,27 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: <Widget>[
-              const SizedBox(height: 50),
+              const SizedBox(height: 40),
               Container(
-                padding: const EdgeInsets.all(22),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
-                  border:
-                      Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
+                  border: Border.all(
+                      color: AppColors.outline.withValues(alpha: 0.15)),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.04),
+                      blurRadius: 16,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Form(
                   key: _formKey,
@@ -123,24 +130,31 @@ class _SignInScreenState extends State<SignInScreen> {
                           width: 76,
                           height: 76,
                           decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              borderRadius: BorderRadius.circular(20)),
-                          child: Icon(PhosphorIcons.palette(),
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(22),
+                          ),
+                          child: Icon(PhosphorIcons.handshake(),
                               color: Colors.white, size: 34),
                         ),
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 16),
                       Center(
                         child: Text(
                           'Welcome Back',
-                          style: AppTextStyles.displayMd
-                              .copyWith(fontSize: 52 * 0.78),
+                          style: AppTextStyles.displayMd.copyWith(
+                            fontSize: 44,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Center(
-                          child: Text('Sign in to continue to Artisans.',
-                              style: AppTextStyles.bodyLg)),
+                        child: Text(
+                          'Sign in to continue to Artisans.',
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.bodyLg,
+                        ),
+                      ),
                       if (_authError != null) ...<Widget>[
                         const SizedBox(height: 16),
                         AuthErrorBanner(

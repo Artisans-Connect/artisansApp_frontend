@@ -53,7 +53,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           children: <Widget>[
@@ -67,7 +67,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     GestureDetector(
                       onTap: () {
                         _pageController.previousPage(
-                          duration: const Duration(milliseconds: 400),
+                           duration: const Duration(milliseconds: 400),
                           curve: Curves.easeInOut,
                         );
                       },
@@ -106,7 +106,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: <Widget>[
                   // Page 1: Client value-proposition
                   OnboardingPageContent(
-                    heroIcon: PhosphorIcons.shieldCheck(),
+                    heroIcon: PhosphorIcons.magnifyingGlass(),
                     heroGradientColors: <Color>[
                       Color(0xFF1B1B2F),
                       Color(0xFF2D3561),
@@ -117,11 +117,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     title: 'Find help in minutes',
                     subtitle:
                         'Access a network of elite professionals\nready to solve your problems instantly.',
+                    imageUrl: 'https://images.unsplash.com/photo-1614213951697-a45781262acf?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                   ),
 
                   // Page 2: Worker value-proposition
                   OnboardingPageContent(
-                    heroIcon: PhosphorIcons.trendUp(),
+                    heroIcon: PhosphorIcons.handshake(),
                     heroGradientColors: <Color>[
                       Color(0xFF0F2027),
                       Color(0xFF203A43),
@@ -132,6 +133,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     title: 'Earn as an Artisan',
                     subtitle:
                         'Connect with clients in your neighborhood,\nshowcase your skills, and grow your\nrevenue with our premium toolkit.',
+                    imageUrl: 'https://images.unsplash.com/photo-1638262052640-82e94d64664a?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                   ),
                 ],
               ),

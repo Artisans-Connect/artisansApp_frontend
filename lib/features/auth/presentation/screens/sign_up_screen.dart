@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
-import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -86,10 +85,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Form(
             key: _formKey,
             child: Column(
@@ -105,10 +104,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                        color: AppColors.outline.withValues(alpha: 0.15)),
                     boxShadow: <BoxShadow>[
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 18,
+                        color: Colors.black.withValues(alpha: 0.04),
+                        blurRadius: 16,
                         offset: const Offset(0, 8),
                       ),
                     ],
@@ -121,25 +122,27 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           width: 76,
                           height: 76,
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                                color: AppColors.outline.withValues(alpha: 0.3)),
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(22),
                           ),
-                          child: Icon(PhosphorIcons.paintBrush(),
-                              color: AppColors.primary),
+                          child: Icon(PhosphorIcons.wrench(),
+                              color: Colors.white, size: 34),
                         ),
                       ),
                       const SizedBox(height: 16),
                       Center(
-                        child: Text('Join Artisans',
-                            style: AppTextStyles.displayMd
-                                .copyWith(fontSize: 66 * 0.78)),
+                        child: Text(
+                          'Join Artisans',
+                          style: AppTextStyles.displayMd.copyWith(
+                            fontSize: 44,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Create your account to connect with the best\nlocal talent.',
+                          'Join our premium community of vetted experts\nand clients today.',
                           textAlign: TextAlign.center,
                           style: AppTextStyles.bodyLg,
                         ),

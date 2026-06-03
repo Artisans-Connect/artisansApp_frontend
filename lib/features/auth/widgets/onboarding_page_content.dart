@@ -14,6 +14,7 @@ class OnboardingPageContent extends StatelessWidget {
     required this.badgeSubtitle,
     required this.title,
     required this.subtitle,
+    this.imageUrl,
   });
 
   final IconData heroIcon;
@@ -23,6 +24,7 @@ class OnboardingPageContent extends StatelessWidget {
   final String badgeSubtitle;
   final String title;
   final String subtitle;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -60,6 +62,7 @@ class OnboardingPageContent extends StatelessWidget {
                   badgeIcon: badgeIcon,
                   badgeLabel: badgeLabel,
                   badgeSubtitle: badgeSubtitle,
+                  imageUrl: imageUrl,
                 ),
                 SizedBox(height: afterHeroGap),
                 Text(
@@ -103,6 +106,7 @@ class _HeroSection extends StatelessWidget {
     required this.badgeIcon,
     required this.badgeLabel,
     required this.badgeSubtitle,
+    this.imageUrl,
   });
 
   final double height;
@@ -113,6 +117,7 @@ class _HeroSection extends StatelessWidget {
   final IconData badgeIcon;
   final String badgeLabel;
   final String badgeSubtitle;
+  final String? imageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -127,54 +132,116 @@ class _HeroSection extends StatelessWidget {
           height: height,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(28),
-            color: heroGradientColors.first,
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: heroGradientColors.last.withOpacity(0.35),
+                color: (imageUrl != null ? Colors.black : heroGradientColors.last).withOpacity(0.25),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
             ],
           ),
-          child: Stack(
-            children: <Widget>[
-              Positioned(
-                top: -height * 0.12,
-                right: -height * 0.12,
-                child: Container(
-                  width: height * 0.42,
-                  height: height * 0.42,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.08),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(28),
+            child: Stack(
+              children: <Widget>[
+                if (imageUrl != null)
+                  Positioned.fill(
+                    child: Image.network(
+                      imageUrl!,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (BuildContext context, Widget child, ImageChunkEvent? loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: heroGradientColors,
+                            ),
+                          ),
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              value: loadingProgress.expectedTotalBytes != null
+                                  ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                  : null,
+                              color: Colors.white,
+                            ),
+                          ),
+                        );
+                      },
+                      errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
+                        return Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: heroGradientColors,
+                            ),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.broken_image, color: Colors.white, size: 40),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: imageUrl != null
+                            ? <Color>[
+                                Colors.black.withOpacity(0.15),
+                                Colors.black.withOpacity(0.55),
+                              ]
+                            : heroGradientColors,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-              Positioned(
-                bottom: -height * 0.08,
-                left: -height * 0.08,
-                child: Container(
-                  width: height * 0.32,
-                  height: height * 0.32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withOpacity(0.06),
+                if (imageUrl == null) ...<Widget>[
+                  Positioned(
+                    top: -height * 0.12,
+                    right: -height * 0.12,
+                    child: Container(
+                      width: height * 0.42,
+                      height: height * 0.42,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.08),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -height * 0.08,
+                    left: -height * 0.08,
+                    child: Container(
+                      width: height * 0.32,
+                      height: height * 0.32,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white.withOpacity(0.06),
+                      ),
+                    ),
+                  ),
+                ],
+                Center(
+                  child: Container(
+                    width: heroIconBox,
+                    height: heroIconBox,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.18),
+                      borderRadius: BorderRadius.circular(heroIconBox * 0.3),
+                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    ),
+                    child: Icon(heroIcon, color: Colors.white, size: heroIconSize),
                   ),
                 ),
-              ),
-              Center(
-                child: Container(
-                  width: heroIconBox,
-                  height: heroIconBox,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(heroIconBox * 0.3),
-                    border: Border.all(color: Colors.white.withOpacity(0.25)),
-                  ),
-                  child: Icon(heroIcon, color: Colors.white, size: heroIconSize),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         Positioned(
