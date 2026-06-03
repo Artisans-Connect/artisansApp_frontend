@@ -6,7 +6,6 @@ import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../utils/shared_user_context.dart';
 import '../../models/conversation_summary.dart';
 import '../../widgets/conversation_tile.dart';
 import '../../widgets/custom_app_bar.dart';

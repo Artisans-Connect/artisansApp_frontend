@@ -16,11 +16,11 @@ class JobDetailCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16.0),
         border: Border.all(
-          color: AppColors.outlineVariant.withOpacity(0.35),
+          color: AppColors.outlineVariant.withValues(alpha: 0.35),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),

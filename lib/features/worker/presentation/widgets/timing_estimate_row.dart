@@ -52,7 +52,7 @@ class _InfoCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.primaryFixed.withOpacity(0.35),
+        color: AppColors.primaryFixed.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(

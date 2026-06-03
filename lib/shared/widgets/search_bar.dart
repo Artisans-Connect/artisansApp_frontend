@@ -80,7 +80,7 @@ class _SearchBarState extends State<CustomSearchBar> {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-            borderSide: BorderSide(color: AppColors.outline.withOpacity(0.3)),
+            borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.3)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),

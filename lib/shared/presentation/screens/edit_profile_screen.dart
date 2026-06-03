@@ -431,7 +431,7 @@ class _LockedField extends StatelessWidget {
       style: AppTextStyles.bodyLg.copyWith(color: AppColors.outline),
       decoration: InputDecoration(
         filled: true,
-        fillColor: AppColors.surfaceDim.withOpacity(0.5),
+        fillColor: AppColors.surfaceDim.withValues(alpha: 0.5),
         suffixIcon: Icon(PhosphorIcons.lock, color: AppColors.outline),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),

@@ -26,7 +26,7 @@ class ReferencePhotosRow extends StatelessWidget {
               color: AppColors.surfaceContainer,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: AppColors.outlineVariant.withOpacity(0.4),
+                color: AppColors.outlineVariant.withValues(alpha: 0.4),
               ),
             ),
             alignment: Alignment.bottomLeft,

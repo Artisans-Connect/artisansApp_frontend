@@ -1,5 +1,6 @@
 import 'dart:async';
-import 'dart:html' as html;
+
+import 'package:web/web.dart' as web;
 
 const String _scriptMarker = 'data-artisans-google-maps';
 
@@ -7,12 +8,12 @@ const String _scriptMarker = 'data-artisans-google-maps';
 Future<void> ensureGoogleMapsLoaded(String apiKey) async {
   if (apiKey.isEmpty) return;
 
-  final html.Element? existing =
-      html.document.querySelector('script[$_scriptMarker]');
+  final web.Element? existing =
+      web.document.querySelector('script[$_scriptMarker]');
   if (existing != null) return;
 
   final completer = Completer<void>();
-  final script = html.ScriptElement()
+  final script = web.HTMLScriptElement()
     ..type = 'text/javascript'
     ..async = true
     ..defer = true
@@ -30,7 +31,7 @@ Future<void> ensureGoogleMapsLoaded(String apiKey) async {
     }
   });
 
-  html.document.head!.append(script);
+  web.document.head!.appendChild(script as web.Node);
 
   try {
     await completer.future.timeout(const Duration(seconds: 15));

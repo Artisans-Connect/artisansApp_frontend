@@ -6,7 +6,6 @@ import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
-import '../../../../shared/widgets/app_toast.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/history_job_card.dart';
 import '../widgets/segment_toggle.dart';

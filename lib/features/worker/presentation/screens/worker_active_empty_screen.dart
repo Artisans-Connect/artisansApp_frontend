@@ -33,7 +33,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                 margin: const EdgeInsets.only(right: AppSpacing.md),
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: badgeColor.withOpacity(0.15),
+                  color: badgeColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -73,7 +73,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 12,
                   ),
                 ],
@@ -93,7 +93,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                   Icon(
                     PhosphorIcons.briefcase,
                     size: 40,
-                    color: AppColors.primary.withOpacity(0.5),
+                    color: AppColors.primary.withValues(alpha: 0.5),
                   ),
                 ],
               ),

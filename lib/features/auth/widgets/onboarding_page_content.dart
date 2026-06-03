@@ -134,7 +134,7 @@ class _HeroSection extends StatelessWidget {
             borderRadius: BorderRadius.circular(28),
             boxShadow: <BoxShadow>[
               BoxShadow(
-                color: (imageUrl != null ? Colors.black : heroGradientColors.last).withOpacity(0.25),
+                color: (imageUrl != null ? Colors.black : heroGradientColors.last).withValues(alpha: 0.25),
                 blurRadius: 24,
                 offset: const Offset(0, 12),
               ),
@@ -194,8 +194,8 @@ class _HeroSection extends StatelessWidget {
                         end: Alignment.bottomCenter,
                         colors: imageUrl != null
                             ? <Color>[
-                                Colors.black.withOpacity(0.15),
-                                Colors.black.withOpacity(0.55),
+                                Colors.black.withValues(alpha: 0.15),
+                                Colors.black.withValues(alpha: 0.55),
                               ]
                             : heroGradientColors,
                       ),
@@ -211,7 +211,7 @@ class _HeroSection extends StatelessWidget {
                       height: height * 0.42,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.08),
+                        color: Colors.white.withValues(alpha: 0.08),
                       ),
                     ),
                   ),
@@ -223,7 +223,7 @@ class _HeroSection extends StatelessWidget {
                       height: height * 0.32,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.white.withOpacity(0.06),
+                        color: Colors.white.withValues(alpha: 0.06),
                       ),
                     ),
                   ),
@@ -233,9 +233,9 @@ class _HeroSection extends StatelessWidget {
                     width: heroIconBox,
                     height: heroIconBox,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.18),
+                      color: Colors.white.withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(heroIconBox * 0.3),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
                     ),
                     child: Icon(heroIcon, color: Colors.white, size: heroIconSize),
                   ),
@@ -255,7 +255,7 @@ class _HeroSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(18),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),

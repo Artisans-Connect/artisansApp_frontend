@@ -21,7 +21,7 @@ class HistoryJobCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -43,7 +43,7 @@ class HistoryJobCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isCompleted
-                      ? AppColors.success.withOpacity(0.15)
+                      ? AppColors.success.withValues(alpha: 0.15)
                       : AppColors.errorContainer,
                   borderRadius: BorderRadius.circular(20),
                 ),

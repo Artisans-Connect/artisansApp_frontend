@@ -65,7 +65,7 @@ class WorkerOnboardingHeader extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: AppColors.outline.withOpacity(0.4),
+              backgroundColor: AppColors.outline.withValues(alpha: 0.4),
               color: AppColors.primary,
             ),
           ),

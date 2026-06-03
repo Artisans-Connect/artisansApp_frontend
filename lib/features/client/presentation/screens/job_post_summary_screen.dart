@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/errors/api_exception.dart';
-import '../../../../core/errors/error_messages.dart';
 import '../../../../core/offline/job_post_queue.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/theme/app_colors.dart';

@@ -122,7 +122,7 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppColors.primaryContainer.withOpacity(0.3)
+                        ? AppColors.primaryContainer.withValues(alpha: 0.3)
                         : AppColors.surfaceContainerLowest,
                     borderRadius:
                         BorderRadius.circular(AppSpacing.radiusLarge),

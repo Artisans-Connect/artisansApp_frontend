@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';

@@ -17,7 +17,7 @@ class AvailabilityCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -44,7 +44,7 @@ class AvailabilityCard extends StatelessWidget {
           Switch(
             value: isAvailable,
             onChanged: onChanged,
-            activeColor: AppColors.success,
+            activeThumbColor: AppColors.success,
           ),
         ],
       ),

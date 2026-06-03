@@ -27,7 +27,7 @@ class MapPlaceholder extends StatelessWidget {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            AppColors.secondaryFixed.withOpacity(0.5),
+            AppColors.secondaryFixed.withValues(alpha: 0.5),
             AppColors.surfaceContainer,
           ],
         ),
@@ -39,7 +39,7 @@ class MapPlaceholder extends StatelessWidget {
               child: Icon(
                 PhosphorIcons.mapTrifold,
                 size: 72,
-                color: AppColors.outline.withOpacity(0.35),
+                color: AppColors.outline.withValues(alpha: 0.35),
               ),
             ),
           if (showPin && clientPinLabel != null)
@@ -64,7 +64,7 @@ class MapPlaceholder extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 6,
                         ),
                       ],
@@ -97,7 +97,7 @@ class MapPlaceholder extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.surface.withOpacity(0.95),
+                  color: AppColors.surface.withValues(alpha: 0.95),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(

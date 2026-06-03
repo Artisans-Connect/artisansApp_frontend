@@ -22,7 +22,6 @@ class ClientHomeScreen extends StatefulWidget {
 }
 
 class _ClientHomeScreenState extends State<ClientHomeScreen> {
-  String _searchQuery = '';
   String _selectedCategory = '';
 
   List<Map<String, dynamic>> featuredArtisans = [];
@@ -151,9 +150,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               CustomSearchBar(
                 hintText: 'Search artisans or services...',
                 onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
+                  // TODO: Implement search filtering
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -410,9 +407,9 @@ class _ActiveJobBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        color: AppColors.primaryContainer.withOpacity(0.35),
+        color: AppColors.primaryContainer.withValues(alpha: 0.35),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

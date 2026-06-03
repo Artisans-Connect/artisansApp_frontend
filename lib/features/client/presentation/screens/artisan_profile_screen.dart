@@ -5,7 +5,6 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../core/errors/error_messages.dart';
-import '../../../../shared/widgets/app_toast.dart';
 import '../models/client_job_draft.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
@@ -114,7 +113,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 4,
                           ),
                         ],

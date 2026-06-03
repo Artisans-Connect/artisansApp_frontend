@@ -153,7 +153,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                     ),
                   ],
@@ -264,8 +264,8 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                       ),
                                                       decoration: BoxDecoration(
                                                         color: worker['available']
-                                                            ? AppColors.success.withOpacity(0.1)
-                                                            : AppColors.outlineVariant.withOpacity(0.1),
+                                                            ? AppColors.success.withValues(alpha: 0.1)
+                                                            : AppColors.outlineVariant.withValues(alpha: 0.1),
                                                         borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
                                                       ),
                                                       child: Text(

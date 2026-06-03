@@ -108,7 +108,7 @@ class WorkerStatsScreen extends StatelessWidget {
                   Icon(
                     PhosphorIcons.hardHat,
                     size: 64,
-                    color: AppColors.primary.withOpacity(0.4),
+                    color: AppColors.primary.withValues(alpha: 0.4),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   Text('No reviews yet.', style: AppTypography.titleMd),
@@ -161,7 +161,7 @@ class _StatCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16.0),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
             ),
           ],

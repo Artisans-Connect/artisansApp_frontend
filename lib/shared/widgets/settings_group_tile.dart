@@ -32,7 +32,7 @@ class SettingsGroup extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.outline.withOpacity(0.35)),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
           ),
           child: Column(children: children),
         ),
@@ -89,7 +89,7 @@ class SettingsTile extends StatelessWidget {
           Divider(
             height: 1,
             indent: 72,
-            color: AppColors.outline.withOpacity(0.35),
+            color: AppColors.outline.withValues(alpha: 0.35),
           ),
       ],
     );

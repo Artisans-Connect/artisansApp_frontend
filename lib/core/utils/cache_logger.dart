@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 /// Logging utility for cache operations with different levels (debug, info, warning, error).
 abstract final class CacheLogger {
   static const String _prefix = '[Cache]';
@@ -24,8 +26,6 @@ abstract final class CacheLogger {
     }
   }
 }
-
-import 'dart:developer' as developer;
 
 void debugPrint(String message) {
   developer.log(message, name: 'artisans_app');

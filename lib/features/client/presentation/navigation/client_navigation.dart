@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/utils/current_user.dart';
 import '../../../../shared/presentation/navigation/shared_route_args.dart';
-import '../../../../shared/models/conversation_summary.dart';
 import '../../../../shared/presentation/screens/chat_detail_screen.dart';
 import '../../../../shared/presentation/screens/messages_list_screen.dart';
 import '../../../../shared/presentation/screens/settings_screen.dart';

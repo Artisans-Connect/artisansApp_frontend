@@ -5,7 +5,6 @@ import 'package:artisans_app/core/theme/index.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
-import '../state/worker_session_state.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
@@ -241,7 +240,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
               color: AppColors.surface,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withValues(alpha: 0.06),
                   blurRadius: 12,
                   offset: const Offset(0, -2),
                 ),

@@ -75,7 +75,6 @@ abstract final class CacheDebug {
     final box = Hive.box<String>('api_cache');
     final keys = box.keys.whereType<String>().toList();
     
-    final now = DateTime.now();
     print('\n=== Cache Expiration Status ===');
     
     for (final key in keys) {
@@ -83,7 +82,6 @@ abstract final class CacheDebug {
       if (value != null) {
         try {
           final ttl = _getTtlForKey(key);
-          final envelope = (value.startsWith('{') ? value : '{}');
           // Simplified: just show TTL info
           print('  $key: TTL = ${ttl.inMinutes} minutes');
         } catch (e) {

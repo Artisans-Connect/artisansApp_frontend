@@ -22,7 +22,7 @@ class WorkerBottomNav extends StatelessWidget {
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.06),
+            color: Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, -2),
           ),
@@ -97,7 +97,7 @@ class _NavItem extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: isActive
             ? BoxDecoration(
-                color: AppColors.primaryFixed.withOpacity(0.6),
+                color: AppColors.primaryFixed.withValues(alpha: 0.6),
                 borderRadius: BorderRadius.circular(16),
               )
             : null,

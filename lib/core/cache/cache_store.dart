@@ -37,13 +37,13 @@ class CacheStore {
     if (box == null) return;
 
     try {
-      final storedVersion = box.get('__cache_version__') as int?;
+      final storedVersion = int.tryParse(box.get('__cache_version__') ?? '');
       if (storedVersion == null || storedVersion < _cacheVersion) {
         CacheLogger.info(
           'Cache version mismatch: stored=$storedVersion, current=$_cacheVersion. Clearing cache.',
         );
         await box.clear();
-        await box.put('__cache_version__', _cacheVersion);
+        await box.put('__cache_version__', _cacheVersion.toString());
       }
     } catch (e, st) {
       CacheLogger.error('Error validating cache version', e, st);

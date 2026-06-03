@@ -297,7 +297,7 @@ class _ProfileHero extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.outline.withOpacity(0.3)),
+        border: Border.all(color: AppColors.outline.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: <Widget>[
@@ -337,7 +337,7 @@ class _ProfileHero extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(99),
             ),
             child: Text(

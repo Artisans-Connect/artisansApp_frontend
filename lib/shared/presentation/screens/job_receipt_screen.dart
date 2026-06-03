@@ -42,7 +42,7 @@ class JobReceiptScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: AppColors.success.withOpacity(0.12),
+                          color: AppColors.success.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(99),
                         ),
                         child: Text(

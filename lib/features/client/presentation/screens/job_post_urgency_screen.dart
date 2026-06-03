@@ -168,7 +168,7 @@ class _JobPostUrgencyScreenState extends State<JobPostUrgencyScreen> {
               onTap: _selectDate,
             ),
             DropdownButtonFormField<String>(
-              value: _selectedTimeWindow,
+              initialValue: _selectedTimeWindow,
               decoration: InputDecoration(
                 labelText: 'Time window',
                 filled: true,

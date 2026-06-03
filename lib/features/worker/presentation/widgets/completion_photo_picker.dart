@@ -81,7 +81,7 @@ class _PhotoSlot extends StatelessWidget {
               ? Icon(PhosphorIcons.plus, color: AppColors.onPrimary, size: 28)
               : Icon(
                   icon ?? PhosphorIcons.image,
-                  color: AppColors.outline.withOpacity(0.5),
+                  color: AppColors.outline.withValues(alpha: 0.5),
                 ),
         ),
       ),

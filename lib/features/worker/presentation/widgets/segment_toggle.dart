@@ -20,7 +20,7 @@ class SegmentToggle extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.primaryFixed.withOpacity(0.4),
+        color: AppColors.primaryFixed.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(28),
       ),
       child: Row(

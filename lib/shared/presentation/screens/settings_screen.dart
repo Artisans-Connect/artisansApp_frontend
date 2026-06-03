@@ -141,7 +141,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   SwitchListTile(
                     title: const Text('Push notifications'),
                     value: _pushEnabled,
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                     onChanged: (bool value) {
                       setModalState(() => _pushEnabled = value);
                       setState(() => _pushEnabled = value);
@@ -151,7 +151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     SwitchListTile(
                       title: const Text('Email updates'),
                       value: _emailUpdates,
-                      activeColor: AppColors.primary,
+                      activeThumbColor: AppColors.primary,
                       onChanged: (bool value) {
                         setModalState(() => _emailUpdates = value);
                         setState(() => _emailUpdates = value);
@@ -262,7 +262,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Low data mode',
               trailing: Switch(
                 value: _lowDataMode,
-                activeColor: AppColors.primary,
+                activeThumbColor: AppColors.primary,
                 onChanged: (bool value) => setState(() => _lowDataMode = value),
               ),
               showDivider: false,
@@ -313,7 +313,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.outline.withOpacity(0.35)),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
           ),
           child: Column(
             children: <Widget>[
@@ -345,7 +345,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.outline.withOpacity(0.35)),
+              border: Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
             ),
             child: SettingsTile(
               icon: PhosphorIcons.arrowsLeftRight,
@@ -361,7 +361,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.outline.withOpacity(0.35)),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
           ),
           child: SettingsTile(
             icon: PhosphorIcons.signOut,
@@ -440,7 +440,7 @@ class _CommunityPromoCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.12),
+              color: AppColors.primary.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(99),
             ),
             child: Text(
@@ -499,9 +499,9 @@ class _PremiumStatusCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.08),
+        color: AppColors.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: <Widget>[

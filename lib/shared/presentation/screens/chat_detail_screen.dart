@@ -15,7 +15,6 @@ import '../../../features/client/presentation/navigation/client_navigation.dart'
 import '../../utils/shared_user_context.dart';
 import '../../models/chat_message.dart';
 import '../../widgets/chat_bubble.dart';
-import '../../models/user_profile_view.dart';
 import '../navigation/shared_route_args.dart';
 import 'user_profile_screen.dart';
 
@@ -404,7 +403,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         borderRadius: BorderRadius.circular(24),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
