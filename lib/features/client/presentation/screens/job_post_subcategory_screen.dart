@@ -69,7 +69,7 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
     });
     Navigator.pushNamed(
       context,
-      AppRoutes.jobPostTitle,
+      AppRoutes.jobPostDetails,
       arguments: _draft.toMap(),
     );
   }

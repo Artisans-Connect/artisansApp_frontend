@@ -46,16 +46,28 @@ class ClientJobDraft {
     return null;
   }
 
-  double get budgetMin {
-    final value = data['budgetMin'] ?? data['projectBudget'];
+  double get recommendedFee {
+    final value = data['recommendedFee'];
     if (value is num) return value.toDouble();
     return 0;
   }
 
-  double get budgetMax {
-    final value = data['budgetMax'] ?? data['projectBudget'];
+  double get clientPremium {
+    final value = data['clientPremium'];
     if (value is num) return value.toDouble();
-    return budgetMin;
+    return 0;
+  }
+
+  double get totalFee => recommendedFee + clientPremium;
+
+  double get budgetMin => totalFee > 0 ? totalFee : 50;
+
+  double get budgetMax => totalFee > 0 ? totalFee : 50;
+
+  List<String> get photoUrls {
+    final Object? raw = data['photoUrls'];
+    if (raw is List) return raw.cast<String>();
+    return <String>[];
   }
 
   String get displayTitle =>
@@ -100,17 +112,14 @@ class ClientJobDraft {
         return categoryId != null && categoryId!.isNotEmpty;
       case JobPostWizardStep.subcategory:
         return subcategoryId != null && subcategoryId!.isNotEmpty;
-      case JobPostWizardStep.title:
-        return title != null && title!.trim().length >= 3;
-      case JobPostWizardStep.description:
-        return description != null && description!.trim().length >= 20;
-      case JobPostWizardStep.location:
+      case JobPostWizardStep.details:
+        return (title != null && title!.trim().length >= 3) &&
+            (description != null && description!.trim().length >= 20);
+      case JobPostWizardStep.locationSchedule:
         return address != null && address!.trim().isNotEmpty;
-      case JobPostWizardStep.urgency:
-        return budgetMax >= 50;
       case JobPostWizardStep.summary:
-        return isValidForStep(JobPostWizardStep.urgency) &&
-            isValidForStep(JobPostWizardStep.title);
+        return isValidForStep(JobPostWizardStep.details) &&
+            isValidForStep(JobPostWizardStep.locationSchedule);
     }
   }
 
@@ -137,21 +146,21 @@ class ClientJobDraft {
       _ => 'asap',
     };
 
-    final double minBudget = budgetMin >= 50 ? budgetMin : 50;
-    final double maxBudget = budgetMax >= minBudget ? budgetMax : minBudget;
+    final double fee = totalFee >= 50 ? totalFee : 50;
 
     final Map<String, dynamic> payload = <String, dynamic>{
       'category_id': categoryId,
       'title': displayTitle,
       'description': displayDescription,
-      'photo_urls': data['photoUrls'] as List<dynamic>? ?? <dynamic>[],
+      'photo_urls': photoUrls,
       'location_lat': (data['locationLat'] as num?)?.toDouble() ?? defaultLat,
       'location_lng': (data['locationLng'] as num?)?.toDouble() ?? defaultLng,
       'address_label': displayLocation,
       'job_mode': jobMode,
-      'budget_type': 'range',
-      'budget_min': minBudget,
-      'budget_max': maxBudget,
+      'budget_type': 'fixed',
+      'budget_fixed': fee,
+      'budget_min': fee,
+      'budget_max': fee,
       'service_type': 'home_visit',
     };
 

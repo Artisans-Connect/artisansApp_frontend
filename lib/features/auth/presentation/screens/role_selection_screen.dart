@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../worker/presentation/worker_shell.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_text_styles.dart';
@@ -149,6 +150,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     }
 
     setState(() => _isSubmitting = true);
+
+    // Upload avatar to Supabase Storage if a local file was picked
+    if (_imageFile != null &&
+        !(_session.avatarUrl?.startsWith('http') ?? false)) {
+      try {
+        final String? url =
+            await StorageService.instance.uploadAvatar(_imageFile!);
+        if (url != null) _session.avatarUrl = url;
+      } catch (_) {
+        // Avatar upload failed — continue without it
+      }
+    }
 
     try {
       final String role = _session.isWorker ? 'worker' : 'client';

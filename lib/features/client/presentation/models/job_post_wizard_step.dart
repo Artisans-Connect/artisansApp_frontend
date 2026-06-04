@@ -1,19 +1,17 @@
-/// Steps in the client job post wizard (7 total).
+/// Steps in the client job post wizard (5 total).
 enum JobPostWizardStep {
   category(1, 'Select service'),
   subcategory(2, 'Service type'),
-  title(3, 'Job title'),
-  description(4, 'Description'),
-  location(5, 'Location'),
-  urgency(6, 'Budget & schedule'),
-  summary(7, 'Review & post');
+  details(3, 'Job details'),
+  locationSchedule(4, 'Location & schedule'),
+  summary(5, 'Review & post');
 
   const JobPostWizardStep(this.stepNumber, this.headline);
 
   final int stepNumber;
   final String headline;
 
-  static const int totalSteps = 7;
+  static const int totalSteps = 5;
 
   double get progress => stepNumber / totalSteps;
 

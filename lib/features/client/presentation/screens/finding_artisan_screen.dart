@@ -12,6 +12,7 @@ import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/secondary_button.dart';
 import '../models/client_booking_stub.dart';
 import '../navigation/client_navigation.dart';
+import '../client_shell.dart';
 
 class FindingArtisanScreen extends StatefulWidget {
   const FindingArtisanScreen({
@@ -95,7 +96,45 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
 
   void _continueBrowsing() {
     _realtime.unsubscribe();
-    Navigator.pop(context);
+    // Navigate back to the shell and select the Bookings tab so the user
+    // can track matching progress there.
+    ClientNavigation.popToShellAndSelectTab(context, ClientNavTab.bookings);
+  }
+
+  Future<void> _cancelSearch() async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: const Text('Cancel search?'),
+        content: const Text(
+          'Are you sure you want to cancel? The artisan search will stop and your job post will be removed.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep searching'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Yes, cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    _realtime.unsubscribe();
+
+    if (_jobId != null) {
+      try {
+        await _jobsService.cancelJob(_jobId!);
+      } catch (_) {}
+    }
+
+    if (mounted) {
+      ClientNavigation.popToShellAndSelectTab(context, ClientNavTab.bookings);
+    }
   }
 
   @override
@@ -119,7 +158,10 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
               message: _errorMessage!,
               title: _isExpired ? 'No match found' : 'Something went wrong',
               onRetry: _isExpired
-                  ? () => Navigator.pop(context)
+                  ? () => ClientNavigation.popToShellAndSelectTab(
+                        context,
+                        ClientNavTab.bookings,
+                      )
                   : () {
                       setState(() => _errorMessage = null);
                       _startWatching();
@@ -180,14 +222,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                     const SizedBox(height: AppSpacing.md),
                     SecondaryButton(
                       label: 'Cancel search',
-                      onPressed: () async {
-                        if (_jobId != null) {
-                          try {
-                            await _jobsService.cancelJob(_jobId!);
-                          } catch (_) {}
-                        }
-                        if (context.mounted) Navigator.pop(context);
-                      },
+                      onPressed: _cancelSearch,
                     ),
                   ],
                 ),
@@ -196,3 +231,4 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
     );
   }
 }
+

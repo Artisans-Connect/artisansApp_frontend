@@ -10,10 +10,8 @@ class AppRoutes {
   // Job Post Flow
   static const jobPostCategory = '/job-post-category';
   static const jobPostSubcategory = '/job-post-subcategory';
-  static const jobPostTitle = '/job-post-title';
-  static const jobPostDescription = '/job-post-description';
-  static const jobPostLocation = '/job-post-location';
-  static const jobPostUrgency = '/job-post-urgency';
+  static const jobPostDetails = '/job-post-details';
+  static const jobPostLocationSchedule = '/job-post-location-schedule';
   static const jobPostSummary = '/job-post-summary';
 
   // Service Tracking Flow

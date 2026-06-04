@@ -7,10 +7,8 @@ import '../../features/client/presentation/screens/artisan_profile_screen.dart';
 import '../../features/client/presentation/screens/finding_artisan_screen.dart';
 import '../../features/client/presentation/screens/job_post_category_screen.dart';
 import '../../features/client/presentation/screens/job_post_subcategory_screen.dart';
-import '../../features/client/presentation/screens/job_post_title_screen.dart';
-import '../../features/client/presentation/screens/job_post_description_screen.dart';
-import '../../features/client/presentation/screens/job_post_location_screen.dart';
-import '../../features/client/presentation/screens/job_post_urgency_screen.dart';
+import '../../features/client/presentation/screens/job_post_details_screen.dart';
+import '../../features/client/presentation/screens/job_post_location_schedule_screen.dart';
 import '../../features/client/presentation/screens/job_post_summary_screen.dart';
 import '../../features/client/presentation/screens/live_tracking_screen.dart';
 import '../../features/client/presentation/screens/rate_service_screen.dart';
@@ -85,30 +83,16 @@ class AppRouter {
           ),
         );
 
-      case AppRoutes.jobPostTitle:
+      case AppRoutes.jobPostDetails:
         return MaterialPageRoute(
-          builder: (_) => JobPostTitleScreen(
+          builder: (_) => JobPostDetailsScreen(
             jobData: settings.arguments as Map<String, dynamic>?,
           ),
         );
 
-      case AppRoutes.jobPostDescription:
+      case AppRoutes.jobPostLocationSchedule:
         return MaterialPageRoute(
-          builder: (_) => JobPostDescriptionScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
-          ),
-        );
-
-      case AppRoutes.jobPostLocation:
-        return MaterialPageRoute(
-          builder: (_) => JobPostLocationScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
-          ),
-        );
-
-      case AppRoutes.jobPostUrgency:
-        return MaterialPageRoute(
-          builder: (_) => JobPostUrgencyScreen(
+          builder: (_) => JobPostLocationScheduleScreen(
             jobData: settings.arguments as Map<String, dynamic>?,
           ),
         );
