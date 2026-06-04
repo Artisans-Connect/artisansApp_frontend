@@ -5,6 +5,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/services/profile_service.dart';
+import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../utils/shared_user_context.dart';
@@ -98,11 +99,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     session.locationLabel = _locationController.text.trim();
 
     try {
-      await ProfileService.instance.updateProfile(<String, dynamic>{
+      String? avatarUrl;
+      if (_imageFile != null) {
+        avatarUrl = await StorageService.instance.uploadAvatar(_imageFile!);
+      }
+
+      final Map<String, dynamic> body = <String, dynamic>{
         'full_name': _nameController.text.trim(),
-        if (_bioController.text.trim().isNotEmpty)
-          'bio': _bioController.text.trim(),
-      });
+        if (_bioController.text.trim().isNotEmpty) 'bio': _bioController.text.trim(),
+        'location_label': _locationController.text.trim(),
+        if (avatarUrl != null) 'avatar_url': avatarUrl,
+      };
+
+      await ProfileService.instance.updateProfile(body);
       if (!mounted) return;
       AppToast.showSuccess(context, 'Profile updated.');
       Navigator.pop(context);
@@ -113,7 +122,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _pickImage() async {
-    showModalBottomSheet<void>(
+    await showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),

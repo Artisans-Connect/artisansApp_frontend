@@ -35,31 +35,37 @@ class UserProfileViewData {
   bool get isClient => role == UserRole.client;
 
   factory UserProfileViewData.fromJson(Map<String, dynamic> json) {
-    // If it comes from the API, we need to map the backend role to UserRole
-    final roleStr = json['role'] as String?;
-    final role = roleStr == 'artisan' ? UserRole.worker : UserRole.client;
+    final String roleStr = (json['signup_type'] ?? json['role'] ?? 'client').toString();
+    final UserRole role = roleStr == 'worker' ? UserRole.worker : UserRole.client;
 
-    // The backend might return worker_profile object embedded
-    final workerProfile = json['worker_profile'] as Map<String, dynamic>?;
+    final Map<String, dynamic>? workerProfile =
+        (json['worker'] as Map<String, dynamic>?) ??
+        (json['worker_profile'] as Map<String, dynamic>?);
 
     return UserProfileViewData(
-      id: json['id'] as String,
-      fullName: json['full_name'] as String,
+      id: json['id'] as String? ?? '',
+      fullName: json['full_name'] as String? ?? '',
       role: role,
       phone: json['phone'] as String?,
-      bio: workerProfile?['bio'] as String?,
+      bio: json['bio'] as String? ?? workerProfile?['bio'] as String?,
       avatarUrl: json['avatar_url'] as String?,
-      locationLabel: workerProfile?['location_name'] as String?,
-      rating: (workerProfile?['rating'] as num?)?.toDouble(),
-      totalJobs: workerProfile?['jobs_completed'] as int?,
-      skills: workerProfile?['skills'] != null 
-          ? List<String>.from(workerProfile!['skills']) 
+      locationLabel:
+          json['location_label'] as String? ?? workerProfile?['location_label'] as String?,
+      rating: (workerProfile?['rating'] as num?)?.toDouble() ??
+          (json['rating'] as num?)?.toDouble(),
+      totalJobs: (workerProfile?['total_jobs'] as num?)?.toInt() ??
+          (json['total_jobs'] as num?)?.toInt(),
+      skills: workerProfile?['skills'] != null
+          ? List<String>.from(workerProfile!['skills'] as Iterable<dynamic>)
           : const <String>[],
-      serviceAreas: workerProfile?['service_areas'] != null 
-          ? List<String>.from(workerProfile!['service_areas']) 
+      serviceAreas: workerProfile?['service_areas'] != null
+          ? List<String>.from(workerProfile!['service_areas'] as Iterable<dynamic>)
           : const <String>[],
-      experienceBand: workerProfile?['experience_level'] as String?,
-      isVerified: workerProfile?['is_verified'] as bool? ?? false,
+      experienceBand: workerProfile?['experience_band'] as String? ??
+          json['experience_band'] as String?,
+      isVerified: (workerProfile?['is_verified'] as bool?) ??
+          (json['is_verified'] as bool?) ??
+          false,
     );
   }
 
@@ -67,7 +73,8 @@ class UserProfileViewData {
     return {
       'id': id,
       'full_name': fullName,
-      'role': role == UserRole.worker ? 'artisan' : 'client',
+      'signup_type': role == UserRole.worker ? 'worker' : 'client',
+      'last_active_mode': role == UserRole.worker ? 'worker' : 'client',
       'phone': phone,
       'avatar_url': avatarUrl,
       // The rest depends on if we are sending or receiving, 

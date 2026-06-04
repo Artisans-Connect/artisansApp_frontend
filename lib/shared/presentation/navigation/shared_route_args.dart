@@ -18,8 +18,10 @@ class ProfileArgs {
   const ProfileArgs({
     required this.userId,
     this.viewAsWorker = false,
+    this.profileData,
   });
 
   final String userId;
   final bool viewAsWorker;
+  final Map<String, dynamic>? profileData;
 }

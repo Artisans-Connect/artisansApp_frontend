@@ -131,11 +131,16 @@ class ClientNavigation {
     BuildContext context, {
     required String userId,
     String? name,
+    Map<String, dynamic>? artisan,
   }) {
     Navigator.pushNamed(
       context,
       UserProfileScreen.routeName,
-      arguments: ProfileArgs(userId: userId, viewAsWorker: true),
+      arguments: ProfileArgs(
+        userId: userId,
+        viewAsWorker: true,
+        profileData: artisan,
+      ),
     );
   }
 
@@ -154,16 +159,16 @@ class ClientNavigation {
       );
       return;
     }
-    final String name = artisan['name'] as String? ?? 'Artisan';
-    final String workerId =
-        artisan['id'] as String? ?? artisan['worker_id'] as String? ?? '';
+    final Map<String, dynamic> profile = Map<String, dynamic>.from(artisan['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
+    final String name = (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
+    final String workerId = (artisan['id'] ?? artisan['worker_id'] ?? artisan['userId'] ?? profile['id'] ?? '').toString();
     openChat(
       context,
       conversationId: jobId!,
       counterpartUserId: workerId.isNotEmpty ? workerId : 'worker-unknown',
       counterpartName: name,
       jobId: jobId,
-      jobTitle: artisan['profession'] as String?,
+      jobTitle: (artisan['profession'] ?? (artisan['skills'] is List && (artisan['skills'] as List).isNotEmpty ? (artisan['skills'] as List).first.toString() : null)).toString(),
     );
   }
 

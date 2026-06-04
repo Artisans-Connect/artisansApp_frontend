@@ -23,6 +23,34 @@ class ArtisanProfileScreen extends StatefulWidget {
 class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
   bool _isFavorite = false;
   List<dynamic> _reviews = [];
+
+  Map<String, dynamic> get _artisan => Map<String, dynamic>.from(widget.artisan ?? const <String, dynamic>{});
+
+  Map<String, dynamic> get _profile => Map<String, dynamic>.from(_artisan['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
+
+  String get _name => (_artisan['name'] ?? _profile['full_name'] ?? 'Artisan').toString();
+
+  String get _profession => (_artisan['profession'] ?? _profile['profession'] ?? 'Professional').toString();
+
+  String get _imageUrl => (_artisan['imageUrl'] ?? _profile['avatar_url'] ?? 'https://via.placeholder.com/400?text=Artisan').toString();
+
+  String get _location => (_artisan['location'] ?? _profile['location_label'] ?? 'Location not set').toString();
+
+  double get _rating => ((_artisan['rating'] as num?) ?? (_profile['rating'] as num?) ?? 0.0).toDouble();
+
+  int get _reviewCount => ((_artisan['reviewCount'] as num?) ?? 0).toInt();
+
+  String get _bio => (_artisan['bio'] ?? _profile['bio'] ?? 'Experienced professional with 10+ years in the industry. Specialized in residential and commercial projects. Committed to delivering high-quality work with excellent customer service.').toString();
+
+  List<String> get _services {
+    final dynamic rawServices = _artisan['services'] ?? _profile['skills'] ?? <String>['Repair', 'Installation', 'Maintenance', 'Consultation'];
+    if (rawServices is List) {
+      return rawServices.map((dynamic item) => item.toString()).toList();
+    }
+    return <String>[rawServices.toString()];
+  }
+
+  String get _workerId => (_artisan['id'] ?? _artisan['worker_id'] ?? _profile['id'] ?? _artisan['userId'] ?? '').toString();
   bool _isLoadingReviews = true;
   String? _reviewError;
   final ReviewsService _reviewsService = ReviewsService();
@@ -34,12 +62,12 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
   }
 
   Future<void> _fetchReviews() async {
-    final workerId = widget.artisan?['id'] ?? widget.artisan?['worker_id'];
-    if (workerId == null) {
+    final workerId = _workerId;
+    if (workerId.isEmpty) {
       setState(() => _isLoadingReviews = false);
       return;
     }
-    
+
     try {
       final reviews = await _reviewsService.getWorkerReviews(workerId);
       setState(() {
@@ -56,15 +84,6 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final artisan = widget.artisan ?? {
-      'name': 'John Smith',
-      'profession': 'Professional Plumber',
-      'rating': 4.8,
-      'reviewCount': 342,
-      'imageUrl': 'https://via.placeholder.com/400?text=John',
-      'location': 'Downtown Area',
-    };
-
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
@@ -83,7 +102,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                   height: 300,
                   color: AppColors.surfaceContainer,
                   child: Image.network(
-                    artisan['imageUrl'],
+                    _imageUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
@@ -138,12 +157,12 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                 children: [
                   // Name and Profession
                   Text(
-                    artisan['name'],
+                    _name,
                     style: AppTypography.displayMedium,
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    artisan['profession'],
+                    _profession,
                     style: AppTypography.bodyLarge,
                   ),
                   const SizedBox(height: AppSpacing.md),
@@ -153,8 +172,8 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       RatingWidget(
-                        rating: artisan['rating'],
-                        reviewCount: artisan['reviewCount'],
+                        rating: _rating,
+                        reviewCount: _reviewCount,
                       ),
                       Row(
                         children: [
@@ -165,7 +184,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                           ),
                           const SizedBox(width: AppSpacing.xs),
                           Text(
-                            artisan['location'],
+                            _location,
                             style: AppTypography.bodySmall,
                           ),
                         ],
@@ -187,7 +206,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                     ),
                     child: Text(
-                      'Experienced professional with 10+ years in the industry. Specialized in residential and commercial projects. Committed to delivering high-quality work with excellent customer service.',
+                      _bio,
                       style: AppTypography.bodyMedium,
                       maxLines: 5,
                       overflow: TextOverflow.ellipsis,
@@ -204,7 +223,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                   Wrap(
                     spacing: AppSpacing.sm,
                     runSpacing: AppSpacing.sm,
-                    children: ['Repair', 'Installation', 'Maintenance', 'Consultation']
+                    children: _services
                         .map((service) {
                       return Container(
                         padding: const EdgeInsets.symmetric(
@@ -372,9 +391,9 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                       ClientNavigation.openChat(
                         context,
                         conversationId: 'conv-artisan',
-                        counterpartUserId: 'worker-${artisan['name']}',
-                        counterpartName: artisan['name'] as String,
-                        jobTitle: artisan['profession'] as String?,
+                        counterpartUserId: _workerId.isNotEmpty ? _workerId : 'worker-unknown',
+                        counterpartName: _name,
+                        jobTitle: _profession,
                       );
                     },
                     borderRadius:
@@ -414,13 +433,13 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
               label: 'Book Now',
               onPressed: () {
                 final draft = ClientJobDraft.fromMap(<String, dynamic>{
-                  'category': artisan['profession'],
-                  'title': 'Service with ${artisan['name']}',
+                  'category': _profession,
+                  'title': 'Service with $_name',
                 });
                 ClientNavigation.startFindingArtisan(
                   context,
                   jobData: draft.toMap(),
-                  artisan: artisan,
+                  artisan: _artisan,
                 );
               },
             ),

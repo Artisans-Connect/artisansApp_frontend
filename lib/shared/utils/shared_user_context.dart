@@ -25,9 +25,9 @@ class SharedUserContext {
 
   static bool get isWorkerCapable => CurrentUser.isWorkerCapable;
 
-  static bool get isWorker => isViewingAsWorker;
+  static bool get isWorker => CurrentUser.role == UserRole.worker;
 
-  static bool get isClient => true;
+  static bool get isClient => CurrentUser.role != UserRole.worker;
 
   static String? get currentUserId => CurrentUser.id;
 
@@ -38,10 +38,47 @@ class SharedUserContext {
     if (args == null || isOwnProfile(args.userId)) {
       return buildOwnProfile();
     }
-    if (args.userId == SharedStubData.sampleWorkerProfile.id || args.viewAsWorker) {
-      return SharedStubData.sampleWorkerProfile;
+
+    if (args.profileData != null) {
+      return _profileFromMap(args.profileData!);
     }
+
     return SharedStubData.sampleClientProfile;
+  }
+
+  static UserProfileViewData _profileFromMap(Map<String, dynamic> data) {
+    final Map<String, dynamic> nestedProfile =
+        Map<String, dynamic>.from(data['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
+    final List<String> skills = (data['skills'] ?? nestedProfile['skills'] ?? <dynamic>[])
+        .map((dynamic item) => item.toString())
+        .toList();
+    final List<String> serviceAreas = (data['serviceAreas'] ?? nestedProfile['service_areas'] ?? <dynamic>[])
+        .map((dynamic item) => item.toString())
+        .toList();
+
+    return UserProfileViewData(
+      id: (data['id'] ?? data['userId'] ?? nestedProfile['id'] ?? '').toString(),
+      fullName: (data['name'] ?? nestedProfile['full_name'] ?? 'Artisan').toString(),
+      role: UserRole.worker,
+      phone: (data['phone'] ?? nestedProfile['phone']).toString().isNotEmpty
+          ? (data['phone'] ?? nestedProfile['phone']).toString()
+          : null,
+      bio: (data['bio'] ?? nestedProfile['bio'] ?? 'No bio yet.').toString(),
+      avatarUrl: (data['imageUrl'] ?? nestedProfile['avatar_url'] ?? data['avatar_url']).toString().isNotEmpty
+          ? (data['imageUrl'] ?? nestedProfile['avatar_url'] ?? data['avatar_url']).toString()
+          : null,
+      locationLabel: (data['location'] ?? nestedProfile['location_label'] ?? '').toString().isNotEmpty
+          ? (data['location'] ?? nestedProfile['location_label']).toString()
+          : null,
+      rating: (data['rating'] as num?)?.toDouble() ?? (nestedProfile['rating'] as num?)?.toDouble(),
+      totalJobs: (data['totalJobs'] as num?)?.toInt() ?? (data['jobsCompleted'] as num?)?.toInt(),
+      skills: skills,
+      serviceAreas: serviceAreas,
+      experienceBand: (data['experienceBand'] ?? nestedProfile['experience_band']).toString().isNotEmpty
+          ? (data['experienceBand'] ?? nestedProfile['experience_band']).toString()
+          : null,
+      isVerified: data['isVerified'] as bool? ?? nestedProfile['is_verified'] as bool? ?? false,
+    );
   }
 
   static UserProfileViewData buildOwnProfile() {

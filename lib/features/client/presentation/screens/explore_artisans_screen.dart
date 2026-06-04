@@ -290,7 +290,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   Text(
-                                    artisan['profession'] as String,
+                                    (artisan['profession'] ?? 'Professional').toString(),
                                     style: AppTypography.bodySmall,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -310,7 +310,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                                       ),
                                       const Spacer(),
                                       Text(
-                                        artisan['distance'] as String,
+                                        (artisan['distance'] ?? '0 km').toString(),
                                         style: AppTypography.bodySmall
                                             .copyWith(
                                           color: AppColors.textSecondary,
@@ -356,8 +356,9 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                               onPressed: () {
                                 ClientNavigation.openArtisanProfile(
                                   context,
-                                  userId: artisan['userId'] as String,
+                                  userId: (artisan['userId'] ?? artisan['id'] ?? '').toString(),
                                   name: name,
+                                  artisan: artisan,
                                 );
                               },
                               icon: Icon(
