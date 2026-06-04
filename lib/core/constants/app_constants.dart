@@ -9,9 +9,10 @@ class AppConstants {
   static const String supabaseRedirectUrl =
       'https://qdeznjpvkhrxesjykovi.supabase.co';
 
-  /// Override in `.env` as `EXPRESS_API_BASE_URL` (e.g. `http://localhost:3000/api`).
+  /// Override in `.env` as `EXPRESS_API_BASE_URL` (e.g. `https://artisansapp-backend.onrender.com/api`).
   static String get expressApiBaseUrl =>
-      dotenv.env['EXPRESS_API_BASE_URL'] ?? 'http://localhost:3000/api';
+      dotenv.env['EXPRESS_API_BASE_URL'] ??
+      'https://artisansapp-backend.onrender.com/api';
 
   static const String avatarsBucket = 'avatars';
   static const String jobPhotosBucket = 'job-photos';

@@ -20,7 +20,14 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  static const Duration _minSplashDuration = Duration(seconds: 3);
+  static const Duration _minSplashDuration = Duration(seconds: 4);
+
+  /// Onboarding hero images to precache during splash so they display
+  /// instantly when the user reaches the onboarding screen.
+  static const List<String> _onboardingImageUrls = <String>[
+    'https://images.unsplash.com/photo-1614213951697-a45781262acf?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    'https://images.unsplash.com/photo-1638262052640-82e94d64664a?q=80&w=1470&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+  ];
 
   @override
   void initState() {
@@ -28,19 +35,34 @@ class _SplashScreenState extends State<SplashScreen> {
     _initializeApp();
   }
 
+  /// Precache onboarding images so they're in Flutter's image cache when needed.
+  Future<void> _precacheOnboardingImages() async {
+    if (!mounted) return;
+    await Future.wait(
+      _onboardingImageUrls.map(
+        (String url) => precacheImage(NetworkImage(url), context)
+            .catchError((_) {}), // Silently ignore failures
+      ),
+    );
+  }
+
   Future<void> _initializeApp() async {
+    // Start image precaching immediately (needs context, available after initState).
+    final Future<void> precacheFuture = _precacheOnboardingImages();
+
     final bool fastBoot = await _tryFastBootFromCache();
     if (fastBoot) return;
 
     await Future.wait<void>(<Future<void>>[
       Future<void>.delayed(_minSplashDuration),
+      precacheFuture,
       _routeAfterAuth(),
     ]);
 
     if (!mounted) return;
   }
 
-  /// Skip the 3s splash when we already have a cached profile for this session.
+  /// Skip the splash when we already have a cached profile for this session.
   Future<bool> _tryFastBootFromCache() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) return false;
