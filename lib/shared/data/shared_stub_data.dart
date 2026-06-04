@@ -77,6 +77,7 @@ class SharedStubData {
             content: 'Hi, I saw your job request for the kitchen sink.',
             sentAt: DateTime.now().subtract(const Duration(hours: 1)),
             isMine: false,
+            status: MessageStatus.sent,
           ),
           ChatMessage(
             id: 'm2',
@@ -84,6 +85,7 @@ class SharedStubData {
             content: 'Great — are you available this afternoon?',
             sentAt: DateTime.now().subtract(const Duration(minutes: 45)),
             isMine: true,
+            status: MessageStatus.sent,
           ),
           ChatMessage(
             id: 'm3',
@@ -91,6 +93,7 @@ class SharedStubData {
             content: 'I can be there in 20 minutes.',
             sentAt: DateTime.now().subtract(const Duration(minutes: 12)),
             isMine: false,
+            status: MessageStatus.sent,
           ),
         ];
       case 'conv_2':
@@ -101,6 +104,7 @@ class SharedStubData {
             content: 'The outlet is fixed — thank you!',
             sentAt: DateTime.now().subtract(const Duration(hours: 4)),
             isMine: true,
+            status: MessageStatus.sent,
           ),
           ChatMessage(
             id: 'm5',
@@ -108,6 +112,7 @@ class SharedStubData {
             content: 'Thanks — job completed.',
             sentAt: DateTime.now().subtract(const Duration(hours: 3)),
             isMine: false,
+            status: MessageStatus.sent,
           ),
         ];
       default:
@@ -118,6 +123,7 @@ class SharedStubData {
             content: 'Sending photos of the damage now.',
             sentAt: DateTime.now().subtract(const Duration(days: 1)),
             isMine: false,
+            status: MessageStatus.sent,
             imageUrls: const <String>[
               'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=600&auto=format&fit=crop',
             ],

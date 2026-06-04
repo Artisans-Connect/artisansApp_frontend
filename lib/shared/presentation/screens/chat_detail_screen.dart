@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
 import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
+import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/error_state_view.dart';
@@ -29,6 +32,7 @@ class ChatDetailScreen extends StatefulWidget {
 
 class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final ChatService _chatService = ChatService();
+  final ImagePicker _picker = ImagePicker();
   final TextEditingController _composerController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   List<ChatMessage> _messages = <ChatMessage>[];
@@ -94,6 +98,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   sentAt: DateTime.tryParse(record['created_at'] as String? ?? '') ??
                       DateTime.now(),
                   isMine: false,
+                  imageUrls: (record['image_urls'] as List<dynamic>?)
+                      ?.map((dynamic item) => item.toString())
+                      .toList(),
+                  status: MessageStatus.sent,
                 ),
               );
             });
@@ -118,13 +126,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       setState(() {
         _messages = data.map((dynamic item) {
           final Map<String, dynamic> json = item as Map<String, dynamic>;
-          return ChatMessage(
-            id: json['id'] as String,
-            senderId: json['sender_id'] as String,
-            content: json['content'] as String,
-            sentAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
-            isMine: json['sender_id'] == CurrentUser.id,
-          );
+          return ChatMessage.fromJson(json, CurrentUser.id ?? '');
         }).toList();
         _isLoading = false;
       });
@@ -161,12 +163,34 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _sendMessage() async {
+  Future<void> _pickAndUploadAttachment(ImageSource source) async {
+    setState(() => _showAttachmentMenu = false);
+
+    try {
+      final XFile? file = await _picker.pickImage(source: source, imageQuality: 85);
+      if (file == null) return;
+
+      final String? publicUrl = await StorageService.instance.uploadJobPhoto(File(file.path));
+      if (publicUrl == null) {
+        if (!mounted) return;
+        AppToast.showError(context, Exception('Image upload failed.'), fallback: 'Image upload failed.');
+        return;
+      }
+
+      await _sendMessage(imageUrls: <String>[publicUrl]);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Failed to upload image.');
+    }
+  }
+
+  Future<void> _sendMessage({List<String>? imageUrls}) async {
     final String text = _composerController.text.trim();
-    if (text.isEmpty || _args == null) return;
+    if ((text.isEmpty && (imageUrls == null || imageUrls.isEmpty)) || _args == null) return;
 
     final String jobId = _activeJobId ?? _args!.jobId ?? _args!.conversationId;
     if (!ClientNavigation.isValidJobChatId(jobId)) {
+      if (!mounted) return;
       AppToast.showError(
         context,
         Exception('No job linked to this chat.'),
@@ -184,6 +208,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           content: text,
           sentAt: DateTime.now(),
           isMine: true,
+          imageUrls: imageUrls,
+          status: MessageStatus.pending,
         ),
       );
       _composerController.clear();
@@ -191,7 +217,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     _scrollToBottom();
 
     try {
-      final dynamic response = await _chatService.sendMessage(jobId, text);
+      final dynamic response = await _chatService.sendMessage(
+        jobId,
+        text,
+        imageUrls: imageUrls,
+      );
       final Map<String, dynamic> json = response as Map<String, dynamic>;
       
       setState(() {
@@ -200,16 +230,31 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           _messages[index] = ChatMessage(
             id: json['id'] as String,
             senderId: json['sender_id'] as String,
-            content: json['content'] as String,
+            content: json['content'] as String? ?? '',
             sentAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
             isMine: true,
+            imageUrls: (json['image_urls'] as List<dynamic>?)
+                ?.map((dynamic item) => item.toString())
+                .toList(),
+            status: MessageStatus.sent,
           );
         }
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _messages.removeWhere((ChatMessage m) => m.id == tempId);
+        final int index = _messages.indexWhere((ChatMessage m) => m.id == tempId);
+        if (index != -1) {
+          _messages[index] = ChatMessage(
+            id: tempId,
+            senderId: CurrentUser.id ?? '',
+            content: text,
+            sentAt: _messages[index].sentAt,
+            isMine: true,
+            imageUrls: imageUrls,
+            status: MessageStatus.failed,
+          );
+        }
       });
       AppToast.showError(context, e, fallback: 'Failed to send message.');
     }
@@ -418,12 +463,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             tooltip: 'Document',
           ),
           IconButton(
-            onPressed: () => setState(() => _showAttachmentMenu = false),
+            onPressed: () => _pickAndUploadAttachment(ImageSource.camera),
             icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
             tooltip: 'Camera',
           ),
           IconButton(
-            onPressed: () => setState(() => _showAttachmentMenu = false),
+            onPressed: () => _pickAndUploadAttachment(ImageSource.gallery),
             icon: Icon(PhosphorIcons.image, color: AppColors.primary),
             tooltip: 'Gallery',
           ),

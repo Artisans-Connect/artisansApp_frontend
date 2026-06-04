@@ -86,9 +86,15 @@ class ChatBubble extends StatelessWidget {
                   if (message.isMine) ...<Widget>[
                     const SizedBox(width: 4),
                     Icon(
-                      PhosphorIcons.checks,
+                      message.status == MessageStatus.pending
+                          ? PhosphorIcons.clock
+                          : message.status == MessageStatus.failed
+                              ? PhosphorIcons.warningCircle
+                              : PhosphorIcons.checks,
                       size: 14,
-                      color: AppColors.primary,
+                      color: message.status == MessageStatus.failed
+                          ? Colors.redAccent
+                          : AppColors.primary,
                     ),
                   ],
                 ],
