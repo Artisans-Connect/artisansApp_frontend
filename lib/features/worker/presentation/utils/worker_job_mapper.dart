@@ -5,6 +5,10 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
   final String clientName = client is Map<String, dynamic>
       ? client['full_name'] as String? ?? 'Client'
       : 'Client';
+  final String? clientPhone =
+      client is Map<String, dynamic> ? client['phone'] as String? : null;
+  final String? clientAvatarUrl =
+      client is Map<String, dynamic> ? client['avatar_url'] as String? : null;
   final dynamic category = json['categories'];
   final String categoryName = category is Map<String, dynamic>
       ? category['name'] as String? ?? 'General'
@@ -19,6 +23,8 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
     latitude: (json['location_lat'] as num?)?.toDouble() ?? 0,
     longitude: (json['location_lng'] as num?)?.toDouble() ?? 0,
     clientName: clientName,
+    clientPhone: clientPhone,
+    clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,
     estimatedBudgetLabel:
         '${json['budget_min'] ?? '—'} - ${json['budget_max'] ?? '—'} GHS',
@@ -31,6 +37,10 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
   final String clientName = client is Map<String, dynamic>
       ? client['full_name'] as String? ?? 'Client'
       : 'Client';
+  final String? clientPhone =
+      client is Map<String, dynamic> ? client['phone'] as String? : null;
+  final String? clientAvatarUrl =
+      client is Map<String, dynamic> ? client['avatar_url'] as String? : null;
   final dynamic category = json['categories'];
   final String categoryName = category is Map<String, dynamic>
       ? category['name'] as String? ?? 'General'
@@ -46,6 +56,8 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     latitude: 0,
     longitude: 0,
     clientName: clientName,
+    clientPhone: clientPhone,
+    clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,
     estimatedBudgetLabel:
         '${json['budget_min'] ?? '—'} - ${json['budget_max'] ?? '—'} GHS',

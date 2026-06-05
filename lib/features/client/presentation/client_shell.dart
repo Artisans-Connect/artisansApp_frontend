@@ -23,6 +23,7 @@ class ClientShell extends StatefulWidget {
 
 class _ClientShellState extends State<ClientShell> {
   late ClientNavTab _currentTab;
+  int _bookingsRefreshSignal = 0;
 
   @override
   void initState() {
@@ -33,6 +34,9 @@ class _ClientShellState extends State<ClientShell> {
   void _selectTab(ClientNavTab tab) {
     setState(() {
       _currentTab = tab;
+      if (tab == ClientNavTab.bookings) {
+        _bookingsRefreshSignal++;
+      }
     });
   }
 
@@ -43,11 +47,14 @@ class _ClientShellState extends State<ClientShell> {
       child: Scaffold(
         body: IndexedStack(
           index: _currentTab.index,
-          children: const <Widget>[
-            ClientHomeScreen(),
-            BookingHistoryScreen(embedInShell: true),
-            MessagesListScreen(embedInShell: true),
-            UserProfileScreen(embedInShell: true),
+          children: <Widget>[
+            const ClientHomeScreen(),
+            BookingHistoryScreen(
+              embedInShell: true,
+              refreshSignal: _bookingsRefreshSignal,
+            ),
+            const MessagesListScreen(embedInShell: true),
+            const UserProfileScreen(embedInShell: true),
           ],
         ),
         bottomNavigationBar: _ClientBottomNav(

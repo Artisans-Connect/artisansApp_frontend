@@ -10,6 +10,7 @@ class ConversationSummary {
     this.unreadCount = 0,
     this.jobTitle,
     this.isOnline = false,
+    this.isDirect = false,
   });
 
   final String id;
@@ -22,6 +23,7 @@ class ConversationSummary {
   final int unreadCount;
   final String? jobTitle;
   final bool isOnline;
+  final bool isDirect;
 
   factory ConversationSummary.fromJson(Map<String, dynamic> json, String currentUserId) {
     // The backend returns participants and last_message
@@ -43,6 +45,7 @@ class ConversationSummary {
           ? DateTime.parse(lastMessage['created_at'] as String) 
           : DateTime.parse(json['updated_at'] as String),
       unreadCount: json['unread_count'] as int? ?? 0,
+      isDirect: json['type'] == 'direct',
     );
   }
 

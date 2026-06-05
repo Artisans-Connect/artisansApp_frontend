@@ -25,6 +25,7 @@ class ClientHomeScreen extends StatefulWidget {
 
 class _ClientHomeScreenState extends State<ClientHomeScreen> {
   String _selectedCategory = '';
+  String _searchQuery = '';
 
   List<Map<String, dynamic>> featuredArtisans = [];
   bool _isLoadingFeatured = true;
@@ -90,6 +91,28 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
     {'label': 'Painting', 'icon': PhosphorIcons.palette},
   ];
 
+  List<Map<String, dynamic>> get _visibleFeaturedArtisans {
+    return featuredArtisans.where((Map<String, dynamic> artisan) {
+      final Map<String, dynamic> profile =
+          Map<String, dynamic>.from(artisan['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
+      final List<dynamic> skills = artisan['skills'] as List<dynamic>? ?? <dynamic>[];
+      final String haystack = <String>[
+        (profile['full_name'] ?? artisan['name'] ?? '').toString(),
+        ...skills.map((dynamic s) => s.toString()),
+      ].join(' ').toLowerCase();
+
+      if (_selectedCategory.isNotEmpty &&
+          !haystack.contains(_selectedCategory.toLowerCase())) {
+        return false;
+      }
+      if (_searchQuery.isNotEmpty &&
+          !haystack.contains(_searchQuery.toLowerCase())) {
+        return false;
+      }
+      return true;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -151,8 +174,17 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               // Search Bar
               CustomSearchBar(
                 hintText: 'Search artisans or services...',
-                onChanged: (value) {
-                  // TODO: Implement search filtering
+                onChanged: (value) => setState(() => _searchQuery = value),
+                onSearch: () {
+                  Navigator.pushNamed(
+                    context,
+                    AppRoutes.exploreArtisans,
+                    arguments: <String, dynamic>{
+                      'query': _searchQuery,
+                      if (_selectedCategory.isNotEmpty)
+                        'category': _selectedCategory,
+                    },
+                  );
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -196,7 +228,15 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, AppRoutes.exploreArtisans);
+                      Navigator.pushNamed(
+                        context,
+                        AppRoutes.exploreArtisans,
+                        arguments: <String, dynamic>{
+                          if (_searchQuery.isNotEmpty) 'query': _searchQuery,
+                          if (_selectedCategory.isNotEmpty)
+                            'category': _selectedCategory,
+                        },
+                      );
                     },
                     child: Text(
                       'View All',
@@ -208,7 +248,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              if (!_isLoadingFeatured && featuredArtisans.isEmpty)
+              if (!_isLoadingFeatured && _visibleFeaturedArtisans.isEmpty)
                 Container(
                   height: 120,
                   width: double.infinity,
@@ -231,7 +271,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   height: 320,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _isLoadingFeatured ? 3 : featuredArtisans.length,
+                    itemCount: _isLoadingFeatured ? 3 : _visibleFeaturedArtisans.length,
                     itemBuilder: (context, index) {
                       if (_isLoadingFeatured) {
                         return Padding(
@@ -244,10 +284,10 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                           ),
                         );
                       }
-                      final artisan = featuredArtisans[index];
+                      final artisan = _visibleFeaturedArtisans[index];
                       final profile = artisan['profiles'] as Map<String, dynamic>? ?? {};
                       final name = profile['full_name'] as String? ?? 'Artisan';
-                      final imageUrl = profile['avatar_url'] as String? ?? 'https://via.placeholder.com/200?text=Artisan';
+                      final imageUrl = profile['avatar_url'] as String? ?? '';
                       final skills = artisan['skills'] as List<dynamic>? ?? [];
                       final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
                       final rating = (artisan['rating'] as num?)?.toDouble() ?? 0.0;
@@ -262,7 +302,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                             rating: rating,
                             reviewCount: 0,
                             imageUrl: imageUrl,
-                            location: 'Location not set',
+                            location: (profile['location_label'] ?? 'Location not set').toString(),
                             onTap: () {
                               Navigator.pushNamed(
                                 context,

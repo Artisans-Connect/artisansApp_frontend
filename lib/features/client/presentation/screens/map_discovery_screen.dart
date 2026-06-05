@@ -9,6 +9,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
+import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../../services/explore_service.dart';
 
 class MapDiscoveryScreen extends StatefulWidget {
@@ -26,6 +27,8 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     DeviceLocation.accraDefault.longitude,
   );
   Set<Marker> _markers = {};
+  GoogleMapController? _mapController;
+  int? _selectedWorkerIndex;
 
   @override
   void initState() {
@@ -44,15 +47,49 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     };
     for (var i = 0; i < nearbyWorkers.length; i++) {
       final w = nearbyWorkers[i];
+      final bool isSelected = _selectedWorkerIndex == i;
       markers.add(
         Marker(
           markerId: MarkerId('worker_$i'),
           position: LatLng(w['lat'] as double, w['lng'] as double),
-          infoWindow: InfoWindow(title: w['name'] as String? ?? 'Artisan'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(
+            isSelected ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueOrange,
+          ),
+          infoWindow: InfoWindow(
+            title: w['name'] as String? ?? 'Artisan',
+            snippet: '${w['profession']} • ${w['distance']}',
+          ),
+          onTap: () => _selectWorker(i, moveCamera: false),
         ),
       );
     }
     _markers = markers;
+  }
+
+  void _selectWorker(int index, {bool moveCamera = true}) {
+    final worker = nearbyWorkers[index];
+    final position = LatLng(worker['lat'] as double, worker['lng'] as double);
+    setState(() {
+      _selectedWorkerIndex = index;
+      _rebuildMarkers();
+    });
+    if (moveCamera) {
+      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(position, 15));
+    }
+  }
+
+  void _openWorkerProfile(Map<String, dynamic> worker) {
+    Navigator.pushNamed(
+      context,
+      AppRoutes.artisanProfile,
+      arguments: {
+        'name': worker['name'],
+        'profession': worker['profession'],
+        'location': 'Nearby',
+        'imageUrl': worker['imageUrl'],
+        'userId': worker['userId'],
+      },
+    );
   }
 
   Future<void> _fetchNearbyWorkers() async {
@@ -70,7 +107,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
       final mappedWorkers = rawArtisans.map((raw) {
         final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
         final name = profile['full_name'] as String? ?? 'Artisan';
-        final imageUrl = profile['avatar_url'] as String? ?? 'https://via.placeholder.com/200?text=Artisan';
+        final imageUrl = profile['avatar_url'] as String? ?? '';
         final skills = raw['skills'] as List<dynamic>? ?? [];
         final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
         final distanceKm = raw['distance_km'] as num?;
@@ -84,6 +121,10 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
           'available': raw['is_available'] == true,
           'imageUrl': imageUrl,
           'userId': raw['id'],
+          'id': raw['id'],
+          'phone': profile['phone'],
+          'profiles': profile,
+          'skills': skills.map((dynamic item) => item.toString()).toList(),
         };
       }).toList();
 
@@ -93,6 +134,9 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
           _isLoading = false;
           _rebuildMarkers();
         });
+        _mapController?.animateCamera(
+          CameraUpdate.newLatLngZoom(_userPosition, 14),
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -133,9 +177,48 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                       zoom: 13,
                     ),
                     markers: _markers,
+                    onMapCreated: (GoogleMapController controller) {
+                      _mapController = controller;
+                    },
                     myLocationEnabled: true,
+                    myLocationButtonEnabled: true,
                     zoomControlsEnabled: false,
+                    mapToolbarEnabled: false,
                   ),
+          ),
+          Positioned(
+            left: AppSpacing.gutter,
+            right: AppSpacing.gutter,
+            top: AppSpacing.md,
+            child: SafeArea(
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.md,
+                  vertical: AppSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                  border: Border.all(color: AppColors.borderSubtle),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      PhosphorIcons.crosshair,
+                      color: AppColors.primary,
+                      size: 18,
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: Text(
+                        'Explore available artisans near your service area.',
+                        style: AppTypography.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
 
           // Bottom Sheet - Nearby Workers
@@ -209,40 +292,27 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: AppSpacing.md),
                                   child: GestureDetector(
-                                    onTap: () {
-                                      Navigator.pushNamed(
-                                        context,
-                                        AppRoutes.artisanProfile,
-                                        arguments: {
-                                          'name': worker['name'],
-                                          'profession': worker['profession'],
-                                          'location': 'Nearby',
-                                          'imageUrl': worker['imageUrl'],
-                                          'userId': worker['userId'],
-                                        },
-                                      );
-                                    },
+                                    onTap: () => _selectWorker(index),
                                     child: Container(
                                       decoration: BoxDecoration(
-                                        color: AppColors.surfaceContainerLowest,
+                                        color: _selectedWorkerIndex == index
+                                            ? AppColors.primaryContainer
+                                            : AppColors.surfaceContainerLowest,
                                         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                                        border: Border.all(color: AppColors.borderSubtle),
+                                        border: Border.all(
+                                          color: _selectedWorkerIndex == index
+                                              ? AppColors.primary
+                                              : AppColors.borderSubtle,
+                                        ),
                                       ),
                                       padding: const EdgeInsets.all(AppSpacing.md),
                                       child: Row(
                                         children: [
                                           // Avatar
-                                          Container(
-                                            width: 50,
-                                            height: 50,
-                                            decoration: BoxDecoration(
-                                              color: AppColors.primaryContainer,
-                                              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                                            ),
-                                            child: Icon(
-                                              PhosphorIcons.user,
-                                              color: AppColors.onPrimary,
-                                            ),
+                                          ArtisanLogoAvatar(
+                                            imageUrl: worker['imageUrl'] as String?,
+                                            size: 50,
+                                            borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                                           ),
                                           const SizedBox(width: AppSpacing.md),
                                           // Details
@@ -307,10 +377,14 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                             ),
                                           ),
                                           // View Profile Icon
-                                          Icon(
-                                            PhosphorIcons.caretRight,
-                                            size: 16,
-                                            color: AppColors.primary,
+                                          IconButton(
+                                            onPressed: () => _openWorkerProfile(worker),
+                                            icon: Icon(
+                                              PhosphorIcons.caretRight,
+                                              size: 16,
+                                              color: AppColors.primary,
+                                            ),
+                                            tooltip: 'View profile',
                                           ),
                                         ],
                                       ),

@@ -29,10 +29,16 @@ class _SearchBarState extends State<CustomSearchBar> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? TextEditingController();
+    _controller.addListener(_handleTextChanged);
+  }
+
+  void _handleTextChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_handleTextChanged);
     if (widget.controller == null) {
       _controller.dispose();
     }

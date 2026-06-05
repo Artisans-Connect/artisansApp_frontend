@@ -12,9 +12,14 @@ import '../models/client_booking_stub.dart';
 import '../navigation/client_navigation.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
-  const BookingHistoryScreen({super.key, this.embedInShell = false});
+  const BookingHistoryScreen({
+    super.key,
+    this.embedInShell = false,
+    this.refreshSignal = 0,
+  });
 
   final bool embedInShell;
+  final int refreshSignal;
 
   @override
   State<BookingHistoryScreen> createState() => _BookingHistoryScreenState();
@@ -39,6 +44,14 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   void initState() {
     super.initState();
     _loadBookings();
+  }
+
+  @override
+  void didUpdateWidget(covariant BookingHistoryScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshSignal != oldWidget.refreshSignal) {
+      _loadBookings();
+    }
   }
 
   Future<void> _loadBookings() async {

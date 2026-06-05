@@ -1,7 +1,9 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/job_site_map.dart';
 import '../models/mock_worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../widgets/client_contact_row.dart';
@@ -72,12 +74,21 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
                   ),
                   ClientContactRow(
                     onMessage: () => _stub(context, 'Message'),
-                    onCall: () => _stub(context, 'Call'),
+                    onCall: () => _callClient(context, job),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.md),
+            if (job.hasServiceLocation) ...[
+              JobSiteMap(
+                latitude: job.latitude,
+                longitude: job.longitude,
+                label: job.addressLabel,
+                height: 220,
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
             JobDetailCard(
               child: Column(
                 children: [

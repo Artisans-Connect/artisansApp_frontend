@@ -15,6 +15,8 @@ class MockWorkerJob {
     required this.longitude,
     required this.clientName,
     required this.urgency,
+    this.clientPhone,
+    this.clientAvatarUrl,
     this.clientRating = 4.9,
     this.reviewCount = 12,
     this.isNewClient = false,
@@ -46,6 +48,8 @@ class MockWorkerJob {
   final double longitude;
   final String clientName;
   final JobUrgency urgency;
+  final String? clientPhone;
+  final String? clientAvatarUrl;
   final double clientRating;
   final int reviewCount;
   final bool isNewClient;
@@ -86,6 +90,8 @@ class MockWorkerJob {
   String get estimateDisplay =>
       estimateLabel ?? estimatedBudgetLabel ?? rateLabel ?? '—';
 
+  bool get hasServiceLocation => latitude != 0 || longitude != 0;
+
   MockWorkerJob copyWith({WorkerJobStatus? status}) {
     return MockWorkerJob(
       id: id,
@@ -97,6 +103,8 @@ class MockWorkerJob {
       longitude: longitude,
       clientName: clientName,
       urgency: urgency,
+      clientPhone: clientPhone,
+      clientAvatarUrl: clientAvatarUrl,
       clientRating: clientRating,
       reviewCount: reviewCount,
       isNewClient: isNewClient,

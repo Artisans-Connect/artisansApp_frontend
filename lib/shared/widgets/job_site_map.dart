@@ -1,29 +1,87 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/location/device_location_service.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
-/// Worker view: navigate to client job site.
-class JobSiteMap extends StatelessWidget {
+/// Worker view: current worker position and the client's service location.
+class JobSiteMap extends StatefulWidget {
   const JobSiteMap({
     super.key,
     required this.latitude,
     required this.longitude,
     this.height = 220,
     this.label = 'Client',
+    this.showDirectionsButton = true,
   });
 
   final double latitude;
   final double longitude;
   final double height;
   final String label;
+  final bool showDirectionsButton;
+
+  @override
+  State<JobSiteMap> createState() => _JobSiteMapState();
+}
+
+class _JobSiteMapState extends State<JobSiteMap> {
+  GoogleMapController? _controller;
+  LatLng? _workerPosition;
+
+  LatLng get _jobSite => LatLng(widget.latitude, widget.longitude);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWorkerLocation();
+  }
+
+  Future<void> _loadWorkerLocation() async {
+    final loc = await DeviceLocationService.getCurrentOrDefault();
+    if (!mounted || loc.isFallback) return;
+    setState(() => _workerPosition = LatLng(loc.latitude, loc.longitude));
+    _fitMap();
+  }
+
+  void _fitMap() {
+    final controller = _controller;
+    final worker = _workerPosition;
+    if (controller == null || worker == null) return;
+    controller.animateCamera(
+      CameraUpdate.newLatLngBounds(
+        LatLngBounds(
+          southwest: LatLng(
+            math.min(worker.latitude, widget.latitude),
+            math.min(worker.longitude, widget.longitude),
+          ),
+          northeast: LatLng(
+            math.max(worker.latitude, widget.latitude),
+            math.max(worker.longitude, widget.longitude),
+          ),
+        ),
+        48,
+      ),
+    );
+  }
+
+  Future<void> _openDirections() async {
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=${widget.latitude},${widget.longitude}&travelmode=driving',
+    );
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
     if (AppConstants.googleMapsApiKey.isEmpty) {
       return SizedBox(
-        height: height,
+        height: widget.height,
         child: Center(
           child: Text(
             'Configure GOOGLE_MAPS_API_KEY for navigation map.',
@@ -33,20 +91,85 @@ class JobSiteMap extends StatelessWidget {
       );
     }
 
-    final target = LatLng(latitude, longitude);
+    final markers = <Marker>{
+      Marker(
+        markerId: const MarkerId('job_site'),
+        position: _jobSite,
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        infoWindow: InfoWindow(title: widget.label, snippet: 'Job site'),
+      ),
+      if (_workerPosition != null)
+        Marker(
+          markerId: const MarkerId('worker_current_location'),
+          position: _workerPosition!,
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+          infoWindow: const InfoWindow(title: 'You'),
+        ),
+    };
+    final polylines = <Polyline>{
+      if (_workerPosition != null)
+        Polyline(
+          polylineId: const PolylineId('worker_to_job_site'),
+          points: <LatLng>[_workerPosition!, _jobSite],
+          color: AppColors.primary,
+          width: 4,
+        ),
+    };
+
     return SizedBox(
-      height: height,
-      child: GoogleMap(
-        initialCameraPosition: CameraPosition(target: target, zoom: 15),
-        markers: {
-          Marker(
-            markerId: const MarkerId('job_site'),
-            position: target,
-            infoWindow: InfoWindow(title: label),
-          ),
-        },
-        myLocationEnabled: true,
-        zoomControlsEnabled: false,
+      height: widget.height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          children: <Widget>[
+            GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _workerPosition ?? _jobSite,
+                zoom: _workerPosition == null ? 15 : 13,
+              ),
+              markers: markers,
+              polylines: polylines,
+              onMapCreated: (controller) {
+                _controller = controller;
+                _fitMap();
+              },
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: true,
+            ),
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.outlineVariant),
+                ),
+                child: Text(
+                  _workerPosition == null
+                      ? 'Job site location'
+                      : 'Route from your location to the client',
+                  style: AppTypography.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            if (widget.showDirectionsButton)
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: FilledButton.icon(
+                  onPressed: _openDirections,
+                  icon: const Icon(Icons.navigation, size: 18),
+                  label: const Text('Directions'),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/artisan_logo_avatar.dart';
 
 class ArtisanCard extends StatelessWidget {
   final String name;
@@ -57,19 +58,10 @@ class ArtisanCard extends StatelessWidget {
                     height: 180,
                     width: double.infinity,
                     color: AppColors.surfaceContainer,
-                    child: Image.network(
-                      imageUrl,
+                    child: ArtisanLogoPanel(
+                      imageUrl: imageUrl,
+                      height: 180,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          color: AppColors.surfaceContainer,
-                          child: Icon(
-                            PhosphorIcons.user,
-                            size: 80,
-                            color: AppColors.outlineVariant,
-                          ),
-                        );
-                      },
                     ),
                   ),
                   // Favorite Button

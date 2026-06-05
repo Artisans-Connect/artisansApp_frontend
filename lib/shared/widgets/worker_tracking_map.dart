@@ -5,6 +5,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../core/utils/haversine.dart';
 
@@ -125,12 +126,23 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
         markerId: const MarkerId('job'),
         position: job,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        infoWindow: const InfoWindow(title: 'Job site'),
       ),
       if (_workerPosition != null)
         Marker(
           markerId: const MarkerId('worker'),
           position: _workerPosition!,
           icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          infoWindow: const InfoWindow(title: 'Worker location'),
+        ),
+    };
+    final polylines = <Polyline>{
+      if (_workerPosition != null)
+        Polyline(
+          polylineId: const PolylineId('worker_to_job'),
+          points: <LatLng>[_workerPosition!, job],
+          color: AppColors.primary,
+          width: 4,
         ),
     };
 
@@ -138,12 +150,45 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
       height: widget.height,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        child: GoogleMap(
-          initialCameraPosition: CameraPosition(target: job, zoom: 14),
-          markers: markers,
-          onMapCreated: (c) => _mapController = c,
-          myLocationEnabled: false,
-          zoomControlsEnabled: false,
+        child: Stack(
+          children: <Widget>[
+            GoogleMap(
+              initialCameraPosition: CameraPosition(target: job, zoom: 14),
+              markers: markers,
+              polylines: polylines,
+              onMapCreated: (c) {
+                _mapController = c;
+                if (_workerPosition != null) {
+                  _applyWorker(
+                    _workerPosition!.latitude,
+                    _workerPosition!.longitude,
+                  );
+                }
+              },
+              myLocationEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+            ),
+            Positioned(
+              left: 12,
+              right: 12,
+              top: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.outlineVariant),
+                ),
+                child: Text(
+                  _workerPosition == null
+                      ? 'Waiting for the worker location...'
+                      : 'Live route from worker to job site',
+                  style: AppTypography.bodySmall,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

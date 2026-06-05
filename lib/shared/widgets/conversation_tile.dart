@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../models/conversation_summary.dart';
 import '../utils/time_format.dart';
+import 'artisan_logo_avatar.dart';
 
 class ConversationTile extends StatelessWidget {
   const ConversationTile({
@@ -45,7 +46,6 @@ class ConversationTile extends StatelessWidget {
               children: <Widget>[
                 // Avatar with online indicator
                 _AvatarWithStatus(
-                  name: conversation.counterpartName,
                   avatarUrl: conversation.counterpartAvatarUrl,
                   isOnline: conversation.isOnline,
                 ),
@@ -128,12 +128,10 @@ class ConversationTile extends StatelessWidget {
 
 class _AvatarWithStatus extends StatelessWidget {
   const _AvatarWithStatus({
-    required this.name,
     this.avatarUrl,
     required this.isOnline,
   });
 
-  final String name;
   final String? avatarUrl;
   final bool isOnline;
 
@@ -144,24 +142,10 @@ class _AvatarWithStatus extends StatelessWidget {
       height: 56,
       child: Stack(
         children: <Widget>[
-          if (avatarUrl != null)
-            CircleAvatar(
-              radius: 28,
-              backgroundImage: NetworkImage(avatarUrl!),
-              backgroundColor: AppColors.surfaceDim,
-            )
-          else
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: AppColors.surfaceDim,
-              child: Text(
-                name.isNotEmpty ? name[0].toUpperCase() : '?',
-                style: AppTextStyles.displayMd.copyWith(
-                  color: AppColors.primary,
-                  fontSize: 20,
-                ),
-              ),
-            ),
+          ArtisanLogoAvatar(
+            imageUrl: avatarUrl,
+            size: 56,
+          ),
           if (isOnline)
             Positioned(
               bottom: 2,

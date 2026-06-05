@@ -23,6 +23,15 @@ class ChatService {
     return await _api.get('/chat/$conversationId/messages');
   }
 
+  Future<dynamic> createDirectConversation(String workerId) async {
+    final dynamic result = await _api.post(
+      '/chat/direct',
+      body: <String, dynamic>{'worker_id': workerId},
+    );
+    await CacheStore.instance.remove(CacheKeys.chatConversations);
+    return result;
+  }
+
   Future<dynamic> sendMessage(
     String conversationId,
     String content, {

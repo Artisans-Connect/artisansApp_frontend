@@ -1,6 +1,7 @@
 import '../../../core/cache/cache_keys.dart';
 import '../../../core/cache/cached_fetch.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/current_user.dart';
 
 class ExploreService {
   static final ExploreService instance = ExploreService._();
@@ -74,6 +75,10 @@ class ExploreService {
   List<Map<String, dynamic>> _castArtisanList(List<dynamic> raw) {
     return raw
         .map((dynamic e) => Map<String, dynamic>.from(e as Map))
+        .where((Map<String, dynamic> worker) {
+          final String id = (worker['id'] ?? worker['worker_id'] ?? '').toString();
+          return id.isNotEmpty && id != CurrentUser.id;
+        })
         .toList();
   }
 }

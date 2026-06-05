@@ -37,8 +37,18 @@ class AppRouter {
         );
 
       case AppRoutes.exploreArtisans:
+        final Object? exploreArgs = settings.arguments;
+        String initialQuery = '';
+        String initialCategory = '';
+        if (exploreArgs is Map<String, dynamic>) {
+          initialQuery = (exploreArgs['query'] ?? '').toString();
+          initialCategory = (exploreArgs['category'] ?? '').toString();
+        }
         return MaterialPageRoute(
-          builder: (_) => const ExploreArtisansScreen(),
+          builder: (_) => ExploreArtisansScreen(
+            initialQuery: initialQuery,
+            initialCategory: initialCategory,
+          ),
         );
 
       case AppRoutes.mapDiscovery:

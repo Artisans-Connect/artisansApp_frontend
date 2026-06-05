@@ -8,11 +8,19 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/filter_chip.dart';
 import '../../../../shared/widgets/search_bar.dart';
+import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../navigation/client_navigation.dart';
 import '../../services/explore_service.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
-  const ExploreArtisansScreen({super.key});
+  const ExploreArtisansScreen({
+    super.key,
+    this.initialQuery = '',
+    this.initialCategory = '',
+  });
+
+  final String initialQuery;
+  final String initialCategory;
 
   @override
   State<ExploreArtisansScreen> createState() => _ExploreArtisansScreenState();
@@ -20,9 +28,11 @@ class ExploreArtisansScreen extends StatefulWidget {
 
 class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   String _searchQuery = '';
+  String _selectedCategory = '';
   String _selectedDistance = '';
   String _selectedRating = '';
   final Set<String> _savedArtisanNames = <String>{};
+  late final TextEditingController _searchController;
 
   List<Map<String, dynamic>> allArtisans = [];
   bool _isLoading = true;
@@ -30,7 +40,16 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   @override
   void initState() {
     super.initState();
+    _searchQuery = widget.initialQuery;
+    _selectedCategory = widget.initialCategory;
+    _searchController = TextEditingController(text: _searchQuery);
     _fetchArtisans();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchArtisans() async {
@@ -40,7 +59,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
       final mappedArtisans = rawArtisans.map((raw) {
         final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
         final name = profile['full_name'] as String? ?? 'Artisan';
-        final imageUrl = profile['avatar_url'] as String? ?? 'https://via.placeholder.com/200?text=Artisan';
+        final imageUrl = profile['avatar_url'] as String? ?? '';
         final skills = raw['skills'] as List<dynamic>? ?? [];
         final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
         final rating = (raw['rating'] as num?)?.toDouble() ?? 0.0;
@@ -52,9 +71,14 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
           'rating': rating,
           'reviewCount': 0,
           'imageUrl': imageUrl,
-          'location': 'Location not set',
+          'location': (profile['location_label'] ?? 'Location not set').toString(),
           'distance': raw['distance_km'] != null ? '${(raw['distance_km'] as num).toStringAsFixed(1)} km' : 'N/A',
+          'distanceKm': (raw['distance_km'] as num?)?.toDouble(),
           'userId': userId,
+          'id': userId,
+          'phone': profile['phone'],
+          'skills': skills.map((dynamic item) => item.toString()).toList(),
+          'profiles': profile,
         };
       }).toList();
 
@@ -78,9 +102,35 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
       final String name = (artisan['name'] as String).toLowerCase();
       final String profession =
           (artisan['profession'] as String).toLowerCase();
+      final List<String> skills =
+          (artisan['skills'] as List<dynamic>? ?? <dynamic>[])
+              .map((dynamic item) => item.toString().toLowerCase())
+              .toList();
+      final String skillText = skills.join(' ');
       if (_searchQuery.isNotEmpty) {
         final String q = _searchQuery.toLowerCase();
-        if (!name.contains(q) && !profession.contains(q)) return false;
+        if (!name.contains(q) && !profession.contains(q) && !skillText.contains(q)) return false;
+      }
+      if (_selectedCategory.isNotEmpty) {
+        final String category = _selectedCategory.toLowerCase();
+        if (!profession.contains(category) && !skillText.contains(category)) {
+          return false;
+        }
+      }
+      if (_selectedRating.isNotEmpty) {
+        final double minRating =
+            double.tryParse(_selectedRating.replaceAll('+', '')) ?? 0;
+        final double rating = (artisan['rating'] as num?)?.toDouble() ?? 0;
+        if (rating < minRating) return false;
+      }
+      if (_selectedDistance.isNotEmpty && _selectedDistance != 'Nearby') {
+        final double? distance = artisan['distanceKm'] as double?;
+        if (distance == null) return false;
+        final double maxDistance = double.tryParse(
+              _selectedDistance.replaceAll(RegExp(r'[^0-9.]'), ''),
+            ) ??
+            double.infinity;
+        if (distance > maxDistance) return false;
       }
       return true;
     }).toList();
@@ -130,16 +180,6 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
               color: AppColors.textPrimary,
             ),
           ),
-          IconButton(
-            tooltip: 'My profile',
-            onPressed: () => ClientNavigation.openOwnProfile(context),
-            icon: Icon(PhosphorIcons.user, color: AppColors.textPrimary),
-          ),
-          IconButton(
-            tooltip: 'Settings',
-            onPressed: () => ClientNavigation.openSettings(context),
-            icon: Icon(PhosphorIcons.gear, color: AppColors.textPrimary),
-          ),
           const SizedBox(width: 4),
         ],
       ),
@@ -151,11 +191,21 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
             children: <Widget>[
               CustomSearchBar(
                 hintText: 'Search by name or skill...',
+                controller: _searchController,
                 onChanged: (String value) {
                   setState(() => _searchQuery = value);
                 },
               ),
               const SizedBox(height: AppSpacing.md),
+              if (_selectedCategory.isNotEmpty) ...<Widget>[
+                AppFilterChip(
+                  label: _selectedCategory,
+                  isSelected: true,
+                  icon: PhosphorIcons.funnel,
+                  onTap: () => setState(() => _selectedCategory = ''),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               Text('Filters', style: AppTypography.labelLarge),
               const SizedBox(height: AppSpacing.md),
               Column(
@@ -259,13 +309,10 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                           child: SizedBox(
                             width: 100,
                             height: 100,
-                            child: Image.network(
-                              artisan['imageUrl'] as String,
+                            child: ArtisanLogoPanel(
+                              imageUrl: artisan['imageUrl'] as String?,
+                              height: 100,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
-                                color: AppColors.surfaceContainer,
-                                child: Icon(PhosphorIcons.user),
-                              ),
                             ),
                           ),
                         ),

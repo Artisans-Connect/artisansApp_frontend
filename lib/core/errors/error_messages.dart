@@ -61,6 +61,8 @@ String _apiMessage(ApiException e) {
       return 'This job is no longer available.';
     case 'REVIEW_EXISTS':
       return 'You have already reviewed this job.';
+    case 'ROUTE_NOT_AVAILABLE':
+      return 'This feature is not available on the current server yet. Please update the server and try again.';
     case 'FORBIDDEN':
       return e.message.isNotEmpty ? e.message : 'You do not have permission to do that.';
     case 'VALIDATION_ERROR':

@@ -52,10 +52,11 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
 
     try {
       final String categoryId = _draft.categoryId ?? '';
-      final double lat =
-          (_draft.data['locationLat'] as num?)?.toDouble() ?? 5.6037;
-      final double lng =
-          (_draft.data['locationLng'] as num?)?.toDouble() ?? -0.1870;
+      final double? lat = _draft.locationLat;
+      final double? lng = _draft.locationLng;
+      if (lat == null || lng == null) {
+        throw StateError('Select a job location before pricing.');
+      }
       final String jobMode = (_draft.urgency ?? 'asap').toLowerCase();
 
       final estimate = await _pricingService.estimateFee(
@@ -79,7 +80,9 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       if (!mounted) return;
       setState(() {
         _loadingPrice = false;
-        _priceError = 'Could not calculate pricing. Using default.';
+        _priceError = e is StateError
+            ? e.message
+            : 'Could not calculate pricing. Using default.';
         // Use a fallback so the user can still post
         _draft.merge(<String, dynamic>{
           'recommendedFee': 50.0,
@@ -102,10 +105,11 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
 
     setState(() => _isPosting = true);
 
-    final payload = _draft.toCreateJobPayload();
     final idempotencyKey = const Uuid().v4();
+    Map<String, dynamic>? payload;
 
     try {
+      payload = _draft.toCreateJobPayload();
       final dynamic created = await _jobsService.createJob(
         payload,
         idempotencyKey: idempotencyKey,
@@ -122,7 +126,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
     } catch (e) {
       if (!mounted) return;
       final bool offline = e is NetworkException;
-      if (offline) {
+      if (offline && payload != null) {
         await JobPostQueue.instance.enqueue(
           payload,
           idempotencyKey: idempotencyKey,
@@ -156,7 +160,10 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       appBarTitle: 'Review & Post',
       headline: 'Review your job post',
       primaryLabel: _isPosting ? 'Posting…' : 'Post job',
-      primaryEnabled: _agreeToTerms && !_isPosting && !_loadingPrice,
+      primaryEnabled: _agreeToTerms &&
+          !_isPosting &&
+          !_loadingPrice &&
+          _draft.isValidForStep(JobPostWizardStep.summary),
       onPrimary: _postJob,
       secondaryLabel: 'Save draft',
       onSecondary: _saveDraft,

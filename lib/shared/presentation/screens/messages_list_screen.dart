@@ -73,14 +73,16 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         final Map<String, dynamic> json = item as Map<String, dynamic>;
         final String clientId = json['client_id'] as String? ?? '';
         final String workerId = json['worker_id'] as String? ?? '';
+        final bool isDirect = json['type'] == 'direct';
         final String counterpartId = json['counterpart_id'] as String? ??
             (clientId == currentUserId ? workerId : clientId);
 
         return ConversationSummary(
           id: json['id'] as String,
-          jobId: json['id'] as String,
+          jobId: isDirect ? null : json['id'] as String,
           counterpartUserId: counterpartId,
           counterpartName: json['counterpart_name'] as String? ?? 'User',
+          counterpartAvatarUrl: json['counterpart_avatar_url'] as String?,
           lastMessagePreview: json['last_message_preview'] as String? ??
               json['title'] as String? ??
               'Open chat',
@@ -91,6 +93,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
               ) ??
               DateTime.now(),
           jobTitle: json['title'] as String?,
+          isDirect: isDirect,
         );
       }).toList();
     });
@@ -116,6 +119,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         counterpartUserId: conversation.counterpartUserId,
         counterpartName: conversation.counterpartName,
         jobTitle: conversation.jobTitle,
+        isDirect: conversation.isDirect,
       ),
     );
   }

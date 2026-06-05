@@ -61,6 +61,17 @@ class _JobPostLocationScheduleScreenState
   }
 
   Future<void> _initLocation() async {
+    final double? existingLat = _draft.locationLat;
+    final double? existingLng = _draft.locationLng;
+    if (existingLat != null && existingLng != null) {
+      setState(() {
+        _pin = LatLng(existingLat, existingLng);
+        _needsManualPin = false;
+        _loadingLocation = false;
+      });
+      return;
+    }
+
     final loc = await DeviceLocationService.getCurrentOrDefault();
     if (!mounted) return;
 

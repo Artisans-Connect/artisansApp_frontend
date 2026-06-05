@@ -74,8 +74,29 @@ class _JobLocationMapState extends State<JobLocationMap> {
               myLocationEnabled: true,
               myLocationButtonEnabled: true,
               zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
             ),
-            Icon(Icons.location_on, color: AppColors.primary, size: 40),
+            Positioned(
+              top: 12,
+              left: 12,
+              right: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.94),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.outlineVariant),
+                ),
+                child: Text(
+                  'Move the map to set the exact service point.',
+                  style: AppTypography.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+            IgnorePointer(
+              child: Icon(Icons.location_on, color: AppColors.primary, size: 40),
+            ),
           ],
         ),
       ),

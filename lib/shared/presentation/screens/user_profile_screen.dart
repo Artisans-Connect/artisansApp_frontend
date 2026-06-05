@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -18,6 +16,7 @@ import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/gradient_button.dart';
 import '../../widgets/profile_section_card.dart';
+import '../../widgets/artisan_logo_avatar.dart';
 import '../navigation/shared_route_args.dart';
 import '../../utils/shared_user_context.dart';
 import '../../models/user_profile_view.dart';
@@ -573,60 +572,76 @@ class _ProfileHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.outline.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        children: <Widget>[
-          Stack(
-            children: <Widget>[
-              if (profile.avatarUrl != null)
-                CircleAvatar(
-                  radius: 52,
-                  backgroundImage: profile.avatarUrl!.startsWith('http')
-                      ? NetworkImage(profile.avatarUrl!) as ImageProvider
-                      : FileImage(File(profile.avatarUrl!)),
-                  backgroundColor: AppColors.surfaceDim,
-                )
-              else
-                CircleAvatar(
-                  radius: 52,
-                  backgroundColor: AppColors.surfaceDim,
-                  child: Text(
-                    profile.fullName.isNotEmpty ? profile.fullName[0].toUpperCase() : '?',
-                    style: AppTextStyles.displayMd
-                        .copyWith(color: AppColors.primary, fontSize: 32),
-                  ),
-                ),
-              if (profile.isVerified)
-                Positioned(bottom: 0, right: 0, child: CircleAvatar(radius: 14, backgroundColor: AppColors.success, child: Icon(PhosphorIcons.sealCheck, color: Colors.white, size: 16),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            profile.fullName,
-            style: AppTextStyles.displayMd,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(99),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(28),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: AppColors.outline.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(28),
+        ),
+        child: Stack(
+          children: <Widget>[
+            Positioned.fill(
+              child: ArtisanLogoPanel(
+                imageUrl: profile.avatarUrl,
+                height: 220,
+                fit: BoxFit.cover,
+              ),
             ),
-            child: Text(
-              profile.isWorker ? 'Artisan' : 'Client',
-              style: AppTextStyles.labelCaps.copyWith(color: AppColors.primary),
+            Positioned.fill(
+              child: Container(
+                color: Colors.white.withValues(alpha: 0.82),
+              ),
             ),
-          ),
-        ],
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: <Widget>[
+                  Stack(
+                    children: <Widget>[
+                      ArtisanLogoAvatar(
+                        imageUrl: profile.avatarUrl,
+                        size: 104,
+                      ),
+                      if (profile.isVerified)
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: CircleAvatar(
+                            radius: 14,
+                            backgroundColor: AppColors.success,
+                            child: Icon(
+                              PhosphorIcons.sealCheck,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    profile.fullName,
+                    style: AppTextStyles.displayMd,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                    child: Text(
+                      profile.isWorker ? 'Artisan' : 'Client',
+                      style: AppTextStyles.labelCaps.copyWith(color: AppColors.primary),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

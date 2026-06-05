@@ -41,6 +41,12 @@ class ClientJobDraft {
 
   String? get address => data['address'] as String?;
 
+  double? get locationLat => (data['locationLat'] as num?)?.toDouble();
+
+  double? get locationLng => (data['locationLng'] as num?)?.toDouble();
+
+  bool get hasUsableLocation => locationLat != null && locationLng != null;
+
   String? get urgency => data['urgency'] as String?;
 
   String? get timeWindow => data['timeWindow'] as String?;
@@ -121,7 +127,7 @@ class ClientJobDraft {
         return (title != null && title!.trim().length >= 3) &&
             (description != null && description!.trim().length >= 20);
       case JobPostWizardStep.locationSchedule:
-        return address != null && address!.trim().isNotEmpty;
+        return address != null && address!.trim().isNotEmpty && hasUsableLocation;
       case JobPostWizardStep.summary:
         return isValidForStep(JobPostWizardStep.details) &&
             isValidForStep(JobPostWizardStep.locationSchedule);
@@ -141,8 +147,11 @@ class ClientJobDraft {
 
   /// Maps wizard draft fields to the Express `POST /jobs/create` body.
   Map<String, dynamic> toCreateJobPayload() {
-    const double defaultLat = 5.6037;
-    const double defaultLng = -0.1870;
+    final double? lat = locationLat;
+    final double? lng = locationLng;
+    if (lat == null || lng == null) {
+      throw StateError('Select the job location on the map before posting.');
+    }
 
     final String urgencyValue = (urgency ?? 'asap').toLowerCase();
     final String jobMode = switch (urgencyValue) {
@@ -158,8 +167,8 @@ class ClientJobDraft {
       'title': displayTitle,
       'description': displayDescription,
       'photo_urls': photoUrls,
-      'location_lat': (data['locationLat'] as num?)?.toDouble() ?? defaultLat,
-      'location_lng': (data['locationLng'] as num?)?.toDouble() ?? defaultLng,
+      'location_lat': lat,
+      'location_lng': lng,
       'address_label': displayLocation,
       'job_mode': jobMode,
       'budget_type': 'fixed',

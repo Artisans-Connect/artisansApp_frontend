@@ -233,7 +233,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                         Expanded(
                           child: OutlinedButton(
                             onPressed: job['phone'] != null
-                                ? () => ClientNavigation.showCallPlaceholder(
+                                ? () => ClientNavigation.callPhone(
                                       context,
                                       job['phone'] as String,
                                     )

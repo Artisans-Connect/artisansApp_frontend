@@ -5,6 +5,7 @@ class ChatDetailArgs {
     required this.counterpartName,
     this.jobId,
     this.jobTitle,
+    this.isDirect = false,
   });
 
   final String conversationId;
@@ -12,6 +13,7 @@ class ChatDetailArgs {
   final String counterpartUserId;
   final String counterpartName;
   final String? jobTitle;
+  final bool isDirect;
 }
 
 class ProfileArgs {

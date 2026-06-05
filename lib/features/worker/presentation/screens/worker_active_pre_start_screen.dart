@@ -2,6 +2,7 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
@@ -130,7 +131,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                       ),
                       ClientContactRow(
                         onMessage: () => _stub(context, 'Message'),
-                        onCall: () => _stub(context, 'Call'),
+                        onCall: () => _callClient(context, job),
                       ),
                     ],
                   ),
@@ -174,18 +175,6 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  OutlinedButton.icon(
-                    onPressed: () => _stub(context, 'Directions'),
-                    icon: Icon(PhosphorIcons.navigationArrow),
-                    label: const Text('Get Directions'),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
                   GradientButton(
                     label: 'Mark as Started',
                     isLoading: _isStarting,
@@ -232,5 +221,17 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
   }
   void _stub(BuildContext context, String action) {
     AppToast.showInfo(context, '$action — coming soon');
+  }
+  Future<void> _callClient(BuildContext context, MockWorkerJob job) async {
+    final String phone =
+        job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
+    if (phone.isEmpty) {
+      AppToast.showInfo(context, 'Client phone number is not available yet.');
+      return;
+    }
+    final bool launched = await launchUrl(Uri(scheme: 'tel', path: phone));
+    if (!launched && context.mounted) {
+      AppToast.showInfo(context, 'Could not start the call.');
+    }
   }
 }

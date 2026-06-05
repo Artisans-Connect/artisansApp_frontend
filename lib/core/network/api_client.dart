@@ -62,6 +62,11 @@ class ApiClient {
         message = response.body;
       }
     }
+    if (response.statusCode == 404 &&
+        (message.startsWith('Cannot ') || message.contains('Cannot '))) {
+      message = 'This feature is not available on the current server yet.';
+      code = 'ROUTE_NOT_AVAILABLE';
+    }
     throw ApiException(response.statusCode, message, code);
   }
 

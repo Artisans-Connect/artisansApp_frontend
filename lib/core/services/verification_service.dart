@@ -49,12 +49,18 @@ class VerificationService {
   }
 
   Future<Uri> createPortalUri() async {
-    final dynamic response = await _apiClient.post('/verification/handoff');
-    final map = Map<String, dynamic>.from(response as Map);
-    final code = map['handoff_code'] as String? ?? '';
+    String code = '';
+    try {
+      final dynamic response = await _apiClient.post('/verification/handoff');
+      final map = Map<String, dynamic>.from(response as Map);
+      code = map['handoff_code'] as String? ?? '';
+    } on ApiException catch (e) {
+      if (e.code != 'ROUTE_NOT_AVAILABLE' && !e.isNotFound) rethrow;
+    }
     return Uri.parse(AppConstants.verificationPortalUrl).replace(
       queryParameters: <String, String>{
         if (code.isNotEmpty) 'handoff': code,
+        if (code.isEmpty) 'signin': 'true',
       },
     );
   }

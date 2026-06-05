@@ -9,6 +9,7 @@ import '../models/client_job_draft.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/rating_widget.dart';
+import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../../../../core/services/reviews_service.dart';
 
 class ArtisanProfileScreen extends StatefulWidget {
@@ -32,9 +33,11 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
 
   String get _profession => (_artisan['profession'] ?? _profile['profession'] ?? 'Professional').toString();
 
-  String get _imageUrl => (_artisan['imageUrl'] ?? _profile['avatar_url'] ?? 'https://via.placeholder.com/400?text=Artisan').toString();
+  String get _imageUrl => (_artisan['imageUrl'] ?? _profile['avatar_url'] ?? '').toString();
 
   String get _location => (_artisan['location'] ?? _profile['location_label'] ?? 'Location not set').toString();
+
+  String get _phone => (_artisan['phone'] ?? _profile['phone'] ?? '').toString();
 
   double get _rating => ((_artisan['rating'] as num?) ?? (_profile['rating'] as num?) ?? 0.0).toDouble();
 
@@ -43,7 +46,7 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
   String get _bio => (_artisan['bio'] ?? _profile['bio'] ?? 'Experienced professional with 10+ years in the industry. Specialized in residential and commercial projects. Committed to delivering high-quality work with excellent customer service.').toString();
 
   List<String> get _services {
-    final dynamic rawServices = _artisan['services'] ?? _profile['skills'] ?? <String>['Repair', 'Installation', 'Maintenance', 'Consultation'];
+    final dynamic rawServices = _artisan['services'] ?? _artisan['skills'] ?? _profile['skills'] ?? <String>['Repair', 'Installation', 'Maintenance', 'Consultation'];
     if (rawServices is List) {
       return rawServices.map((dynamic item) => item.toString()).toList();
     }
@@ -101,19 +104,10 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                   width: double.infinity,
                   height: 300,
                   color: AppColors.surfaceContainer,
-                  child: Image.network(
-                    _imageUrl,
+                  child: ArtisanLogoPanel(
+                    imageUrl: _imageUrl,
+                    height: 300,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: AppColors.surfaceContainer,
-                        child: Icon(
-                          PhosphorIcons.user,
-                          size: 100,
-                          color: AppColors.outlineVariant,
-                        ),
-                      );
-                    },
                   ),
                 ),
                 // Favorite Button
@@ -350,9 +344,9 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
               children: [
                 Expanded(
                   child: InkWell(
-                    onTap: () => ClientNavigation.showCallPlaceholder(
+                    onTap: () => ClientNavigation.callPhone(
                       context,
-                      '+233 24 000 0000',
+                      _phone,
                     ),
                     borderRadius:
                         BorderRadius.circular(AppSpacing.radiusLarge),
@@ -388,12 +382,9 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                 Expanded(
                   child: InkWell(
                     onTap: () {
-                      ClientNavigation.openChat(
+                      ClientNavigation.openChatForArtisan(
                         context,
-                        conversationId: 'conv-artisan',
-                        counterpartUserId: _workerId.isNotEmpty ? _workerId : 'worker-unknown',
-                        counterpartName: _name,
-                        jobTitle: _profession,
+                        _artisan,
                       );
                     },
                     borderRadius:

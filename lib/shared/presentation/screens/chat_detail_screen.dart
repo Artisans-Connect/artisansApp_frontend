@@ -42,7 +42,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   String? _loadError;
   RealtimeChannel? _realtimeChannel;
   Timer? _pollTimer;
-  String? _activeJobId;
+  String? _activeConversationId;
 
   @override
   void didChangeDependencies() {
@@ -50,35 +50,38 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final Object? routeArgs = ModalRoute.of(context)?.settings.arguments;
     if (routeArgs is ChatDetailArgs && _args == null) {
       _args = routeArgs;
-      final String jobId = routeArgs.jobId ?? routeArgs.conversationId;
-      if (!ClientNavigation.isValidJobChatId(jobId)) {
+      final String conversationId =
+          routeArgs.isDirect ? routeArgs.conversationId : routeArgs.jobId ?? routeArgs.conversationId;
+      if (!ClientNavigation.isValidJobChatId(conversationId)) {
         setState(() {
           _loadError =
               'Invalid conversation. Open chat from an active job or booking.';
         });
         return;
       }
-      _activeJobId = jobId;
-      _loadMessages(jobId);
-      _subscribeToMessages(jobId);
+      _activeConversationId = conversationId;
+      _loadMessages(conversationId);
+      _subscribeToMessages(conversationId, isDirect: routeArgs.isDirect);
       _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-        if (_activeJobId != null) _loadMessages(_activeJobId!, silent: true);
+        if (_activeConversationId != null) {
+          _loadMessages(_activeConversationId!, silent: true);
+        }
       });
     }
   }
 
-  void _subscribeToMessages(String jobId) {
+  void _subscribeToMessages(String conversationId, {required bool isDirect}) {
     _realtimeChannel?.unsubscribe();
     _realtimeChannel = Supabase.instance.client
-        .channel('chat-messages-$jobId')
+        .channel('chat-messages-$conversationId')
         .onPostgresChanges(
           event: PostgresChangeEvent.insert,
           schema: 'public',
           table: 'messages',
           filter: PostgresChangeFilter(
             type: PostgresChangeFilterType.eq,
-            column: 'job_id',
-            value: jobId,
+            column: isDirect ? 'conversation_id' : 'job_id',
+            value: conversationId,
           ),
           callback: (PostgresChangePayload payload) {
             final Map<String, dynamic> record = payload.newRecord;
@@ -111,7 +114,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         .subscribe();
   }
 
-  Future<void> _loadMessages(String jobId, {bool silent = false}) async {
+  Future<void> _loadMessages(String conversationId, {bool silent = false}) async {
     if (!silent) {
       setState(() {
         _isLoading = true;
@@ -119,7 +122,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       });
     }
     try {
-      final dynamic response = await _chatService.getMessages(jobId);
+      final dynamic response = await _chatService.getMessages(conversationId);
       if (!mounted) return;
 
       final List<dynamic> data = response as List<dynamic>;
@@ -188,8 +191,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final String text = _composerController.text.trim();
     if ((text.isEmpty && (imageUrls == null || imageUrls.isEmpty)) || _args == null) return;
 
-    final String jobId = _activeJobId ?? _args!.jobId ?? _args!.conversationId;
-    if (!ClientNavigation.isValidJobChatId(jobId)) {
+    final String conversationId =
+        _activeConversationId ?? _args!.jobId ?? _args!.conversationId;
+    if (!ClientNavigation.isValidJobChatId(conversationId)) {
       if (!mounted) return;
       AppToast.showError(
         context,
@@ -218,7 +222,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
     try {
       final dynamic response = await _chatService.sendMessage(
-        jobId,
+        conversationId,
         text,
         imageUrls: imageUrls,
       );
@@ -386,7 +390,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             title: 'Could not load chat',
                             compact: true,
                             onRetry: () => _loadMessages(
-                              _args!.jobId ?? _args!.conversationId,
+                              _activeConversationId ??
+                                  _args!.jobId ??
+                                  _args!.conversationId,
                             ),
                           )
                     : _messages.isEmpty
