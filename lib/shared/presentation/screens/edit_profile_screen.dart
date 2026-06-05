@@ -47,6 +47,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
+  bool _isSaving = false;
 
   final List<String> _editableSkills = <String>[];
 
@@ -98,11 +99,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   bool get _isWorker => SharedUserContext.isWorker;
 
   Future<void> _save() async {
-    final session = SharedUserContext.session;
-    session.fullName = _nameController.text.trim();
-    session.phone = _phoneController.text.trim();
-    session.bio = _bioController.text.trim();
-    session.locationLabel = _locationController.text.trim();
+    if (_isSaving) return;
+
+    final String fullName = _nameController.text.trim();
+    final String phone = _phoneController.text.trim();
+    final String bio = _bioController.text.trim();
+    final String locationLabel = _locationController.text.trim();
+
+    if (fullName.isEmpty) {
+      AppToast.showError(context, 'Full name is required.');
+      return;
+    }
+
+    setState(() => _isSaving = true);
 
     try {
       String? avatarUrl;
@@ -111,21 +120,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       }
 
       final Map<String, dynamic> body = <String, dynamic>{
-        'full_name': _nameController.text.trim(),
-        'phone': _phoneController.text.trim(),
-        if (_bioController.text.trim().isNotEmpty) 'bio': _bioController.text.trim(),
-        'location_label': _locationController.text.trim(),
+        'full_name': fullName,
+        if (phone.isNotEmpty) 'phone': phone,
+        if (bio.isNotEmpty) 'bio': bio,
+        'location_label': locationLabel,
         if (avatarUrl != null) 'avatar_url': avatarUrl,
       };
 
       await ProfileService.instance.updateProfile(body);
       await ProfileService.instance.getMyProfile(forceRefresh: true);
+      final session = SharedUserContext.session;
+      session.fullName = fullName;
+      if (phone.isNotEmpty) session.phone = phone;
+      session.bio = bio;
+      session.locationLabel = locationLabel;
+      if (avatarUrl != null) session.avatarUrl = avatarUrl;
       if (!mounted) return;
       AppToast.showSuccess(context, 'Profile updated.');
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not save profile.');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 
@@ -230,14 +247,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         showBackButton: true,
         actions: <Widget>[
           TextButton(
-            onPressed: _save,
-            child: Text(
-              'Save',
-              style: AppTextStyles.bodyLg.copyWith(
-                color: AppColors.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            onPressed: _isSaving ? null : _save,
+            child: _isSaving
+                ? SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                : Text(
+                    'Save',
+                    style: AppTextStyles.bodyLg.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
           const SizedBox(width: 8),
         ],
@@ -298,6 +324,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             AppInput(
               controller: _phoneController,
               hint: 'Phone number',
+              keyboardType: TextInputType.phone,
               prefixIcon: PhosphorIcons.phone,
             ),
             if (_isWorker) ...<Widget>[
@@ -413,7 +440,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
             ],
             const SizedBox(height: 28),
-            GradientButton(label: 'Save Changes', onPressed: _save),
+            GradientButton(
+              label: 'Save Changes',
+              onPressed: _isSaving ? null : _save,
+              isLoading: _isSaving,
+            ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: () => Navigator.maybePop(context),

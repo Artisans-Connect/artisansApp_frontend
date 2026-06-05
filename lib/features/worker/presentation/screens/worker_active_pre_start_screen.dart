@@ -19,6 +19,7 @@ class WorkerActivePreStartScreen extends StatefulWidget {
 class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen> {
   final WorkersService _workersService = WorkersService();
   bool _isStarting = false;
+  bool _isOpeningDirections = false;
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
@@ -176,27 +177,58 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   GradientButton(
-                    label: "I'm on my way / Start work",
-                    isLoading: _isStarting,
-                    enabled: !_isStarting,
+                    label: job.hasServiceLocation
+                        ? "I'm on my way - open directions"
+                        : "I'm on my way",
+                    isLoading: _isOpeningDirections,
+                    enabled: !_isOpeningDirections,
                     onPressed: () async {
                       await HapticFeedback.mediumImpact();
-                      setState(() => _isStarting = true);
+                      if (!context.mounted) return;
+                      setState(() => _isOpeningDirections = true);
+                      try {
+                        if (job.hasServiceLocation) {
+                          await _openDirections(job);
+                        } else {
+                          AppToast.showInfo(
+                            context,
+                            'Travel noted. Start work only when you arrive.',
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isOpeningDirections = false);
+                        }
+                      }
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  OutlineButton(
+                    label: 'Start work when I arrive',
+                    onPressed: _isStarting
+                        ? null
+                        : () async {
+                            await HapticFeedback.mediumImpact();
+                            setState(() => _isStarting = true);
                       try {
                         await _workersService.startJob(job.id);
                         if (mounted) {
                           session.markJobStarted();
                         }
-                      } catch (e) {
-                        if (context.mounted) {
-                          AppToast.showError(context, e, fallback: 'Failed to start job.');
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() => _isStarting = false);
-                        }
-                      }
-                    },
+                            } catch (e) {
+                              if (context.mounted) {
+                                AppToast.showError(
+                                  context,
+                                  e,
+                                  fallback: 'Failed to start job.',
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setState(() => _isStarting = false);
+                              }
+                            }
+                          },
                   ),
                   const SizedBox(height: AppSpacing.md),
                   TextButton(
@@ -232,6 +264,24 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
     final bool launched = await launchUrl(Uri(scheme: 'tel', path: phone));
     if (!launched && context.mounted) {
       AppToast.showInfo(context, 'Could not start the call.');
+    }
+  }
+
+  Future<void> _openDirections(MockWorkerJob job) async {
+    if (!job.hasServiceLocation) {
+      AppToast.showInfo(context, 'Job location is not available yet.');
+      return;
+    }
+    final Uri uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&destination=${job.latitude},${job.longitude}',
+    );
+    final bool launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched && mounted) {
+      AppToast.showInfo(context, 'Could not open directions.');
     }
   }
 }

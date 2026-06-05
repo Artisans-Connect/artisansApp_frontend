@@ -13,8 +13,6 @@ class ArtisanCard extends StatelessWidget {
   final String imageUrl;
   final String location;
   final VoidCallback onTap;
-  final bool isFavorite;
-  final VoidCallback? onFavoriteTap;
 
   const ArtisanCard({
     Key? key,
@@ -25,8 +23,6 @@ class ArtisanCard extends StatelessWidget {
     required this.imageUrl,
     required this.location,
     required this.onTap,
-    this.isFavorite = false,
-    this.onFavoriteTap,
   }) : super(key: key);
 
   @override
@@ -62,32 +58,6 @@ class ArtisanCard extends StatelessWidget {
                       imageUrl: imageUrl,
                       height: 180,
                       fit: BoxFit.cover,
-                    ),
-                  ),
-                  // Favorite Button
-                  Positioned(
-                    top: AppSpacing.sm,
-                    right: AppSpacing.sm,
-                    child: GestureDetector(
-                      onTap: onFavoriteTap,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceContainerLowest,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.1),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          isFavorite ? PhosphorIcons.heart : PhosphorIcons.heart,
-                          color: isFavorite ? Colors.red : AppColors.outlineVariant,
-                          size: 20,
-                        ),
-                      ),
                     ),
                   ),
                 ],

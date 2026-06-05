@@ -310,14 +310,6 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                                 arguments: artisan,
                               );
                             },
-                            onFavoriteTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Added to favorites'),
-                                  duration: Duration(seconds: 1),
-                                ),
-                              );
-                            },
                           ),
                         ),
                       );

@@ -26,8 +26,7 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
     clientPhone: clientPhone,
     clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,
-    estimatedBudgetLabel:
-        '${json['budget_min'] ?? '—'} - ${json['budget_max'] ?? '—'} GHS',
+    estimatedBudgetLabel: _budgetLabel(json),
     distanceKm: null,
   );
 }
@@ -59,12 +58,38 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     clientPhone: clientPhone,
     clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,
-    estimatedBudgetLabel:
-        '${json['budget_min'] ?? '—'} - ${json['budget_max'] ?? '—'} GHS',
+    estimatedBudgetLabel: _budgetLabel(json),
     distanceKm: null,
     historyDate: json['updated_at']?.toString().split('T').first ?? 'Just now',
     historyStatus: status == 'completed'
         ? HistoryStatus.completed
         : HistoryStatus.cancelled,
   );
+}
+
+String _budgetLabel(Map<String, dynamic> json) {
+  final String budgetType = (json['budget_type'] as String? ?? '').toLowerCase();
+  final num? fixed = json['budget_fixed'] as num?;
+  final num? min = json['budget_min'] as num?;
+  final num? max = json['budget_max'] as num?;
+
+  if (budgetType == 'fixed' && fixed != null) {
+    return '${_formatMoney(fixed)} GHS';
+  }
+  if (min != null && max != null) {
+    if (min == max) return '${_formatMoney(min)} GHS';
+    return '${_formatMoney(min)} - ${_formatMoney(max)} GHS';
+  }
+  if (min != null) return 'From ${_formatMoney(min)} GHS';
+  if (max != null) return 'Up to ${_formatMoney(max)} GHS';
+  if (fixed != null) return '${_formatMoney(fixed)} GHS';
+  return 'Budget not set';
+}
+
+String _formatMoney(num value) {
+  final double amount = value.toDouble();
+  if (amount == amount.roundToDouble()) {
+    return amount.toInt().toString();
+  }
+  return amount.toStringAsFixed(2);
 }

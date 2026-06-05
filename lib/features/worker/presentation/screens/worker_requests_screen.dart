@@ -19,19 +19,24 @@ class WorkerRequestsScreen extends StatefulWidget {
   @override
   State<WorkerRequestsScreen> createState() => _WorkerRequestsScreenState();
 }
-class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
+class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
+    with WidgetsBindingObserver {
   final WorkersService _workersService = WorkersService();
   RequestsViewState _viewState = RequestsViewState.loading;
   List<MockWorkerJob> _jobs = <MockWorkerJob>[];
   String? _errorMessage;
   Timer? _refreshTimer;
+  bool _isLoadingRequests = false;
+  bool _isSilentRefreshing = false;
+  DateTime? _lastCheckedAt;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _load();
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 20),
+      const Duration(seconds: 8),
       (_) => _load(silent: true),
     );
   }
@@ -39,15 +44,28 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
   @override
   void dispose() {
     _refreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _load(silent: true);
+    }
+  }
+
   Future<void> _load({bool silent = false}) async {
+    if (_isLoadingRequests) return;
+    _isLoadingRequests = true;
     if (!silent) {
       setState(() {
         _viewState = RequestsViewState.loading;
         _errorMessage = null;
+        _isSilentRefreshing = false;
       });
+    } else if (mounted) {
+      setState(() => _isSilentRefreshing = true);
     }
     try {
       final List<dynamic> data = await _workersService.getJobRequests();
@@ -60,13 +78,21 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
         _viewState = _jobs.isEmpty
             ? RequestsViewState.empty
             : RequestsViewState.loaded;
+        _lastCheckedAt = DateTime.now();
+        _isSilentRefreshing = false;
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _errorMessage = userMessageFor(e, fallback: 'Failed to load requests.');
-        _viewState = RequestsViewState.error;
-      });
+      if (silent) {
+        setState(() => _isSilentRefreshing = false);
+      } else {
+        setState(() {
+          _errorMessage = userMessageFor(e, fallback: 'Failed to load requests.');
+          _viewState = RequestsViewState.error;
+        });
+      }
+    } finally {
+      _isLoadingRequests = false;
     }
   }
   void _openDetail(MockWorkerJob job) {
@@ -104,7 +130,15 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _load,
-        child: _buildBody(session),
+        child: Column(
+          children: <Widget>[
+            if (_isSilentRefreshing)
+              const LinearProgressIndicator(minHeight: 2)
+            else
+              const SizedBox(height: 2),
+            Expanded(child: _buildBody(session)),
+          ],
+        ),
       ),
     );
   }
@@ -172,13 +206,23 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   session.isAvailable
-                      ? 'No open requests right now.\nWe refresh this list automatically.'
+                      ? 'No open requests right now.\nWe keep checking every few seconds.'
                       : 'Go online to receive nearby job requests.',
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyLg.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
                 ),
+                if (_lastCheckedAt != null) ...<Widget>[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    'Last checked ${_formatLastChecked(_lastCheckedAt!)}',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyMd.copyWith(
+                      color: AppColors.outline,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.md),
                 TextButton(
                   onPressed: () => _load(),
@@ -200,5 +244,12 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
           ),
       ],
     );
+  }
+
+  String _formatLastChecked(DateTime checkedAt) {
+    final Duration age = DateTime.now().difference(checkedAt);
+    if (age.inSeconds < 5) return 'just now';
+    if (age.inSeconds < 60) return '${age.inSeconds}s ago';
+    return '${age.inMinutes}m ago';
   }
 }
