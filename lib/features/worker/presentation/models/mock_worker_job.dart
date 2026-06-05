@@ -37,6 +37,11 @@ class MockWorkerJob {
     this.historyStatus,
     this.historyDate,
     this.historyRating,
+    this.backendStatus,
+    this.completionHours,
+    this.completionMaterials,
+    this.completionNotes,
+    this.completionPhotoUrls = const [],
   });
 
   final String id;
@@ -70,6 +75,11 @@ class MockWorkerJob {
   final HistoryStatus? historyStatus;
   final String? historyDate;
   final double? historyRating;
+  final String? backendStatus;
+  final double? completionHours;
+  final String? completionMaterials;
+  final String? completionNotes;
+  final List<String> completionPhotoUrls;
 
   String get urgencyLabel => urgencyBadge ??
       (urgency == JobUrgency.asap ? 'ASAP' : (scheduledLabel ?? 'Scheduled'));
@@ -125,6 +135,11 @@ class MockWorkerJob {
       historyStatus: historyStatus,
       historyDate: historyDate,
       historyRating: historyRating,
+      backendStatus: backendStatus,
+      completionHours: completionHours,
+      completionMaterials: completionMaterials,
+      completionNotes: completionNotes,
+      completionPhotoUrls: completionPhotoUrls,
     );
   }
 }

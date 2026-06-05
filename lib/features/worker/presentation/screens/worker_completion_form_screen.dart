@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/jobs_service.dart';
+import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../widgets/completion_photo_picker.dart';
@@ -27,6 +31,8 @@ class _WorkerCompletionFormScreenState
   final _materialsController = TextEditingController();
   final _notesController = TextEditingController();
   final JobsService _jobsService = JobsService();
+  final ImagePicker _picker = ImagePicker();
+  final List<File> _photos = <File>[];
   bool _isSubmitting = false;
   @override
   void dispose() {
@@ -36,16 +42,34 @@ class _WorkerCompletionFormScreenState
     super.dispose();
   }
   Future<void> _submit() async {
-    if (_hoursController.text.trim().isEmpty) {
+    if (_isSubmitting) return;
+    final double? hours = double.tryParse(_hoursController.text.trim());
+    if (hours == null || hours <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter time spent')),
+        const SnackBar(content: Text('Enter a valid time spent')),
       );
       return;
     }
     await HapticFeedback.mediumImpact();
     setState(() => _isSubmitting = true);
     try {
-      await _jobsService.completeJob(widget.job.id);
+      final List<String> photoUrls = <String>[];
+      for (final File file in _photos) {
+        final String? url =
+            await StorageService.instance.uploadCompletionPhoto(file);
+        if (url != null) photoUrls.add(url);
+      }
+      await _jobsService.completeJob(
+        widget.job.id,
+        body: <String, dynamic>{
+          'hours_spent': hours,
+          if (_materialsController.text.trim().isNotEmpty)
+            'materials_used': _materialsController.text.trim(),
+          if (_notesController.text.trim().isNotEmpty)
+            'notes': _notesController.text.trim(),
+          'photo_urls': photoUrls,
+        },
+      );
       if (!mounted) return;
       setState(() => _isSubmitting = false);
       await Navigator.of(context).pushReplacement(
@@ -122,7 +146,15 @@ class _WorkerCompletionFormScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const CompletionPhotoPicker(),
+            CompletionPhotoPicker(
+              photos: _photos,
+              isBusy: _isSubmitting,
+              onAdd: _pickPhoto,
+              onRemove: (int index) {
+                if (_isSubmitting) return;
+                setState(() => _photos.removeAt(index));
+              },
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text('NOTES FOR CLIENT (OPTIONAL)', style: AppTypography.labelCaps),
             const SizedBox(height: AppSpacing.sm),
@@ -164,5 +196,12 @@ class _WorkerCompletionFormScreenState
         borderSide: BorderSide.none,
       ),
     );
+  }
+
+  Future<void> _pickPhoto() async {
+    if (_isSubmitting || _photos.length >= 4) return;
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image == null || !mounted) return;
+    setState(() => _photos.add(File(image.path)));
   }
 }

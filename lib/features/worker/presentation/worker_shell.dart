@@ -72,6 +72,9 @@ class _WorkerShellState extends State<WorkerShell> {
     if (tab == WorkerNavTab.messages) {
       _messagesRefreshSignal++;
     }
+    if (tab == WorkerNavTab.bookings) {
+      unawaited(_session.loadActiveJob());
+    }
     _session.setTab(tab);
   }
 
@@ -140,8 +143,10 @@ class _WorkerShellState extends State<WorkerShell> {
     }
     final job = _session.activeJob!;
     switch (_session.jobPhase) {
-      case WorkerJobPhase.preStart:
-        return WorkerActivePreStartScreen(job: job);
+      case WorkerJobPhase.accepted:
+      case WorkerJobPhase.onTheWay:
+      case WorkerJobPhase.arrived:
+        return WorkerActivePreStartScreen(job: job, phase: _session.jobPhase);
       case WorkerJobPhase.inProgress:
         return WorkerActiveInProgressScreen(job: job);
       case WorkerJobPhase.none:

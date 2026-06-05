@@ -28,6 +28,6 @@ void main() {
     session.acceptJob(MockWorkerData.incomingJobs.first);
 
     expect(session.hasActiveJob, isTrue);
-    expect(session.jobPhase, WorkerJobPhase.preStart);
+    expect(session.jobPhase, WorkerJobPhase.accepted);
   });
 }

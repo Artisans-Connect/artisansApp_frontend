@@ -13,6 +13,10 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
   final String categoryName = category is Map<String, dynamic>
       ? category['name'] as String? ?? 'General'
       : 'General';
+  final List<String> photoUrls =
+      (json['photo_urls'] as List<dynamic>? ?? <dynamic>[])
+          .map((dynamic url) => url.toString())
+          .toList();
 
   return MockWorkerJob(
     id: json['id'] as String,
@@ -27,6 +31,9 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
     clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,
     estimatedBudgetLabel: _budgetLabel(json),
+    referencePhotoLabels: photoUrls,
+    photoCount: photoUrls.length,
+    backendStatus: json['status'] as String?,
     distanceKm: null,
   );
 }
@@ -45,6 +52,12 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
       ? category['name'] as String? ?? 'General'
       : 'General';
   final String status = (json['status'] as String? ?? '').toLowerCase();
+  final Map<String, dynamic> completion =
+      _firstRelated(json['completion_details']);
+  final List<String> completionPhotoUrls =
+      (completion['photo_urls'] as List<dynamic>? ?? <dynamic>[])
+          .map((dynamic url) => url.toString())
+          .toList();
 
   return MockWorkerJob(
     id: json['id'] as String,
@@ -59,12 +72,27 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,
     estimatedBudgetLabel: _budgetLabel(json),
+    backendStatus: status,
     distanceKm: null,
     historyDate: json['updated_at']?.toString().split('T').first ?? 'Just now',
     historyStatus: status == 'completed'
         ? HistoryStatus.completed
         : HistoryStatus.cancelled,
+    completionHours: (completion['hours_spent'] as num?)?.toDouble(),
+    completionMaterials: completion['materials_used'] as String?,
+    completionNotes: completion['notes'] as String?,
+    completionPhotoUrls: completionPhotoUrls,
   );
+}
+
+Map<String, dynamic> _firstRelated(dynamic value) {
+  if (value is List && value.isNotEmpty && value.first is Map) {
+    return Map<String, dynamic>.from(value.first as Map);
+  }
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  return <String, dynamic>{};
 }
 
 String _budgetLabel(Map<String, dynamic> json) {

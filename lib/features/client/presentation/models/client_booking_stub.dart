@@ -77,7 +77,10 @@ class ClientBooking {
 
   bool get isTrackable {
     final String raw = (backendStatus ?? '').toLowerCase();
-    return raw == 'matched' || raw == 'in_progress';
+    return raw == 'matched' ||
+        raw == 'on_the_way' ||
+        raw == 'arrived' ||
+        raw == 'in_progress';
   }
 
   bool get isNavigable =>
@@ -139,6 +142,8 @@ class ClientBooking {
     final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
     final ClientBookingStatus status = switch (statusRaw) {
       'matched' => ClientBookingStatus.accepted,
+      'on_the_way' => ClientBookingStatus.accepted,
+      'arrived' => ClientBookingStatus.accepted,
       'in_progress' => ClientBookingStatus.inProgress,
       'completed' => ClientBookingStatus.completed,
       'cancelled' || 'expired' => ClientBookingStatus.cancelled,
@@ -178,7 +183,10 @@ class ClientBooking {
   static ClientBooking? pickActiveTrackable(Iterable<Map<String, dynamic>> jobs) {
     for (final Map<String, dynamic> json in jobs) {
       final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
-      if (statusRaw == 'matched' || statusRaw == 'in_progress') {
+      if (statusRaw == 'matched' ||
+          statusRaw == 'on_the_way' ||
+          statusRaw == 'arrived' ||
+          statusRaw == 'in_progress') {
         return ClientBooking.fromApiJob(json);
       }
     }

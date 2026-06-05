@@ -9,6 +9,7 @@ import '../state/worker_session_state.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/history_job_card.dart';
 import '../widgets/segment_toggle.dart';
+import 'worker_booking_detail_screen.dart';
 class WorkerBookingHistoryScreen extends StatefulWidget {
   const WorkerBookingHistoryScreen({super.key});
   @override
@@ -122,7 +123,18 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
                         itemCount: _filtered.length,
-                        itemBuilder: (_, int i) => HistoryJobCard(job: _filtered[i]),
+                        itemBuilder: (_, int i) => HistoryJobCard(
+                          job: _filtered[i],
+                          onViewDetails: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => WorkerBookingDetailScreen(
+                                  job: _filtered[i],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
           ),
         ],

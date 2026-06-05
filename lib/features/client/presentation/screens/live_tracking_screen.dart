@@ -143,7 +143,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   void _applyStepFromStatus(String? statusRaw) {
     final String status = (statusRaw ?? '').toLowerCase();
     final int step = switch (status) {
-      'matched' => 1,
+      'matched' => 0,
+      'on_the_way' => 1,
+      'arrived' => 2,
       'in_progress' => 3,
       'completed' => 4,
       _ => 0,
@@ -380,7 +382,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                   borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
                 ),
                 child: Text(
-                  'In Progress',
+                  _statusPillLabel(job['status'] as String?),
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.success,
                   ),
@@ -391,6 +393,17 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
         ],
       ),
     );
+  }
+
+  String _statusPillLabel(String? statusRaw) {
+    return switch ((statusRaw ?? '').toLowerCase()) {
+      'on_the_way' => 'On the Way',
+      'arrived' => 'Arrived',
+      'in_progress' => 'In Progress',
+      'completed' => 'Completed',
+      'matched' => 'Confirmed',
+      _ => 'Pending',
+    };
   }
 
   Widget _buildProgressTimeline() {

@@ -27,6 +27,10 @@ class StorageService {
     return _uploadFile(file, AppConstants.chatMediaBucket);
   }
 
+  Future<String?> uploadCompletionPhoto(File file) async {
+    return _uploadFile(file, AppConstants.completionPhotosBucket);
+  }
+
   Future<String?> _uploadFile(File file, String bucketName) async {
     try {
       final String userId = _supabase.auth.currentUser?.id ?? 'anonymous';

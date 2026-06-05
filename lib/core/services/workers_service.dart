@@ -24,6 +24,14 @@ class WorkersService {
     return await _api.post('/workers/$jobId/start');
   }
 
+  Future<dynamic> markOnTheWay(String jobId) async {
+    return await _api.post('/workers/$jobId/on-way');
+  }
+
+  Future<dynamic> markArrived(String jobId) async {
+    return await _api.post('/workers/$jobId/arrive');
+  }
+
   Future<dynamic> getHistory() async {
     return await _api.get('/workers/me/history');
   }

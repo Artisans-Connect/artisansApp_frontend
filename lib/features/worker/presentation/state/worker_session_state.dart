@@ -7,7 +7,7 @@ import '../models/worker_ui_contracts.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/worker_bottom_nav.dart';
 
-enum WorkerJobPhase { none, preStart, inProgress }
+enum WorkerJobPhase { none, accepted, onTheWay, arrived, inProgress }
 enum WorkerProfilePage { earnings, stats, history }
 
 class WorkerSessionState extends ChangeNotifier {
@@ -64,9 +64,7 @@ class WorkerSessionState extends ChangeNotifier {
       }
       activeJob = workerJobFromApi(data);
       final String status = (data['status'] as String? ?? '').toLowerCase();
-      jobPhase = status == 'in_progress'
-          ? WorkerJobPhase.inProgress
-          : WorkerJobPhase.preStart;
+      jobPhase = _phaseForStatus(status);
       currentTab = WorkerNavTab.bookings;
       notifyListeners();
     } catch (_) {
@@ -92,15 +90,34 @@ class WorkerSessionState extends ChangeNotifier {
 
   void acceptJob(MockWorkerJob job) {
     activeJob = job;
-    jobPhase = WorkerJobPhase.preStart;
+    jobPhase = WorkerJobPhase.accepted;
     currentTab = WorkerNavTab.bookings;
     notifyListeners();
   }
 
   void acceptJobFromApi(Map<String, dynamic> job) {
     activeJob = workerJobFromApi(job);
-    jobPhase = WorkerJobPhase.preStart;
+    jobPhase = _phaseForStatus((job['status'] as String? ?? '').toLowerCase());
     currentTab = WorkerNavTab.bookings;
+    notifyListeners();
+  }
+
+  void updateActiveJobFromApi(Map<String, dynamic> job) {
+    activeJob = workerJobFromApi(job);
+    jobPhase = _phaseForStatus((job['status'] as String? ?? '').toLowerCase());
+    currentTab = WorkerNavTab.bookings;
+    notifyListeners();
+  }
+
+  void markOnTheWay() {
+    if (activeJob == null) return;
+    jobPhase = WorkerJobPhase.onTheWay;
+    notifyListeners();
+  }
+
+  void markArrived() {
+    if (activeJob == null) return;
+    jobPhase = WorkerJobPhase.arrived;
     notifyListeners();
   }
 
@@ -127,6 +144,16 @@ class WorkerSessionState extends ChangeNotifier {
   void goToExplore() {
     currentTab = WorkerNavTab.explore;
     notifyListeners();
+  }
+
+  WorkerJobPhase _phaseForStatus(String status) {
+    return switch (status) {
+      'on_the_way' => WorkerJobPhase.onTheWay,
+      'arrived' => WorkerJobPhase.arrived,
+      'in_progress' => WorkerJobPhase.inProgress,
+      'matched' => WorkerJobPhase.accepted,
+      _ => WorkerJobPhase.accepted,
+    };
   }
 }
 

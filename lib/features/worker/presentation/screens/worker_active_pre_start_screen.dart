@@ -11,8 +11,13 @@ import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
 import '../../../../shared/widgets/job_site_map.dart';
 class WorkerActivePreStartScreen extends StatefulWidget {
-  const WorkerActivePreStartScreen({super.key, required this.job});
+  const WorkerActivePreStartScreen({
+    super.key,
+    required this.job,
+    required this.phase,
+  });
   final MockWorkerJob job;
+  final WorkerJobPhase phase;
   @override
   State<WorkerActivePreStartScreen> createState() => _WorkerActivePreStartScreenState();
 }
@@ -20,6 +25,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
   final WorkersService _workersService = WorkersService();
   bool _isStarting = false;
   bool _isOpeningDirections = false;
+  bool _isAdvancing = false;
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
@@ -175,61 +181,10 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: AppSpacing.xl),
-                  GradientButton(
-                    label: job.hasServiceLocation
-                        ? "I'm on my way - open directions"
-                        : "I'm on my way",
-                    isLoading: _isOpeningDirections,
-                    enabled: !_isOpeningDirections,
-                    onPressed: () async {
-                      await HapticFeedback.mediumImpact();
-                      if (!context.mounted) return;
-                      setState(() => _isOpeningDirections = true);
-                      try {
-                        if (job.hasServiceLocation) {
-                          await _openDirections(job);
-                        } else {
-                          AppToast.showInfo(
-                            context,
-                            'Travel noted. Start work only when you arrive.',
-                          );
-                        }
-                      } finally {
-                        if (mounted) {
-                          setState(() => _isOpeningDirections = false);
-                        }
-                      }
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  OutlineButton(
-                    label: 'Start work when I arrive',
-                    onPressed: _isStarting
-                        ? null
-                        : () async {
-                            await HapticFeedback.mediumImpact();
-                            setState(() => _isStarting = true);
-                      try {
-                        await _workersService.startJob(job.id);
-                        if (mounted) {
-                          session.markJobStarted();
-                        }
-                            } catch (e) {
-                              if (context.mounted) {
-                                AppToast.showError(
-                                  context,
-                                  e,
-                                  fallback: 'Failed to start job.',
-                                );
-                              }
-                            } finally {
-                              if (mounted) {
-                                setState(() => _isStarting = false);
-                              }
-                            }
-                          },
-                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _PhaseHint(phase: widget.phase),
+                  const SizedBox(height: AppSpacing.lg),
+                  ..._buildPhaseActions(session, job),
                   const SizedBox(height: AppSpacing.md),
                   TextButton(
                     onPressed: () {
@@ -254,6 +209,138 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
   void _stub(BuildContext context, String action) {
     AppToast.showInfo(context, '$action — coming soon');
   }
+  List<Widget> _buildPhaseActions(
+    WorkerSessionState session,
+    MockWorkerJob job,
+  ) {
+    final bool busy = _isAdvancing || _isStarting || _isOpeningDirections;
+    switch (widget.phase) {
+      case WorkerJobPhase.accepted:
+        return <Widget>[
+          OutlineButton(
+            label: 'Open directions',
+            onPressed: busy ? null : () => _openDirectionsWithLoading(job),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          GradientButton(
+            label: "I'm on my way",
+            isLoading: _isAdvancing,
+            enabled: !busy,
+            onPressed: () => _markOnTheWay(session, job),
+          ),
+        ];
+      case WorkerJobPhase.onTheWay:
+        return <Widget>[
+          OutlineButton(
+            label: 'Open directions',
+            onPressed: busy ? null : () => _openDirectionsWithLoading(job),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          GradientButton(
+            label: "I've arrived",
+            isLoading: _isAdvancing,
+            enabled: !busy,
+            onPressed: () => _markArrived(session, job),
+          ),
+        ];
+      case WorkerJobPhase.arrived:
+        return <Widget>[
+          GradientButton(
+            label: 'Start work',
+            isLoading: _isStarting,
+            enabled: !busy,
+            onPressed: () => _startWork(session, job),
+          ),
+        ];
+      case WorkerJobPhase.inProgress:
+      case WorkerJobPhase.none:
+        return const <Widget>[];
+    }
+  }
+
+  Future<void> _markOnTheWay(
+    WorkerSessionState session,
+    MockWorkerJob job,
+  ) async {
+    await HapticFeedback.mediumImpact();
+    if (!mounted) return;
+    setState(() => _isAdvancing = true);
+    try {
+      final dynamic updated = await _workersService.markOnTheWay(job.id);
+      if (!mounted) return;
+      if (updated is Map<String, dynamic>) {
+        session.updateActiveJobFromApi(updated);
+      } else {
+        session.markOnTheWay();
+      }
+      AppToast.showSuccess(context, 'Client notified that you are on the way.');
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not update job status.');
+      }
+    } finally {
+      if (mounted) setState(() => _isAdvancing = false);
+    }
+  }
+
+  Future<void> _markArrived(
+    WorkerSessionState session,
+    MockWorkerJob job,
+  ) async {
+    await HapticFeedback.mediumImpact();
+    if (!mounted) return;
+    setState(() => _isAdvancing = true);
+    try {
+      final dynamic updated = await _workersService.markArrived(job.id);
+      if (!mounted) return;
+      if (updated is Map<String, dynamic>) {
+        session.updateActiveJobFromApi(updated);
+      } else {
+        session.markArrived();
+      }
+      AppToast.showSuccess(context, 'Arrival confirmed.');
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not confirm arrival.');
+      }
+    } finally {
+      if (mounted) setState(() => _isAdvancing = false);
+    }
+  }
+
+  Future<void> _startWork(
+    WorkerSessionState session,
+    MockWorkerJob job,
+  ) async {
+    await HapticFeedback.mediumImpact();
+    if (!mounted) return;
+    setState(() => _isStarting = true);
+    try {
+      final dynamic updated = await _workersService.startJob(job.id);
+      if (!mounted) return;
+      if (updated is Map<String, dynamic>) {
+        session.updateActiveJobFromApi(updated);
+      } else {
+        session.markJobStarted();
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Failed to start job.');
+      }
+    } finally {
+      if (mounted) setState(() => _isStarting = false);
+    }
+  }
+
+  Future<void> _openDirectionsWithLoading(MockWorkerJob job) async {
+    setState(() => _isOpeningDirections = true);
+    try {
+      await _openDirections(job);
+    } finally {
+      if (mounted) setState(() => _isOpeningDirections = false);
+    }
+  }
+
   Future<void> _callClient(BuildContext context, MockWorkerJob job) async {
     final String phone =
         job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
@@ -283,5 +370,37 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
     if (!launched && mounted) {
       AppToast.showInfo(context, 'Could not open directions.');
     }
+  }
+}
+
+class _PhaseHint extends StatelessWidget {
+  const _PhaseHint({required this.phase});
+
+  final WorkerJobPhase phase;
+
+  @override
+  Widget build(BuildContext context) {
+    final String text = switch (phase) {
+      WorkerJobPhase.accepted =>
+        'Open directions, then tell the client when you are on the way.',
+      WorkerJobPhase.onTheWay =>
+        'Keep directions handy and confirm arrival when you reach the job site.',
+      WorkerJobPhase.arrived =>
+        'Only start work after you have met the client and are ready to begin.',
+      WorkerJobPhase.inProgress => 'Work is already in progress.',
+      WorkerJobPhase.none => '',
+    };
+    if (text.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primaryFixed.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        text,
+        style: AppTypography.bodyMd.copyWith(color: AppColors.primary),
+      ),
+    );
   }
 }
