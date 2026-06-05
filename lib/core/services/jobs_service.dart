@@ -60,4 +60,8 @@ class JobsService {
   Future<dynamic> getJobById(dynamic id) async {
     return await _apiClient.get('/jobs/$id');
   }
+
+  Future<dynamic> getMatchingProgress(dynamic id) async {
+    return await _apiClient.get('/jobs/$id/matching-progress');
+  }
 }

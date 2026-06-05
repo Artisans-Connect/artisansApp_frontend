@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/errors/error_messages.dart';
 import '../../../core/utils/current_user.dart';
@@ -39,6 +40,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   ChatDetailArgs? _args;
   bool _showAttachmentMenu = false;
   bool _isLoading = false;
+  bool _isSending = false;
+  bool _isUploadingMedia = false;
   String? _loadError;
   RealtimeChannel? _realtimeChannel;
   Timer? _pollTimer;
@@ -104,6 +107,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   imageUrls: (record['image_urls'] as List<dynamic>?)
                       ?.map((dynamic item) => item.toString())
                       .toList(),
+                  mediaUrls: (record['media_urls'] as List<dynamic>?)
+                      ?.map((dynamic item) => item.toString())
+                      .toList(),
+                  mediaTypes: (record['media_types'] as List<dynamic>?)
+                      ?.map((dynamic item) => item.toString())
+                      .toList(),
                   status: MessageStatus.sent,
                 ),
               );
@@ -166,30 +175,47 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _pickAndUploadAttachment(ImageSource source) async {
+  Future<void> _pickAndUploadAttachment(ImageSource source, {bool video = false}) async {
+    if (_isUploadingMedia) return;
     setState(() => _showAttachmentMenu = false);
 
     try {
-      final XFile? file = await _picker.pickImage(source: source, imageQuality: 85);
+      setState(() => _isUploadingMedia = true);
+      final XFile? file = video
+          ? await _picker.pickVideo(source: source, maxDuration: const Duration(seconds: 60))
+          : await _picker.pickImage(source: source, imageQuality: 85);
       if (file == null) return;
 
-      final String? publicUrl = await StorageService.instance.uploadJobPhoto(File(file.path));
+      final String? publicUrl = await StorageService.instance.uploadChatMedia(File(file.path));
       if (publicUrl == null) {
         if (!mounted) return;
-        AppToast.showError(context, Exception('Image upload failed.'), fallback: 'Image upload failed.');
+        AppToast.showError(context, Exception('Media upload failed.'), fallback: 'Media upload failed.');
         return;
       }
 
-      await _sendMessage(imageUrls: <String>[publicUrl]);
+      await _sendMessage(
+        imageUrls: video ? null : <String>[publicUrl],
+        mediaUrls: <String>[publicUrl],
+        mediaTypes: <String>[video ? 'video' : 'image'],
+      );
     } catch (e) {
       if (!mounted) return;
-      AppToast.showError(context, e, fallback: 'Failed to upload image.');
+      AppToast.showError(context, e, fallback: 'Failed to upload media.');
+    } finally {
+      if (mounted) setState(() => _isUploadingMedia = false);
     }
   }
 
-  Future<void> _sendMessage({List<String>? imageUrls}) async {
+  Future<void> _sendMessage({
+    List<String>? imageUrls,
+    List<String>? mediaUrls,
+    List<String>? mediaTypes,
+  }) async {
+    if (_isSending) return;
     final String text = _composerController.text.trim();
-    if ((text.isEmpty && (imageUrls == null || imageUrls.isEmpty)) || _args == null) return;
+    final bool hasMedia = (imageUrls != null && imageUrls.isNotEmpty) ||
+        (mediaUrls != null && mediaUrls.isNotEmpty);
+    if ((text.isEmpty && !hasMedia) || _args == null) return;
 
     final String conversationId =
         _activeConversationId ?? _args!.jobId ?? _args!.conversationId;
@@ -203,8 +229,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       return;
     }
     final String tempId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+    final String clientMessageId = const Uuid().v4();
 
     setState(() {
+      _isSending = true;
       _messages.add(
         ChatMessage(
           id: tempId,
@@ -213,6 +241,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           sentAt: DateTime.now(),
           isMine: true,
           imageUrls: imageUrls,
+          mediaUrls: mediaUrls,
+          mediaTypes: mediaTypes,
           status: MessageStatus.pending,
         ),
       );
@@ -225,6 +255,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         conversationId,
         text,
         imageUrls: imageUrls,
+        mediaUrls: mediaUrls,
+        mediaTypes: mediaTypes,
+        clientMessageId: clientMessageId,
       );
       final Map<String, dynamic> json = response as Map<String, dynamic>;
       
@@ -238,6 +271,12 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             sentAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
             isMine: true,
             imageUrls: (json['image_urls'] as List<dynamic>?)
+                ?.map((dynamic item) => item.toString())
+                .toList(),
+            mediaUrls: (json['media_urls'] as List<dynamic>?)
+                ?.map((dynamic item) => item.toString())
+                .toList(),
+            mediaTypes: (json['media_types'] as List<dynamic>?)
                 ?.map((dynamic item) => item.toString())
                 .toList(),
             status: MessageStatus.sent,
@@ -256,11 +295,45 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             sentAt: _messages[index].sentAt,
             isMine: true,
             imageUrls: imageUrls,
+            mediaUrls: mediaUrls,
+            mediaTypes: mediaTypes,
             status: MessageStatus.failed,
           );
         }
       });
       AppToast.showError(context, e, fallback: 'Failed to send message.');
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
+  }
+
+  void _openProfile(ChatDetailArgs args) {
+    Navigator.pushNamed(
+      context,
+      UserProfileScreen.routeName,
+      arguments: ProfileArgs(
+        userId: args.counterpartUserId,
+        viewAsWorker: SharedUserContext.isClient,
+      ),
+    );
+  }
+
+  void _handleMoreAction(String action, ChatDetailArgs args) {
+    switch (action) {
+      case 'profile':
+        _openProfile(args);
+        break;
+      case 'call':
+        ClientNavigation.callPhone(context, args.counterpartPhone ?? '');
+        break;
+      case 'refresh':
+        _loadMessages(
+          _activeConversationId ?? args.jobId ?? args.conversationId,
+        );
+        break;
+      case 'dismiss':
+        setState(() => _showAttachmentMenu = false);
+        break;
     }
   }
 
@@ -288,14 +361,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ),
         titleSpacing: 4,
         title: InkWell(
-          onTap: () => Navigator.pushNamed(
-            context,
-            UserProfileScreen.routeName,
-            arguments: ProfileArgs(
-              userId: args.counterpartUserId,
-              viewAsWorker: SharedUserContext.isClient,
-            ),
-          ),
+          onTap: () => _openProfile(args),
           borderRadius: BorderRadius.circular(8),
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
@@ -367,13 +433,29 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           ),
         ),
         actions: <Widget>[
-          IconButton(
-            onPressed: () {},
-            icon: Icon(PhosphorIcons.videoCamera, color: AppColors.textPrimary),
-          ),
-          IconButton(
-            onPressed: () {},
+          PopupMenuButton<String>(
             icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
+            onSelected: (String action) => _handleMoreAction(action, args),
+            itemBuilder: (_) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'profile',
+                child: Text('View profile'),
+              ),
+              if ((args.counterpartPhone ?? '').trim().isNotEmpty)
+                const PopupMenuItem<String>(
+                  value: 'call',
+                  child: Text('Call'),
+                ),
+              const PopupMenuItem<String>(
+                value: 'refresh',
+                child: Text('Refresh chat'),
+              ),
+              if (_showAttachmentMenu)
+                const PopupMenuItem<String>(
+                  value: 'dismiss',
+                  child: Text('Close attachments'),
+                ),
+            ],
           ),
         ],
       ),
@@ -464,17 +546,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
           IconButton(
-            onPressed: () => setState(() => _showAttachmentMenu = false),
-            icon: Icon(PhosphorIcons.file, color: AppColors.primary),
-            tooltip: 'Document',
+            onPressed: _isUploadingMedia
+                ? null
+                : () => _pickAndUploadAttachment(ImageSource.gallery, video: true),
+            icon: Icon(PhosphorIcons.video, color: AppColors.primary),
+            tooltip: 'Video',
           ),
           IconButton(
-            onPressed: () => _pickAndUploadAttachment(ImageSource.camera),
+            onPressed: _isUploadingMedia
+                ? null
+                : () => _pickAndUploadAttachment(ImageSource.camera),
             icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
             tooltip: 'Camera',
           ),
           IconButton(
-            onPressed: () => _pickAndUploadAttachment(ImageSource.gallery),
+            onPressed: _isUploadingMedia
+                ? null
+                : () => _pickAndUploadAttachment(ImageSource.gallery),
             icon: Icon(PhosphorIcons.image, color: AppColors.primary),
             tooltip: 'Gallery',
           ),
@@ -504,7 +592,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             color: AppColors.surfaceDim,
             borderRadius: BorderRadius.circular(99),
             child: InkWell(
-              onTap: () {
+              onTap: _isUploadingMedia ? null : () {
                 setState(() => _showAttachmentMenu = !_showAttachmentMenu);
               },
               borderRadius: BorderRadius.circular(99),
@@ -557,9 +645,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             color: AppColors.primary,
             borderRadius: BorderRadius.circular(99),
             child: InkWell(
-              onTap: _sendMessage,
+              onTap: _isSending ? null : _sendMessage,
               borderRadius: BorderRadius.circular(99),
-              child: Padding(padding: const EdgeInsets.all(12), child: Icon(PhosphorIcons.paperPlaneRight, color: Colors.white, size: 22),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: _isSending
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(PhosphorIcons.paperPlaneRight, color: Colors.white, size: 22),
               ),
             ),
           ),

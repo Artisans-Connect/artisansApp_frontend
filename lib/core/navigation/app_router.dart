@@ -4,6 +4,7 @@ import '../../features/client/presentation/client_shell.dart';
 import '../../features/client/presentation/screens/explore_artisans_screen.dart';
 import '../../features/client/presentation/screens/map_discovery_screen.dart';
 import '../../features/client/presentation/screens/artisan_profile_screen.dart';
+import '../../features/client/presentation/screens/direct_worker_request_screen.dart';
 import '../../features/client/presentation/screens/finding_artisan_screen.dart';
 import '../../features/client/presentation/screens/job_post_category_screen.dart';
 import '../../features/client/presentation/screens/job_post_subcategory_screen.dart';
@@ -76,6 +77,13 @@ class AppRouter {
           builder: (_) => FindingArtisanScreen(
             jobData: jobData,
             artisan: artisan,
+          ),
+        );
+
+      case AppRoutes.directWorkerRequest:
+        return MaterialPageRoute(
+          builder: (_) => DirectWorkerRequestScreen(
+            artisan: settings.arguments as Map<String, dynamic>?,
           ),
         );
 

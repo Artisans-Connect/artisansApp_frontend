@@ -31,11 +31,13 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   String _selectedCategory = '';
   String _selectedDistance = '';
   String _selectedRating = '';
-  final Set<String> _savedArtisanNames = <String>{};
   late final TextEditingController _searchController;
 
   List<Map<String, dynamic>> allArtisans = [];
   bool _isLoading = true;
+  bool _openingMap = false;
+  bool _openingMessages = false;
+  final Set<String> _openingChatWorkerIds = <String>{};
 
   @override
   void initState() {
@@ -72,7 +74,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
           'reviewCount': 0,
           'imageUrl': imageUrl,
           'location': (profile['location_label'] ?? 'Location not set').toString(),
-          'distance': raw['distance_km'] != null ? '${(raw['distance_km'] as num).toStringAsFixed(1)} km' : 'N/A',
+          'distance': raw['distance_km'] != null ? '${(raw['distance_km'] as num).toStringAsFixed(1)} km' : '',
           'distanceKm': (raw['distance_km'] as num?)?.toDouble(),
           'userId': userId,
           'id': userId,
@@ -136,24 +138,28 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
     }).toList();
   }
 
-  void _toggleSaved(String name) {
-    setState(() {
-      if (_savedArtisanNames.contains(name)) {
-        _savedArtisanNames.remove(name);
-      } else {
-        _savedArtisanNames.add(name);
-      }
+  Future<void> _openMap() async {
+    if (_openingMap) return;
+    setState(() => _openingMap = true);
+    await ClientNavigation.pushFlow(context, AppRoutes.mapDiscovery);
+    if (mounted) setState(() => _openingMap = false);
+  }
+
+  void _openMessages() {
+    if (_openingMessages) return;
+    setState(() => _openingMessages = true);
+    ClientNavigation.openMessages(context);
+    Future<void>.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _openingMessages = false);
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          _savedArtisanNames.contains(name)
-              ? 'Saved $name'
-              : 'Removed $name from saved',
-        ),
-        duration: const Duration(seconds: 1),
-      ),
-    );
+  }
+
+  Future<void> _openChat(Map<String, dynamic> artisan) async {
+    final String workerId = (artisan['id'] ?? artisan['userId'] ?? '').toString();
+    if (_openingChatWorkerIds.contains(workerId)) return;
+    setState(() => _openingChatWorkerIds.add(workerId));
+    await ClientNavigation.openChatForArtisan(context, artisan);
+    if (mounted) setState(() => _openingChatWorkerIds.remove(workerId));
   }
 
   @override
@@ -168,17 +174,28 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
         actions: <Widget>[
           IconButton(
             tooltip: 'Map view',
-            onPressed: () =>
-                ClientNavigation.pushFlow(context, AppRoutes.mapDiscovery),
-            icon: Icon(PhosphorIcons.mapTrifold, color: AppColors.textPrimary),
+            onPressed: _openingMap ? null : _openMap,
+            icon: _openingMap
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(PhosphorIcons.mapTrifold, color: AppColors.textPrimary),
           ),
           IconButton(
             tooltip: 'Messages',
-            onPressed: () => ClientNavigation.openMessages(context),
-            icon: Icon(
-              PhosphorIcons.chatCircle,
-              color: AppColors.textPrimary,
-            ),
+            onPressed: _openingMessages ? null : _openMessages,
+            icon: _openingMessages
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(
+                    PhosphorIcons.chatCircle,
+                    color: AppColors.textPrimary,
+                  ),
           ),
           const SizedBox(width: 4),
         ],
@@ -286,7 +303,8 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
               if (!_isLoading)
                 ...artisans.map((Map<String, dynamic> artisan) {
                   final String name = artisan['name'] as String;
-                final bool isSaved = _savedArtisanNames.contains(name);
+                  final String workerId = (artisan['id'] ?? artisan['userId'] ?? '').toString();
+                  final bool openingChat = _openingChatWorkerIds.contains(workerId);
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.md),
                   child: Container(
@@ -375,44 +393,18 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                           children: <Widget>[
                             IconButton(
                               tooltip: 'Message',
-                              onPressed: () => ClientNavigation.openChatForArtisan(
-                                context,
-                                artisan,
-                              ),
-                              icon: Icon(
-                                PhosphorIcons.chatCircle,
-                                color: AppColors.primary,
-                                size: 22,
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: isSaved ? 'Unsave' : 'Save',
-                              onPressed: () => _toggleSaved(name),
-                              icon: Icon(
-                                isSaved
-                                    ? PhosphorIcons.bookmark
-                                    : PhosphorIcons.bookmark,
-                                color: isSaved
-                                    ? AppColors.primary
-                                    : AppColors.outlineVariant,
-                                size: 22,
-                              ),
-                            ),
-                            IconButton(
-                              tooltip: 'View profile',
-                              onPressed: () {
-                                ClientNavigation.openArtisanProfile(
-                                  context,
-                                  userId: (artisan['userId'] ?? artisan['id'] ?? '').toString(),
-                                  name: name,
-                                  artisan: artisan,
-                                );
-                              },
-                              icon: Icon(
-                                PhosphorIcons.user,
-                                color: AppColors.textSecondary,
-                                size: 22,
-                              ),
+                              onPressed: openingChat ? null : () => _openChat(artisan),
+                              icon: openingChat
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(strokeWidth: 2),
+                                    )
+                                  : Icon(
+                                      PhosphorIcons.chatCircle,
+                                      color: AppColors.primary,
+                                      size: 22,
+                                    ),
                             ),
                           ],
                         ),

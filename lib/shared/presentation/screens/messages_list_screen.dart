@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
+import '../../../core/navigation/app_routes.dart';
 import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -32,6 +33,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   String? _loadError;
   List<ConversationSummary> _conversations = <ConversationSummary>[];
   String _searchQuery = '';
+  bool _openingSearch = false;
 
   @override
   void initState() {
@@ -124,6 +126,18 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
     );
   }
 
+  void _openWorkerSearch() {
+    if (_openingSearch) return;
+    setState(() => _openingSearch = true);
+    Navigator.pushNamed(
+      context,
+      AppRoutes.exploreArtisans,
+      arguments: <String, dynamic>{'query': _searchQuery},
+    ).whenComplete(() {
+      if (mounted) setState(() => _openingSearch = false);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,9 +145,18 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       appBar: _buildAppBar(),
       body: _buildBody(),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _openingSearch ? null : _openWorkerSearch,
         backgroundColor: AppColors.primary,
-        child: Icon(PhosphorIcons.pencilSimple, color: Colors.white),
+        child: _openingSearch
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : Icon(PhosphorIcons.magnifyingGlass, color: Colors.white),
       ),
     );
   }
@@ -144,10 +167,25 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       showBackButton: !widget.embedInShell,
       actions: <Widget>[
         if (!widget.embedInShell) ...[
-          IconButton(
-            onPressed: () =>
-                Navigator.pushNamed(context, SettingsScreen.routeName),
+          PopupMenuButton<String>(
             icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
+            onSelected: (String value) {
+              if (value == 'settings') {
+                Navigator.pushNamed(context, SettingsScreen.routeName);
+              } else if (value == 'refresh') {
+                _loadConversations(forceRefresh: true);
+              }
+            },
+            itemBuilder: (_) => <PopupMenuEntry<String>>[
+              const PopupMenuItem<String>(
+                value: 'refresh',
+                child: Text('Refresh'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'settings',
+                child: Text('Settings'),
+              ),
+            ],
           ),
         ],
         const SizedBox(width: 4),
@@ -222,6 +260,12 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
               'When you match with an artisan or client, your chats will appear here.',
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyLg,
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: _openingSearch ? null : _openWorkerSearch,
+              icon: Icon(PhosphorIcons.magnifyingGlass),
+              label: const Text('Find a worker'),
             ),
           ],
         ),

@@ -8,6 +8,8 @@ class ChatMessage {
     required this.sentAt,
     required this.isMine,
     this.imageUrls,
+    this.mediaUrls,
+    this.mediaTypes,
     this.status = MessageStatus.sent,
   });
 
@@ -17,6 +19,8 @@ class ChatMessage {
   final DateTime sentAt;
   final bool isMine;
   final List<String>? imageUrls;
+  final List<String>? mediaUrls;
+  final List<String>? mediaTypes;
   final MessageStatus status;
 
   factory ChatMessage.fromJson(Map<String, dynamic> json, String currentUserId) {
@@ -29,6 +33,12 @@ class ChatMessage {
       isMine: json['sender_id'] == currentUserId,
       imageUrls: json['image_urls'] != null
           ? List<String>.from(json['image_urls'])
+          : null,
+      mediaUrls: json['media_urls'] != null
+          ? List<String>.from(json['media_urls'])
+          : null,
+      mediaTypes: json['media_types'] != null
+          ? List<String>.from(json['media_types'])
           : null,
       status: MessageStatus.values.firstWhere(
         (MessageStatus item) => item.name == statusValue,
@@ -44,6 +54,8 @@ class ChatMessage {
       'content': content,
       'created_at': sentAt.toIso8601String(),
       'image_urls': imageUrls,
+      'media_urls': mediaUrls,
+      'media_types': mediaTypes,
       'status': status.name,
     };
   }

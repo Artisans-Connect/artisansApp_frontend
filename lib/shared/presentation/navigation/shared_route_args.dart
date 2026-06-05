@@ -6,6 +6,7 @@ class ChatDetailArgs {
     this.jobId,
     this.jobTitle,
     this.isDirect = false,
+    this.counterpartPhone,
   });
 
   final String conversationId;
@@ -14,6 +15,7 @@ class ChatDetailArgs {
   final String counterpartName;
   final String? jobTitle;
   final bool isDirect;
+  final String? counterpartPhone;
 }
 
 class ProfileArgs {

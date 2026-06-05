@@ -144,7 +144,7 @@ class ClientBooking {
       'cancelled' || 'expired' => ClientBookingStatus.cancelled,
       _ => ClientBookingStatus.requested,
     };
-    final dynamic worker = json['worker'] ?? json['profiles'];
+    final dynamic worker = json['worker'] ?? json['requested_worker'] ?? json['profiles'];
     final String artisanName = worker is Map<String, dynamic>
         ? worker['full_name'] as String? ?? 'Artisan'
         : 'Artisan';
@@ -163,11 +163,11 @@ class ClientBooking {
       imageUrl: worker is Map<String, dynamic>
           ? worker['avatar_url'] as String?
           : null,
-      counterpartUserId: json['worker_id'] as String?,
+      counterpartUserId: json['worker_id'] as String? ?? json['requested_worker_id'] as String?,
       jobUuid: jobId,
       conversationId: jobId,
       backendStatus: statusRaw,
-      workerId: json['worker_id'] as String?,
+      workerId: json['worker_id'] as String? ?? json['requested_worker_id'] as String?,
       locationLat: (json['location_lat'] as num?)?.toDouble(),
       locationLng: (json['location_lng'] as num?)?.toDouble(),
       phone: phone,

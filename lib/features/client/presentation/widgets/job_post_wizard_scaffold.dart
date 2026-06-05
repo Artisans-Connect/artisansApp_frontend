@@ -22,6 +22,8 @@ class JobPostWizardScaffold extends StatelessWidget {
     this.secondaryLabel,
     this.onSecondary,
     this.secondaryEnabled = true,
+    this.primaryLoading = false,
+    this.secondaryLoading = false,
     this.appBarTitle = 'Post a Job',
     this.showDiscardOnBack = false,
     this.onDiscard,
@@ -37,6 +39,8 @@ class JobPostWizardScaffold extends StatelessWidget {
   final String? secondaryLabel;
   final VoidCallback? onSecondary;
   final bool secondaryEnabled;
+  final bool primaryLoading;
+  final bool secondaryLoading;
   final String appBarTitle;
   final bool showDiscardOnBack;
   final VoidCallback? onDiscard;
@@ -135,6 +139,7 @@ class JobPostWizardScaffold extends StatelessWidget {
                         child: SecondaryButton(
                           label: secondaryLabel!,
                           onPressed: onSecondary ?? () {},
+                          isLoading: secondaryLoading,
                           isEnabled:
                               secondaryEnabled && onSecondary != null,
                         ),
@@ -146,6 +151,7 @@ class JobPostWizardScaffold extends StatelessWidget {
                       child: PrimaryButton(
                         label: primaryLabel,
                         onPressed: onPrimary,
+                        isLoading: primaryLoading,
                         isEnabled: primaryEnabled,
                       ),
                     ),

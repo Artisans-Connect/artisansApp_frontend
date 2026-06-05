@@ -2,9 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
-
 const String artisanLogoAsset = 'assets/ArtisanConnect Logo - 1.png';
+const Color artisanWarmWhiteFallback = Color(0xFFFFFBF4);
 
 bool hasUsableImageUrl(String? value) {
   if (value == null) return false;
@@ -102,7 +101,7 @@ class _LogoFallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.primaryContainer,
+      color: artisanWarmWhiteFallback,
       alignment: Alignment.center,
       child: Padding(
         padding: const EdgeInsets.all(12),

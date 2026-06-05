@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/location/device_location_service.dart';
+import '../../../../core/location/place_lookup_service.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -27,9 +30,15 @@ class _JobPostLocationScheduleScreenState
     extends State<JobPostLocationScheduleScreen> {
   late ClientJobDraft _draft;
   late TextEditingController _addressController;
+  late TextEditingController _locationSearchController;
+  Timer? _searchDebounce;
+  Timer? _reverseGeocodeDebounce;
   bool _showAddressEditor = false;
   bool _loadingLocation = true;
+  bool _searchingPlaces = false;
+  bool _reverseGeocoding = false;
   bool _needsManualPin = false;
+  List<PlaceSuggestion> _placeSuggestions = <PlaceSuggestion>[];
   LatLng _pin = LatLng(
     DeviceLocation.accraDefault.latitude,
     DeviceLocation.accraDefault.longitude,
@@ -53,6 +62,7 @@ class _JobPostLocationScheduleScreenState
     _addressController = TextEditingController(
       text: _draft.address ?? '',
     );
+    _locationSearchController = TextEditingController();
     _urgency = _draft.urgency ?? 'asap';
     final Object? date = _draft.data['preferredDate'];
     if (date is DateTime) _selectedDate = date;
@@ -75,22 +85,92 @@ class _JobPostLocationScheduleScreenState
     final loc = await DeviceLocationService.getCurrentOrDefault();
     if (!mounted) return;
 
-    if (_addressController.text.isEmpty && !loc.isFallback) {
-      _addressController.text =
-          'Lat: ${loc.latitude.toStringAsFixed(4)}, Lng: ${loc.longitude.toStringAsFixed(4)}';
-    }
-
     setState(() {
       _pin = LatLng(loc.latitude, loc.longitude);
       _needsManualPin = loc.isFallback;
       _loadingLocation = false;
     });
+    if (!loc.isFallback) {
+      unawaited(_updateAddressFromPin(_pin));
+    }
   }
 
   @override
   void dispose() {
+    _searchDebounce?.cancel();
+    _reverseGeocodeDebounce?.cancel();
     _addressController.dispose();
+    _locationSearchController.dispose();
     super.dispose();
+  }
+
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 350), () async {
+      if (!mounted) return;
+      if (value.trim().length < 2) {
+        setState(() => _placeSuggestions = <PlaceSuggestion>[]);
+        return;
+      }
+      setState(() => _searchingPlaces = true);
+      try {
+        final suggestions = await PlaceLookupService.instance.search(value);
+        if (!mounted) return;
+        setState(() {
+          _placeSuggestions = suggestions;
+          _searchingPlaces = false;
+        });
+      } catch (_) {
+        if (mounted) setState(() => _searchingPlaces = false);
+      }
+    });
+  }
+
+  Future<void> _selectSuggestion(PlaceSuggestion suggestion) async {
+    setState(() {
+      _searchingPlaces = true;
+      _placeSuggestions = <PlaceSuggestion>[];
+      _locationSearchController.text = suggestion.description;
+    });
+    try {
+      final result = await PlaceLookupService.instance.details(suggestion.placeId);
+      if (result == null || !mounted) return;
+      setState(() {
+        _pin = result.position;
+        _addressController.text = result.address.isNotEmpty
+            ? result.address
+            : suggestion.description;
+        _needsManualPin = false;
+        _showAddressEditor = false;
+      });
+    } finally {
+      if (mounted) setState(() => _searchingPlaces = false);
+    }
+  }
+
+  void _onPinChanged(LatLng latLng) {
+    setState(() {
+      _pin = latLng;
+      _needsManualPin = false;
+    });
+    _reverseGeocodeDebounce?.cancel();
+    _reverseGeocodeDebounce = Timer(
+      const Duration(milliseconds: 500),
+      () => _updateAddressFromPin(latLng),
+    );
+  }
+
+  Future<void> _updateAddressFromPin(LatLng latLng) async {
+    if (!PlaceLookupService.instance.isConfigured) return;
+    setState(() => _reverseGeocoding = true);
+    try {
+      final String? address =
+          await PlaceLookupService.instance.reverseGeocode(latLng);
+      if (!mounted || address == null || address.isEmpty) return;
+      setState(() => _addressController.text = address);
+    } finally {
+      if (mounted) setState(() => _reverseGeocoding = false);
+    }
   }
 
   Future<void> _selectDate() async {
@@ -145,6 +225,57 @@ class _JobPostLocationScheduleScreenState
             ),
           ),
           const SizedBox(height: AppSpacing.md),
+          TextField(
+            controller: _locationSearchController,
+            onChanged: _onSearchChanged,
+            decoration: InputDecoration(
+              hintText: 'Search for a location',
+              prefixIcon: Icon(PhosphorIcons.magnifyingGlass),
+              suffixIcon: _searchingPlaces
+                  ? const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    )
+                  : null,
+              filled: true,
+              fillColor: AppColors.surfaceContainerLowest,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+              ),
+            ),
+          ),
+          if (_placeSuggestions.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(top: AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Column(
+                children: _placeSuggestions
+                    .map(
+                      (PlaceSuggestion suggestion) => ListTile(
+                        leading: Icon(
+                          PhosphorIcons.mapPin,
+                          color: AppColors.primary,
+                        ),
+                        title: Text(
+                          suggestion.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        onTap: () => _selectSuggestion(suggestion),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          const SizedBox(height: AppSpacing.md),
           if (_loadingLocation)
             Container(
               height: 180,
@@ -163,11 +294,7 @@ class _JobPostLocationScheduleScreenState
               child: JobLocationMap(
                 initial: _pin,
                 height: 180,
-                onPositionChanged: (latLng) =>
-                    setState(() {
-                      _pin = latLng;
-                      _needsManualPin = false;
-                    }),
+                onPositionChanged: _onPinChanged,
               ),
             ),
           if (_needsManualPin) ...[
@@ -203,6 +330,16 @@ class _JobPostLocationScheduleScreenState
               ),
             ],
           ),
+          if (_reverseGeocoding)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.xs),
+              child: Text(
+                'Updating address from map pin...',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
           if (_showAddressEditor) ...[
             const SizedBox(height: AppSpacing.sm),
             TextField(

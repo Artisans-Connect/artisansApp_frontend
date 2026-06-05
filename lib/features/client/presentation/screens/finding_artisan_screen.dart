@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
@@ -36,6 +38,11 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
   final JobRealtimeService _realtime = JobRealtimeService();
   String? _errorMessage;
   bool _isExpired = false;
+  bool _isContinuing = false;
+  bool _isCancelling = false;
+  Timer? _progressTimer;
+  String _progressHeadline = 'Checking nearby artisans';
+  String _progressDetail = 'Preparing your request...';
 
   @override
   void initState() {
@@ -61,6 +68,40 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
     }).catchError((_) {});
 
     _realtime.subscribeToJob(_jobId!, onUpdate: _handleJobUpdate);
+    _loadProgress();
+    _progressTimer?.cancel();
+    _progressTimer = Timer.periodic(
+      const Duration(seconds: 8),
+      (_) => _loadProgress(),
+    );
+  }
+
+  Future<void> _loadProgress() async {
+    if (_jobId == null) return;
+    try {
+      final dynamic response = await _jobsService.getMatchingProgress(_jobId!);
+      if (!mounted || response is! Map<String, dynamic>) return;
+      final int round = (response['current_round'] as num?)?.toInt() ?? 1;
+      final int maxRounds = (response['max_rounds'] as num?)?.toInt() ?? 3;
+      final double radius =
+          (response['active_radius_km'] as num?)?.toDouble() ?? 5;
+      final int dispatched =
+          (response['dispatched_count'] as num?)?.toInt() ?? 0;
+      final bool targeted = response['is_targeted'] == true;
+      final String radiusText = radius == radius.truncateToDouble()
+          ? radius.toStringAsFixed(0)
+          : radius.toStringAsFixed(1);
+      setState(() {
+        _progressHeadline = targeted
+            ? 'Waiting for this worker'
+            : 'Checking artisans within $radiusText km';
+        _progressDetail = dispatched > 0
+            ? 'Round $round of $maxRounds - $dispatched request${dispatched == 1 ? '' : 's'} sent'
+            : round > 1
+                ? 'Trying another round and expanding the search'
+                : 'Looking for available workers now';
+      });
+    } catch (_) {}
   }
 
   void _handleJobUpdate(Map<String, dynamic> job) {
@@ -68,9 +109,11 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
     final String status = (job['status'] as String? ?? '').toLowerCase();
     if (status == 'matched' || status == 'in_progress') {
       _realtime.unsubscribe();
+      _progressTimer?.cancel();
       _openTracking(job);
     } else if (status == 'expired' || status == 'cancelled') {
       _realtime.unsubscribe();
+      _progressTimer?.cancel();
       setState(() {
         _isExpired = true;
         _errorMessage = status == 'expired'
@@ -100,13 +143,17 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
   }
 
   void _continueBrowsing() {
+    if (_isContinuing) return;
+    setState(() => _isContinuing = true);
     _realtime.unsubscribe();
+    _progressTimer?.cancel();
     // Navigate back to the shell and select the Bookings tab so the user
     // can track matching progress there.
     ClientNavigation.popToShellAndSelectTab(context, ClientNavTab.bookings);
   }
 
   Future<void> _cancelSearch() async {
+    if (_isCancelling) return;
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
@@ -129,7 +176,9 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
 
     if (confirmed != true || !mounted) return;
 
+    setState(() => _isCancelling = true);
     _realtime.unsubscribe();
+    _progressTimer?.cancel();
 
     if (_jobId != null) {
       try {
@@ -145,6 +194,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
   @override
   void dispose() {
     _realtime.unsubscribe();
+    _progressTimer?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -199,13 +249,13 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                     ),
                     const SizedBox(height: AppSpacing.xl),
                     Text(
-                      'Finding the best artisan…',
+                      'Finding the best artisan...',
                       style: AppTypography.displaySmall,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      widget.jobData?['title'] as String? ?? 'Your job request',
+                      _progressHeadline,
                       style: AppTypography.bodyLarge.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -213,7 +263,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Matching continues in the background. You can keep browsing—we will update your bookings when an artisan accepts.',
+                      _progressDetail,
                       style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
@@ -222,11 +272,14 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                     const SizedBox(height: AppSpacing.xl),
                     PrimaryButton(
                       label: 'Continue browsing',
+                      isLoading: _isContinuing,
                       onPressed: _continueBrowsing,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     SecondaryButton(
                       label: 'Cancel search',
+                      isLoading: _isCancelling,
+                      isEnabled: !_isCancelling,
                       onPressed: _cancelSearch,
                     ),
                   ],

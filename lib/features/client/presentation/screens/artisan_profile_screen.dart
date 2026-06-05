@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../core/errors/error_messages.dart';
-import '../models/client_job_draft.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/rating_widget.dart';
@@ -22,8 +22,8 @@ class ArtisanProfileScreen extends StatefulWidget {
 }
 
 class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
-  bool _isFavorite = false;
   List<dynamic> _reviews = [];
+  bool _isOpeningChat = false;
 
   Map<String, dynamic> get _artisan => Map<String, dynamic>.from(widget.artisan ?? const <String, dynamic>{});
 
@@ -98,49 +98,15 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Profile Image
-            Stack(
-              children: [
-                Container(
-                  width: double.infinity,
-                  height: 300,
-                  color: AppColors.surfaceContainer,
-                  child: ArtisanLogoPanel(
-                    imageUrl: _imageUrl,
-                    height: 300,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                // Favorite Button
-                Positioned(
-                  top: AppSpacing.md,
-                  right: AppSpacing.md,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _isFavorite = !_isFavorite;
-                      });
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceContainerLowest,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 4,
-                          ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: Icon(
-                        _isFavorite ? PhosphorIcons.heart : PhosphorIcons.heart,
-                        color: _isFavorite ? Colors.red : AppColors.outlineVariant,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            Container(
+              width: double.infinity,
+              height: 300,
+              color: AppColors.surfaceContainer,
+              child: ArtisanLogoPanel(
+                imageUrl: _imageUrl,
+                height: 300,
+                fit: BoxFit.cover,
+              ),
             ),
 
             // Profile Info
@@ -381,11 +347,13 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: InkWell(
-                    onTap: () {
-                      ClientNavigation.openChatForArtisan(
+                    onTap: _isOpeningChat ? null : () async {
+                      setState(() => _isOpeningChat = true);
+                      await ClientNavigation.openChatForArtisan(
                         context,
                         _artisan,
                       );
+                      if (mounted) setState(() => _isOpeningChat = false);
                     },
                     borderRadius:
                         BorderRadius.circular(AppSpacing.radiusLarge),
@@ -423,14 +391,10 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
             PrimaryButton(
               label: 'Book Now',
               onPressed: () {
-                final draft = ClientJobDraft.fromMap(<String, dynamic>{
-                  'category': _profession,
-                  'title': 'Service with $_name',
-                });
-                ClientNavigation.startFindingArtisan(
+                Navigator.pushNamed(
                   context,
-                  jobData: draft.toMap(),
-                  artisan: _artisan,
+                  AppRoutes.directWorkerRequest,
+                  arguments: _artisan,
                 );
               },
             ),

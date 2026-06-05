@@ -160,6 +160,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       appBarTitle: 'Review & Post',
       headline: 'Review your job post',
       primaryLabel: _isPosting ? 'Posting…' : 'Post job',
+      primaryLoading: _isPosting,
       primaryEnabled: _agreeToTerms &&
           !_isPosting &&
           !_loadingPrice &&

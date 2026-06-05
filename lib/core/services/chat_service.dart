@@ -36,10 +36,16 @@ class ChatService {
     String conversationId,
     String content, {
     List<String>? imageUrls,
+    List<String>? mediaUrls,
+    List<String>? mediaTypes,
+    String? clientMessageId,
   }) async {
     final dynamic result = await _api.post('/chat/$conversationId/messages', body: {
       'content': content,
       if (imageUrls != null) 'image_urls': imageUrls,
+      if (mediaUrls != null) 'media_urls': mediaUrls,
+      if (mediaTypes != null) 'media_types': mediaTypes,
+      if (clientMessageId != null) 'client_message_id': clientMessageId,
     });
     await CacheStore.instance.remove(CacheKeys.chatConversations);
     return result;

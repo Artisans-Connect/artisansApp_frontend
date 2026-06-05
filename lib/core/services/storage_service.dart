@@ -23,14 +23,25 @@ class StorageService {
     return _uploadFile(file, AppConstants.jobPhotosBucket);
   }
 
+  Future<String?> uploadChatMedia(File file) async {
+    return _uploadFile(file, AppConstants.chatMediaBucket);
+  }
+
   Future<String?> _uploadFile(File file, String bucketName) async {
     try {
+      final String userId = _supabase.auth.currentUser?.id ?? 'anonymous';
+      final String originalName = file.path.split(Platform.pathSeparator).last;
+      final String safeName = originalName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
       final String fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${file.path.split(Platform.pathSeparator).last}';
+          '$userId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
       await _supabase.storage.from(bucketName).upload(
             fileName,
             file,
-            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+            fileOptions: FileOptions(
+              cacheControl: '3600',
+              upsert: false,
+              contentType: _contentTypeFor(fileName),
+            ),
           );
 
       return _supabase.storage.from(bucketName).getPublicUrl(fileName);
@@ -39,5 +50,15 @@ class StorageService {
         'Upload failed. Check your connection and try again.',
       );
     }
+  }
+
+  String _contentTypeFor(String path) {
+    final String lower = path.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.mp4')) return 'video/mp4';
+    if (lower.endsWith('.mov')) return 'video/quicktime';
+    if (lower.endsWith('.webm')) return 'video/webm';
+    return 'image/jpeg';
   }
 }

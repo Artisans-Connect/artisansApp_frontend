@@ -6,6 +6,7 @@ class AppRoutes {
   static const artisanProfile = '/artisan-profile';
   static const mapDiscovery = '/map-discovery';
   static const findingArtisan = '/finding-artisan';
+  static const directWorkerRequest = '/direct-worker-request';
 
   // Job Post Flow
   static const jobPostCategory = '/job-post-category';

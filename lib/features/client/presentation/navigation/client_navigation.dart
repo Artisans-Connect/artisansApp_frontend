@@ -65,6 +65,7 @@ class ClientNavigation {
     String? jobId,
     String? jobTitle,
     bool isDirect = false,
+    String? counterpartPhone,
   }) {
     final String effectiveJobId = jobId ?? conversationId;
     if (!isValidJobChatId(effectiveJobId)) {
@@ -87,6 +88,7 @@ class ClientNavigation {
         jobId: effectiveJobId,
         jobTitle: jobTitle,
         isDirect: isDirect,
+        counterpartPhone: counterpartPhone,
       ),
     );
   }
@@ -157,6 +159,7 @@ class ClientNavigation {
       final Map<String, dynamic> profile = Map<String, dynamic>.from(artisan['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
       final String workerId = (artisan['id'] ?? artisan['worker_id'] ?? artisan['userId'] ?? profile['id'] ?? '').toString();
       final String name = (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
+      final String? phone = (artisan['phone'] ?? profile['phone']) as String?;
       if (workerId.isEmpty || workerId == CurrentUser.id) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('You cannot message this profile.')),
@@ -177,6 +180,7 @@ class ClientNavigation {
           jobId: data['id'] as String,
           jobTitle: 'Enquiry',
           isDirect: true,
+          counterpartPhone: phone,
         );
       } catch (_) {
         if (!context.mounted) return;
@@ -189,6 +193,7 @@ class ClientNavigation {
     final Map<String, dynamic> profile = Map<String, dynamic>.from(artisan['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
     final String name = (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
     final String workerId = (artisan['id'] ?? artisan['worker_id'] ?? artisan['userId'] ?? profile['id'] ?? '').toString();
+    final String? phone = (artisan['phone'] ?? profile['phone']) as String?;
     openChat(
       context,
       conversationId: jobId!,
@@ -196,6 +201,7 @@ class ClientNavigation {
       counterpartName: name,
       jobId: jobId,
       jobTitle: (artisan['profession'] ?? (artisan['skills'] is List && (artisan['skills'] as List).isNotEmpty ? (artisan['skills'] as List).first.toString() : null)).toString(),
+      counterpartPhone: phone,
     );
   }
 

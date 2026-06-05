@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:artisans_app/core/theme/index.dart';
 import '../models/chat_message.dart';
@@ -42,32 +43,23 @@ class ChatBubble extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  if (message.imageUrls != null && message.imageUrls!.isNotEmpty)
+                  if (_mediaItems.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: message.imageUrls!.map((String url) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Image.network(
-                              url,
-                              width: 120,
-                              height: 120,
-                              fit: BoxFit.cover,
-                            ),
-                          );
-                        }).toList(),
+                        children: _mediaItems.map(_buildMedia).toList(),
                       ),
                     ),
-                  Text(
-                    message.content,
-                    style: AppTypography.bodyLg.copyWith(
-                      color: message.isMine ? Colors.white : AppColors.textPrimary,
-                      height: 1.4,
+                  if (message.content.isNotEmpty)
+                    Text(
+                      message.content,
+                      style: AppTypography.bodyLg.copyWith(
+                        color: message.isMine ? Colors.white : AppColors.textPrimary,
+                        height: 1.4,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -106,6 +98,54 @@ class ChatBubble extends StatelessWidget {
     );
   }
 
+  List<_BubbleMedia> get _mediaItems {
+    final List<_BubbleMedia> items = <_BubbleMedia>[];
+    final List<String> urls = message.mediaUrls ?? <String>[];
+    final List<String> types = message.mediaTypes ?? <String>[];
+    for (int i = 0; i < urls.length; i++) {
+      items.add(_BubbleMedia(urls[i], i < types.length ? types[i] : 'image'));
+    }
+    for (final String url in message.imageUrls ?? <String>[]) {
+      if (!items.any((_BubbleMedia item) => item.url == url)) {
+        items.add(_BubbleMedia(url, 'image'));
+      }
+    }
+    return items;
+  }
+
+  Widget _buildMedia(_BubbleMedia media) {
+    if (media.type == 'video') {
+      return InkWell(
+        onTap: () => launchUrl(Uri.parse(media.url), mode: LaunchMode.externalApplication),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          width: 160,
+          height: 96,
+          decoration: BoxDecoration(
+            color: Colors.black.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Icon(
+              PhosphorIcons.playCircle,
+              color: message.isMine ? Colors.white : AppColors.primary,
+              size: 34,
+            ),
+          ),
+        ),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Image.network(
+        media.url,
+        width: 120,
+        height: 120,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
   String _formatTime(DateTime dt) {
     final int hour = dt.hour;
     final int minute = dt.minute;
@@ -113,4 +153,11 @@ class ChatBubble extends StatelessWidget {
     final int displayHour = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
     return '$displayHour:${minute.toString().padLeft(2, '0')} $period';
   }
+}
+
+class _BubbleMedia {
+  const _BubbleMedia(this.url, this.type);
+
+  final String url;
+  final String type;
 }
