@@ -33,6 +33,10 @@ class WorkersService {
     return response as List<dynamic>;
   }
 
+  Future<dynamic> getJobRequestById(String jobId) async {
+    return await _api.get('/workers/me/job-requests/$jobId');
+  }
+
   Future<List<dynamic>> getNearby({
     required String categoryId,
     required double lat,

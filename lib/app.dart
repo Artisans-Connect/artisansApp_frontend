@@ -15,13 +15,28 @@ import 'shared/presentation/screens/job_receipt_screen.dart';
 import 'shared/presentation/screens/messages_list_screen.dart';
 import 'shared/presentation/screens/settings_screen.dart';
 import 'shared/presentation/screens/user_profile_screen.dart';
+import 'core/services/notification_service.dart';
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.drainPendingNavigation();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: NotificationService.instance.navigatorKey,
       debugShowCheckedModeBanner: false,
       title: 'ArtisansConnect',
       theme: buildAppTheme(),
@@ -43,7 +58,13 @@ class MyApp extends StatelessWidget {
         SettingsScreen.routeName: (_) => const SettingsScreen(),
         EditProfileScreen.routeName: (_) => const EditProfileScreen(),
         JobReceiptScreen.routeName: (_) => const JobReceiptScreen(),
-        WorkerShell.routeName: (_) => const WorkerShell(),
+        WorkerShell.routeName: (BuildContext context) {
+          final Object? args = ModalRoute.of(context)?.settings.arguments;
+          final String? jobId = args is Map
+              ? args['openJobRequestId'] as String?
+              : null;
+          return WorkerShell(initialJobRequestId: jobId);
+        },
         ClientShell.routeName: (_) => const ClientShell(),
       },
       onGenerateRoute: AppRouter.generateRoute,

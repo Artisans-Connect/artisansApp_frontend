@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../cache/cache_keys.dart';
@@ -7,6 +9,7 @@ import '../errors/auth_failure.dart';
 import '../network/api_client.dart';
 import '../session/app_user_session.dart';
 import '../utils/cache_logger.dart';
+import 'notification_service.dart';
 
 class AuthService {
   static final AuthService instance = AuthService._();
@@ -113,6 +116,7 @@ class AuthService {
       await CacheStore.instance.put(CacheKeys.profileMe, map);
       final appUser = _appUserFromProfile(map);
       _session.updateUser(appUser);
+      unawaited(NotificationService.instance.registerCurrentDevice());
       return appUser;
     } on ApiException catch (e) {
       if (e.code == 'PROFILE_NOT_FOUND') {
@@ -176,6 +180,7 @@ class AuthService {
       await _persistProfile(map);
       final appUser = _appUserFromProfile(map);
       _session.updateUser(appUser);
+      unawaited(NotificationService.instance.registerCurrentDevice());
       return appUser;
     } on ApiException catch (e) {
       if (e.code == 'PROFILE_EXISTS') {
@@ -212,9 +217,10 @@ class AuthService {
     );
     final map = Map<String, dynamic>.from(profileData as Map);
     await _persistProfile(map);
-    final appUser = _appUserFromProfile(map);
-    _session.updateUser(appUser);
-    return appUser;
+      final appUser = _appUserFromProfile(map);
+      _session.updateUser(appUser);
+      unawaited(NotificationService.instance.registerCurrentDevice());
+      return appUser;
   }
 
   Future<void> resendVerificationEmail(String email) async {
@@ -236,6 +242,7 @@ class AuthService {
 
   Future<void> signOut() async {
     try {
+      await NotificationService.instance.unregisterCurrentDevice();
       await _supabaseAuth.signOut();
     } catch (_) {
       // Ignore remote errors to ensure local session always clears
