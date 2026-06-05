@@ -191,7 +191,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                     isLoading: _isStarting,
                     enabled: !_isStarting,
                     onPressed: () async {
-                      HapticFeedback.mediumImpact();
+                      await HapticFeedback.mediumImpact();
                       setState(() => _isStarting = true);
                       try {
                         await _workersService.startJob(job.id);
@@ -199,7 +199,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                           session.markJobStarted();
                         }
                       } catch (e) {
-                        if (mounted) {
+                        if (context.mounted) {
                           AppToast.showError(context, e, fallback: 'Failed to start job.');
                         }
                       } finally {

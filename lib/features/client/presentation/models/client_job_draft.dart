@@ -25,6 +25,11 @@ class ClientJobDraft {
 
   String? get categoryName => data['categoryName'] as String?;
 
+  String? get categorySlug =>
+      data['categorySlug'] as String? ??
+      data['category_slug'] as String? ??
+      data['categoryKey'] as String?;
+
   String? get subcategoryId =>
       data['subcategoryId'] as String? ?? data['subcategory'] as String?;
 
@@ -165,10 +170,20 @@ class ClientJobDraft {
     };
 
     if (jobMode == 'scheduled' && preferredDate != null) {
-      payload['scheduled_for'] = preferredDate!.toUtc().toIso8601String();
+      payload['scheduled_for'] = _scheduledDateTime().toUtc().toIso8601String();
     }
 
     return payload;
+  }
+
+  DateTime _scheduledDateTime() {
+    final DateTime date = preferredDate!;
+    final int hour = switch (timeWindow) {
+      'Afternoon (12pm - 5pm)' => 12,
+      'Evening (5pm - 9pm)' => 17,
+      _ => 8,
+    };
+    return DateTime(date.year, date.month, date.day, hour);
   }
 }
 

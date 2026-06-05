@@ -144,7 +144,7 @@ class ClientBooking {
       'cancelled' || 'expired' => ClientBookingStatus.cancelled,
       _ => ClientBookingStatus.requested,
     };
-    final dynamic worker = json['profiles'];
+    final dynamic worker = json['worker'] ?? json['profiles'];
     final String artisanName = worker is Map<String, dynamic>
         ? worker['full_name'] as String? ?? 'Artisan'
         : 'Artisan';

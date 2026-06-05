@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../utils/cache_logger.dart';
 
 /// Deduplicates concurrent API requests to prevent duplicate calls for the same cache key.
@@ -21,10 +23,12 @@ class RequestDeduplicator {
     if (_pendingRequests.containsKey(key)) {
       CacheLogger.debug('Request in-flight for key: $key, waiting...');
       try {
-        return await _pendingRequests[key]! as T;
+        final dynamic value = await _pendingRequests[key]!;
+        return value as T;
       } catch (e) {
         // If pending request failed, allow a retry
-        _pendingRequests.remove(key);
+        final removed = _pendingRequests.remove(key);
+        if (removed != null) unawaited(removed);
         rethrow;
       }
     }
@@ -42,7 +46,10 @@ class RequestDeduplicator {
       CacheLogger.error('Request failed for key: $key', e);
       rethrow;
     } finally {
-      _pendingRequests.remove(key);
+      final removed = _pendingRequests.remove(key);
+      if (removed != null && !identical(removed, future)) {
+        unawaited(removed);
+      }
     }
   }
 

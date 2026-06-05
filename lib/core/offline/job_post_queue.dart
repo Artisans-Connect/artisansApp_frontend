@@ -49,8 +49,11 @@ class JobPostQueue {
     Connectivity().onConnectivityChanged.listen((_) => flush());
   }
 
-  Future<String> enqueue(Map<String, dynamic> payload) async {
-    final key = _uuid.v4();
+  Future<String> enqueue(
+    Map<String, dynamic> payload, {
+    String? idempotencyKey,
+  }) async {
+    final key = idempotencyKey ?? _uuid.v4();
     await _box?.put(
       key,
       jsonEncode(

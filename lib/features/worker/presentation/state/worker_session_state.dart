@@ -4,6 +4,7 @@ import '../../../../core/location/worker_location_service.dart';
 import '../../../../core/services/workers_service.dart';
 import '../models/mock_worker_job.dart';
 import '../models/worker_ui_contracts.dart';
+import '../utils/worker_job_mapper.dart';
 import '../widgets/worker_bottom_nav.dart';
 
 enum WorkerJobPhase { none, preStart, inProgress }
@@ -15,7 +16,7 @@ class WorkerSessionState extends ChangeNotifier {
   WorkerNavTab currentTab = WorkerNavTab.explore;
   WorkerProfilePage profilePage = WorkerProfilePage.earnings;
 
-  bool isAvailable = true;
+  bool isAvailable = false;
   MockWorkerJob? activeJob;
   WorkerJobPhase jobPhase = WorkerJobPhase.none;
 
@@ -52,6 +53,27 @@ class WorkerSessionState extends ChangeNotifier {
     }
   }
 
+  Future<void> loadActiveJob() async {
+    try {
+      final dynamic data = await _workersService.getActiveJob();
+      if (data is! Map<String, dynamic>) {
+        activeJob = null;
+        jobPhase = WorkerJobPhase.none;
+        notifyListeners();
+        return;
+      }
+      activeJob = workerJobFromApi(data);
+      final String status = (data['status'] as String? ?? '').toLowerCase();
+      jobPhase = status == 'in_progress'
+          ? WorkerJobPhase.inProgress
+          : WorkerJobPhase.preStart;
+      currentTab = WorkerNavTab.bookings;
+      notifyListeners();
+    } catch (_) {
+      // Keep shell usable; request/booking screens still expose retry states.
+    }
+  }
+
   @override
   void dispose() {
     WorkerLocationService.instance.stop();
@@ -70,6 +92,13 @@ class WorkerSessionState extends ChangeNotifier {
 
   void acceptJob(MockWorkerJob job) {
     activeJob = job;
+    jobPhase = WorkerJobPhase.preStart;
+    currentTab = WorkerNavTab.bookings;
+    notifyListeners();
+  }
+
+  void acceptJobFromApi(Map<String, dynamic> job) {
+    activeJob = workerJobFromApi(job);
     jobPhase = WorkerJobPhase.preStart;
     currentTab = WorkerNavTab.bookings;
     notifyListeners();

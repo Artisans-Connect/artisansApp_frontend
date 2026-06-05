@@ -20,17 +20,26 @@ class JobReceiptViewData {
   final String? notes;
 
   factory JobReceiptViewData.fromJson(Map<String, dynamic> json) {
-    final clientProfile = json['client_profile'] as Map<String, dynamic>?;
+    final clientProfile =
+        json['client'] as Map<String, dynamic>? ??
+        json['client_profile'] as Map<String, dynamic>?;
     return JobReceiptViewData(
       jobId: json['id'] as String,
-      title: json['title'] as String,
+      title: json['title'] as String? ?? 'Job receipt',
       clientName: clientProfile?['full_name'] as String? ?? 'Unknown Client',
-      location: json['location_address'] as String? ?? 'Unknown Location',
-      completedAt: json['completed_at'] != null 
+      location: json['address_label'] as String? ??
+          json['location_address'] as String? ??
+          'Unknown Location',
+      completedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : json['completed_at'] != null
           ? DateTime.parse(json['completed_at'] as String)
           : DateTime.now(),
-      amountGhs: (json['budget'] as num?)?.toDouble() ?? 0.0,
-      status: json['status'] as String,
+      amountGhs: (json['budget_fixed'] as num?)?.toDouble() ??
+          (json['budget_min'] as num?)?.toDouble() ??
+          (json['budget'] as num?)?.toDouble() ??
+          0.0,
+      status: (json['status'] as String? ?? 'completed').toUpperCase(),
       notes: json['description'] as String?,
     );
   }

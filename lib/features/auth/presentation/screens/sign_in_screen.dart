@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/errors/auth_failure.dart';
@@ -78,11 +80,11 @@ class _SignInScreenState extends State<SignInScreen> {
       );
 
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
     } on AuthFailure catch (e) {
       if (!mounted) return;
       if (e.code == AuthFailureCode.profileNotFound) {
-        Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
+        await Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
         return;
       }
       setState(() => _authError = e);
@@ -208,8 +210,9 @@ class _SignInScreenState extends State<SignInScreen> {
                       const SizedBox(height: 16),
                       Center(
                         child: TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/auth/sign-up'),
+                          onPressed: () => unawaited(
+                            Navigator.pushNamed(context, '/auth/sign-up'),
+                          ),
                           child: const Text("Don't have an account? Sign Up"),
                         ),
                       ),

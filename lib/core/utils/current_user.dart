@@ -9,11 +9,11 @@ class CurrentUser {
 
   static String? get id =>
       AppUserSession.instance.currentUser?.id ??
-      Supabase.instance.client.auth.currentUser?.id;
+      _supabaseUserId;
 
   static String? get email =>
       AppUserSession.instance.currentUser?.email ??
-      Supabase.instance.client.auth.currentUser?.email;
+      _supabaseEmail;
 
   static String get activeMode => AppUserSession.instance.activeMode;
 
@@ -26,5 +26,29 @@ class CurrentUser {
   }
 
   static bool get isAuthenticated =>
-      Supabase.instance.client.auth.currentSession != null;
+      _hasSupabaseSession;
+
+  static String? get _supabaseUserId {
+    try {
+      return Supabase.instance.client.auth.currentUser?.id;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String? get _supabaseEmail {
+    try {
+      return Supabase.instance.client.auth.currentUser?.email;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static bool get _hasSupabaseSession {
+    try {
+      return Supabase.instance.client.auth.currentSession != null;
+    } catch (_) {
+      return false;
+    }
+  }
 }

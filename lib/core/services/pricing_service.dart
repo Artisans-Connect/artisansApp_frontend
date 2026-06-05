@@ -8,6 +8,7 @@ class FeeEstimate {
     required this.distanceCost,
     required this.urgencyPremium,
     required this.verificationPremium,
+    required this.verifiedWorkerMarketPremium,
   });
 
   final double minimumFee;
@@ -15,6 +16,7 @@ class FeeEstimate {
   final double distanceCost;
   final double urgencyPremium;
   final double verificationPremium;
+  final double verifiedWorkerMarketPremium;
 
   factory FeeEstimate.fromJson(Map<String, dynamic> json) {
     final Map<String, dynamic> breakdown =
@@ -28,6 +30,9 @@ class FeeEstimate {
           (breakdown['urgency_premium'] as num?)?.toDouble() ?? 0,
       verificationPremium:
           (breakdown['verification_premium'] as num?)?.toDouble() ?? 0,
+      verifiedWorkerMarketPremium:
+          (breakdown['verified_worker_market_premium'] as num?)?.toDouble() ??
+              0,
     );
   }
 
@@ -65,6 +70,7 @@ class PricingService {
       distanceCost: 0,
       urgencyPremium: 0,
       verificationPremium: 0,
+      verifiedWorkerMarketPremium: 0,
     );
   }
 }

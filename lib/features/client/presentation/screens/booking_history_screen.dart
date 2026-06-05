@@ -62,7 +62,6 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
         _errorMessage =
             userMessageFor(e, fallback: 'Failed to load bookings.');
         _isLoading = false;
-        _bookings = ClientBooking.sampleBookings;
       });
     }
   }

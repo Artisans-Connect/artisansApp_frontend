@@ -1,13 +1,18 @@
 import 'dart:io';
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/navigation/auth_navigation.dart';
+import '../../../core/services/profile_service.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/verification_service.dart';
 import '../../../core/session/app_user_session.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/errors/error_messages.dart';
 import '../../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
@@ -42,6 +47,22 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
+  Future<void> _openVerificationPortal() async {
+    try {
+      await VerificationService.instance.openPortalAndRefreshProfile();
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Verification portal opened.');
+      setState(() {});
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not open verification portal.',
+      );
+    }
+  }
+
   Future<void> _switchView(String targetMode) async {
     try {
       await AuthService.instance.updateActiveMode(targetMode);
@@ -50,7 +71,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         targetMode,
         AppUserSession.instance.isWorkerCapable,
       );
-      Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+      await Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not switch view.');
@@ -61,8 +82,20 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   Widget build(BuildContext context) {
     final ProfileArgs? args =
         ModalRoute.of(context)?.settings.arguments as ProfileArgs?;
-    final UserProfileViewData profile = SharedUserContext.resolveProfile(args);
     final bool isOwnProfile = SharedUserContext.isOwnProfile(args?.userId);
+    if (!isOwnProfile && args?.profileData == null && args?.userId.isNotEmpty == true) {
+      return _RemoteProfileScaffold(userId: args!.userId);
+    }
+
+    final UserProfileViewData profile = SharedUserContext.resolveProfile(args);
+    return _buildScaffold(context, profile, isOwnProfile);
+  }
+
+  Widget _buildScaffold(
+    BuildContext context,
+    UserProfileViewData profile,
+    bool isOwnProfile,
+  ) {
     final bool isWorkerView = profile.isWorker;
 
     return Scaffold(
@@ -73,7 +106,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         actions: <Widget>[
           if (isOwnProfile)
             IconButton(
-              onPressed: () => Navigator.pushNamed(context, EditProfileScreen.routeName).then((_) => setState(() {})),
+              onPressed: () => unawaited(
+                Navigator.pushNamed(context, EditProfileScreen.routeName)
+                    .then((_) {
+                  if (mounted) setState(() {});
+                }),
+              ),
               icon: Icon(PhosphorIcons.pencilSimple, color: AppColors.primary),
             ),
           const SizedBox(width: 8),
@@ -117,6 +155,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
               if (isWorkerView) ...<Widget>[
+                if (isOwnProfile) ...<Widget>[
+                  const SizedBox(height: 14),
+                  FutureBuilder<VerificationContext>(
+                    future: VerificationService.instance.getMyVerification(),
+                    builder: (context, snapshot) {
+                      final contextData = snapshot.data;
+                      return _VerificationCard(
+                        profile: profile,
+                        verification: contextData,
+                        isLoading:
+                            snapshot.connectionState != ConnectionState.done,
+                        onOpenPortal: _openVerificationPortal,
+                      );
+                    },
+                  ),
+                ],
                 if (profile.skills.isNotEmpty) ...<Widget>[
                   const SizedBox(height: 14),
                   ProfileSectionCard(
@@ -232,10 +286,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               if (isOwnProfile) ...<Widget>[
                 GradientButton(
                   label: 'Edit Profile',
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    EditProfileScreen.routeName,
-                  ).then((_) => setState(() {})),
+                  onPressed: () => unawaited(
+                    Navigator.pushNamed(
+                      context,
+                      EditProfileScreen.routeName,
+                    ).then((_) {
+                      if (mounted) setState(() {});
+                    }),
+                  ),
                 ),
                 if (SharedUserContext.isViewingAsWorker) ...<Widget>[
                   const SizedBox(height: 12),
@@ -252,19 +310,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ] else if (!SharedUserContext.isWorkerCapable) ...<Widget>[
                   const SizedBox(height: 12),
                   OutlinedButton(
-                    onPressed: () => Navigator.pushNamed(
-                      context,
-                      RoleSelectionScreen.routeName,
-                      arguments: <String, dynamic>{'isBecomingWorker': true},
+                    onPressed: () => unawaited(
+                      Navigator.pushNamed(
+                        context,
+                        RoleSelectionScreen.routeName,
+                        arguments: <String, dynamic>{'isBecomingWorker': true},
+                      ),
                     ),
                     child: const Text('Become a Worker'),
                   ),
                 ],
                 const SizedBox(height: 12),
                 TextButton(
-                  onPressed: () => Navigator.pushNamed(
-                    context,
-                    SettingsScreen.routeName,
+                  onPressed: () => unawaited(
+                    Navigator.pushNamed(
+                      context,
+                      SettingsScreen.routeName,
+                    ),
                   ),
                   child: Text(
                     SharedUserContext.isWorker
@@ -275,11 +337,230 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               ] else
                 GradientButton(
                   label: 'Message',
-                  onPressed: () => Navigator.maybePop(context),
+                  onPressed: () => unawaited(Navigator.maybePop(context)),
                 ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _VerificationCard extends StatelessWidget {
+  const _VerificationCard({
+    required this.profile,
+    required this.verification,
+    required this.isLoading,
+    required this.onOpenPortal,
+  });
+
+  final UserProfileViewData profile;
+  final VerificationContext? verification;
+  final bool isLoading;
+  final VoidCallback onOpenPortal;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isVerified = profile.isVerified || (verification?.isVerified ?? false);
+    final String? status = verification?.status;
+
+    return ProfileSectionCard(
+      title: 'Verification',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: isVerified
+                    ? AppColors.success.withAlpha(31)
+                    : AppColors.primary.withAlpha(26),
+                child: Icon(
+                  isVerified ? PhosphorIcons.sealCheck : PhosphorIcons.shieldCheck,
+                  color: isVerified ? AppColors.success : AppColors.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      _verificationTitle(isVerified, status, isLoading),
+                      style: AppTextStyles.bodyLg.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _verificationSubtitle(isVerified, status),
+                      style: AppTextStyles.bodyMd.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    if (verification?.applicationNumber != null) ...<Widget>[
+                      const SizedBox(height: 6),
+                      Text(
+                        verification!.applicationNumber!,
+                        style: AppTextStyles.labelCaps.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (!isVerified) ...<Widget>[
+            const SizedBox(height: 14),
+            OutlinedButton.icon(
+              onPressed: isLoading ? null : onOpenPortal,
+              icon: Icon(PhosphorIcons.arrowSquareOut),
+              label: Text(status == null ? 'Get verified' : 'Continue verification'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _verificationTitle(bool isVerified, String? status, bool isLoading) {
+    if (isVerified) return 'Verified artisan';
+    if (isLoading) return 'Checking verification';
+    switch (status) {
+      case 'pending':
+        return 'Application pending';
+      case 'under_review':
+        return 'Under review';
+      case 'more_info_requested':
+        return 'More information needed';
+      case 'rejected':
+        return 'Verification not approved';
+      default:
+        return 'Get verified';
+    }
+  }
+
+  String _verificationSubtitle(bool isVerified, String? status) {
+    if (isVerified) return 'Clients will see your verified badge on your profile.';
+    switch (status) {
+      case 'pending':
+        return 'Your application was received and is waiting for review.';
+      case 'under_review':
+        return 'The verification team is reviewing your documents.';
+      case 'more_info_requested':
+        return 'Open the portal to provide the requested information.';
+      case 'rejected':
+        return 'Open the portal to review the decision or submit updated details.';
+      default:
+        return 'Submit your documents to earn the official worker badge.';
+    }
+  }
+}
+
+class _RemoteProfileScaffold extends StatelessWidget {
+  const _RemoteProfileScaffold({required this.userId});
+
+  final String userId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.surface,
+      appBar: const CustomAppBar(
+        title: 'Profile',
+        showBackButton: true,
+      ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: ProfileService.instance.getProfileById(userId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError || snapshot.data == null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  userMessageFor(
+                    snapshot.error ?? Exception('Profile unavailable'),
+                    fallback: 'Could not load this profile.',
+                  ),
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodyLg,
+                ),
+              ),
+            );
+          }
+
+          final profile = UserProfileViewData.fromJson(snapshot.data!);
+          return SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  _ProfileHero(profile: profile),
+                  const SizedBox(height: 20),
+                  if (profile.locationLabel != null &&
+                      profile.locationLabel!.isNotEmpty) ...<Widget>[
+                    ProfileSectionCard(
+                      title: 'Location',
+                      child: _InfoRow(
+                        icon: PhosphorIcons.mapPin,
+                        label: profile.locationLabel!,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                  ],
+                  ProfileSectionCard(
+                    title: 'Contact',
+                    child: profile.phone != null
+                        ? _InfoRow(
+                            icon: PhosphorIcons.phone,
+                            label: profile.phone!,
+                          )
+                        : Text('No phone added yet.', style: AppTextStyles.bodyMd),
+                  ),
+                  const SizedBox(height: 14),
+                  ProfileSectionCard(
+                    title: 'About',
+                    child: Text(
+                      profile.bio ?? 'No bio yet.',
+                      style: AppTextStyles.bodyLg
+                          .copyWith(color: AppColors.textPrimary),
+                    ),
+                  ),
+                  if (profile.isWorker && profile.skills.isNotEmpty) ...<Widget>[
+                    const SizedBox(height: 14),
+                    ProfileSectionCard(
+                      title: 'Skills & trades',
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: profile.skills
+                            .map(
+                              (String skill) => Chip(
+                                label: Text(skill),
+                                backgroundColor: AppColors.surfaceDim,
+                                side: BorderSide.none,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

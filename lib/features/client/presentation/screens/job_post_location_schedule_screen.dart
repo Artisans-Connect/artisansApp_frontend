@@ -29,6 +29,7 @@ class _JobPostLocationScheduleScreenState
   late TextEditingController _addressController;
   bool _showAddressEditor = false;
   bool _loadingLocation = true;
+  bool _needsManualPin = false;
   LatLng _pin = LatLng(
     DeviceLocation.accraDefault.latitude,
     DeviceLocation.accraDefault.longitude,
@@ -63,14 +64,14 @@ class _JobPostLocationScheduleScreenState
     final loc = await DeviceLocationService.getCurrentOrDefault();
     if (!mounted) return;
 
-    // If address is empty, try to use a descriptive fallback from GPS
-    if (_addressController.text.isEmpty) {
+    if (_addressController.text.isEmpty && !loc.isFallback) {
       _addressController.text =
           'Lat: ${loc.latitude.toStringAsFixed(4)}, Lng: ${loc.longitude.toStringAsFixed(4)}';
     }
 
     setState(() {
       _pin = LatLng(loc.latitude, loc.longitude);
+      _needsManualPin = loc.isFallback;
       _loadingLocation = false;
     });
   }
@@ -94,7 +95,9 @@ class _JobPostLocationScheduleScreenState
   }
 
   bool get _canContinue =>
-      _addressController.text.trim().isNotEmpty && !_loadingLocation;
+      _addressController.text.trim().isNotEmpty &&
+      !_loadingLocation &&
+      !_needsManualPin;
 
   void _continue() {
     _draft.merge(<String, dynamic>{
@@ -150,9 +153,21 @@ class _JobPostLocationScheduleScreenState
                 initial: _pin,
                 height: 180,
                 onPositionChanged: (latLng) =>
-                    setState(() => _pin = latLng),
+                    setState(() {
+                      _pin = latLng;
+                      _needsManualPin = false;
+                    }),
               ),
             ),
+          if (_needsManualPin) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'We could not access your GPS. Move the map pin to the job location before continuing.',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.error,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [

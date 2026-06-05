@@ -88,6 +88,11 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
         'title': job['title'],
         'status': job['status'],
         'worker_id': job['worker_id'],
+        'location_lat': job['location_lat'],
+        'location_lng': job['location_lng'],
+        'budget_fixed': job['budget_fixed'],
+        'budget_min': job['budget_min'],
+        'budget_max': job['budget_max'],
       },
       artisan: widget.artisan,
     );

@@ -1,7 +1,7 @@
 import '../models/mock_worker_job.dart';
 
 MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
-  final dynamic client = json['profiles'];
+  final dynamic client = json['client'] ?? json['profiles'];
   final String clientName = client is Map<String, dynamic>
       ? client['full_name'] as String? ?? 'Client'
       : 'Client';
@@ -27,7 +27,7 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
 }
 
 MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
-  final dynamic client = json['profiles'];
+  final dynamic client = json['client'] ?? json['profiles'];
   final String clientName = client is Map<String, dynamic>
       ? client['full_name'] as String? ?? 'Client'
       : 'Client';

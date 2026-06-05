@@ -1,20 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../../core/errors/error_messages.dart';
+import '../../../core/services/jobs_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../data/shared_stub_data.dart';
+import '../../models/job_receipt_view.dart';
 import '../../widgets/custom_app_bar.dart';
 
 /// Read-only job receipt for workers (mock 66).
-class JobReceiptScreen extends StatelessWidget {
+class JobReceiptScreen extends StatefulWidget {
   const JobReceiptScreen({super.key});
 
   static const String routeName = '/shared/job-receipt';
 
   @override
+  State<JobReceiptScreen> createState() => _JobReceiptScreenState();
+}
+
+class _JobReceiptScreenState extends State<JobReceiptScreen> {
+  final JobsService _jobsService = JobsService();
+
+  @override
   Widget build(BuildContext context) {
-    final receipt = SharedStubData.sampleJobReceipt;
+    final String? jobId = _jobIdFromArgs(context);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -22,7 +32,59 @@ class JobReceiptScreen extends StatelessWidget {
         title: 'Job receipt',
         showBackButton: true,
       ),
-      body: SingleChildScrollView(
+      body: jobId == null
+          ? _ReceiptBody(receipt: SharedStubData.sampleJobReceipt)
+          : FutureBuilder<dynamic>(
+              future: _jobsService.getJobById(jobId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState != ConnectionState.done) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError || snapshot.data is! Map<String, dynamic>) {
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        userMessageFor(
+                          snapshot.error ?? Exception('Receipt unavailable'),
+                          fallback: 'Could not load this receipt.',
+                        ),
+                        textAlign: TextAlign.center,
+                        style: AppTextStyles.bodyLg,
+                      ),
+                    ),
+                  );
+                }
+                return _ReceiptBody(
+                  receipt: JobReceiptViewData.fromJson(
+                    snapshot.data as Map<String, dynamic>,
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  String? _jobIdFromArgs(BuildContext context) {
+    final Object? args = ModalRoute.of(context)?.settings.arguments;
+    if (args is String && args.isNotEmpty) return args;
+    if (args is Map<String, dynamic>) {
+      return args['job_id'] as String? ??
+          args['jobId'] as String? ??
+          args['id'] as String?;
+    }
+    return null;
+  }
+}
+
+class _ReceiptBody extends StatelessWidget {
+  const _ReceiptBody({required this.receipt});
+
+  final JobReceiptViewData receipt;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -156,7 +218,6 @@ class JobReceiptScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

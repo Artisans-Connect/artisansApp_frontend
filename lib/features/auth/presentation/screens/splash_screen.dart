@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -70,8 +72,8 @@ class _SplashScreenState extends State<SplashScreen> {
     final user = await AuthService.instance.loadCachedUser();
     if (user == null || !mounted) return false;
 
-    Navigator.pushReplacementNamed(context, shellRouteForUser(user));
-    AuthService.instance.getCurrentUser(forceRefresh: true);
+    await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    unawaited(AuthService.instance.getCurrentUser(forceRefresh: true));
     return true;
   }
 
@@ -81,18 +83,20 @@ class _SplashScreenState extends State<SplashScreen> {
       try {
         final user = await AuthService.instance.getCurrentUser();
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+        await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
       } on AuthFailure catch (e) {
         if (!mounted) return;
         if (e.code == AuthFailureCode.profileNotFound) {
-          Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
+          await Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
         } else {
-          Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+          await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
         }
       } on NetworkException {
         if (!mounted) return;
+        final navigator = Navigator.of(context);
         await AuthService.instance.signOut();
-        Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+        if (!navigator.mounted) return;
+        await navigator.pushReplacementNamed(SignInScreen.routeName);
       } on ApiException catch (e) {
         if (!mounted) return;
         if (e.isUnauthorized) {
@@ -100,22 +104,24 @@ class _SplashScreenState extends State<SplashScreen> {
           try {
             final user = await AuthService.instance.getCurrentUser();
             if (!mounted) return;
-            Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+            await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
             return;
           } catch (_) {
             await AuthService.instance.signOut();
           }
         }
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+        await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       } catch (_) {
         if (!mounted) return;
+        final navigator = Navigator.of(context);
         await AuthService.instance.signOut();
-        Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+        if (!navigator.mounted) return;
+        await navigator.pushReplacementNamed(SignInScreen.routeName);
       }
     } else {
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, OnboardingScreen.routeName);
+      await Navigator.pushReplacementNamed(context, OnboardingScreen.routeName);
     }
   }
 

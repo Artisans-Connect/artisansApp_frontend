@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -374,12 +376,12 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                         }
                       } catch (_) {}
                     }
-                    if (!mounted) return;
-                    ClientNavigation.pushFlow(
+                    if (!context.mounted) return;
+                    unawaited(ClientNavigation.pushFlow(
                       context,
                       AppRoutes.liveTracking,
                       arguments: booking.toTrackingMap(),
-                    );
+                    ));
                   },
                 ),
               ],

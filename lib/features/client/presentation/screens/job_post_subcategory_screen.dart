@@ -42,7 +42,7 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
   }
 
   List<Map<String, dynamic>> get _options =>
-      JobPostSubcategoryCatalog.forCategory(_draft.categoryId);
+      JobPostSubcategoryCatalog.forCategory(_draft.categorySlug);
 
   List<Map<String, dynamic>> get _filtered {
     final String q = _searchController.text.toLowerCase();

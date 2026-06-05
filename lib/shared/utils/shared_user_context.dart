@@ -102,7 +102,7 @@ class SharedUserContext {
             ? appUser.serviceAreas
             : session.serviceAreas.toList(),
         experienceBand: appUser.experienceBand ?? session.experienceBand,
-        isVerified: false,
+        isVerified: role == UserRole.worker && appUser.isVerified,
       );
     }
 

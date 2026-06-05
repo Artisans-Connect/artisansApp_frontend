@@ -41,4 +41,9 @@ class ProfileService {
     _session.updateUser(appUser);
     return appUser;
   }
+
+  Future<Map<String, dynamic>> getProfileById(String userId) async {
+    final profileData = await _apiClient.get('/profiles/$userId');
+    return Map<String, dynamic>.from(profileData as Map);
+  }
 }

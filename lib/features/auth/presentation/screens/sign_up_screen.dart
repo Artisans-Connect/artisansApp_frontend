@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
@@ -62,7 +64,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       if (!mounted) return;
 
       if (outcome.needsEmailVerification) {
-        Navigator.pushReplacementNamed(
+        await Navigator.pushReplacementNamed(
           context,
           VerifyEmailScreen.routeName,
           arguments: email,
@@ -70,7 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         return;
       }
 
-      Navigator.pushNamed(context, RoleSelectionScreen.routeName);
+      await Navigator.pushNamed(context, RoleSelectionScreen.routeName);
     } on AuthFailure catch (e) {
       if (!mounted) return;
       setState(() => _errorMessage = e.message);
@@ -95,7 +97,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 IconButton(
-                  onPressed: () => Navigator.maybePop(context),
+                  onPressed: () => unawaited(Navigator.maybePop(context)),
                   icon: Icon(PhosphorIcons.arrowLeft),
                 ),
                 const SizedBox(height: 6),
@@ -234,8 +236,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
                       Center(
                         child: TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/auth/sign-in'),
+                          onPressed: () => unawaited(
+                            Navigator.pushNamed(context, '/auth/sign-in'),
+                          ),
                           child: const Text('Already have an account? Sign In'),
                         ),
                       ),

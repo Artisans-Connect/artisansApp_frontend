@@ -5,6 +5,7 @@ import 'package:artisans_app/core/theme/index.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
+import '../utils/worker_job_mapper.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
@@ -15,9 +16,11 @@ class JobRequestDetailScreen extends StatefulWidget {
     super.key,
     required this.job,
     required this.onAcceptRequest,
+    this.onAcceptResponse,
   });
   final MockWorkerJob job;
   final ValueChanged<MockWorkerJob> onAcceptRequest;
+  final ValueChanged<Map<String, dynamic>>? onAcceptResponse;
   @override
   State<JobRequestDetailScreen> createState() =>
       _JobRequestDetailScreenState();
@@ -28,16 +31,23 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
   bool _isAccepting = false;
   void _onAccept() async {
     if (_isAccepting || _acceptLocked) return;
-    HapticFeedback.mediumImpact();
+    await HapticFeedback.mediumImpact();
     setState(() {
       _acceptLocked = true;
       _isAccepting = true;
     });
     try {
-      await _workersService.acceptJob(widget.job.id);
+      final dynamic accepted = await _workersService.acceptJob(widget.job.id);
       if (!mounted) return;
-      widget.onAcceptRequest(widget.job);
-      Navigator.of(context).maybePop();
+      if (accepted is Map<String, dynamic>) {
+        widget.onAcceptResponse?.call(accepted);
+        if (widget.onAcceptResponse == null) {
+          widget.onAcceptRequest(workerJobFromApi(accepted));
+        }
+      } else {
+        widget.onAcceptRequest(widget.job);
+      }
+      await Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Unable to accept this request.');
@@ -45,14 +55,15 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
         _acceptLocked = false;
       });
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _isAccepting = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isAccepting = false;
+        });
+      }
     }
   }
   void _onDecline() async {
-    HapticFeedback.lightImpact();
+    await HapticFeedback.lightImpact();
     try {
       await _workersService.declineJob(widget.job.id);
     } catch (e) {

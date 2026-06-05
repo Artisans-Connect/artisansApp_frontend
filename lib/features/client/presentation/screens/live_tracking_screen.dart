@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/services/job_realtime_service.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -27,6 +30,7 @@ class LiveTrackingScreen extends StatefulWidget {
 
 class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
   final JobsService _jobsService = JobsService();
+  final JobRealtimeService _realtime = JobRealtimeService();
   Map<String, dynamic>? _job;
   bool _loading = true;
   String? _loadError;
@@ -67,11 +71,19 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     _job = widget.job != null ? Map<String, dynamic>.from(widget.job!) : null;
     _applyStepFromStatus(_job?['status'] as String?);
     _loadJobDetails();
+    final String? jobId = _currentJobId;
+    if (jobId != null && jobId.isNotEmpty) {
+      _realtime.subscribeToJob(jobId, onUpdate: _handleJobUpdate);
+    }
   }
 
+  String? get _currentJobId =>
+      _job?['job_id'] as String? ??
+      _job?['jobId'] as String? ??
+      _job?['id'] as String?;
+
   Future<void> _loadJobDetails() async {
-    final String? jobId =
-        _job?['job_id'] as String? ?? _job?['jobId'] as String?;
+    final String? jobId = _currentJobId;
     if (jobId == null || jobId.isEmpty) {
       setState(() => _loading = false);
       return;
@@ -100,6 +112,34 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     }
   }
 
+  void _handleJobUpdate(Map<String, dynamic> job) {
+    unawaited(_refreshFromRealtimeJob(job));
+  }
+
+  Future<void> _refreshFromRealtimeJob(Map<String, dynamic> job) async {
+    Map<String, dynamic> fullJob = job;
+    final String? jobId = job['id'] as String?;
+    if (jobId != null && jobId.isNotEmpty) {
+      try {
+        final dynamic fetched = await _jobsService.getJobById(jobId);
+        if (fetched is Map<String, dynamic>) {
+          fullJob = fetched;
+        }
+      } catch (_) {
+        fullJob = <String, dynamic>{...? _job, ...job};
+      }
+    }
+
+    final ClientBooking booking = ClientBooking.fromApiJob(fullJob);
+    if (!mounted) return;
+    setState(() {
+      _job = booking.toTrackingMap();
+      _loading = false;
+      _loadError = null;
+    });
+    _applyStepFromStatus(booking.backendStatus);
+  }
+
   void _applyStepFromStatus(String? statusRaw) {
     final String status = (statusRaw ?? '').toLowerCase();
     final int step = switch (status) {
@@ -109,6 +149,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
       _ => 0,
     };
     setState(() => _currentStep = step);
+  }
+
+  @override
+  void dispose() {
+    _realtime.unsubscribe();
+    super.dispose();
   }
 
   @override
@@ -124,7 +170,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
     final String? workerId = job['worker_id'] as String?;
     final double? jobLat = (job['location_lat'] as num?)?.toDouble();
     final double? jobLng = (job['location_lng'] as num?)?.toDouble();
-    final String? jobUuid = job['job_id'] as String? ?? job['jobId'] as String?;
+    final String? jobUuid =
+        job['job_id'] as String? ?? job['jobId'] as String? ?? job['id'] as String?;
+    final String status = (job['status'] as String? ?? '').toLowerCase();
+    final bool canRate = status == 'completed';
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -252,8 +301,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     PrimaryButton(
-                      label: 'Job Complete - Proceed to Rating →',
+                      label: canRate
+                          ? 'Rate completed job'
+                          : 'Waiting for worker completion',
+                      isEnabled: canRate,
                       onPressed: () {
+                        if (!canRate) return;
                         Navigator.pushNamed(
                           context,
                           AppRoutes.rateService,

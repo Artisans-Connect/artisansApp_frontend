@@ -58,7 +58,14 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
       MaterialPageRoute<void>(
         builder: (_) => JobRequestDetailScreen(
           job: job,
-          onAcceptRequest: session.acceptJob,
+          onAcceptRequest: (accepted) {
+            session.acceptJob(accepted);
+            _load();
+          },
+          onAcceptResponse: (accepted) {
+            session.acceptJobFromApi(accepted);
+            _load();
+          },
         ),
       ),
     );

@@ -2,14 +2,20 @@ import 'package:geolocator/geolocator.dart';
 
 /// Accra fallback when GPS is unavailable (demo / permission denied).
 class DeviceLocation {
-  const DeviceLocation({required this.latitude, required this.longitude});
+  const DeviceLocation({
+    required this.latitude,
+    required this.longitude,
+    this.isFallback = false,
+  });
 
   final double latitude;
   final double longitude;
+  final bool isFallback;
 
   static const DeviceLocation accraDefault = DeviceLocation(
     latitude: 5.6037,
     longitude: -0.1870,
+    isFallback: true,
   );
 }
 

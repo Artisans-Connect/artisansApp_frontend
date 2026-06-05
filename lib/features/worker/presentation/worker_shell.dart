@@ -29,6 +29,7 @@ class _WorkerShellState extends State<WorkerShell> {
     _session = WorkerSessionState();
     _session.addListener(_onSessionChanged);
     _session.syncLocationTracking();
+    _session.loadActiveJob();
   }
 
   @override

@@ -35,12 +35,13 @@ class UserProfileViewData {
   bool get isClient => role == UserRole.client;
 
   factory UserProfileViewData.fromJson(Map<String, dynamic> json) {
-    final String roleStr = (json['signup_type'] ?? json['role'] ?? 'client').toString();
-    final UserRole role = roleStr == 'worker' ? UserRole.worker : UserRole.client;
-
     final Map<String, dynamic>? workerProfile =
         (json['worker'] as Map<String, dynamic>?) ??
         (json['worker_profile'] as Map<String, dynamic>?);
+    final String roleStr = workerProfile != null
+        ? 'worker'
+        : (json['signup_type'] ?? json['role'] ?? 'client').toString();
+    final UserRole role = roleStr == 'worker' ? UserRole.worker : UserRole.client;
 
     return UserProfileViewData(
       id: json['id'] as String? ?? '',

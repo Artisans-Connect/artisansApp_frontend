@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
@@ -56,12 +58,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await AuthService.instance.signOut();
     SharedUserContext.session.reset();
     if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(
+    AppToast.showSuccess(context, 'Signed out.');
+    await Navigator.pushNamedAndRemoveUntil(
       context,
       SignInScreen.routeName,
       (_) => false,
     );
-    AppToast.showSuccess(context, 'Signed out.');
   }
 
   Future<void> _switchView(String targetMode) async {
@@ -72,7 +74,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         targetMode,
         AppUserSession.instance.isWorkerCapable,
       );
-      Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+      await Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not switch view.');
@@ -80,11 +82,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _becomeWorker() {
-    Navigator.pushNamed(
+    unawaited(Navigator.pushNamed(
       context,
       RoleSelectionScreen.routeName,
       arguments: <String, dynamic>{'isBecomingWorker': true},
-    );
+    ));
   }
 
   VoidCallback? get _onSwitchOrBecomeWorker {
@@ -207,12 +209,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         InkWell(
-          onTap: () =>
-              Navigator.pushNamed(context, EditProfileScreen.routeName),
+          onTap: () => unawaited(
+            Navigator.pushNamed(context, EditProfileScreen.routeName),
+          ),
           borderRadius: BorderRadius.circular(24),
           child: _ClientSettingsHero(
-            onEdit: () =>
-                Navigator.pushNamed(context, EditProfileScreen.routeName),
+            onEdit: () => unawaited(
+              Navigator.pushNamed(context, EditProfileScreen.routeName),
+            ),
           ),
         ),
         const SizedBox(height: 20),

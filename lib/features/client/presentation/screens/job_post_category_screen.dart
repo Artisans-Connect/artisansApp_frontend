@@ -151,6 +151,7 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
     if (cat == null) return;
     _draft.merge(<String, dynamic>{
       'categoryId': cat['id'],
+      'categorySlug': cat['slug'],
       'categoryName': cat['name'],
       'category': cat['name'],
     });

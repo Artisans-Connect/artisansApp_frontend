@@ -123,7 +123,10 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       if (!mounted) return;
       final bool offline = e is NetworkException;
       if (offline) {
-        await JobPostQueue.instance.enqueue(payload);
+        await JobPostQueue.instance.enqueue(
+          payload,
+          idempotencyKey: idempotencyKey,
+        );
         if (!mounted) return;
         AppToast.showInfo(
           context,

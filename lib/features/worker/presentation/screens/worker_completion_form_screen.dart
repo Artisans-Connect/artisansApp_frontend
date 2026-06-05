@@ -2,6 +2,8 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
+import '../../../../core/services/jobs_service.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../models/mock_worker_job.dart';
 import '../widgets/completion_photo_picker.dart';
 import '../widgets/gradient_button.dart';
@@ -24,6 +26,7 @@ class _WorkerCompletionFormScreenState
   final _hoursController = TextEditingController();
   final _materialsController = TextEditingController();
   final _notesController = TextEditingController();
+  final JobsService _jobsService = JobsService();
   bool _isSubmitting = false;
   @override
   void dispose() {
@@ -39,19 +42,25 @@ class _WorkerCompletionFormScreenState
       );
       return;
     }
-    HapticFeedback.mediumImpact();
+    await HapticFeedback.mediumImpact();
     setState(() => _isSubmitting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    setState(() => _isSubmitting = false);
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (_) => WorkerCompletionSuccessScreen(
-          job: widget.job,
-          onDone: widget.onCompletionSubmitted,
+    try {
+      await _jobsService.completeJob(widget.job.id);
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      await Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(
+          builder: (_) => WorkerCompletionSuccessScreen(
+            job: widget.job,
+            onDone: widget.onCompletionSubmitted,
+          ),
         ),
-      ),
-    );
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      AppToast.showError(context, e, fallback: 'Could not complete job.');
+    }
   }
   @override
   Widget build(BuildContext context) {

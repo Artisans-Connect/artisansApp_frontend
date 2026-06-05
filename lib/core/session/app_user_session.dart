@@ -17,6 +17,9 @@ class AppUser {
   final List<String> serviceAreas;
   final double? hourlyRate;
   final String? rateType;
+  final bool isVerified;
+  final String? verificationStatus;
+  final String? verificationLevel;
 
   AppUser({
     required this.id,
@@ -34,6 +37,9 @@ class AppUser {
     this.serviceAreas = const <String>[],
     this.hourlyRate,
     this.rateType,
+    this.isVerified = false,
+    this.verificationStatus,
+    this.verificationLevel,
   });
 
   factory AppUser.fromJson(Map<String, dynamic> json) {
@@ -61,6 +67,9 @@ class AppUser {
           ? double.tryParse(worker!['hourly_rate'].toString())
           : null,
       rateType: worker?['rate_type'] as String?,
+      isVerified: worker?['is_verified'] as bool? ?? false,
+      verificationStatus: json['verification_status'] as String?,
+      verificationLevel: json['verification_level'] as String?,
     );
   }
 
@@ -77,6 +86,9 @@ class AppUser {
     List<String>? serviceAreas,
     double? hourlyRate,
     String? rateType,
+    bool? isVerified,
+    String? verificationStatus,
+    String? verificationLevel,
   }) {
     return AppUser(
       id: id,
@@ -94,6 +106,9 @@ class AppUser {
       serviceAreas: serviceAreas ?? this.serviceAreas,
       hourlyRate: hourlyRate ?? this.hourlyRate,
       rateType: rateType ?? this.rateType,
+      isVerified: isVerified ?? this.isVerified,
+      verificationStatus: verificationStatus ?? this.verificationStatus,
+      verificationLevel: verificationLevel ?? this.verificationLevel,
     );
   }
 }

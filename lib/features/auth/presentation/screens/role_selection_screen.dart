@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -179,7 +180,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         };
         await AuthService.instance.becomeWorker(workerBody);
         if (!mounted) return;
-        Navigator.pushNamedAndRemoveUntil(
+        await Navigator.pushNamedAndRemoveUntil(
           context,
           WorkerShell.routeName,
           (Route<dynamic> route) => false,
@@ -206,7 +207,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       final user = await AuthService.instance.createProfile(body);
 
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(
+      await Navigator.pushNamedAndRemoveUntil(
         context,
         shellRouteForUser(user),
         (Route<dynamic> route) => false,
@@ -220,7 +221,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   Future<void> _pickImage() async {
-    showModalBottomSheet<void>(
+    unawaited(showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -282,7 +283,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           ),
         );
       },
-    );
+    ));
   }
 
   bool _canProceed() {

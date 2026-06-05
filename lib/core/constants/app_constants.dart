@@ -1,9 +1,17 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
-  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
+  static String? _env(String key) {
+    try {
+      return dotenv.env[key];
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static String get supabaseUrl => _env('SUPABASE_URL') ?? '';
   static String get supabasePublishableKey =>
-      dotenv.env['SUPABASE_PUBLISHABLE_KEY'] ?? '';
+      _env('SUPABASE_PUBLISHABLE_KEY') ?? '';
 
   /// Placeholder redirect for email confirmation (dev). Replace with app deep link in production.
   static const String supabaseRedirectUrl =
@@ -11,12 +19,16 @@ class AppConstants {
 
   /// Override in `.env` as `EXPRESS_API_BASE_URL` (e.g. `https://artisansapp-backend.onrender.com/api`).
   static String get expressApiBaseUrl =>
-      dotenv.env['EXPRESS_API_BASE_URL'] ??
+      _env('EXPRESS_API_BASE_URL') ??
       'https://artisansapp-backend.onrender.com/api';
+
+  static String get verificationPortalUrl =>
+      _env('VERIFICATION_PORTAL_URL') ??
+      'https://artisans-verification-portal.onrender.com';
 
   static const String avatarsBucket = 'avatars';
   static const String jobPhotosBucket = 'job-photos';
 
   /// Set GOOGLE_MAPS_API_KEY in .env; also configure native Android/iOS manifests.
-  static String get googleMapsApiKey => dotenv.env['GOOGLE_MAPS_API_KEY'] ?? '';
+  static String get googleMapsApiKey => _env('GOOGLE_MAPS_API_KEY') ?? '';
 }

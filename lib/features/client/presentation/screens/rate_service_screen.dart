@@ -113,19 +113,31 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                 onPressed: () async {
                   setState(() => _isSubmitting = true);
                   try {
-                    final jobId = widget.service?['id'] ?? widget.service?['jobId'];
-                    final workerId = widget.service?['workerId'] ?? widget.service?['worker_id'];
+                    final jobId = widget.service?['job_id'] ??
+                        widget.service?['jobId'] ??
+                        widget.service?['id'];
+                    final workerId = widget.service?['workerId'] ??
+                        widget.service?['worker_id'] ??
+                        widget.service?['counterpartUserId'];
                     
-                    if (jobId != null && workerId != null) {
-                      await _reviewsService.createReview({
-                        'job_id': jobId,
-                        'worker_id': workerId,
-                        'rating': _rating.toInt(),
-                        'comment': _reviewController.text.trim(),
-                      });
+                    if (jobId == null || workerId == null) {
+                      throw Exception('This booking is missing review details.');
                     }
+
+                    final String comment = [
+                      _reviewController.text.trim(),
+                      if (_selectedTags.isNotEmpty)
+                        'Highlights: ${_selectedTags.join(', ')}',
+                    ].where((part) => part.isNotEmpty).join('\n\n');
+
+                    await _reviewsService.createReview({
+                      'job_id': jobId,
+                      'worker_id': workerId,
+                      'rating': _rating.toInt(),
+                      if (comment.isNotEmpty) 'comment': comment,
+                    });
                     
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     AppToast.showSuccess(context, 'Rating submitted successfully!');
 
                     ClientNavigation.popToShellAndSelectTab(
@@ -133,7 +145,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                       ClientNavTab.bookings,
                     );
                   } catch (e) {
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     AppToast.showError(context, e, fallback: 'Could not submit rating.');
                     setState(() => _isSubmitting = false);
                   }
