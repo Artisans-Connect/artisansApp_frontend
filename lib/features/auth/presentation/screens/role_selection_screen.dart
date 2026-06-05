@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
-
+ 
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-
+ 
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/storage_service.dart';
@@ -16,63 +16,494 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
-
 import '../../widgets/role_option_card.dart';
-
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Design tokens (mirrored from DESIGN.md)
+// ─────────────────────────────────────────────────────────────────────────────
+class _T {
+  // Surfaces
+  static const Color surfaceBase = Color(0xFFFFF8F0);
+  static const Color surfaceCard = Color(0xFFFFFFFF);
+ 
+  // Brand
+  static const Color primary     = Color(0xFFC15A3D); // terracotta
+  static const Color primaryDark = Color(0xFF8B3A2A);
+  static const Color accentGold  = Color(0xFFE6A017); // Kente gold
+  static const Color accentWarm  = Color(0xFFD97706);
+ 
+  // Text
+  static const Color textPrimary   = Color(0xFF2C2418);
+  static const Color textSecondary = Color(0xFF5C5243);
+ 
+  // Borders
+  static const Color borderSubtle = Color(0x0F000000); // rgba(0,0,0,0.06)
+ 
+  // Feedback
+  static const Color successGreen = Color(0xFF00E676);
+  static const Color error        = Color(0xFFBA1A1A);
+ 
+  // Derived tints used in the redesigned screens
+  static const Color primaryTint12 = Color(0x1FC15A3D); // 12% primary
+  static const Color primaryTint08 = Color(0x14C15A3D); // 8%
+  static const Color goldTint12    = Color(0x1FE6A017);
+  static const Color warmSurface   = Color(0xFFFAF2EA); // slightly richer off-white
+ 
+  // Radii
+  static const double radiusSm  = 4;
+  static const double radiusMd  = 12;
+  static const double radiusLg  = 16;
+  static const double radiusXl  = 24;
+  static const double radiusFull = 999;
+ 
+  // Spacing
+  static const double xs     = 4;
+  static const double sm     = 8;
+  static const double md     = 16;
+  static const double lg     = 24;
+  static const double xl     = 40;
+  static const double gutter = 20;
+}
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Small reusable local widgets
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+/// Pill-shaped progress step dots
+class _StepDots extends StatelessWidget {
+  const _StepDots({required this.total, required this.current});
+  final int total;
+  final int current;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(total, (i) {
+        final bool active = i == current;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeInOut,
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          width: active ? 20 : 7,
+          height: 7,
+          decoration: BoxDecoration(
+            color: active ? _T.primary : _T.primary.withOpacity(0.22),
+            borderRadius: BorderRadius.circular(_T.radiusFull),
+          ),
+        );
+      }),
+    );
+  }
+}
+ 
+/// Hero band shown at the top of each onboarding page.
+class _HeroHeader extends StatelessWidget {
+  const _HeroHeader({
+    required this.icon,
+    required this.bgColor,
+    required this.title,
+    required this.subtitle,
+    required this.totalDots,
+    required this.currentDot,
+  });
+ 
+  final Widget icon;
+  final Color bgColor;
+  final String title;
+  final String subtitle;
+  final int totalDots;
+  final int currentDot;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(_T.gutter, 28, _T.gutter, 22),
+      decoration: const BoxDecoration(
+        color: _T.surfaceCard,
+        border: Border(
+          bottom: BorderSide(color: _T.borderSubtle, width: 1),
+        ),
+      ),
+      child: Column(
+        children: <Widget>[
+          Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              color: bgColor,
+              shape: BoxShape.circle,
+              border: Border.all(color: _T.borderSubtle, width: 1.5),
+            ),
+            child: Center(child: icon),
+          ),
+          const SizedBox(height: 14),
+          _StepDots(total: totalDots, current: currentDot),
+          const SizedBox(height: 14),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: _T.textPrimary,
+              height: 1.2,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 14,
+              fontWeight: FontWeight.w400,
+              color: _T.textSecondary,
+              height: 1.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+ 
+/// Premium 2-col trade icon card chip.
+class _TradeChip extends StatelessWidget {
+  const _TradeChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+ 
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: selected ? _T.primaryTint08 : _T.surfaceCard,
+          borderRadius: BorderRadius.circular(_T.radiusLg),
+          border: Border.all(
+            color: selected ? _T.primary : _T.borderSubtle,
+            width: selected ? 1.8 : 1,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? _T.primaryTint12
+                        : _T.surfaceBase,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    icon,
+                    size: 20,
+                    color: selected ? _T.primary : _T.textSecondary,
+                  ),
+                ),
+                const Spacer(),
+                if (selected)
+                  Container(
+                    width: 20,
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: _T.primary,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      size: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: selected ? _T.primary : _T.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+ 
+/// Area pill toggle for service areas.
+class _AreaPill extends StatelessWidget {
+  const _AreaPill({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+ 
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        decoration: BoxDecoration(
+          color: selected ? _T.primary : _T.surfaceCard,
+          borderRadius: BorderRadius.circular(_T.radiusFull),
+          border: Border.all(
+            color: selected ? _T.primary : _T.borderSubtle,
+            width: 1.2,
+          ),
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontFamily: 'Satoshi',
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? Colors.white : _T.textSecondary,
+          ),
+        ),
+      ),
+    );
+  }
+}
+ 
+/// Experience year card — compact tap target.
+class _ExpCard extends StatelessWidget {
+  const _ExpCard({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+ 
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: selected ? _T.primaryTint08 : _T.surfaceCard,
+            borderRadius: BorderRadius.circular(_T.radiusMd),
+            border: Border.all(
+              color: selected ? _T.primary : _T.borderSubtle,
+              width: selected ? 1.8 : 1,
+            ),
+          ),
+          child: Column(
+            children: <Widget>[
+              Text(
+                label.replaceAll(' years', '').replaceAll(' yrs', ''),
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: selected ? _T.primary : _T.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'yrs',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.05,
+                  color: selected ? _T.primary : _T.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+ 
+/// Info strip used on the service areas page.
+class _InfoStrip extends StatelessWidget {
+  const _InfoStrip({required this.text});
+  final String text;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: _T.primaryTint08,
+        borderRadius: BorderRadius.circular(_T.radiusMd),
+        border: Border.all(color: _T.primaryTint12),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(PhosphorIcons.info, color: _T.primary, size: 16),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: 12,
+                color: _T.primaryDark,
+                height: 1.5,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+ 
+/// Section label (small caps, muted).
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Text(
+        text.toUpperCase(),
+        style: const TextStyle(
+          fontFamily: 'Satoshi',
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.08,
+          color: _T.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+ 
+/// Trust signal chip shown in the Bio page.
+class _TrustChip extends StatelessWidget {
+  const _TrustChip({required this.icon, required this.label});
+  final IconData icon;
+  final String label;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+        decoration: BoxDecoration(
+          color: _T.primaryTint08,
+          borderRadius: BorderRadius.circular(_T.radiusMd),
+          border: Border.all(color: _T.primaryTint12),
+        ),
+        child: Column(
+          children: <Widget>[
+            Icon(icon, color: _T.primary, size: 18),
+            const SizedBox(height: 5),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.05,
+                color: _T.primaryDark,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Main screen
+// ─────────────────────────────────────────────────────────────────────────────
+ 
 class RoleSelectionScreen extends StatefulWidget {
   const RoleSelectionScreen({super.key});
-
+ 
   static const String routeName = '/auth/role-selection';
-
+ 
   @override
   State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
 }
-
+ 
 class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   final PageController _pageController = PageController();
   final OnboardingSession _session = OnboardingSession.instance;
-
+ 
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final GlobalKey<FormState> _bioFormKey = GlobalKey<FormState>();
-
+ 
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
-
+ 
   int _currentIndex = 0;
   bool _isBecomingWorker = false;
   bool _parsedRouteArgs = false;
-
-  static const List<String> _trades = <String>[
-    'Electrician',
-    'Plumber',
-    'Carpenter',
-    'Mason',
-    'Painter',
-    'Welder',
-    'Appliance Repair',
-    'Other',
+ 
+  // ── Static data ────────────────────────────────────────────────────────────
+ 
+  static const List<_TradeEntry> _trades = <_TradeEntry>[
+    _TradeEntry('Electrician',     PhosphorIcons.lightning),
+    _TradeEntry('Plumber',         PhosphorIcons.drop),
+    _TradeEntry('Carpenter',       PhosphorIcons.hammer),
+    _TradeEntry('Mason',           PhosphorIcons.wall),
+    _TradeEntry('Painter',         PhosphorIcons.paintBrush),
+    _TradeEntry('Welder',          PhosphorIcons.flame),
+    _TradeEntry('Appliance Repair',PhosphorIcons.wrench),
+    _TradeEntry('Other',           PhosphorIcons.dotsThree),
   ];
-
+ 
   static const List<String> _areas = <String>[
-    'Adum',
-    'Asokwa',
-    'Bantama',
-    'Suame',
-    'Tafo',
-    'Ahodwo',
-    'Santasi',
-    'KNUST',
+    'Adum', 'Asokwa', 'Bantama', 'Suame',
+    'Tafo', 'Ahodwo', 'Santasi', 'KNUST',
   ];
-
+ 
   static const List<String> _experienceBands = <String>[
-    '0–1 years',
-    '1–3 years',
-    '3–5 years',
-    '5+ years',
+    '0–1 years', '1–3 years', '3–5 years', '5+ years',
   ];
-
+ 
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
+ 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -84,7 +515,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       _session.setRole(UserRole.worker);
     }
   }
-
+ 
   @override
   void dispose() {
     _pageController.dispose();
@@ -92,14 +523,36 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     _bioController.dispose();
     super.dispose();
   }
-
+ 
+  // ── Helpers ────────────────────────────────────────────────────────────────
+ 
   int get _totalDots {
     if (_isBecomingWorker) return 4;
     return _session.isWorker ? 5 : 2;
   }
-
-
-
+ 
+  bool _canProceed() {
+    if (_isBecomingWorker) {
+      if (_currentIndex == 0) return _session.selectedTrades.isNotEmpty;
+      if (_currentIndex == 1) {
+        return _session.serviceAreas.isNotEmpty &&
+            _session.experienceBand != null;
+      }
+      return true;
+    }
+    if (_currentIndex == 0) return _session.role != null;
+    if (_session.isWorker) {
+      if (_currentIndex == 1) return _session.selectedTrades.isNotEmpty;
+      if (_currentIndex == 2) {
+        return _session.serviceAreas.isNotEmpty &&
+            _session.experienceBand != null;
+      }
+    }
+    return true;
+  }
+ 
+  // ── Navigation ─────────────────────────────────────────────────────────────
+ 
   void _onNext() {
     if (_isBecomingWorker) {
       if (_currentIndex == 0 && _session.selectedTrades.isEmpty) return;
@@ -141,18 +594,17 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       curve: Curves.easeInOut,
     );
   }
-
-
-
+ 
+  // ── Submit ─────────────────────────────────────────────────────────────────
+ 
   Future<void> _finishProfile() async {
     if (_session.isWorker) {
       if (_bioFormKey.currentState?.validate() != true) return;
       _session.bio = _bioController.text.trim();
     }
-
+ 
     setState(() => _isSubmitting = true);
-
-    // Upload avatar to Supabase Storage if a local file was picked
+ 
     if (_imageFile != null &&
         !(_session.avatarUrl?.startsWith('http') ?? false)) {
       try {
@@ -163,7 +615,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         // Avatar upload failed — continue without it
       }
     }
-
+ 
     try {
       final String role = _session.isWorker ? 'worker' : 'client';
       if (_isBecomingWorker) {
@@ -172,10 +624,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           'service_areas': _session.serviceAreas.toList(),
           if (_session.experienceBand != null)
             'experience_band': _session.experienceBand,
-          if (_session.bio != null && _session.bio!.isNotEmpty) 'bio': _session.bio,
-          if (_session.locationLabel != null && _session.locationLabel!.isNotEmpty)
+          if (_session.bio != null && _session.bio!.isNotEmpty)
+            'bio': _session.bio,
+          if (_session.locationLabel != null &&
+              _session.locationLabel!.isNotEmpty)
             'location_label': _session.locationLabel,
-          if (_session.avatarUrl != null && _session.avatarUrl!.startsWith('http'))
+          if (_session.avatarUrl != null &&
+              _session.avatarUrl!.startsWith('http'))
             'avatar_url': _session.avatarUrl,
         };
         await AuthService.instance.becomeWorker(workerBody);
@@ -187,25 +642,31 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         );
         return;
       }
-
+ 
       final Map<String, dynamic> body = <String, dynamic>{
-        'full_name': _session.fullName?.isNotEmpty == true ? _session.fullName : 'User',
-        'phone': _session.phone?.isNotEmpty == true ? _session.phone : '0000000000',
+        'full_name': _session.fullName?.isNotEmpty == true
+            ? _session.fullName
+            : 'User',
+        'phone': _session.phone?.isNotEmpty == true
+            ? _session.phone
+            : '0000000000',
         'signup_type': role,
-        if (_session.avatarUrl != null && _session.avatarUrl!.startsWith('http'))
+        if (_session.avatarUrl != null &&
+            _session.avatarUrl!.startsWith('http'))
           'avatar_url': _session.avatarUrl,
-        if (_session.bio != null && _session.bio!.isNotEmpty) 'bio': _session.bio,
+        if (_session.bio != null && _session.bio!.isNotEmpty)
+          'bio': _session.bio,
         if (_session.experienceBand != null)
           'experience_band': _session.experienceBand,
       };
-
+ 
       if (_session.isWorker) {
         body['skills'] = _session.selectedTrades.toList();
         body['service_areas'] = _session.serviceAreas.toList();
       }
-
+ 
       final user = await AuthService.instance.createProfile(body);
-
+ 
       if (!mounted) return;
       await Navigator.pushNamedAndRemoveUntil(
         context,
@@ -219,12 +680,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
-
+ 
+  // ── Image picker ───────────────────────────────────────────────────────────
+ 
   Future<void> _pickImage() async {
     unawaited(showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(_T.radiusXl)),
       ),
       builder: (BuildContext ctx) {
         return SafeArea(
@@ -233,13 +696,23 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: _T.borderSubtle,
+                    borderRadius: BorderRadius.circular(_T.radiusFull),
+                  ),
+                ),
                 ListTile(
-                  leading: Icon(PhosphorIcons.images, color: AppColors.primary),
+                  leading:
+                      Icon(PhosphorIcons.images, color: _T.primary),
                   title: const Text('Choose from Gallery'),
                   onTap: () async {
                     Navigator.pop(ctx);
-                    final XFile? image =
-                        await _picker.pickImage(source: ImageSource.gallery);
+                    final XFile? image = await _picker.pickImage(
+                        source: ImageSource.gallery);
                     if (image != null) {
                       setState(() {
                         _imageFile = File(image.path);
@@ -249,12 +722,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   },
                 ),
                 ListTile(
-                  leading: Icon(PhosphorIcons.camera, color: AppColors.primary),
+                  leading:
+                      Icon(PhosphorIcons.camera, color: _T.primary),
                   title: const Text('Take a Photo'),
                   onTap: () async {
                     Navigator.pop(ctx);
-                    final XFile? image =
-                        await _picker.pickImage(source: ImageSource.camera);
+                    final XFile? image = await _picker.pickImage(
+                        source: ImageSource.camera);
                     if (image != null) {
                       setState(() {
                         _imageFile = File(image.path);
@@ -266,7 +740,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 if (_imageFile != null) ...<Widget>[
                   const Divider(),
                   ListTile(
-                    leading: Icon(PhosphorIcons.trash, color: AppColors.error),
+                    leading:
+                        Icon(PhosphorIcons.trash, color: AppColors.error),
                     title: const Text('Remove Photo',
                         style: TextStyle(color: AppColors.error)),
                     onTap: () {
@@ -285,42 +760,25 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       },
     ));
   }
-
-  bool _canProceed() {
-    if (_isBecomingWorker) {
-      if (_currentIndex == 0) return _session.selectedTrades.isNotEmpty;
-      if (_currentIndex == 1) {
-        return _session.serviceAreas.isNotEmpty && _session.experienceBand != null;
-      }
-      return true;
-    }
-    if (_currentIndex == 0) return _session.role != null;
-    if (_session.isWorker) {
-      if (_currentIndex == 1) return _session.selectedTrades.isNotEmpty;
-      if (_currentIndex == 2) {
-        return _session.serviceAreas.isNotEmpty && _session.experienceBand != null;
-      }
-    }
-    return true;
-  }
-
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Build
+  // ─────────────────────────────────────────────────────────────────────────
+ 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF2F0F8),
+      backgroundColor: _T.surfaceBase,
       body: SafeArea(
         child: Column(
           children: <Widget>[
-
-            // ── Content PageView ───────────────────────────────────
+            // ── Content PageView ──────────────────────────────────────────
             Expanded(
               child: PageView(
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 onPageChanged: (int index) {
-                  setState(() {
-                    _currentIndex = index;
-                  });
+                  setState(() => _currentIndex = index);
                 },
                 children: _isBecomingWorker
                     ? <Widget>[
@@ -343,35 +801,45 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           ],
               ),
             ),
-
-            // ── Bottom Action & Dot indicator ──────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GradientButton(
-                    label: _currentIndex == _totalDots - 1
-                        ? 'Complete Setup & Explore'
-                        : 'Continue',
-                    trailingIcon: _currentIndex == _totalDots - 1
-                        ? null
-                        : PhosphorIcons.caretRight,
-                    isLoading: _isSubmitting,
-                    onPressed: _canProceed() ? _onNext : null,
-                  ),
-                ],
-              ),
-            ),
+ 
+            // ── Bottom CTA ────────────────────────────────────────────────
+            _buildBottomBar(),
           ],
         ),
       ),
     );
   }
-
+ 
+  // ── Bottom bar ─────────────────────────────────────────────────────────────
+ 
+  Widget _buildBottomBar() {
+    final bool isLastPage = _currentIndex == _totalDots - 1;
+    final bool canProceed = _canProceed();
+ 
+    return Container(
+      padding: const EdgeInsets.fromLTRB(
+          _T.gutter, 12, _T.gutter, 28),
+      decoration: const BoxDecoration(
+        color: _T.surfaceBase,
+        border: Border(
+          top: BorderSide(color: _T.borderSubtle),
+        ),
+      ),
+      child: GradientButton(
+        label: isLastPage ? 'Complete Setup & Explore' : 'Continue',
+        trailingIcon:
+            isLastPage ? null : PhosphorIcons.caretRight,
+        isLoading: _isSubmitting,
+        onPressed: canProceed ? _onNext : null,
+      ),
+    );
+  }
+ 
+  // ── Role Selection (unchanged logic, kept consistent) ──────────────────────
+ 
   Widget _buildRoleSelectionPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_T.gutter),
       child: Column(
         children: <Widget>[
           const SizedBox(height: 14),
@@ -392,9 +860,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             subtitle: 'Find skilled professionals for your next project.',
             icon: PhosphorIcons.desktop,
             isSelected: _session.isClient,
-            onTap: () {
-              setState(() => _session.setRole(UserRole.client));
-            },
+            onTap: () => setState(() => _session.setRole(UserRole.client)),
           ),
           const SizedBox(height: 18),
           RoleOptionCard(
@@ -402,181 +868,214 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             subtitle: 'Showcase your skills and find new clients.',
             icon: PhosphorIcons.briefcase,
             isSelected: _session.isWorker,
-            onTap: () {
-              setState(() => _session.setRole(UserRole.worker));
-            },
+            onTap: () => setState(() => _session.setRole(UserRole.worker)),
           ),
         ],
       ),
     );
   }
-
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // ── TRADE SELECTION (redesigned) ─────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+ 
   Widget _buildTradeSelectionPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            'What work do you do?',
-            style: AppTextStyles.displayMd.copyWith(fontSize: 36),
+    final int selectedCount = _session.selectedTrades.length;
+ 
+    return Column(
+      children: <Widget>[
+        // Hero header
+        _HeroHeader(
+          icon: const Icon(
+            PhosphorIcons.toolbox,
+            color: _T.primary,
+            size: 34,
           ),
-          const SizedBox(height: 10),
-          Text(
-            'Select all that apply to help us find the right jobs for you.',
-            style: AppTextStyles.bodyLg,
-          ),
-          const SizedBox(height: 24),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: _trades.map((String trade) {
-              final bool selected = _session.selectedTrades.contains(trade);
-              return FilterChip(
-                label: Text(trade),
-                selected: selected,
-                onSelected: (_) {
-                  setState(() {
-                    if (selected) {
-                      _session.selectedTrades.remove(trade);
-                    } else {
-                      _session.selectedTrades.add(trade);
-                    }
-                  });
-                },
-                selectedColor: AppColors.primary.withValues(alpha: 0.12),
-                checkmarkColor: AppColors.primary,
-                labelStyle: TextStyle(
-                  color: selected ? AppColors.primary : AppColors.textPrimary,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-                ),
-                side: BorderSide(
-                  color: selected ? AppColors.primary : AppColors.outline,
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildServiceAreasPage() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(
-            'Where do you work?',
-            style: AppTextStyles.displayMd.copyWith(fontSize: 36),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            'Choose neighborhoods you can reach for jobs.',
-            style: AppTextStyles.bodyLg,
-          ),
-          const SizedBox(height: 20),
-          Text('Service areas',
-              style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: _areas.map((String area) {
-              final bool selected = _session.serviceAreas.contains(area);
-              return FilterChip(
-                label: Text(area),
-                selected: selected,
-                onSelected: (_) {
-                  setState(() {
-                    if (selected) {
-                      _session.serviceAreas.remove(area);
-                    } else {
-                      _session.serviceAreas.add(area);
-                    }
-                  });
-                },
-                selectedColor: AppColors.primary.withValues(alpha: 0.12),
-                checkmarkColor: AppColors.primary,
-                side: BorderSide(
-                  color: selected ? AppColors.primary : AppColors.outline,
-                ),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 28),
-          Text('Experience',
-              style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700)),
-          const SizedBox(height: 12),
-          ..._experienceBands.map((String band) {
-            final bool selected = _session.experienceBand == band;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: InkWell(
-                onTap: () => setState(() => _session.experienceBand = band),
-                borderRadius: BorderRadius.circular(14),
-                child: Container(
-                  width: double.infinity,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(
-                      color: selected ? AppColors.primary : AppColors.outline,
-                      width: selected ? 2 : 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Text(
-                          band,
-                          style: AppTextStyles.bodyLg.copyWith(
-                            fontWeight:
-                                selected ? FontWeight.w700 : FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                      if (selected)
-                        Icon(PhosphorIcons.checkCircle, color: AppColors.primary),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.08),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
+          bgColor: _T.primaryTint12,
+          title: 'What work\ndo you do?',
+          subtitle:
+              'Pick all your trades — clients match\nyou based on these.',
+          totalDots: _totalDots,
+          currentDot: _isBecomingWorker ? 0 : 1,
+        ),
+ 
+        // Scrollable content
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(_T.gutter),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Icon(PhosphorIcons.info,
-                    color: AppColors.primary, size: 20),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Hourly rates are set per job after you accept a request.',
-                    style: AppTextStyles.bodyMd,
+                const _SectionLabel('Your trades'),
+ 
+                // 2-column icon card grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.35,
                   ),
+                  itemCount: _trades.length,
+                  itemBuilder: (BuildContext context, int i) {
+                    final _TradeEntry entry = _trades[i];
+                    final bool selected =
+                        _session.selectedTrades.contains(entry.label);
+                    return _TradeChip(
+                      label: entry.label,
+                      icon: entry.icon,
+                      selected: selected,
+                      onTap: () => setState(() {
+                        if (selected) {
+                          _session.selectedTrades.remove(entry.label);
+                        } else {
+                          _session.selectedTrades.add(entry.label);
+                        }
+                      }),
+                    );
+                  },
+                ),
+ 
+                const SizedBox(height: 16),
+ 
+                // Selected count strip
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: selectedCount > 0
+                      ? Container(
+                          key: ValueKey<int>(selectedCount),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: _T.goldTint12,
+                            borderRadius:
+                                BorderRadius.circular(_T.radiusMd),
+                            border:
+                                Border.all(color: _T.accentGold, width: 1),
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(PhosphorIcons.checkCircle,
+                                  color: _T.accentWarm, size: 16),
+                              const SizedBox(width: 8),
+                              Text(
+                                '$selectedCount trade${selectedCount > 1 ? 's' : ''} selected — add more any time from settings.',
+                                style: const TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 12,
+                                  color: _T.accentWarm,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
                 ),
               ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // ── SERVICE AREAS + EXPERIENCE (redesigned) ───────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+ 
+  Widget _buildServiceAreasPage() {
+    return Column(
+      children: <Widget>[
+        // Hero header
+        _HeroHeader(
+          icon: const Icon(
+            PhosphorIcons.mapPin,
+            color: Color(0xFF1D9E75),
+            size: 34,
+          ),
+          bgColor: const Color(0xFFE1F5EE),
+          title: 'Where do\nyou work?',
+          subtitle:
+              'Choose the areas you cover and how\nlong you\'ve been in the trade.',
+          totalDots: _totalDots,
+          currentDot: _isBecomingWorker ? 1 : 2,
+        ),
+ 
+        // Scrollable body
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(_T.gutter),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                // ── Areas ──
+                const _SectionLabel('Service areas'),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _areas.map((String area) {
+                    final bool selected =
+                        _session.serviceAreas.contains(area);
+                    return _AreaPill(
+                      label: area,
+                      selected: selected,
+                      onTap: () => setState(() {
+                        if (selected) {
+                          _session.serviceAreas.remove(area);
+                        } else {
+                          _session.serviceAreas.add(area);
+                        }
+                      }),
+                    );
+                  }).toList(),
+                ),
+ 
+                const SizedBox(height: _T.lg),
+ 
+                // ── Experience ──
+                const _SectionLabel('Experience level'),
+                Row(
+                  children: _experienceBands.map((String band) {
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        right: band == _experienceBands.last ? 0 : 8,
+                      ),
+                      child: _ExpCard(
+                        // Strip trailing text — the card shows just the number range
+                        label: band,
+                        selected: _session.experienceBand == band,
+                        onTap: () => setState(
+                            () => _session.experienceBand = band),
+                      ),
+                    );
+                  }).toList(),
+                ),
+ 
+                const SizedBox(height: _T.md),
+                const _InfoStrip(
+                  text:
+                      'Hourly rates are negotiated per job — you set them after accepting a request.',
+                ),
+                const SizedBox(height: _T.md),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // ── PHOTO + LOCATION (original layout, token-updated) ─────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+ 
   Widget _buildPhotoLocationPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(_T.gutter),
       child: Column(
         children: <Widget>[
           Text(
@@ -592,14 +1091,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           const SizedBox(height: 22),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(_T.gutter),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(28),
+              color: _T.surfaceCard,
+              borderRadius: BorderRadius.circular(_T.radiusXl),
+              border: Border.all(color: _T.borderSubtle),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
+                // Avatar picker
                 Center(
                   child: GestureDetector(
                     onTap: _pickImage,
@@ -610,31 +1111,32 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           height: 150,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.surfaceDim,
+                            color: _T.warmSurface,
                             border: Border.all(
-                              color: AppColors.outline,
+                              color: _T.borderSubtle,
                               width: 2,
                               strokeAlign: BorderSide.strokeAlignOutside,
                             ),
                           ),
                           child: _imageFile != null
                               ? ClipOval(
-                                  child: Image.file(
-                                    _imageFile!,
-                                    fit: BoxFit.cover,
-                                  ),
+                                  child: Image.file(_imageFile!,
+                                      fit: BoxFit.cover),
                                 )
                               : Icon(PhosphorIcons.cameraPlus,
-                                  color: AppColors.textSecondary, size: 42),
+                                  color: _T.textSecondary, size: 42),
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundColor: AppColors.secondary,
-                            child: Icon(PhosphorIcons.pencilSimple,
-                                color: Colors.white, size: 16),
+                            backgroundColor: _T.primary,
+                            child: const Icon(
+                              PhosphorIcons.pencilSimple,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                           ),
                         ),
                       ],
@@ -645,38 +1147,38 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 Center(
                   child: Text(
                     'UPLOAD PROFILE PICTURE',
-                    style: AppTextStyles.labelCaps.copyWith(
-                      color: AppColors.primary,
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
+                      letterSpacing: 0.08,
+                      color: _T.primary,
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text('ACCOUNT TYPE',
-                    style: AppTextStyles.labelCaps.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700)),
-                const SizedBox(height: 10),
+ 
+                // Account type display
+                const _SectionLabel('Account type'),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(_T.md),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceDim,
-                    borderRadius: BorderRadius.circular(22),
+                    color: _T.warmSurface,
+                    borderRadius: BorderRadius.circular(_T.radiusLg),
+                    border: Border.all(color: _T.borderSubtle),
                   ),
                   child: Row(
                     children: <Widget>[
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: _session.isClient
-                            ? AppColors.primary.withValues(alpha: 0.15)
-                            : AppColors.secondary,
+                            ? _T.primaryTint12
+                            : _T.primaryTint12,
                         child: Icon(
                           _session.isClient
                               ? PhosphorIcons.desktop
                               : PhosphorIcons.identificationCard,
-                          color: _session.isClient
-                              ? AppColors.primary
-                              : Colors.white,
+                          color: _T.primary,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -684,36 +1186,40 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Text(
+                            const Text(
                               'SELECTED ROLE',
-                              style: AppTextStyles.labelCaps.copyWith(
-                                color: AppColors.primary,
+                              style: TextStyle(
+                                fontFamily: 'Satoshi',
+                                fontSize: 10,
                                 fontWeight: FontWeight.w700,
+                                letterSpacing: 0.08,
+                                color: _T.textSecondary,
                               ),
                             ),
                             Text(
                               _session.isClient
                                   ? 'Client Profile'
                                   : 'Worker Profile',
-                              style: AppTextStyles.bodyLg.copyWith(
-                                color: AppColors.textPrimary,
+                              style: const TextStyle(
+                                fontFamily: 'Satoshi',
+                                fontSize: 16,
                                 fontWeight: FontWeight.w700,
+                                color: _T.textPrimary,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Icon(PhosphorIcons.checkCircle,
-                          color: AppColors.success, size: 20),
+                      const Icon(PhosphorIcons.checkCircle,
+                          color: _T.successGreen, size: 20),
                     ],
                   ),
                 ),
+ 
                 const SizedBox(height: 22),
-                Text('LOCATION',
-                    style: AppTextStyles.labelCaps.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700)),
-                const SizedBox(height: 10),
+ 
+                // Location input
+                const _SectionLabel('Location'),
                 AppInput(
                   controller: _locationController,
                   hint: 'e.g., East Legon, Accra',
@@ -726,75 +1232,241 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       ),
     );
   }
-
+ 
+  // ─────────────────────────────────────────────────────────────────────────
+  // ── BIO PAGE (redesigned) ─────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+ 
   Widget _buildBioPage() {
-    return SingleChildScrollView(
-      child: Form(
-        key: _bioFormKey,
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: <Widget>[
-              Text(
-                _session.isClient ? 'Tell Us About You' : 'Your bio',
-                style: AppTextStyles.displayMd.copyWith(fontSize: 58 * 0.7),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                _session.isClient
-                    ? 'A quick bio helps artisans know who they are working with.'
-                    : 'Help clients understand your experience and approach.',
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyLg,
-              ),
-              const SizedBox(height: 22),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      _session.isClient ? 'ABOUT YOU' : 'PROFESSIONAL BIO',
-                      style: AppTextStyles.labelCaps.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w700,
+    return Column(
+      children: <Widget>[
+        // Hero header
+        _HeroHeader(
+          icon: const Icon(
+            PhosphorIcons.userCircle,
+            color: _T.primary,
+            size: 34,
+          ),
+          bgColor: _T.primaryTint12,
+          title: _session.isClient
+              ? 'Tell us about\nyourself'
+              : 'Write your\nprofessional bio',
+          subtitle: _session.isClient
+              ? 'A quick intro helps artisans know\nwho they\'re working with.'
+              : 'A great bio gets you hired faster.\nKeep it honest and specific.',
+          totalDots: _totalDots,
+          currentDot: _isBecomingWorker ? 3 : 4,
+        ),
+ 
+        // Body
+        Expanded(
+          child: SingleChildScrollView(
+            child: Form(
+              key: _bioFormKey,
+              child: Padding(
+                padding: const EdgeInsets.all(_T.gutter),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(_T.gutter),
+                  decoration: BoxDecoration(
+                    color: _T.surfaceCard,
+                    borderRadius: BorderRadius.circular(_T.radiusXl),
+                    border: Border.all(color: _T.borderSubtle),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      // Label + character ring row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          _SectionLabel(
+                            _session.isClient
+                                ? 'About you'
+                                : 'Professional bio',
+                          ),
+                          // Character count ring
+                          ValueListenableBuilder<TextEditingValue>(
+                            valueListenable: _bioController,
+                            builder: (BuildContext context,
+                                TextEditingValue value, Widget? _) {
+                              final int count = value.text.length;
+                              const int maxLen = 250;
+                              final double progress = count / maxLen;
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: <Widget>[
+                                  SizedBox(
+                                    width: 28,
+                                    height: 28,
+                                    child: CustomPaint(
+                                      painter: _RingPainter(
+                                        progress: progress.clamp(0, 1),
+                                        trackColor: _T.borderSubtle,
+                                        fillColor: progress > 0.9
+                                            ? _T.error
+                                            : _T.primary,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '$count/$maxLen',
+                                    style: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontSize: 11,
+                                      color: _T.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    AppInput(
-                      controller: _bioController,
-                      hint: _session.isClient
-                          ? 'What kind of help do you usually need?'
-                          : 'Tell clients about your background and work ethic…',
-                      maxLines: 4,
-                      maxLength: 250,
-                      validator: (String? value) {
-                        if ((value ?? '').trim().length < 10) {
-                          return 'Bio should be at least 10 characters.';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    Center(
-                      child: Text(
-                        'By continuing, you agree to our Community\nGuidelines.',
-                        textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyMd,
+ 
+                      // Textarea
+                      AppInput(
+                        controller: _bioController,
+                        hint: _session.isClient
+                            ? 'What kind of help do you usually need?'
+                            : 'Tell clients about your background and work ethic…',
+                        maxLines: 4,
+                        maxLength: 250,
+                        validator: (String? value) {
+                          if ((value ?? '').trim().length < 10) {
+                            return 'Bio should be at least 10 characters.';
+                          }
+                          return null;
+                        },
                       ),
-                    ),
-                  ],
+ 
+                      const SizedBox(height: 20),
+ 
+                      // Trust signal chips
+                      const _SectionLabel('Your profile will show'),
+                      Row(
+                        children: const <Widget>[
+                          _TrustChip(
+                            icon: PhosphorIcons.star,
+                            label: 'Verified\ntrades',
+                          ),
+                          SizedBox(width: 8),
+                          _TrustChip(
+                            icon: PhosphorIcons.clock,
+                            label: 'Response\ntime',
+                          ),
+                          SizedBox(width: 8),
+                          _TrustChip(
+                            icon: PhosphorIcons.checkCircle,
+                            label: 'Job\nhistory',
+                          ),
+                        ],
+                      ),
+ 
+                      const SizedBox(height: 20),
+ 
+                      // Guidelines note
+                      Center(
+                        child: Text.rich(
+                          TextSpan(
+                            text: 'By continuing you agree to our ',
+                            style: const TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontSize: 12,
+                              color: _T.textSecondary,
+                            ),
+                            children: <InlineSpan>[
+                              TextSpan(
+                                text: 'Community Guidelines',
+                                style: const TextStyle(
+                                  color: _T.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const TextSpan(text: '.'),
+                            ],
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
   }
+}
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper data class for trade entries
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+class _TradeEntry {
+  const _TradeEntry(this.label, this.icon);
+  final String label;
+  final IconData icon;
+}
+ 
+// ─────────────────────────────────────────────────────────────────────────────
+// Custom painter for the bio character-count ring
+// ─────────────────────────────────────────────────────────────────────────────
+ 
+class _RingPainter extends CustomPainter {
+  const _RingPainter({
+    required this.progress,
+    required this.trackColor,
+    required this.fillColor,
+  });
+ 
+  final double progress;
+  final Color trackColor;
+  final Color fillColor;
+ 
+  @override
+  void paint(Canvas canvas, Size size) {
+    const double strokeWidth = 2.5;
+    final Rect rect = Rect.fromLTWH(
+      strokeWidth / 2,
+      strokeWidth / 2,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
+    );
+ 
+    // Track
+    canvas.drawArc(
+      rect,
+      -1.5708, // -π/2  (12 o'clock)
+      6.2832,  // full circle
+      false,
+      Paint()
+        ..color = trackColor
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round,
+    );
+ 
+    // Fill arc
+    if (progress > 0) {
+      canvas.drawArc(
+        rect,
+        -1.5708,
+        6.2832 * progress,
+        false,
+        Paint()
+          ..color = fillColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = strokeWidth
+          ..strokeCap = StrokeCap.round,
+      );
+    }
+  }
+ 
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.progress != progress || old.fillColor != fillColor;
 }
