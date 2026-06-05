@@ -39,6 +39,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   ];
 
   late final TextEditingController _nameController;
+  late final TextEditingController _phoneController;
   late final TextEditingController _bioController;
   late final TextEditingController _locationController;
   late final TextEditingController _hourlyRateController;
@@ -58,6 +59,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final profile = SharedUserContext.buildOwnProfile();
     _nameController = TextEditingController(
       text: session.fullName ?? profile.fullName,
+    );
+    _phoneController = TextEditingController(
+      text: session.phone ?? profile.phone ?? '',
     );
     _bioController = TextEditingController(text: session.bio ?? profile.bio ?? '');
     _locationController = TextEditingController(
@@ -83,6 +87,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   void dispose() {
     _bioController.removeListener(_onBioChanged);
     _nameController.dispose();
+    _phoneController.dispose();
     _bioController.dispose();
     _locationController.dispose();
     _hourlyRateController.dispose();
@@ -95,6 +100,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Future<void> _save() async {
     final session = SharedUserContext.session;
     session.fullName = _nameController.text.trim();
+    session.phone = _phoneController.text.trim();
     session.bio = _bioController.text.trim();
     session.locationLabel = _locationController.text.trim();
 
@@ -106,12 +112,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       final Map<String, dynamic> body = <String, dynamic>{
         'full_name': _nameController.text.trim(),
+        'phone': _phoneController.text.trim(),
         if (_bioController.text.trim().isNotEmpty) 'bio': _bioController.text.trim(),
         'location_label': _locationController.text.trim(),
         if (avatarUrl != null) 'avatar_url': avatarUrl,
       };
 
       await ProfileService.instance.updateProfile(body);
+      await ProfileService.instance.getMyProfile(forceRefresh: true);
       if (!mounted) return;
       AppToast.showSuccess(context, 'Profile updated.');
       Navigator.pop(context);
@@ -215,9 +223,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final String phone =
-        SharedUserContext.session.phone ?? SharedUserContext.buildOwnProfile().phone ?? '';
-
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
@@ -290,7 +295,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             const SizedBox(height: 16),
             _fieldLabel('PHONE NUMBER'),
             const SizedBox(height: 8),
-            _LockedField(value: phone),
+            AppInput(
+              controller: _phoneController,
+              hint: 'Phone number',
+              prefixIcon: PhosphorIcons.phone,
+            ),
             if (_isWorker) ...<Widget>[
               const SizedBox(height: 16),
               _fieldLabel('SKILLS'),
@@ -427,26 +436,3 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 }
 
-class _LockedField extends StatelessWidget {
-  const _LockedField({required this.value});
-
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      initialValue: value,
-      enabled: false,
-      style: AppTextStyles.bodyLg.copyWith(color: AppColors.outline),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: AppColors.surfaceDim.withValues(alpha: 0.5),
-        suffixIcon: Icon(PhosphorIcons.lock, color: AppColors.outline),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide.none,
-        ),
-      ),
-    );
-  }
-}

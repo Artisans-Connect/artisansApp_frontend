@@ -176,7 +176,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   GradientButton(
-                    label: 'Mark as Started',
+                    label: "I'm on my way / Start work",
                     isLoading: _isStarting,
                     enabled: !_isStarting,
                     onPressed: () async {

@@ -12,16 +12,22 @@ import '../../widgets/conversation_tile.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/error_state_view.dart';
 import '../../widgets/search_bar.dart';
+import '../../utils/shared_user_context.dart';
 import '../navigation/shared_route_args.dart';
 import 'chat_detail_screen.dart';
 import 'settings_screen.dart';
 
 class MessagesListScreen extends StatefulWidget {
-  const MessagesListScreen({super.key, this.embedInShell = false});
+  const MessagesListScreen({
+    super.key,
+    this.embedInShell = false,
+    this.refreshSignal = 0,
+  });
 
   static const String routeName = '/shared/messages';
 
   final bool embedInShell;
+  final int refreshSignal;
 
   @override
   State<MessagesListScreen> createState() => _MessagesListScreenState();
@@ -35,10 +41,20 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   String _searchQuery = '';
   bool _openingSearch = false;
 
+  bool get _isWorkerView => SharedUserContext.isViewingAsWorker;
+
   @override
   void initState() {
     super.initState();
     _loadConversations();
+  }
+
+  @override
+  void didUpdateWidget(covariant MessagesListScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshSignal != oldWidget.refreshSignal) {
+      _loadConversations(forceRefresh: true);
+    }
   }
 
   Future<void> _loadConversations({bool forceRefresh = false}) async {
@@ -144,20 +160,22 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       backgroundColor: AppColors.surface,
       appBar: _buildAppBar(),
       body: _buildBody(),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openingSearch ? null : _openWorkerSearch,
-        backgroundColor: AppColors.primary,
-        child: _openingSearch
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : Icon(PhosphorIcons.magnifyingGlass, color: Colors.white),
-      ),
+      floatingActionButton: _isWorkerView
+          ? null
+          : FloatingActionButton(
+              onPressed: _openingSearch ? null : _openWorkerSearch,
+              backgroundColor: AppColors.primary,
+              child: _openingSearch
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Icon(PhosphorIcons.magnifyingGlass, color: Colors.white),
+            ),
     );
   }
 
@@ -166,7 +184,13 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       title: 'Messages',
       showBackButton: !widget.embedInShell,
       actions: <Widget>[
-        if (!widget.embedInShell) ...[
+        if (widget.embedInShell) ...[
+          IconButton(
+            tooltip: 'Refresh',
+            onPressed: () => _loadConversations(forceRefresh: true),
+            icon: Icon(PhosphorIcons.arrowClockwise, color: AppColors.textPrimary),
+          ),
+        ] else ...[
           PopupMenuButton<String>(
             icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
             onSelected: (String value) {
@@ -257,16 +281,20 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'When you match with an artisan or client, your chats will appear here.',
+              _isWorkerView
+                  ? 'Client conversations will appear here after a booking or enquiry starts.'
+                  : 'When you match with an artisan or client, your chats will appear here.',
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyLg,
             ),
-            const SizedBox(height: 16),
-            TextButton.icon(
-              onPressed: _openingSearch ? null : _openWorkerSearch,
-              icon: Icon(PhosphorIcons.magnifyingGlass),
-              label: const Text('Find a worker'),
-            ),
+            if (!_isWorkerView) ...<Widget>[
+              const SizedBox(height: 16),
+              TextButton.icon(
+                onPressed: _openingSearch ? null : _openWorkerSearch,
+                icon: Icon(PhosphorIcons.magnifyingGlass),
+                label: const Text('Find a worker'),
+              ),
+            ],
           ],
         ),
       ),

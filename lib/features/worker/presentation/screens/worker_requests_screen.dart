@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/errors/error_messages.dart';
@@ -22,16 +24,31 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
   RequestsViewState _viewState = RequestsViewState.loading;
   List<MockWorkerJob> _jobs = <MockWorkerJob>[];
   String? _errorMessage;
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
     _load();
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 20),
+      (_) => _load(silent: true),
+    );
   }
-  Future<void> _load() async {
-    setState(() {
-      _viewState = RequestsViewState.loading;
-      _errorMessage = null;
-    });
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool silent = false}) async {
+    if (!silent) {
+      setState(() {
+        _viewState = RequestsViewState.loading;
+        _errorMessage = null;
+      });
+    }
     try {
       final List<dynamic> data = await _workersService.getJobRequests();
       if (!mounted) return;
@@ -123,10 +140,13 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
         AppSpacing.gutter,
       ),
       children: <Widget>[
-        AvailabilityCard(
+          AvailabilityCard(
           isAvailable: session.isAvailable,
           onChanged: (bool value) async {
             final bool ok = await session.setAvailable(value);
+            if (ok && mounted) {
+              await _load();
+            }
             if (!ok && mounted) {
               AppToast.showError(
                 context,
@@ -140,15 +160,34 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen> {
         if (_viewState == RequestsViewState.empty)
           Padding(
             padding: const EdgeInsets.only(top: 48),
-            child: Text(
-              'No open requests right now.\nPull down to refresh.',
-              textAlign: TextAlign.center,
-              style: AppTypography.bodyLg.copyWith(
-                color: AppColors.onSurfaceVariant,
+            child: Column(
+              children: <Widget>[
+                Icon(
+                  session.isAvailable
+                      ? Icons.radar
+                      : Icons.power_settings_new,
+                  color: AppColors.onSurfaceVariant,
+                  size: 36,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  session.isAvailable
+                      ? 'No open requests right now.\nWe refresh this list automatically.'
+                      : 'Go online to receive nearby job requests.',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyLg.copyWith(
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                TextButton(
+                  onPressed: () => _load(),
+                  child: const Text('Refresh'),
+                ),
+              ],
               ),
             ),
-          )
-        else
+        if (_viewState != RequestsViewState.empty)
           ..._jobs.map(
             (MockWorkerJob job) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.md),

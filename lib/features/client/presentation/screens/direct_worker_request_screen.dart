@@ -279,7 +279,12 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(AppSpacing.gutter),
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.gutter,
+                AppSpacing.gutter,
+                AppSpacing.gutter,
+                120,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
@@ -390,13 +395,32 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  PrimaryButton(
-                    label: 'Send request',
-                    isLoading: _submitting,
-                    isEnabled: _canSubmit,
-                    onPressed: _submit,
-                  ),
                 ],
+              ),
+            ),
+      bottomNavigationBar: _loading
+          ? null
+          : SafeArea(
+              top: false,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.gutter,
+                  AppSpacing.sm,
+                  AppSpacing.gutter,
+                  AppSpacing.gutter,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  border: Border(
+                    top: BorderSide(color: AppColors.borderSubtle),
+                  ),
+                ),
+                child: PrimaryButton(
+                  label: 'Send request',
+                  isLoading: _submitting,
+                  isEnabled: _canSubmit,
+                  onPressed: _submit,
+                ),
               ),
             ),
     );

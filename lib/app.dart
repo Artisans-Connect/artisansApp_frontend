@@ -8,6 +8,7 @@ import 'features/auth/presentation/screens/sign_up_screen.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
 import 'features/auth/presentation/screens/verify_email_screen.dart';
 import 'features/worker/presentation/worker_shell.dart';
+import 'features/worker/presentation/widgets/worker_bottom_nav.dart';
 import 'features/client/presentation/client_shell.dart';
 import 'shared/presentation/screens/chat_detail_screen.dart';
 import 'shared/presentation/screens/edit_profile_screen.dart';
@@ -63,7 +64,14 @@ class _MyAppState extends State<MyApp> {
           final String? jobId = args is Map
               ? args['openJobRequestId'] as String?
               : null;
-          return WorkerShell(initialJobRequestId: jobId);
+          final WorkerNavTab initialTab =
+              args is Map && args['initialTab'] == 'messages'
+                  ? WorkerNavTab.messages
+                  : WorkerNavTab.explore;
+          return WorkerShell(
+            initialJobRequestId: jobId,
+            initialTab: initialTab,
+          );
         },
         ClientShell.routeName: (_) => const ClientShell(),
       },

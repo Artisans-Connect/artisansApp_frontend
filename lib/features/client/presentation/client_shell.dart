@@ -24,6 +24,7 @@ class ClientShell extends StatefulWidget {
 class _ClientShellState extends State<ClientShell> {
   late ClientNavTab _currentTab;
   int _bookingsRefreshSignal = 0;
+  int _messagesRefreshSignal = 0;
 
   @override
   void initState() {
@@ -36,6 +37,8 @@ class _ClientShellState extends State<ClientShell> {
       _currentTab = tab;
       if (tab == ClientNavTab.bookings) {
         _bookingsRefreshSignal++;
+      } else if (tab == ClientNavTab.messages) {
+        _messagesRefreshSignal++;
       }
     });
   }
@@ -53,7 +56,10 @@ class _ClientShellState extends State<ClientShell> {
               embedInShell: true,
               refreshSignal: _bookingsRefreshSignal,
             ),
-            const MessagesListScreen(embedInShell: true),
+            MessagesListScreen(
+              embedInShell: true,
+              refreshSignal: _messagesRefreshSignal,
+            ),
             const UserProfileScreen(embedInShell: true),
           ],
         ),

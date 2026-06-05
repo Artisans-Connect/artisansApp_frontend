@@ -176,7 +176,7 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                       longitude: job.longitude,
                       label: job.addressLabel,
                       height: 150,
-                      showDirectionsButton: false,
+                      showDirectionsButton: true,
                     )
                   : MapPlaceholder(
                       height: 130,

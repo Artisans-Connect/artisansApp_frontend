@@ -19,11 +19,16 @@ import 'widgets/worker_bottom_nav.dart';
 import 'widgets/worker_job_alert_sheet.dart';
 
 class WorkerShell extends StatefulWidget {
-  const WorkerShell({super.key, this.initialJobRequestId});
+  const WorkerShell({
+    super.key,
+    this.initialJobRequestId,
+    this.initialTab = WorkerNavTab.explore,
+  });
 
   static const String routeName = '/shared/worker-home';
 
   final String? initialJobRequestId;
+  final WorkerNavTab initialTab;
 
   @override
   State<WorkerShell> createState() => _WorkerShellState();
@@ -35,11 +40,13 @@ class _WorkerShellState extends State<WorkerShell> {
   final WorkerDispatchRealtimeService _dispatchRealtime =
       WorkerDispatchRealtimeService();
   final Set<String> _shownRequestIds = <String>{};
+  int _messagesRefreshSignal = 0;
 
   @override
   void initState() {
     super.initState();
     _session = WorkerSessionState();
+    _session.currentTab = widget.initialTab;
     _session.addListener(_onSessionChanged);
     _session.syncLocationTracking();
     _session.loadActiveJob();
@@ -60,6 +67,13 @@ class _WorkerShellState extends State<WorkerShell> {
   }
 
   void _onSessionChanged() => setState(() {});
+
+  void _selectTab(WorkerNavTab tab) {
+    if (tab == WorkerNavTab.messages) {
+      _messagesRefreshSignal++;
+    }
+    _session.setTab(tab);
+  }
 
   void _subscribeToDispatches() {
     final workerId = Supabase.instance.client.auth.currentUser?.id;
@@ -145,7 +159,10 @@ class _WorkerShellState extends State<WorkerShell> {
           children: [
             const WorkerRequestsScreen(),
             _bookingsTab(),
-            const MessagesListScreen(embedInShell: true),
+            MessagesListScreen(
+              embedInShell: true,
+              refreshSignal: _messagesRefreshSignal,
+            ),
             UserProfileScreen(
               embedInShell: true,
               onOpenWorkerEarnings: () {
@@ -174,7 +191,7 @@ class _WorkerShellState extends State<WorkerShell> {
         ),
         bottomNavigationBar: WorkerBottomNav(
           currentTab: _session.currentTab,
-          onTabSelected: _session.setTab,
+          onTabSelected: _selectTab,
         ),
       ),
     );

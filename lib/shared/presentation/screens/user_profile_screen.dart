@@ -595,8 +595,11 @@ class _ProfileHero extends StatelessWidget {
             ),
             Padding(
               padding: const EdgeInsets.all(24),
-              child: Column(
-                children: <Widget>[
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
                   Stack(
                     children: <Widget>[
                       ArtisanLogoAvatar(
@@ -637,7 +640,8 @@ class _ProfileHero extends StatelessWidget {
                       style: AppTextStyles.labelCaps.copyWith(color: AppColors.primary),
                     ),
                   ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],

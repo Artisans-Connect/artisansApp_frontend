@@ -6,9 +6,9 @@ import '../../../../core/services/chat_service.dart';
 import '../../../../core/utils/current_user.dart';
 import '../../../../shared/presentation/navigation/shared_route_args.dart';
 import '../../../../shared/presentation/screens/chat_detail_screen.dart';
-import '../../../../shared/presentation/screens/messages_list_screen.dart';
 import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
+import '../../../worker/presentation/worker_shell.dart';
 import '../client_shell.dart';
 import '../models/client_booking_stub.dart';
 import 'client_shell_scope.dart';
@@ -118,7 +118,22 @@ class ClientNavigation {
   }
 
   static void openMessages(BuildContext context) {
-    Navigator.pushNamed(context, MessagesListScreen.routeName);
+    final ClientShellScope? scope = ClientShellScope.maybeOf(context);
+    if (scope != null) {
+      scope.selectTab(ClientNavTab.messages);
+      return;
+    }
+    final String route = CurrentUser.role?.name == 'worker'
+        ? WorkerShell.routeName
+        : AppRoutes.clientHome;
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      route,
+      (_) => false,
+      arguments: CurrentUser.role?.name == 'worker'
+          ? <String, dynamic>{'initialTab': 'messages'}
+          : <String, dynamic>{'initialTab': ClientNavTab.messages},
+    );
   }
 
   static void openSettings(BuildContext context) {

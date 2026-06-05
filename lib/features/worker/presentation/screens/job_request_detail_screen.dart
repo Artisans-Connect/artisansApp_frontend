@@ -49,6 +49,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
       } else {
         widget.onAcceptRequest(widget.job);
       }
+      AppToast.showSuccess(context, 'Job accepted. Opening booking details.');
       await Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;
@@ -196,7 +197,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                       longitude: job.longitude,
                       label: job.addressLabel,
                       height: 180,
-                      showDirectionsButton: false,
+                      showDirectionsButton: true,
                     )
                   else
                     MapPlaceholder(
