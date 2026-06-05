@@ -24,7 +24,7 @@ class AppConstants {
 
   static String get verificationPortalUrl =>
       _env('VERIFICATION_PORTAL_URL') ??
-      'https://artisans-verification-portal.onrender.com';
+      'https://craft-match-verification-portal.vercel.app/';
 
   static const String avatarsBucket = 'avatars';
   static const String jobPhotosBucket = 'job-photos';

@@ -134,9 +134,12 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
           _isLoading = false;
           _rebuildMarkers();
         });
-        _mapController?.animateCamera(
-          CameraUpdate.newLatLngZoom(_userPosition, 14),
-        );
+        final GoogleMapController? controller = _mapController;
+        if (controller != null) {
+          await controller.animateCamera(
+            CameraUpdate.newLatLngZoom(_userPosition, 14),
+          );
+        }
       }
     } catch (e) {
       if (mounted) {

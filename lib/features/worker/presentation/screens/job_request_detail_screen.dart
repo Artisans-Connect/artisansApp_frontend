@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:artisans_app/core/theme/index.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/job_site_map.dart';
 import '../models/mock_worker_job.dart';
 import '../utils/worker_job_mapper.dart';
 import '../utils/worker_formatters.dart';
@@ -188,11 +190,20 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.md),
-                  MapPlaceholder(
-                    height: 140,
-                    compact: true,
-                    addressLabel: job.mapLabel ?? job.addressLabel,
-                  ),
+                  if (job.hasServiceLocation)
+                    JobSiteMap(
+                      latitude: job.latitude,
+                      longitude: job.longitude,
+                      label: job.addressLabel,
+                      height: 180,
+                      showDirectionsButton: false,
+                    )
+                  else
+                    MapPlaceholder(
+                      height: 140,
+                      compact: true,
+                      addressLabel: job.mapLabel ?? job.addressLabel,
+                    ),
                   const SizedBox(height: AppSpacing.lg),
                   Text('REQUEST DESCRIPTION', style: AppTypography.labelCaps),
                   const SizedBox(height: AppSpacing.sm),
@@ -219,13 +230,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                   TimingEstimateRow(job: job),
                   const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Call ${job.clientName} — later'),
-                        ),
-                      );
-                    },
+                    onPressed: () => _callClient(job),
                     icon: Icon(PhosphorIcons.phone),
                     label: Text('Call ${job.clientName}'),
                     style: OutlinedButton.styleFrom(
@@ -284,5 +289,18 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _callClient(MockWorkerJob job) async {
+    final String phone =
+        job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
+    if (phone.isEmpty) {
+      AppToast.showInfo(context, 'Client phone number is not available yet.');
+      return;
+    }
+    final bool launched = await launchUrl(Uri(scheme: 'tel', path: phone));
+    if (!launched && mounted) {
+      AppToast.showInfo(context, 'Could not start the call.');
+    }
   }
 }

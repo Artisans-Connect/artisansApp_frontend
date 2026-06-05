@@ -135,7 +135,20 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
   void _stub(BuildContext context, String action) {
     AppToast.showInfo(context, '$action — coming soon');
   }
+  Future<void> _callClient(BuildContext context, MockWorkerJob job) async {
+    final String phone =
+        job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
+    if (phone.isEmpty) {
+      AppToast.showInfo(context, 'Client phone number is not available yet.');
+      return;
+    }
+    final bool launched = await launchUrl(Uri(scheme: 'tel', path: phone));
+    if (!launched && context.mounted) {
+      AppToast.showInfo(context, 'Could not start the call.');
+    }
+  }
 }
+
 class _DetailRow extends StatelessWidget {
   const _DetailRow({
     required this.icon,
