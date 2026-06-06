@@ -13,6 +13,7 @@ import '../navigation/client_shell_scope.dart';
 import '../widgets/artisan_card.dart';
 import '../widgets/category_chip.dart';
 import '../../../../shared/widgets/search_bar.dart';
+import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../services/explore_service.dart';
 
@@ -25,19 +26,44 @@ class ClientHomeScreen extends StatefulWidget {
 
 class _ClientHomeScreenState extends State<ClientHomeScreen> {
   String _selectedCategory = '';
+  String _selectedCategoryId = '';
   String _searchQuery = '';
 
   List<Map<String, dynamic>> featuredArtisans = [];
+  List<Map<String, dynamic>> _categories = <Map<String, dynamic>>[];
   bool _isLoadingFeatured = true;
+  bool _isLoadingCategories = true;
   final JobsService _jobsService = JobsService();
+  final CategoriesService _categoriesService = CategoriesService();
   ClientBooking? _activeTrackableJob;
   bool _loadingActiveJob = true;
 
   @override
   void initState() {
     super.initState();
+    _loadCategories();
     _fetchFeaturedArtisans();
     _loadActiveJob();
+  }
+
+  Future<void> _loadCategories() async {
+    try {
+      final List<dynamic> data = await _categoriesService.listCategories();
+      if (!mounted) return;
+      setState(() {
+        _categories = data
+            .whereType<Map>()
+            .map((Map item) => Map<String, dynamic>.from(item))
+            .toList();
+        _isLoadingCategories = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _categories = _fallbackCategories;
+        _isLoadingCategories = false;
+      });
+    }
   }
 
   Future<void> _loadActiveJob() async {
@@ -83,13 +109,24 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
     }
   }
 
-  final List<Map<String, dynamic>> categories = [
-    {'label': 'Plumbing', 'icon': PhosphorIcons.drop},
-    {'label': 'Electrical', 'icon': PhosphorIcons.lightning},
-    {'label': 'Carpentry', 'icon': PhosphorIcons.wrench},
-    {'label': 'Cleaning', 'icon': PhosphorIcons.broom},
-    {'label': 'Painting', 'icon': PhosphorIcons.palette},
+  static final List<Map<String, dynamic>> _fallbackCategories = [
+    {'id': '', 'name': 'Plumbing', 'icon': PhosphorIcons.drop},
+    {'id': '', 'name': 'Electrical', 'icon': PhosphorIcons.lightning},
+    {'id': '', 'name': 'Carpentry', 'icon': PhosphorIcons.wrench},
+    {'id': '', 'name': 'Cleaning', 'icon': PhosphorIcons.broom},
+    {'id': '', 'name': 'Painting', 'icon': PhosphorIcons.palette},
   ];
+
+  IconData _categoryIcon(Map<String, dynamic> category) {
+    final String text =
+        (category['slug'] ?? category['name'] ?? '').toString().toLowerCase();
+    if (text.contains('plumb')) return PhosphorIcons.drop;
+    if (text.contains('electric')) return PhosphorIcons.lightning;
+    if (text.contains('carpent') || text.contains('wood')) return PhosphorIcons.wrench;
+    if (text.contains('clean')) return PhosphorIcons.broom;
+    if (text.contains('paint')) return PhosphorIcons.palette;
+    return category['icon'] as IconData? ?? PhosphorIcons.squaresFour;
+  }
 
   List<Map<String, dynamic>> get _visibleFeaturedArtisans {
     return featuredArtisans.where((Map<String, dynamic> artisan) {
@@ -183,6 +220,8 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                       'query': _searchQuery,
                       if (_selectedCategory.isNotEmpty)
                         'category': _selectedCategory,
+                      if (_selectedCategoryId.isNotEmpty)
+                        'categoryId': _selectedCategoryId,
                     },
                   );
                 },
@@ -198,17 +237,29 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: categories.map((category) {
-                    final isSelected = _selectedCategory == category['label'];
+                  children: (_isLoadingCategories
+                          ? _fallbackCategories
+                          : _categories)
+                      .map((category) {
+                    final String categoryId =
+                        (category['id'] ?? '').toString();
+                    final String label =
+                        (category['name'] ?? category['label'] ?? 'Service')
+                            .toString();
+                    final bool isSelected = categoryId.isNotEmpty
+                        ? _selectedCategoryId == categoryId
+                        : _selectedCategory == label;
                     return Padding(
                       padding: const EdgeInsets.only(right: AppSpacing.md),
                       child: CategoryChip(
-                        label: category['label'],
-                        icon: category['icon'],
+                        label: label,
+                        icon: _categoryIcon(category),
                         isSelected: isSelected,
                         onTap: () {
                           setState(() {
-                            _selectedCategory = isSelected ? '' : category['label'];
+                            _selectedCategory = isSelected ? '' : label;
+                            _selectedCategoryId =
+                                isSelected ? '' : categoryId;
                           });
                         },
                       ),
@@ -235,6 +286,8 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                           if (_searchQuery.isNotEmpty) 'query': _searchQuery,
                           if (_selectedCategory.isNotEmpty)
                             'category': _selectedCategory,
+                          if (_selectedCategoryId.isNotEmpty)
+                            'categoryId': _selectedCategoryId,
                         },
                       );
                     },

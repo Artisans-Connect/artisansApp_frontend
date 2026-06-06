@@ -45,12 +45,14 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   final TextEditingController _searchController = TextEditingController();
   final List<String> _photoUrls = <String>[];
 
-  List<dynamic> _categories = <dynamic>[];
+  List<Map<String, dynamic>> _workerCategories = <Map<String, dynamic>>[];
   List<PlaceSuggestion> _suggestions = <PlaceSuggestion>[];
   String? _categoryId;
   bool _loading = true;
   bool _submitting = false;
   bool _uploadingPhoto = false;
+  bool _usingCurrentLocation = false;
+  bool _updatingAddress = false;
   String _urgency = 'asap';
   LatLng _pin = LatLng(
     DeviceLocation.accraDefault.latitude,
@@ -110,9 +112,15 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       final dynamic loc = results[1];
       final LatLng pin = LatLng(loc.latitude as double, loc.longitude as double);
       if (!mounted) return;
+      final List<Map<String, dynamic>> workerCategories =
+          _resolveWorkerCategories(categories);
       setState(() {
-        _categories = categories;
-        _categoryId = _guessCategory(categories);
+        _workerCategories = workerCategories;
+        _categoryId = workerCategories.length == 1
+            ? workerCategories.first['id'] as String?
+            : workerCategories.isNotEmpty
+                ? workerCategories.first['id'] as String?
+                : null;
         _pin = pin;
         _loading = false;
       });
@@ -124,31 +132,31 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     }
   }
 
-  String? _guessCategory(List<dynamic> categories) {
+  List<Map<String, dynamic>> _resolveWorkerCategories(List<dynamic> categories) {
     final String text = <String>[
       _profession,
       ...(_artisan['skills'] is List
           ? (_artisan['skills'] as List).map((dynamic item) => item.toString())
           : <String>[]),
     ].join(' ').toLowerCase();
+    final List<Map<String, dynamic>> matches = <Map<String, dynamic>>[];
     for (final dynamic item in categories) {
       final Map<String, dynamic> category = Map<String, dynamic>.from(item as Map);
       final String name = (category['name'] ?? '').toString().toLowerCase();
       final String slug = (category['slug'] ?? '').toString().toLowerCase();
       if ((name.isNotEmpty && text.contains(name)) ||
           (slug.isNotEmpty && text.contains(slug))) {
-        return category['id'] as String?;
+        matches.add(category);
       }
     }
-    return categories.isNotEmpty
-        ? (categories.first as Map<String, dynamic>)['id'] as String?
-        : null;
+    return matches;
   }
 
   bool get _canSubmit =>
       !_submitting &&
       _workerId.isNotEmpty &&
       _categoryId != null &&
+      _workerCategories.isNotEmpty &&
       _titleController.text.trim().length >= 3 &&
       _descriptionController.text.trim().length >= 20 &&
       _addressController.text.trim().isNotEmpty;
@@ -183,9 +191,41 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   }
 
   Future<void> _updateAddressFromPin(LatLng pin) async {
+    if (mounted) setState(() => _updatingAddress = true);
     final String? address = await PlaceLookupService.instance.reverseGeocode(pin);
-    if (!mounted || address == null) return;
-    setState(() => _addressController.text = address);
+    if (!mounted) return;
+    setState(() {
+      if (address != null) _addressController.text = address;
+      _updatingAddress = false;
+    });
+  }
+
+  Future<void> _useCurrentLocation() async {
+    if (_usingCurrentLocation) return;
+    setState(() => _usingCurrentLocation = true);
+    try {
+      final DeviceLocation loc = await DeviceLocationService.getCurrentOrDefault();
+      final LatLng pin = LatLng(loc.latitude, loc.longitude);
+      if (!mounted) return;
+      setState(() {
+        _pin = pin;
+        _suggestions = <PlaceSuggestion>[];
+        _searchController.text = '';
+      });
+      if (loc.isFallback) {
+        AppToast.showInfo(
+          context,
+          'Location permission is unavailable. Search or move the pin to set the job address.',
+        );
+      }
+      await _updateAddressFromPin(pin);
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not use current location.');
+      }
+    } finally {
+      if (mounted) setState(() => _usingCurrentLocation = false);
+    }
   }
 
   Future<void> _pickPhoto() async {
@@ -309,21 +349,7 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                     ],
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  DropdownButtonFormField<String>(
-                    initialValue: _categoryId,
-                    decoration: const InputDecoration(labelText: 'Service category'),
-                    items: _categories
-                        .map((dynamic item) {
-                          final Map<String, dynamic> category =
-                              Map<String, dynamic>.from(item as Map);
-                          return DropdownMenuItem<String>(
-                            value: category['id'] as String,
-                            child: Text((category['name'] ?? 'Service').toString()),
-                          );
-                        })
-                        .toList(),
-                    onChanged: (String? value) => setState(() => _categoryId = value),
-                  ),
+                  _buildWorkerServiceSelector(),
                   const SizedBox(height: AppSpacing.md),
                   TextField(
                     controller: _titleController,
@@ -338,6 +364,18 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.lg),
+                  OutlinedButton.icon(
+                    onPressed: _usingCurrentLocation ? null : _useCurrentLocation,
+                    icon: _usingCurrentLocation
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(PhosphorIcons.crosshair),
+                    label: const Text('Use my current location'),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   TextField(
                     controller: _searchController,
                     onChanged: _onSearchChanged,
@@ -360,10 +398,33 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                     onPositionChanged: _onPinChanged,
                   ),
                   const SizedBox(height: AppSpacing.sm),
+                  if (_updatingAddress)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                      child: Row(
+                        children: <Widget>[
+                          const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Updating address...',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   TextField(
                     controller: _addressController,
                     maxLines: 2,
-                    decoration: const InputDecoration(labelText: 'Address'),
+                    decoration: const InputDecoration(
+                      labelText: 'Address fallback',
+                      helperText: 'Edit only if the map address is not precise.',
+                    ),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.lg),
@@ -377,23 +438,7 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                         setState(() => _urgency = value.first),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  Row(
-                    children: <Widget>[
-                      Text('Photos', style: AppTypography.labelLarge),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: _uploadingPhoto ? null : _pickPhoto,
-                        icon: _uploadingPhoto
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(strokeWidth: 2),
-                              )
-                            : Icon(PhosphorIcons.cameraPlus),
-                        label: Text('${_photoUrls.length}/5'),
-                      ),
-                    ],
-                  ),
+                  _buildPhotoPicker(),
                   const SizedBox(height: AppSpacing.xl),
                 ],
               ),
@@ -423,6 +468,135 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  Widget _buildWorkerServiceSelector() {
+    if (_workerCategories.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: AppColors.errorContainer,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+        ),
+        child: Text(
+          'This worker profile needs service setup before direct requests can be sent.',
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.error,
+          ),
+        ),
+      );
+    }
+
+    if (_workerCategories.length == 1) {
+      final Map<String, dynamic> category = _workerCategories.first;
+      return InputDecorator(
+        decoration: const InputDecoration(labelText: 'Worker service'),
+        child: Text((category['name'] ?? 'Service').toString()),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text('Worker service', style: AppTypography.labelLarge),
+        const SizedBox(height: AppSpacing.sm),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: _workerCategories.map((Map<String, dynamic> category) {
+            final String id = (category['id'] ?? '').toString();
+            final bool selected = _categoryId == id;
+            return FilterChip(
+              label: Text((category['name'] ?? 'Service').toString()),
+              selected: selected,
+              onSelected: (_) => setState(() => _categoryId = id),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPhotoPicker() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Text('Photos', style: AppTypography.labelLarge),
+            const Spacer(),
+            Text(
+              'Optional',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        SizedBox(
+          height: 88,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: <Widget>[
+              ..._photoUrls.map((String url) => Padding(
+                    padding: const EdgeInsets.only(right: AppSpacing.sm),
+                    child: Stack(
+                      children: <Widget>[
+                        ClipRRect(
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusMedium),
+                          child: Image.network(
+                            url,
+                            width: 88,
+                            height: 88,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          right: 4,
+                          top: 4,
+                          child: IconButton.filledTonal(
+                            visualDensity: VisualDensity.compact,
+                            iconSize: 16,
+                            onPressed: () =>
+                                setState(() => _photoUrls.remove(url)),
+                            icon: Icon(PhosphorIcons.x),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              if (_photoUrls.length < 5)
+                OutlinedButton(
+                  onPressed: _uploadingPhoto ? null : _pickPhoto,
+                  style: OutlinedButton.styleFrom(
+                    fixedSize: const Size(88, 88),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+                    ),
+                  ),
+                  child: _uploadingPhoto
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Icon(PhosphorIcons.cameraPlus),
+                            const SizedBox(height: 4),
+                            Text('${_photoUrls.length}/5'),
+                          ],
+                        ),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

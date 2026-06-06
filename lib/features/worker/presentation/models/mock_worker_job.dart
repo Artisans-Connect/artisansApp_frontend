@@ -42,6 +42,9 @@ class MockWorkerJob {
     this.completionMaterials,
     this.completionNotes,
     this.completionPhotoUrls = const [],
+    this.createdAt,
+    this.trade,
+    this.area,
   });
 
   final String id;
@@ -80,6 +83,9 @@ class MockWorkerJob {
   final String? completionMaterials;
   final String? completionNotes;
   final List<String> completionPhotoUrls;
+  final DateTime? createdAt;
+  final String? trade;
+  final String? area;
 
   String get urgencyLabel => urgencyBadge ??
       (urgency == JobUrgency.asap ? 'ASAP' : (scheduledLabel ?? 'Scheduled'));
@@ -140,6 +146,9 @@ class MockWorkerJob {
       completionMaterials: completionMaterials,
       completionNotes: completionNotes,
       completionPhotoUrls: completionPhotoUrls,
+      createdAt: createdAt,
+      trade: trade,
+      area: area,
     );
   }
 }

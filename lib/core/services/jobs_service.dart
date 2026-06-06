@@ -51,6 +51,13 @@ class JobsService {
     return result;
   }
 
+  Future<dynamic> requestAnotherWorker(dynamic id) async {
+    final dynamic result =
+        await _apiClient.post('/jobs/$id/request-another-worker');
+    await _invalidateJobsCache();
+    return result;
+  }
+
   Future<dynamic> completeJob(dynamic id, {Map<String, dynamic>? body}) async {
     final dynamic result = await _apiClient.post(
       '/jobs/$id/complete',

@@ -17,10 +17,12 @@ class ExploreArtisansScreen extends StatefulWidget {
     super.key,
     this.initialQuery = '',
     this.initialCategory = '',
+    this.initialCategoryId = '',
   });
 
   final String initialQuery;
   final String initialCategory;
+  final String initialCategoryId;
 
   @override
   State<ExploreArtisansScreen> createState() => _ExploreArtisansScreenState();
@@ -29,6 +31,7 @@ class ExploreArtisansScreen extends StatefulWidget {
 class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   String _searchQuery = '';
   String _selectedCategory = '';
+  String _selectedCategoryId = '';
   String _selectedDistance = '';
   String _selectedRating = '';
   late final TextEditingController _searchController;
@@ -44,6 +47,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
     super.initState();
     _searchQuery = widget.initialQuery;
     _selectedCategory = widget.initialCategory;
+    _selectedCategoryId = widget.initialCategoryId;
     _searchController = TextEditingController(text: _searchQuery);
     _fetchArtisans();
   }
@@ -56,7 +60,10 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
 
   Future<void> _fetchArtisans() async {
     try {
-      final rawArtisans = await ExploreService.instance.getArtisans(limit: 50);
+      final rawArtisans = await ExploreService.instance.getArtisans(
+        limit: 50,
+        categoryId: _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
+      );
       
       final mappedArtisans = rawArtisans.map((raw) {
         final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
@@ -113,7 +120,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
         final String q = _searchQuery.toLowerCase();
         if (!name.contains(q) && !profession.contains(q) && !skillText.contains(q)) return false;
       }
-      if (_selectedCategory.isNotEmpty) {
+      if (_selectedCategory.isNotEmpty && _selectedCategoryId.isEmpty) {
         final String category = _selectedCategory.toLowerCase();
         if (!profession.contains(category) && !skillText.contains(category)) {
           return false;
@@ -219,7 +226,14 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                   label: _selectedCategory,
                   isSelected: true,
                   icon: PhosphorIcons.funnel,
-                  onTap: () => setState(() => _selectedCategory = ''),
+                  onTap: () {
+                    setState(() {
+                      _selectedCategory = '';
+                      _selectedCategoryId = '';
+                      _isLoading = true;
+                    });
+                    _fetchArtisans();
+                  },
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],

@@ -32,6 +32,16 @@ class WorkersService {
     return await _api.post('/workers/$jobId/arrive');
   }
 
+  Future<dynamic> cancelJob(String jobId, {String? reason}) async {
+    return await _api.post(
+      '/workers/$jobId/cancel',
+      body: <String, dynamic>{
+        if (reason != null && reason.trim().isNotEmpty)
+          'reason': reason.trim(),
+      },
+    );
+  }
+
   Future<dynamic> getHistory() async {
     return await _api.get('/workers/me/history');
   }

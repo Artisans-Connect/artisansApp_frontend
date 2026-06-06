@@ -2,6 +2,7 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/job_site_map.dart';
 import '../models/mock_worker_job.dart';
@@ -11,12 +12,23 @@ import '../widgets/elapsed_timer_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/job_detail_card.dart';
 import 'worker_completion_form_screen.dart';
-class WorkerActiveInProgressScreen extends StatelessWidget {
+class WorkerActiveInProgressScreen extends StatefulWidget {
   const WorkerActiveInProgressScreen({super.key, required this.job});
   final MockWorkerJob job;
+
+  @override
+  State<WorkerActiveInProgressScreen> createState() =>
+      _WorkerActiveInProgressScreenState();
+}
+
+class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScreen> {
+  final WorkersService _workersService = WorkersService();
+  bool _isCancelling = false;
+
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
+    final MockWorkerJob job = widget.job;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -123,9 +135,18 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             TextButton.icon(
-              onPressed: () => _stub(context, 'Support'),
-              icon: Icon(PhosphorIcons.headset, size: 18),
-              label: const Text('Need help? Call support'),
+              onPressed: _isCancelling ? null : () => _confirmCancel(context, session, job),
+              icon: _isCancelling
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(PhosphorIcons.xCircle, size: 18),
+              label: Text(
+                _isCancelling ? 'Cancelling booking...' : 'Cancel booking',
+              ),
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
             ),
           ],
         ),
@@ -145,6 +166,49 @@ class WorkerActiveInProgressScreen extends StatelessWidget {
     final bool launched = await launchUrl(Uri(scheme: 'tel', path: phone));
     if (!launched && context.mounted) {
       AppToast.showInfo(context, 'Could not start the call.');
+    }
+  }
+
+  Future<void> _confirmCancel(
+    BuildContext context,
+    WorkerSessionState session,
+    MockWorkerJob job,
+  ) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Cancel booking?'),
+        content: const Text(
+          'The client will be notified and can request another worker.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep booking'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Cancel booking',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _isCancelling = true);
+    try {
+      await _workersService.cancelJob(job.id);
+      if (!context.mounted) return;
+      session.cancelActiveJob();
+      AppToast.showInfo(context, 'Booking cancelled. The client was notified.');
+    } catch (e) {
+      if (context.mounted) {
+        AppToast.showError(context, e, fallback: 'Could not cancel booking.');
+      }
+    } finally {
+      if (mounted) setState(() => _isCancelling = false);
     }
   }
 }

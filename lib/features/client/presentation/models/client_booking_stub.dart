@@ -52,9 +52,12 @@ class ClientBooking {
     this.locationLat,
     this.locationLng,
     this.phone,
+    this.cancelledBy,
+    this.cancelledReason,
+    this.cancelledAt,
   });
 
-  final int id;
+  final String id;
   final String? jobUuid;
   final String title;
   final String artisan;
@@ -71,6 +74,9 @@ class ClientBooking {
   final double? locationLat;
   final double? locationLng;
   final String? phone;
+  final String? cancelledBy;
+  final String? cancelledReason;
+  final String? cancelledAt;
 
   bool get canRate =>
       status == ClientBookingStatus.completed && rating == null;
@@ -92,8 +98,8 @@ class ClientBooking {
   Map<String, dynamic> toMap() => toTrackingMap();
 
   Map<String, dynamic> toTrackingMap() => {
-        'id': jobUuid ?? id.toString(),
-        'jobId': jobUuid ?? id.toString(),
+        'id': id,
+        'jobId': jobUuid ?? id,
         'job_id': jobUuid,
         'title': title,
         'artisan': artisan,
@@ -109,6 +115,9 @@ class ClientBooking {
         'location_lat': locationLat,
         'location_lng': locationLng,
         'phone': phone,
+        'cancelled_by': cancelledBy,
+        'cancelled_reason': cancelledReason,
+        'cancelled_at': cancelledAt,
         'eta': 'Calculating ETA…',
       };
 
@@ -118,7 +127,7 @@ class ClientBooking {
         ) ??
         ClientBookingStatus.requested;
     return ClientBooking(
-      id: map['id'] is int ? map['id'] as int : 0,
+      id: map['id']?.toString() ?? '',
       jobUuid: map['job_id'] as String? ?? map['jobId'] as String?,
       title: map['title'] as String? ?? '',
       artisan: map['artisan'] as String? ?? 'Artisan',
@@ -135,6 +144,9 @@ class ClientBooking {
       locationLat: (map['location_lat'] as num?)?.toDouble(),
       locationLng: (map['location_lng'] as num?)?.toDouble(),
       phone: map['phone'] as String?,
+      cancelledBy: map['cancelled_by'] as String?,
+      cancelledReason: map['cancelled_reason'] as String?,
+      cancelledAt: map['cancelled_at'] as String?,
     );
   }
 
@@ -153,15 +165,22 @@ class ClientBooking {
     final String artisanName = worker is Map<String, dynamic>
         ? worker['full_name'] as String? ?? 'Artisan'
         : 'Artisan';
+    final dynamic category = json['categories'];
+    final String categoryName = category is Map<String, dynamic>
+        ? (category['name'] as String? ?? 'Artisan')
+        : 'Artisan';
+    final String profession = worker is Map<String, dynamic>
+        ? (worker['profession'] as String? ?? categoryName)
+        : categoryName;
     final String? phone = worker is Map<String, dynamic>
         ? worker['phone'] as String?
         : null;
     final String? jobId = json['id'] as String?;
     return ClientBooking(
-      id: jobId?.hashCode ?? 0,
+      id: jobId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: json['title'] as String? ?? 'Job',
       artisan: artisanName,
-      profession: 'Artisan',
+      profession: profession,
       status: status,
       date: json['created_at']?.toString().split('T').first ?? '',
       amount: 'GHS ${json['budget_min'] ?? json['budget_fixed'] ?? '—'}',
@@ -176,6 +195,9 @@ class ClientBooking {
       locationLat: (json['location_lat'] as num?)?.toDouble(),
       locationLng: (json['location_lng'] as num?)?.toDouble(),
       phone: phone,
+      cancelledBy: json['cancelled_by'] as String?,
+      cancelledReason: json['cancelled_reason'] as String?,
+      cancelledAt: json['cancelled_at'] as String?,
     );
   }
 
@@ -195,7 +217,7 @@ class ClientBooking {
 
   static List<ClientBooking> get sampleBookings => [
         const ClientBooking(
-          id: 1,
+          id: '1',
           title: 'Fix leaking kitchen faucet',
           artisan: 'John Smith',
           profession: 'Professional Plumber',
@@ -208,7 +230,7 @@ class ClientBooking {
           counterpartUserId: 'worker-john',
         ),
         const ClientBooking(
-          id: 2,
+          id: '2',
           title: 'Install smart lighting system',
           artisan: 'Sarah Johnson',
           profession: 'Expert Electrician',
@@ -221,7 +243,7 @@ class ClientBooking {
           backendStatus: 'in_progress',
         ),
         const ClientBooking(
-          id: 3,
+          id: '3',
           title: 'Paint bedroom walls',
           artisan: 'Mike Wilson',
           profession: 'Professional Painter',
@@ -231,7 +253,7 @@ class ClientBooking {
           imageUrl: 'https://via.placeholder.com/100?text=Mike',
         ),
         const ClientBooking(
-          id: 4,
+          id: '4',
           title: 'Deep clean house',
           artisan: 'Emma Davis',
           profession: 'Professional Cleaner',
@@ -243,7 +265,7 @@ class ClientBooking {
           counterpartUserId: 'worker-emma',
         ),
         const ClientBooking(
-          id: 5,
+          id: '5',
           title: 'Repair bathroom tiles',
           artisan: 'Pending match',
           profession: 'Tiler',
@@ -265,7 +287,7 @@ class ClientBooking {
         artisan?['profession'] as String? ?? draft.displayCategory;
     final String? jobId = jobData['id'] as String?;
     final map = ClientBooking(
-      id: DateTime.now().millisecondsSinceEpoch,
+      id: jobId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       jobUuid: jobId,
       title: draft.displayTitle,
       artisan: artisanName,

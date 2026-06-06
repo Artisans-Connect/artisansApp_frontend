@@ -41,14 +41,17 @@ class AppRouter {
         final Object? exploreArgs = settings.arguments;
         String initialQuery = '';
         String initialCategory = '';
+        String initialCategoryId = '';
         if (exploreArgs is Map<String, dynamic>) {
           initialQuery = (exploreArgs['query'] ?? '').toString();
           initialCategory = (exploreArgs['category'] ?? '').toString();
+          initialCategoryId = (exploreArgs['categoryId'] ?? '').toString();
         }
         return MaterialPageRoute(
           builder: (_) => ExploreArtisansScreen(
             initialQuery: initialQuery,
             initialCategory: initialCategory,
+            initialCategoryId: initialCategoryId,
           ),
         );
 

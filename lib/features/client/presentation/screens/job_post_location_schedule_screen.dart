@@ -37,6 +37,7 @@ class _JobPostLocationScheduleScreenState
   bool _loadingLocation = true;
   bool _searchingPlaces = false;
   bool _reverseGeocoding = false;
+  bool _usingCurrentLocation = false;
   bool _needsManualPin = false;
   List<PlaceSuggestion> _placeSuggestions = <PlaceSuggestion>[];
   LatLng _pin = LatLng(
@@ -173,6 +174,28 @@ class _JobPostLocationScheduleScreenState
     }
   }
 
+  Future<void> _useCurrentLocation() async {
+    if (_usingCurrentLocation) return;
+    setState(() => _usingCurrentLocation = true);
+    try {
+      final loc = await DeviceLocationService.getCurrentOrDefault();
+      if (!mounted) return;
+      final LatLng pin = LatLng(loc.latitude, loc.longitude);
+      setState(() {
+        _pin = pin;
+        _needsManualPin = loc.isFallback;
+        _showAddressEditor = false;
+        _placeSuggestions = <PlaceSuggestion>[];
+        _locationSearchController.text = '';
+      });
+      if (!loc.isFallback) {
+        await _updateAddressFromPin(pin);
+      }
+    } finally {
+      if (mounted) setState(() => _usingCurrentLocation = false);
+    }
+  }
+
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -223,6 +246,18 @@ class _JobPostLocationScheduleScreenState
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: _usingCurrentLocation ? null : _useCurrentLocation,
+            icon: _usingCurrentLocation
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(PhosphorIcons.crosshair),
+            label: const Text('Use my current location'),
           ),
           const SizedBox(height: AppSpacing.md),
           TextField(

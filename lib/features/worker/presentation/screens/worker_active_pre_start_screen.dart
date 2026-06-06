@@ -26,6 +26,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
   bool _isStarting = false;
   bool _isOpeningDirections = false;
   bool _isAdvancing = false;
+  bool _isCancelling = false;
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
@@ -187,11 +188,11 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                   ..._buildPhaseActions(session, job),
                   const SizedBox(height: AppSpacing.md),
                   TextButton(
-                    onPressed: () {
-                      session.cancelActiveJob();
-                    },
+                    onPressed: _isCancelling || _isAdvancing || _isStarting
+                        ? null
+                        : () => _confirmCancel(session, job),
                     child: Text(
-                      'Cancel Booking',
+                      _isCancelling ? 'Cancelling...' : 'Cancel Booking',
                       style: AppTypography.bodyLg.copyWith(
                         color: AppColors.error,
                         fontWeight: FontWeight.w600,
@@ -213,7 +214,8 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
     WorkerSessionState session,
     MockWorkerJob job,
   ) {
-    final bool busy = _isAdvancing || _isStarting || _isOpeningDirections;
+    final bool busy =
+        _isAdvancing || _isStarting || _isOpeningDirections || _isCancelling;
     switch (widget.phase) {
       case WorkerJobPhase.accepted:
         return <Widget>[
@@ -338,6 +340,48 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
       await _openDirections(job);
     } finally {
       if (mounted) setState(() => _isOpeningDirections = false);
+    }
+  }
+
+  Future<void> _confirmCancel(
+    WorkerSessionState session,
+    MockWorkerJob job,
+  ) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Cancel booking?'),
+        content: const Text(
+          'The client will be notified and can request another worker.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Keep booking'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(
+              'Cancel booking',
+              style: TextStyle(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() => _isCancelling = true);
+    try {
+      await _workersService.cancelJob(job.id);
+      if (!mounted) return;
+      session.cancelActiveJob();
+      AppToast.showInfo(context, 'Booking cancelled. The client was notified.');
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not cancel booking.');
+      }
+    } finally {
+      if (mounted) setState(() => _isCancelling = false);
     }
   }
 

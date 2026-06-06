@@ -35,6 +35,9 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
     photoCount: photoUrls.length,
     backendStatus: json['status'] as String?,
     distanceKm: null,
+    createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+    trade: categoryName,
+    area: json['address_label'] as String?,
   );
 }
 
@@ -82,6 +85,9 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     completionMaterials: completion['materials_used'] as String?,
     completionNotes: completion['notes'] as String?,
     completionPhotoUrls: completionPhotoUrls,
+    createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
+    trade: categoryName,
+    area: json['address_label'] as String?,
   );
 }
 
