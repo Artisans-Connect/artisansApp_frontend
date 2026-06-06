@@ -1,8 +1,11 @@
-import '../models/mock_worker_data.dart';
+String formatCedis(num amount) {
+  if (amount == amount.roundToDouble()) {
+    return 'GHS ${amount.round()}';
+  }
+  return 'GHS ${amount.toStringAsFixed(2)}';
+}
 
-String formatCedis(num amount) => MockWorkerData.formatCedis(amount);
-
-String formatRating(double rating) => MockWorkerData.formatRating(rating);
+String formatRating(double rating) => rating.toStringAsFixed(1);
 
 String formatRelativeTime(DateTime dateTime) {
   final diff = DateTime.now().difference(dateTime);

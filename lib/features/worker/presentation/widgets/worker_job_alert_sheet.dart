@@ -7,7 +7,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/job_site_map.dart';
 import '../../../../core/services/workers_service.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../utils/worker_job_mapper.dart';
 import 'gradient_button.dart';
 import 'map_placeholder.dart';
@@ -21,7 +21,7 @@ class WorkerJobAlertSheet extends StatefulWidget {
     this.initialSeconds = 90,
   });
 
-  final MockWorkerJob job;
+  final WorkerJob job;
   final ValueChanged<Map<String, dynamic>> onAccepted;
   final VoidCallback onDeclined;
   final int initialSeconds;
@@ -219,5 +219,5 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
   }
 }
 
-MockWorkerJob workerJobAlertFromApi(Map<String, dynamic> json) =>
+WorkerJob workerJobAlertFromApi(Map<String, dynamic> json) =>
     workerJobFromApi(json);

@@ -6,7 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/job_site_map.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../utils/worker_job_mapper.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
@@ -20,8 +20,8 @@ class JobRequestDetailScreen extends StatefulWidget {
     required this.onAcceptRequest,
     this.onAcceptResponse,
   });
-  final MockWorkerJob job;
-  final ValueChanged<MockWorkerJob> onAcceptRequest;
+  final WorkerJob job;
+  final ValueChanged<WorkerJob> onAcceptRequest;
   final ValueChanged<Map<String, dynamic>>? onAcceptResponse;
   @override
   State<JobRequestDetailScreen> createState() =>
@@ -292,7 +292,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     );
   }
 
-  Future<void> _callClient(MockWorkerJob job) async {
+  Future<void> _callClient(WorkerJob job) async {
     final String phone =
         job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
     if (phone.isEmpty) {

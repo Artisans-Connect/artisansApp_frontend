@@ -13,8 +13,10 @@ import '../../../features/auth/presentation/screens/sign_in_screen.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/settings_group_tile.dart';
 import 'edit_profile_screen.dart';
+import 'legal_document_screen.dart';
 
 /// Shared settings — client layout (53) vs worker layout (65) on same route.
 class SettingsScreen extends StatefulWidget {
@@ -31,7 +33,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushEnabled = true;
   bool _emailUpdates = false;
-  bool _lowDataMode = false;
+
 
   bool get _isWorker => SharedUserContext.isWorker;
 
@@ -118,8 +120,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return 'Offer services and find jobs';
   }
 
-  void _showStub(String title) {
-    AppToast.showInfo(context, '$title — coming soon');
+  void _openPrivacyPolicy() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LegalDocumentScreen(
+          title: 'Privacy Policy',
+          assetPath: 'assets/legal/privacy_policy.txt',
+        ),
+      ),
+    );
+  }
+
+  void _openTermsOfService() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const LegalDocumentScreen(
+          title: 'Terms of Service',
+          assetPath: 'assets/legal/terms&conditions.txt',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openHelpCenter() async {
+    final Uri url = Uri(scheme: 'tel', path: '0257243106');
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      if (!mounted) return;
+      AppToast.showError(context, Exception('Could not launch phone dialer.'), fallback: 'Could not launch phone dialer.');
+    }
   }
 
   void _openNotificationPrefs() {
@@ -221,9 +253,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
         _LegalAndSupportGroup(
-          onPrivacy: () => _showStub('Privacy Policy'),
-          onTerms: () => _showStub('Terms of Service'),
-          onHelp: () => _showStub('Help Center'),
+          onPrivacy: _openPrivacyPolicy,
+          onTerms: _openTermsOfService,
+          onHelp: _openHelpCenter,
           onSwitchView: _onSwitchOrBecomeWorker,
           switchViewLabel: _switchViewLabel,
           switchViewSubtitle: _switchViewSubtitle,
@@ -264,10 +296,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             SettingsTile(
               icon: PhosphorIcons.database,
               title: 'Low data mode',
-              trailing: Switch(
-                value: _lowDataMode,
-                activeThumbColor: AppColors.primary,
-                onChanged: (bool value) => setState(() => _lowDataMode = value),
+              trailing: const Switch(
+                value: false,
+                onChanged: null,
               ),
               showDivider: false,
             ),
@@ -275,9 +306,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
         _LegalAndSupportGroup(
-          onPrivacy: () => _showStub('Privacy Policy'),
-          onTerms: () => _showStub('Terms of Service'),
-          onHelp: () => _showStub('Help Center'),
+          onPrivacy: _openPrivacyPolicy,
+          onTerms: _openTermsOfService,
+          onHelp: _openHelpCenter,
           onSwitchView: _onSwitchOrBecomeWorker,
           switchViewLabel: _switchViewLabel,
           switchViewSubtitle: _switchViewSubtitle,

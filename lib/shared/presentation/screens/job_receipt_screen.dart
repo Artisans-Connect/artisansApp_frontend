@@ -5,11 +5,10 @@ import '../../../core/errors/error_messages.dart';
 import '../../../core/services/jobs_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
-import '../../data/shared_stub_data.dart';
 import '../../models/job_receipt_view.dart';
 import '../../widgets/custom_app_bar.dart';
 
-/// Read-only job receipt for workers (mock 66).
+/// Read-only job receipt for workers.
 class JobReceiptScreen extends StatefulWidget {
   const JobReceiptScreen({super.key});
 
@@ -33,14 +32,15 @@ class _JobReceiptScreenState extends State<JobReceiptScreen> {
         showBackButton: true,
       ),
       body: jobId == null
-          ? _ReceiptBody(receipt: SharedStubData.sampleJobReceipt)
+          ? const _ReceiptUnavailable()
           : FutureBuilder<dynamic>(
               future: _jobsService.getJobById(jobId),
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (snapshot.hasError || snapshot.data is! Map<String, dynamic>) {
+                if (snapshot.hasError ||
+                    snapshot.data is! Map<String, dynamic>) {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(24),
@@ -77,6 +77,24 @@ class _JobReceiptScreenState extends State<JobReceiptScreen> {
   }
 }
 
+class _ReceiptUnavailable extends StatelessWidget {
+  const _ReceiptUnavailable();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Text(
+          'Receipt unavailable. Open a completed job to view its receipt.',
+          textAlign: TextAlign.center,
+          style: AppTextStyles.bodyLg,
+        ),
+      ),
+    );
+  }
+}
+
 class _ReceiptBody extends StatelessWidget {
   const _ReceiptBody({required this.receipt});
 
@@ -85,139 +103,153 @@ class _ReceiptBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.success.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(99),
-                        ),
-                        child: Text(
-                          receipt.status,
-                          style: AppTextStyles.labelCaps.copyWith(
-                            color: AppColors.success,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Text('#${receipt.jobId}',
-                          style: AppTextStyles.bodyMd),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(receipt.title,
-                      style: AppTextStyles.displayMd.copyWith(fontSize: 26)),
-                  const SizedBox(height: 8),
-                  Text(_formatDate(receipt.completedAt),
-                      style: AppTextStyles.bodyMd),
-                ],
-              ),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(20),
             ),
-            const SizedBox(height: 16),
-            _ReceiptSection(
-              title: 'Client',
-              rows: <_ReceiptRow>[
-                _ReceiptRow(PhosphorIcons.user, receipt.clientName),
-                _ReceiptRow(PhosphorIcons.mapPin, receipt.location),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                Expanded(
-                  child: _ReceiptSection(
-                    title: 'Time spent',
-                    rows: <_ReceiptRow>[
-                      _ReceiptRow(PhosphorIcons.clock, '2h 30m'),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _ReceiptSection(
-                    title: 'Earnings',
-                    rows: <_ReceiptRow>[
-                      _ReceiptRow(
-                        PhosphorIcons.money,
-                        'GHS ${receipt.amountGhs.toStringAsFixed(2)}',
+                Row(
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                    ],
-                  ),
+                      decoration: BoxDecoration(
+                        color: AppColors.success.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                      child: Text(
+                        receipt.status,
+                        style: AppTextStyles.labelCaps.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Flexible(
+                      child: Text(
+                        '#${_shortId(receipt.jobId)}',
+                        style: AppTextStyles.bodyMd,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  receipt.title,
+                  style: AppTextStyles.displayMd.copyWith(fontSize: 26),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _formatDate(receipt.completedAt),
+                  style: AppTextStyles.bodyMd,
                 ),
               ],
             ),
-            if (receipt.notes != null) ...<Widget>[
-              const SizedBox(height: 16),
-              _ReceiptSection(
-                title: 'Notes',
-                child: Text(
-                  receipt.notes!,
-                  style: AppTextStyles.bodyLg,
-                ),
-              ),
+          ),
+          const SizedBox(height: 16),
+          _ReceiptSection(
+            title: 'Client',
+            rows: <_ReceiptRow>[
+              _ReceiptRow(PhosphorIcons.user, receipt.clientName),
+              _ReceiptRow(PhosphorIcons.mapPin, receipt.location),
             ],
+          ),
+          const SizedBox(height: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final List<Widget> sections = <Widget>[
+                _ReceiptSection(
+                  title: 'Time spent',
+                  rows: <_ReceiptRow>[
+                    _ReceiptRow(
+                      PhosphorIcons.clock,
+                      _formatHours(receipt.hoursSpent),
+                    ),
+                  ],
+                ),
+                _ReceiptSection(
+                  title: 'Earnings',
+                  rows: <_ReceiptRow>[
+                    _ReceiptRow(
+                      PhosphorIcons.money,
+                      'GHS ${receipt.amountGhs.toStringAsFixed(2)}',
+                    ),
+                  ],
+                ),
+              ];
+
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  children: <Widget>[
+                    sections[0],
+                    const SizedBox(height: 16),
+                    sections[1],
+                  ],
+                );
+              }
+
+              return Row(
+                children: <Widget>[
+                  Expanded(child: sections[0]),
+                  const SizedBox(width: 16),
+                  Expanded(child: sections[1]),
+                ],
+              );
+            },
+          ),
+          if (receipt.notes != null) ...<Widget>[
             const SizedBox(height: 16),
             _ReceiptSection(
-              title: 'Completion Photos',
+              title: 'Notes',
+              child: Text(receipt.notes!, style: AppTextStyles.bodyLg),
+            ),
+          ],
+          if (receipt.photoUrls.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 16),
+            _ReceiptSection(
+              title: 'Completion photos',
               child: GridView.count(
                 crossAxisCount: 3,
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
-                children: <Widget>[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=256&auto=format&fit=crop',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceDim,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(PhosphorIcons.image, color: AppColors.outline),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: ListTile(
-                leading: Icon(PhosphorIcons.warning, color: AppColors.error),
-                title: Text('Report an issue', style: AppTextStyles.bodyLg.copyWith(color: AppColors.error)),
-                trailing: Icon(PhosphorIcons.caretRight, color: AppColors.outline),
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Issue reporting opens here.')),
-                  );
-                },
+                children: receipt.photoUrls
+                    .map(
+                      (String url) => ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          url,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Container(
+                            color: AppColors.surfaceContainerHigh,
+                            child: Icon(
+                              PhosphorIcons.imageBroken,
+                              color: AppColors.outline,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ],
-        ),
+        ],
+      ),
     );
   }
 }
@@ -234,14 +266,16 @@ class _ReceiptSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceContainerLow,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(title,
-              style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            title,
+            style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 12),
           if (child != null) child!,
           if (rows != null)
@@ -267,16 +301,43 @@ class _ReceiptSection extends StatelessWidget {
 
 class _ReceiptRow {
   const _ReceiptRow(this.icon, this.label);
+
   final IconData icon;
   final String label;
 }
 
+String _shortId(String id) {
+  if (id.length <= 8) return id;
+  return id.substring(0, 8);
+}
+
+String _formatHours(double? hours) {
+  if (hours == null) return 'Not recorded';
+  if (hours < 1) return '${(hours * 60).round()}m';
+  final int wholeHours = hours.floor();
+  final int minutes = ((hours - wholeHours) * 60).round();
+  if (minutes == 0) return '${wholeHours}h';
+  return '${wholeHours}h ${minutes}m';
+}
+
 String _formatDate(DateTime date) {
   const List<String> months = <String>[
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
-  final int hour = date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
+  final int hour =
+      date.hour > 12 ? date.hour - 12 : (date.hour == 0 ? 12 : date.hour);
   final String period = date.hour >= 12 ? 'PM' : 'AM';
-  return '${date.day} ${months[date.month - 1]} ${date.year} · $hour:${date.minute.toString().padLeft(2, '0')} $period';
+  final String minute = date.minute.toString().padLeft(2, '0');
+  return '${date.day} ${months[date.month - 1]} ${date.year} - $hour:$minute $period';
 }

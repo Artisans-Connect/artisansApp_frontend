@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
@@ -12,7 +12,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
     required this.onDone,
   });
 
-  final MockWorkerJob job;
+  final WorkerJob job;
   final VoidCallback onDone;
 
   @override
@@ -134,15 +134,6 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
             GradientButton(
               label: 'Back to Requests',
               onPressed: () => _goHome(context),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Share — coming soon')),
-                );
-              },
-              icon: Icon(PhosphorIcons.shareNetwork, size: 18),
-              label: const Text('Share this job to your portfolio'),
             ),
           ],
         ),

@@ -1,4 +1,4 @@
-import 'package:artisans_app/features/worker/presentation/models/mock_worker_data.dart';
+import 'package:artisans_app/features/worker/presentation/models/worker_job.dart';
 import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/availability_card.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +25,19 @@ void main() {
   testWidgets('Accept job from detail updates session',
       (WidgetTester tester) async {
     final session = WorkerSessionState();
-    session.acceptJob(MockWorkerData.incomingJobs.first);
+    session.acceptJob(
+      const WorkerJob(
+        id: 'job-test',
+        title: 'Fix sink',
+        category: 'Plumbing',
+        description: 'Leaking sink',
+        addressLabel: 'Kumasi',
+        latitude: 0,
+        longitude: 0,
+        clientName: 'Client',
+        urgency: JobUrgency.scheduled,
+      ),
+    );
 
     expect(session.hasActiveJob, isTrue);
     expect(session.jobPhase, WorkerJobPhase.accepted);

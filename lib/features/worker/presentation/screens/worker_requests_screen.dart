@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
  
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/skeleton_box.dart';
@@ -344,7 +344,7 @@ class _RequestJobCard extends StatelessWidget {
     required this.onAccept,
   });
  
-  final MockWorkerJob job;
+  final WorkerJob job;
   final VoidCallback onViewDetails;
   final VoidCallback onAccept;
  
@@ -520,7 +520,7 @@ class _RequestJobCard extends StatelessWidget {
     );
   }
  
-  List<Widget> _tagsFor(MockWorkerJob job) {
+  List<Widget> _tagsFor(WorkerJob job) {
     final List<Widget> tags = <Widget>[];
     if (job.trade != null) tags.add(_JobTag(label: job.trade!));
     if (job.distanceKm != null) {
@@ -660,7 +660,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
   final WorkersService _workersService = WorkersService();
  
   RequestsViewState _viewState = RequestsViewState.loading;
-  List<MockWorkerJob> _jobs = <MockWorkerJob>[];
+  List<WorkerJob> _jobs = <WorkerJob>[];
   String? _errorMessage;
   Timer? _refreshTimer;
   bool _isLoadingRequests = false;
@@ -741,7 +741,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
  
   // ── Navigation ─────────────────────────────────────────────────────────────
  
-  void _openDetail(MockWorkerJob job) {
+  void _openDetail(WorkerJob job) {
     final WorkerSessionState session = WorkerScope.of(context);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
@@ -897,7 +897,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
  
           // ── Job cards ────────────────────────────────────────
           ..._jobs.map(
-            (MockWorkerJob job) => Padding(
+            (WorkerJob job) => Padding(
               padding: const EdgeInsets.only(bottom: _T.md),
               child: _RequestJobCard(
                 job: job,

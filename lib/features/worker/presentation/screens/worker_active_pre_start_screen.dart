@@ -4,8 +4,10 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../../shared/presentation/navigation/shared_route_args.dart';
+import '../../../../shared/presentation/screens/chat_detail_screen.dart';
 import '../../../../shared/widgets/app_toast.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
@@ -16,7 +18,7 @@ class WorkerActivePreStartScreen extends StatefulWidget {
     required this.job,
     required this.phase,
   });
-  final MockWorkerJob job;
+  final WorkerJob job;
   final WorkerJobPhase phase;
   @override
   State<WorkerActivePreStartScreen> createState() => _WorkerActivePreStartScreenState();
@@ -49,12 +51,6 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
           ],
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(PhosphorIcons.dotsThreeVertical),
-            onPressed: () => _stub(context, 'More actions'),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -138,7 +134,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                         ),
                       ),
                       ClientContactRow(
-                        onMessage: () => _stub(context, 'Message'),
+                        onMessage: () => _openMessage(context, job),
                         onCall: () => _callClient(context, job),
                       ),
                     ],
@@ -207,12 +203,28 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
       ),
     );
   }
-  void _stub(BuildContext context, String action) {
-    AppToast.showInfo(context, '$action — coming soon');
+  void _openMessage(BuildContext context, WorkerJob job) {
+    final String clientId = job.clientId ?? '';
+    if (clientId.isEmpty) {
+      AppToast.showInfo(context, 'Client chat is not available for this booking.');
+      return;
+    }
+    Navigator.pushNamed(
+      context,
+      ChatDetailScreen.routeName,
+      arguments: ChatDetailArgs(
+        conversationId: job.id,
+        jobId: job.id,
+        counterpartUserId: clientId,
+        counterpartName: job.clientName,
+        counterpartPhone: job.clientPhone,
+        jobTitle: job.title,
+      ),
+    );
   }
   List<Widget> _buildPhaseActions(
     WorkerSessionState session,
-    MockWorkerJob job,
+    WorkerJob job,
   ) {
     final bool busy =
         _isAdvancing || _isStarting || _isOpeningDirections || _isCancelling;
@@ -262,7 +274,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
 
   Future<void> _markOnTheWay(
     WorkerSessionState session,
-    MockWorkerJob job,
+    WorkerJob job,
   ) async {
     await HapticFeedback.mediumImpact();
     if (!mounted) return;
@@ -287,7 +299,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
 
   Future<void> _markArrived(
     WorkerSessionState session,
-    MockWorkerJob job,
+    WorkerJob job,
   ) async {
     await HapticFeedback.mediumImpact();
     if (!mounted) return;
@@ -312,7 +324,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
 
   Future<void> _startWork(
     WorkerSessionState session,
-    MockWorkerJob job,
+    WorkerJob job,
   ) async {
     await HapticFeedback.mediumImpact();
     if (!mounted) return;
@@ -334,7 +346,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
     }
   }
 
-  Future<void> _openDirectionsWithLoading(MockWorkerJob job) async {
+  Future<void> _openDirectionsWithLoading(WorkerJob job) async {
     setState(() => _isOpeningDirections = true);
     try {
       await _openDirections(job);
@@ -345,7 +357,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
 
   Future<void> _confirmCancel(
     WorkerSessionState session,
-    MockWorkerJob job,
+    WorkerJob job,
   ) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
@@ -385,7 +397,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
     }
   }
 
-  Future<void> _callClient(BuildContext context, MockWorkerJob job) async {
+  Future<void> _callClient(BuildContext context, WorkerJob job) async {
     final String phone =
         job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
     if (phone.isEmpty) {
@@ -398,7 +410,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
     }
   }
 
-  Future<void> _openDirections(MockWorkerJob job) async {
+  Future<void> _openDirections(WorkerJob job) async {
     if (!job.hasServiceLocation) {
       AppToast.showInfo(context, 'Job location is not available yet.');
       return;

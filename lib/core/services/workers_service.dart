@@ -20,6 +20,11 @@ class WorkersService {
     return await _api.get('/workers/me/active-job');
   }
 
+  Future<Map<String, dynamic>> getStats() async {
+    final dynamic response = await _api.get('/workers/me/stats');
+    return Map<String, dynamic>.from(response as Map);
+  }
+
   Future<dynamic> startJob(String jobId) async {
     return await _api.post('/workers/$jobId/start');
   }

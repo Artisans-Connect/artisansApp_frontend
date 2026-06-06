@@ -4,7 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/error_state_view.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/history_job_card.dart';
@@ -21,7 +21,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
   bool _isLoading = true;
   String? _loadError;
   bool _showCompleted = true;
-  List<MockWorkerJob> _allJobs = [];
+  List<WorkerJob> _allJobs = [];
   @override
   void initState() {
     super.initState();
@@ -51,8 +51,8 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
       });
     }
   }
-  List<MockWorkerJob> get _filtered => _allJobs
-      .where((MockWorkerJob j) =>
+  List<WorkerJob> get _filtered => _allJobs
+      .where((WorkerJob j) =>
           _showCompleted
               ? j.historyStatus == HistoryStatus.completed
               : j.historyStatus == HistoryStatus.cancelled)

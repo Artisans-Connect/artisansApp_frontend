@@ -4,8 +4,8 @@ enum WorkerJobStatus { incoming, active, completing, completed, cancelled }
 
 enum HistoryStatus { completed, cancelled }
 
-class MockWorkerJob {
-  const MockWorkerJob({
+class WorkerJob {
+  const WorkerJob({
     required this.id,
     required this.title,
     required this.category,
@@ -15,6 +15,7 @@ class MockWorkerJob {
     required this.longitude,
     required this.clientName,
     required this.urgency,
+    this.clientId,
     this.clientPhone,
     this.clientAvatarUrl,
     this.clientRating = 4.9,
@@ -56,6 +57,7 @@ class MockWorkerJob {
   final double longitude;
   final String clientName;
   final JobUrgency urgency;
+  final String? clientId;
   final String? clientPhone;
   final String? clientAvatarUrl;
   final double clientRating;
@@ -108,8 +110,8 @@ class MockWorkerJob {
 
   bool get hasServiceLocation => latitude != 0 || longitude != 0;
 
-  MockWorkerJob copyWith({WorkerJobStatus? status}) {
-    return MockWorkerJob(
+  WorkerJob copyWith({WorkerJobStatus? status}) {
+    return WorkerJob(
       id: id,
       title: title,
       category: category,
@@ -119,6 +121,7 @@ class MockWorkerJob {
       longitude: longitude,
       clientName: clientName,
       urgency: urgency,
+      clientId: clientId,
       clientPhone: clientPhone,
       clientAvatarUrl: clientAvatarUrl,
       clientRating: clientRating,

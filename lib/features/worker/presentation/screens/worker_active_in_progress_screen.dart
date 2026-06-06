@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../../shared/presentation/navigation/shared_route_args.dart';
+import '../../../../shared/presentation/screens/chat_detail_screen.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/job_site_map.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../state/worker_session_state.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/elapsed_timer_card.dart';
@@ -14,7 +16,7 @@ import '../widgets/job_detail_card.dart';
 import 'worker_completion_form_screen.dart';
 class WorkerActiveInProgressScreen extends StatefulWidget {
   const WorkerActiveInProgressScreen({super.key, required this.job});
-  final MockWorkerJob job;
+  final WorkerJob job;
 
   @override
   State<WorkerActiveInProgressScreen> createState() =>
@@ -28,7 +30,7 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
   @override
   Widget build(BuildContext context) {
     final session = WorkerScope.of(context);
-    final MockWorkerJob job = widget.job;
+    final WorkerJob job = widget.job;
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -39,12 +41,6 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
           style: AppTypography.titleMd.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(PhosphorIcons.dotsThreeVertical),
-            onPressed: () => _stub(context, 'More actions'),
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(
@@ -85,7 +81,7 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
                     ),
                   ),
                   ClientContactRow(
-                    onMessage: () => _stub(context, 'Message'),
+                    onMessage: () => _openMessage(context, job),
                     onCall: () => _callClient(context, job),
                   ),
                 ],
@@ -153,10 +149,26 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
       ),
     );
   }
-  void _stub(BuildContext context, String action) {
-    AppToast.showInfo(context, '$action — coming soon');
+  void _openMessage(BuildContext context, WorkerJob job) {
+    final String clientId = job.clientId ?? '';
+    if (clientId.isEmpty) {
+      AppToast.showInfo(context, 'Client chat is not available for this booking.');
+      return;
+    }
+    Navigator.pushNamed(
+      context,
+      ChatDetailScreen.routeName,
+      arguments: ChatDetailArgs(
+        conversationId: job.id,
+        jobId: job.id,
+        counterpartUserId: clientId,
+        counterpartName: job.clientName,
+        counterpartPhone: job.clientPhone,
+        jobTitle: job.title,
+      ),
+    );
   }
-  Future<void> _callClient(BuildContext context, MockWorkerJob job) async {
+  Future<void> _callClient(BuildContext context, WorkerJob job) async {
     final String phone =
         job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
     if (phone.isEmpty) {
@@ -172,7 +184,7 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
   Future<void> _confirmCancel(
     BuildContext context,
     WorkerSessionState session,
-    MockWorkerJob job,
+    WorkerJob job,
   ) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,

@@ -215,68 +215,7 @@ class ClientBooking {
     return null;
   }
 
-  static List<ClientBooking> get sampleBookings => [
-        const ClientBooking(
-          id: '1',
-          title: 'Fix leaking kitchen faucet',
-          artisan: 'John Smith',
-          profession: 'Professional Plumber',
-          status: ClientBookingStatus.completed,
-          date: 'May 18, 2024',
-          rating: 4.8,
-          amount: '\$150',
-          imageUrl: 'https://via.placeholder.com/100?text=John',
-          conversationId: 'conv-1',
-          counterpartUserId: 'worker-john',
-        ),
-        const ClientBooking(
-          id: '2',
-          title: 'Install smart lighting system',
-          artisan: 'Sarah Johnson',
-          profession: 'Expert Electrician',
-          status: ClientBookingStatus.inProgress,
-          date: 'May 20, 2024',
-          amount: '\$280',
-          imageUrl: 'https://via.placeholder.com/100?text=Sarah',
-          conversationId: 'conv-2',
-          counterpartUserId: 'worker-sarah',
-          backendStatus: 'in_progress',
-        ),
-        const ClientBooking(
-          id: '3',
-          title: 'Paint bedroom walls',
-          artisan: 'Mike Wilson',
-          profession: 'Professional Painter',
-          status: ClientBookingStatus.cancelled,
-          date: 'May 15, 2024',
-          amount: '\$200',
-          imageUrl: 'https://via.placeholder.com/100?text=Mike',
-        ),
-        const ClientBooking(
-          id: '4',
-          title: 'Deep clean house',
-          artisan: 'Emma Davis',
-          profession: 'Professional Cleaner',
-          status: ClientBookingStatus.completed,
-          date: 'May 10, 2024',
-          amount: '\$120',
-          imageUrl: 'https://via.placeholder.com/100?text=Emma',
-          conversationId: 'conv-4',
-          counterpartUserId: 'worker-emma',
-        ),
-        const ClientBooking(
-          id: '5',
-          title: 'Repair bathroom tiles',
-          artisan: 'Pending match',
-          profession: 'Tiler',
-          status: ClientBookingStatus.requested,
-          date: 'May 22, 2024',
-          amount: '\$90',
-          imageUrl: 'https://via.placeholder.com/100?text=Job',
-        ),
-      ];
-
-  /// Stub booking created after posting a job or hiring from profile.
+  /// Tracking payload created after posting a job or hiring from profile.
   static Map<String, dynamic> fromJobPost({
     required Map<String, dynamic> jobData,
     Map<String, dynamic>? artisan,

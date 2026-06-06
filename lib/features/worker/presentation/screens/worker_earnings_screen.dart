@@ -122,55 +122,6 @@ class WorkerEarningsScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        'Weekly activity preview',
-                        style: AppTypography.titleMd.copyWith(fontSize: 16),
-                      ),
-                      const Spacer(),
-                      IconButton(
-                        icon: Icon(PhosphorIcons.dotsThree),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Weekly insights coming soon'),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  SizedBox(
-                    height: 100,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _Bar(height: 40, label: 'M'),
-                        _Bar(height: 55, label: 'T'),
-                        _Bar(height: 35, label: 'W'),
-                        _Bar(height: 50, label: 'T'),
-                        _Bar(height: 80, label: 'F', highlight: true),
-                        _Bar(height: 45, label: 'S'),
-                        _Bar(height: 30, label: 'S'),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
             TextButton(
               onPressed: () {
                 WorkerScope.of(context).setProfilePage(WorkerProfilePage.stats);
@@ -202,36 +153,6 @@ class WorkerEarningsScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-class _Bar extends StatelessWidget {
-  const _Bar({
-    required this.height,
-    required this.label,
-    this.highlight = false,
-  });
-  final double height;
-  final String label;
-  final bool highlight;
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Container(
-          width: 24,
-          height: height,
-          decoration: BoxDecoration(
-            color: highlight
-                ? AppColors.primaryFixed
-                : AppColors.surfaceContainer,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: AppTypography.bodyMd.copyWith(fontSize: 11)),
-      ],
     );
   }
 }

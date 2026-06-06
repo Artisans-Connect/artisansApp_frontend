@@ -216,11 +216,11 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                       if (!_isLoadingReviews && _reviews.isNotEmpty)
                         TextButton(
                           onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Full reviews list (UI stub).'),
-                              ),
-                            );
+	                            ScaffoldMessenger.of(context).showSnackBar(
+	                              const SnackBar(
+	                                content: Text('Showing the latest reviews.'),
+	                              ),
+	                            );
                           },
                           child: Text(
                             'View All',

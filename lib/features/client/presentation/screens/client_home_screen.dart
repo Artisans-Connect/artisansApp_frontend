@@ -7,7 +7,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../client_shell.dart';
-import '../models/client_booking_stub.dart';
+import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
 import '../navigation/client_shell_scope.dart';
 import '../widgets/artisan_card.dart';

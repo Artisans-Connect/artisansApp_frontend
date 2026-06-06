@@ -209,35 +209,37 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 14),
-                ProfileSectionCard(
-                  title: 'Stats',
-                  child: Row(
-                    children: <Widget>[
-                      if (profile.rating != null)
-                        Expanded(
-                          child: _StatBlock(
-                            label: 'Rating',
-                            value: profile.rating!.toStringAsFixed(1),
+                if (profile.rating != null || profile.totalJobs != null) ...[
+                  const SizedBox(height: 14),
+                  ProfileSectionCard(
+                    title: 'Stats',
+                    child: Row(
+                      children: <Widget>[
+                        if (profile.rating != null)
+                          Expanded(
+                            child: _StatBlock(
+                              label: 'Rating',
+                              value: profile.rating!.toStringAsFixed(1),
+                            ),
                           ),
-                        ),
-                      if (profile.rating != null && profile.totalJobs != null)
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: AppColors.outlineVariant,
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                        ),
-                      if (profile.totalJobs != null)
-                        Expanded(
-                          child: _StatBlock(
-                            label: 'Jobs completed',
-                            value: '${profile.totalJobs}',
+                        if (profile.rating != null && profile.totalJobs != null)
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.outlineVariant,
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
                           ),
-                        ),
-                    ],
+                        if (profile.totalJobs != null)
+                          Expanded(
+                            child: _StatBlock(
+                              label: 'Jobs completed',
+                              value: '${profile.totalJobs}',
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
                 if (isOwnProfile &&
                     (widget.onOpenWorkerEarnings != null ||
                         widget.onOpenWorkerStats != null ||

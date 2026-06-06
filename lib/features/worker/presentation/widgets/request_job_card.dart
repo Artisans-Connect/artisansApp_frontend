@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
 import '../utils/worker_formatters.dart';
 
@@ -13,7 +13,7 @@ class RequestJobCard extends StatelessWidget {
     this.isAcceptEnabled = true,
   });
 
-  final MockWorkerJob job;
+  final WorkerJob job;
   final VoidCallback onAccept;
   final VoidCallback? onTap;
   final bool isAcceptEnabled;

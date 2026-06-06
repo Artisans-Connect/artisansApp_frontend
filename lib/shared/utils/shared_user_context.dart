@@ -1,7 +1,6 @@
 import '../../core/session/app_user_session.dart';
 import '../../core/utils/current_user.dart';
 import '../../features/auth/models/onboarding_session.dart';
-import '../data/shared_stub_data.dart';
 import '../models/user_profile_view.dart';
 import '../presentation/navigation/shared_route_args.dart';
 
@@ -14,7 +13,7 @@ class SharedUserContext {
   static UserRole get currentRole {
     if (CurrentUser.role != null) return CurrentUser.role!;
     if (session.hasRole) return session.role!;
-    return SharedStubData.currentUserProfile.role;
+    return UserRole.client;
   }
 
   static bool get isViewingAsWorker =>
@@ -43,7 +42,11 @@ class SharedUserContext {
       return _profileFromMap(args.profileData!);
     }
 
-    return SharedStubData.sampleClientProfile;
+    return UserProfileViewData(
+      id: args.userId,
+      fullName: 'Unknown user',
+      role: args.viewAsWorker == true ? UserRole.worker : UserRole.client,
+    );
   }
 
   static UserProfileViewData _profileFromMap(Map<String, dynamic> data) {
@@ -93,8 +96,8 @@ class SharedUserContext {
         bio: appUser.bio ?? session.bio,
         avatarUrl: appUser.avatarUrl,
         locationLabel: appUser.locationLabel ?? session.locationLabel,
-        rating: role == UserRole.worker ? 4.8 : null,
-        totalJobs: role == UserRole.worker ? 0 : null,
+        rating: null,
+        totalJobs: null,
         skills: appUser.skills.isNotEmpty
             ? appUser.skills
             : session.selectedTrades.toList(),
@@ -106,26 +109,24 @@ class SharedUserContext {
       );
     }
 
-    final UserProfileViewData base = SharedStubData.currentUserProfile;
     final UserRole role = currentRole;
     return UserProfileViewData(
-      id: currentUserId ?? base.id,
-      fullName: session.fullName ?? base.fullName,
+      id: currentUserId ?? '',
+      fullName: session.fullName ?? CurrentUser.email ?? 'Account',
       role: role,
-      phone: session.phone ?? base.phone,
-      bio: session.bio ?? base.bio,
-      avatarUrl: base.avatarUrl,
-      locationLabel: session.locationLabel ?? base.locationLabel,
-      rating: role == UserRole.worker ? (base.rating ?? 4.8) : base.rating,
-      totalJobs: role == UserRole.worker ? (base.totalJobs ?? 0) : base.totalJobs,
+      phone: session.phone,
+      bio: session.bio,
+      locationLabel: session.locationLabel,
+      rating: null,
+      totalJobs: null,
       skills: session.selectedTrades.isNotEmpty
           ? session.selectedTrades.toList()
-          : base.skills,
+          : const <String>[],
       serviceAreas: session.serviceAreas.isNotEmpty
           ? session.serviceAreas.toList()
-          : base.serviceAreas,
-      experienceBand: session.experienceBand ?? base.experienceBand,
-      isVerified: base.isVerified,
+          : const <String>[],
+      experienceBand: session.experienceBand,
+      isVerified: false,
     );
   }
 }

@@ -8,7 +8,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../widgets/completion_photo_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/job_detail_card.dart';
@@ -19,7 +19,7 @@ class WorkerCompletionFormScreen extends StatefulWidget {
     required this.job,
     required this.onCompletionSubmitted,
   });
-  final MockWorkerJob job;
+  final WorkerJob job;
   final VoidCallback onCompletionSubmitted;
   @override
   State<WorkerCompletionFormScreen> createState() =>

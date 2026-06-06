@@ -1,6 +1,6 @@
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 
-MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
+WorkerJob workerJobFromApi(Map<String, dynamic> json) {
   final dynamic client = json['client'] ?? json['profiles'];
   final String clientName = client is Map<String, dynamic>
       ? client['full_name'] as String? ?? 'Client'
@@ -18,7 +18,7 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
           .map((dynamic url) => url.toString())
           .toList();
 
-  return MockWorkerJob(
+  return WorkerJob(
     id: json['id'] as String,
     title: json['title'] as String? ?? 'Job request',
     category: categoryName,
@@ -27,6 +27,7 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
     latitude: (json['location_lat'] as num?)?.toDouble() ?? 0,
     longitude: (json['location_lng'] as num?)?.toDouble() ?? 0,
     clientName: clientName,
+    clientId: json['client_id'] as String?,
     clientPhone: clientPhone,
     clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,
@@ -41,7 +42,7 @@ MockWorkerJob workerJobFromApi(Map<String, dynamic> json) {
   );
 }
 
-MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
+WorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
   final dynamic client = json['client'] ?? json['profiles'];
   final String clientName = client is Map<String, dynamic>
       ? client['full_name'] as String? ?? 'Client'
@@ -62,7 +63,7 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
           .map((dynamic url) => url.toString())
           .toList();
 
-  return MockWorkerJob(
+  return WorkerJob(
     id: json['id'] as String,
     title: json['title'] as String? ?? 'Job',
     category: categoryName,
@@ -71,6 +72,7 @@ MockWorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     latitude: 0,
     longitude: 0,
     clientName: clientName,
+    clientId: json['client_id'] as String?,
     clientPhone: clientPhone,
     clientAvatarUrl: clientAvatarUrl,
     urgency: JobUrgency.scheduled,

@@ -8,7 +8,7 @@ import 'messages_list_screen.dart';
 import 'settings_screen.dart';
 import 'user_profile_screen.dart';
 
-/// Post-onboarding worker shell with bottom navigation (UI stub).
+/// Post-onboarding worker shell with bottom navigation.
 class WorkerHomeShellScreen extends StatefulWidget {
   const WorkerHomeShellScreen({super.key});
 

@@ -1,14 +1,14 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 class HistoryJobCard extends StatelessWidget {
   const HistoryJobCard({
     super.key,
     required this.job,
     this.onViewDetails,
   });
-  final MockWorkerJob job;
+  final WorkerJob job;
   final VoidCallback? onViewDetails;
   @override
   Widget build(BuildContext context) {
@@ -101,12 +101,7 @@ class HistoryJobCard extends StatelessWidget {
               ),
               const Spacer(),
               TextButton(
-                onPressed: onViewDetails ??
-                    () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Details — coming soon')),
-                      );
-                    },
+                onPressed: onViewDetails,
                 child: Text(
                   'View details >',
                   style: AppTypography.bodyLg.copyWith(

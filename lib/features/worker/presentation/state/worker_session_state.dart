@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../../../../core/location/worker_location_service.dart';
 import '../../../../core/services/workers_service.dart';
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../models/worker_ui_contracts.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/worker_bottom_nav.dart';
@@ -17,7 +17,7 @@ class WorkerSessionState extends ChangeNotifier {
   WorkerProfilePage profilePage = WorkerProfilePage.earnings;
 
   bool isAvailable = false;
-  MockWorkerJob? activeJob;
+  WorkerJob? activeJob;
   WorkerJobPhase jobPhase = WorkerJobPhase.none;
 
   bool get hasActiveJob =>
@@ -88,7 +88,7 @@ class WorkerSessionState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void acceptJob(MockWorkerJob job) {
+  void acceptJob(WorkerJob job) {
     activeJob = job;
     jobPhase = WorkerJobPhase.accepted;
     currentTab = WorkerNavTab.bookings;

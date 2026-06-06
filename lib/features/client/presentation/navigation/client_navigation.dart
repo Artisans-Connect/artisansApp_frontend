@@ -10,7 +10,7 @@ import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../../../worker/presentation/worker_shell.dart';
 import '../client_shell.dart';
-import '../models/client_booking_stub.dart';
+import '../models/client_booking.dart';
 import 'client_shell_scope.dart';
 
 /// Client-side navigation helpers (shell-safe).

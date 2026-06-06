@@ -2,13 +2,13 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../models/mock_worker_job.dart';
+import '../models/worker_job.dart';
 import '../widgets/job_detail_card.dart';
 
 class WorkerBookingDetailScreen extends StatelessWidget {
   const WorkerBookingDetailScreen({super.key, required this.job});
 
-  final MockWorkerJob job;
+  final WorkerJob job;
 
   @override
   Widget build(BuildContext context) {

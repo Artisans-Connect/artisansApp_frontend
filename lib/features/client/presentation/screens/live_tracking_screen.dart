@@ -14,7 +14,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/worker_tracking_map.dart';
-import '../models/client_booking_stub.dart';
+import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
  
 // ---------------------------------------------------------------------------
