@@ -14,7 +14,7 @@ import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/error_state_view.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../features/client/presentation/navigation/client_navigation.dart';
 import '../../utils/shared_user_context.dart';
 import '../../models/chat_message.dart';
@@ -380,7 +380,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           args.counterpartName.isNotEmpty
                               ? args.counterpartName[0].toUpperCase()
                               : '?',
-                          style: AppTextStyles.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
                           ),
@@ -410,7 +410,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                     children: <Widget>[
                       Text(
                         args.counterpartName,
-                        style: AppTextStyles.bodyLg.copyWith(
+                        style: AppTypography.bodyLarge.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
@@ -481,7 +481,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         ? Center(
                             child: Text(
                               'Say hello to start the conversation.',
-                              style: AppTextStyles.bodyLg,
+                              style: AppTypography.bodyLarge,
                             ),
                           )
                         : ListView.builder(
@@ -502,7 +502,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                     ),
                                     child: Text(
                                       'Today',
-                                      style: AppTextStyles.bodyMd.copyWith(
+                                      style: AppTypography.bodyMedium.copyWith(
                                         color: AppColors.textSecondary,
                                         fontSize: 12,
                                       ),
@@ -617,7 +617,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       maxLines: 4,
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
-                        hintStyle: AppTextStyles.bodyMd.copyWith(
+                        hintStyle: AppTypography.bodyMedium.copyWith(
                           color: AppColors.outline,
                         ),
                         border: InputBorder.none,

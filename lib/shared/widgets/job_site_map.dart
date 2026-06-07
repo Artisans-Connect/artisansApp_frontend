@@ -1,11 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/location/device_location_service.dart';
+import '../../core/maps/map_feature_helpers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
@@ -55,24 +54,16 @@ class _JobSiteMapState extends State<JobSiteMap> {
     if (controller == null || worker == null) return;
     controller.animateCamera(
       CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(
-            math.min(worker.latitude, widget.latitude),
-            math.min(worker.longitude, widget.longitude),
-          ),
-          northeast: LatLng(
-            math.max(worker.latitude, widget.latitude),
-            math.max(worker.longitude, widget.longitude),
-          ),
-        ),
+        MapFeatureHelpers.boundsFor(<LatLng>[worker, _jobSite]),
         48,
       ),
     );
   }
 
   Future<void> _openDirections() async {
-    final uri = Uri.parse(
-      'https://www.google.com/maps/dir/?api=1&destination=${widget.latitude},${widget.longitude}&travelmode=driving',
+    final uri = MapFeatureHelpers.googleMapsDirectionsUri(
+      destination: _jobSite,
+      origin: _workerPosition,
     );
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
@@ -115,6 +106,12 @@ class _JobSiteMapState extends State<JobSiteMap> {
           width: 4,
         ),
     };
+    final estimate = _workerPosition == null
+        ? null
+        : MapRouteEstimate.between(
+            origin: _workerPosition!,
+            destination: _jobSite,
+          );
 
     return SizedBox(
       height: widget.height,
@@ -152,7 +149,7 @@ class _JobSiteMapState extends State<JobSiteMap> {
                 child: Text(
                   _workerPosition == null
                       ? 'Job site location'
-                      : 'Route from your location to the client',
+                      : '${estimate!.distanceLabel} estimated route to client',
                   style: AppTypography.bodySmall,
                   textAlign: TextAlign.center,
                 ),

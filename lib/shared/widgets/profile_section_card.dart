@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_typography.dart';
 import 'glass_card.dart';
 
 class ProfileSectionCard extends StatelessWidget {
@@ -23,7 +23,7 @@ class ProfileSectionCard extends StatelessWidget {
         children: <Widget>[
           Text(
             title.toUpperCase(),
-            style: AppTextStyles.labelCaps.copyWith(
+            style: AppTypography.labelCaps.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w700,
             ),

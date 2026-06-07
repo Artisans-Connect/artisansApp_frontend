@@ -10,7 +10,7 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../worker/presentation/worker_shell.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/models/user_profile_view.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/app_input.dart';
@@ -846,13 +846,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           Text(
             'How will you use\nArtisansConnect?',
             textAlign: TextAlign.center,
-            style: AppTextStyles.displayMd.copyWith(fontSize: 50 * 0.78),
+            style: AppTypography.displayMedium.copyWith(fontSize: 50 * 0.78),
           ),
           const SizedBox(height: 10),
           Text(
             'Select your primary role to customize your\nexperience and connect with the right people.',
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyLg,
+            style: AppTypography.bodyLarge,
           ),
           const SizedBox(height: 24),
           RoleOptionCard(
@@ -1080,13 +1080,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         children: <Widget>[
           Text(
             'Complete Your Profile',
-            style: AppTextStyles.displayMd.copyWith(fontSize: 58 * 0.78),
+            style: AppTypography.displayMedium.copyWith(fontSize: 58 * 0.78),
           ),
           const SizedBox(height: 10),
           Text(
             "Let's put a face to the name and finalize\nyour setup.",
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyLg,
+            style: AppTypography.bodyLarge,
           ),
           const SizedBox(height: 22),
           Container(

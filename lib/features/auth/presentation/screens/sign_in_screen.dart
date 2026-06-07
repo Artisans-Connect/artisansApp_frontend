@@ -6,7 +6,7 @@ import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
@@ -138,7 +138,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       Center(
                         child: Text(
                           'Welcome Back',
-                          style: AppTextStyles.displayMd.copyWith(
+                          style: AppTypography.displayMedium.copyWith(
                             fontSize: 44,
                             fontWeight: FontWeight.bold,
                           ),
@@ -149,7 +149,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         child: Text(
                           'Sign in to continue to ArtisansConnect.',
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyLg,
+                          style: AppTypography.bodyLarge,
                         ),
                       ),
                       if (_authError != null) ...<Widget>[
@@ -168,7 +168,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       ],
                       const SizedBox(height: 22),
                       Text('Email Address',
-                          style: AppTextStyles.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
@@ -183,7 +183,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       ),
                       const SizedBox(height: 14),
                       Text('Password',
-                          style: AppTextStyles.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),

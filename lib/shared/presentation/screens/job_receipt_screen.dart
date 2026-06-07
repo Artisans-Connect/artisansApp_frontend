@@ -4,7 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../core/errors/error_messages.dart';
 import '../../../core/services/jobs_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../models/job_receipt_view.dart';
 import '../../widgets/custom_app_bar.dart';
 
@@ -50,7 +50,7 @@ class _JobReceiptScreenState extends State<JobReceiptScreen> {
                           fallback: 'Could not load this receipt.',
                         ),
                         textAlign: TextAlign.center,
-                        style: AppTextStyles.bodyLg,
+                        style: AppTypography.bodyLarge,
                       ),
                     ),
                   );
@@ -88,7 +88,7 @@ class _ReceiptUnavailable extends StatelessWidget {
         child: Text(
           'Receipt unavailable. Open a completed job to view its receipt.',
           textAlign: TextAlign.center,
-          style: AppTextStyles.bodyLg,
+          style: AppTypography.bodyLarge,
         ),
       ),
     );
@@ -129,7 +129,7 @@ class _ReceiptBody extends StatelessWidget {
                       ),
                       child: Text(
                         receipt.status,
-                        style: AppTextStyles.labelCaps.copyWith(
+                        style: AppTypography.labelCaps.copyWith(
                           color: AppColors.success,
                           fontWeight: FontWeight.w700,
                         ),
@@ -139,7 +139,7 @@ class _ReceiptBody extends StatelessWidget {
                     Flexible(
                       child: Text(
                         '#${_shortId(receipt.jobId)}',
-                        style: AppTextStyles.bodyMd,
+                        style: AppTypography.bodyMedium,
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.end,
                       ),
@@ -149,12 +149,12 @@ class _ReceiptBody extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   receipt.title,
-                  style: AppTextStyles.displayMd.copyWith(fontSize: 26),
+                  style: AppTypography.displayMedium.copyWith(fontSize: 26),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   _formatDate(receipt.completedAt),
-                  style: AppTextStyles.bodyMd,
+                  style: AppTypography.bodyMedium,
                 ),
               ],
             ),
@@ -214,7 +214,7 @@ class _ReceiptBody extends StatelessWidget {
             const SizedBox(height: 16),
             _ReceiptSection(
               title: 'Notes',
-              child: Text(receipt.notes!, style: AppTextStyles.bodyLg),
+              child: Text(receipt.notes!, style: AppTypography.bodyLarge),
             ),
           ],
           if (receipt.photoUrls.isNotEmpty) ...<Widget>[
@@ -274,7 +274,7 @@ class _ReceiptSection extends StatelessWidget {
         children: <Widget>[
           Text(
             title,
-            style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700),
+            style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 12),
           if (child != null) child!,
@@ -287,7 +287,7 @@ class _ReceiptSection extends StatelessWidget {
                     Icon(row.icon, color: AppColors.primary, size: 20),
                     const SizedBox(width: 10),
                     Expanded(
-                      child: Text(row.label, style: AppTextStyles.bodyLg),
+                      child: Text(row.label, style: AppTypography.bodyLarge),
                     ),
                   ],
                 ),

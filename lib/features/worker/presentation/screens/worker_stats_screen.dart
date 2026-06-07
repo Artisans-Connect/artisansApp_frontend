@@ -64,7 +64,7 @@ class _WorkerStatsScreenState extends State<WorkerStatsScreen> {
         ),
         title: Text(
           'Your Stats',
-          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         actions: [
           IconButton(
@@ -114,11 +114,11 @@ class _StatsContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Performance Overview', style: AppTypography.titleMd),
+          Text('Performance Overview', style: AppTypography.titleLarge),
           const SizedBox(height: 4),
           Text(
             'Track your professional growth as an artisan.',
-            style: AppTypography.bodyMd,
+            style: AppTypography.bodyMedium,
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(
@@ -149,7 +149,7 @@ class _StatsContent extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              Text('Recent Reviews', style: AppTypography.titleMd),
+              Text('Recent Reviews', style: AppTypography.titleLarge),
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -174,7 +174,7 @@ class _StatsContent extends StatelessWidget {
           if (stats.responseSampleCount > 0) ...[
             Text(
               'Average response based on ${stats.responseSampleCount} accepted request${stats.responseSampleCount == 1 ? '' : 's'}.',
-              style: AppTypography.bodyMd.copyWith(
+              style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
@@ -224,11 +224,11 @@ class _NoReviewsCard extends StatelessWidget {
             color: AppColors.primary.withValues(alpha: 0.4),
           ),
           const SizedBox(height: AppSpacing.md),
-          Text('No reviews yet.', style: AppTypography.titleMd),
+          Text('No reviews yet.', style: AppTypography.titleLarge),
           const SizedBox(height: 8),
           Text(
             'Complete your first few jobs to receive feedback from your clients and build your profile.',
-            style: AppTypography.bodyMd,
+            style: AppTypography.bodyMedium,
             textAlign: TextAlign.center,
           ),
         ],
@@ -264,7 +264,7 @@ class _ReviewCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   review.reviewerName,
-                  style: AppTypography.bodyMd,
+                  style: AppTypography.bodyMedium,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -282,7 +282,7 @@ class _ReviewCard extends StatelessWidget {
             review.comment?.trim().isNotEmpty == true
                 ? review.comment!.trim()
                 : 'No comment added.',
-            style: AppTypography.bodyMd,
+            style: AppTypography.bodyMedium,
           ),
         ],
       ),
@@ -324,7 +324,7 @@ class _StatCard extends StatelessWidget {
               fit: BoxFit.scaleDown,
               child: Text(
                 value,
-                style: AppTypography.titleMd.copyWith(fontSize: 18),
+                style: AppTypography.titleLarge.copyWith(fontSize: 18),
                 maxLines: 1,
               ),
             ),

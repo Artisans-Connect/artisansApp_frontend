@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_typography.dart';
 
 class SettingsGroup extends StatelessWidget {
   const SettingsGroup({
@@ -25,7 +25,7 @@ class SettingsGroup extends StatelessWidget {
             child: Text(
               title.toUpperCase(),
               style:
-                  AppTextStyles.labelCaps.copyWith(fontWeight: FontWeight.w700),
+                  AppTypography.labelCaps.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         Container(
@@ -74,14 +74,14 @@ class SettingsTile extends StatelessWidget {
           ),
           title: Text(
             title,
-            style: AppTextStyles.bodyLg.copyWith(
+            style: AppTypography.bodyLarge.copyWith(
               color: titleColor ?? AppColors.textPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
           subtitle: subtitle == null
               ? null
-              : Text(subtitle!, style: AppTextStyles.bodyMd),
+              : Text(subtitle!, style: AppTypography.bodyMedium),
           trailing: trailing ??
               Icon(PhosphorIcons.caretRight, color: AppColors.textSecondary),
         ),

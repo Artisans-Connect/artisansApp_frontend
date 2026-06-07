@@ -111,7 +111,7 @@ class MapPlaceholder extends StatelessWidget {
                     Expanded(
                       child: Text(
                         addressLabel!,
-                        style: AppTypography.bodyMd.copyWith(
+                        style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.onSurface,
                           fontWeight: FontWeight.w500,
                         ),

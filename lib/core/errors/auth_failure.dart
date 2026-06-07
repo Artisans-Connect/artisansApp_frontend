@@ -6,6 +6,7 @@ enum AuthFailureCode {
   profileCreateFailed,
   accountAlreadyExists,
   signUpFailed,
+  network,
   unknown,
 }
 

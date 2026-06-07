@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../widgets/dot_indicator.dart';
 import '../../widgets/onboarding_page_content.dart';
@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   if (_currentPage > 0) const SizedBox(width: 8),
                   Text(
                     'ArtisansConnect',
-                    style: AppTextStyles.displayMd.copyWith(
+                    style: AppTypography.displayMedium.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w800,
                     ),
@@ -87,7 +87,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onPressed: _goToSignIn,
                     child: Text(
                       'Skip',
-                      style: AppTextStyles.bodyLg.copyWith(
+                      style: AppTypography.bodyLarge.copyWith(
                         color: AppColors.textPrimary,
                         fontWeight: FontWeight.w600,
                       ),

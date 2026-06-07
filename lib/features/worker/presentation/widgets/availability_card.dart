@@ -31,12 +31,12 @@ class AvailabilityCard extends StatelessWidget {
               children: [
                 Text(
                   'Available for work',
-                  style: AppTypography.titleMd.copyWith(fontSize: 16),
+                  style: AppTypography.titleLarge.copyWith(fontSize: 16),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'When ON, you receive job requests.',
-                  style: AppTypography.bodyMd,
+                  style: AppTypography.bodyMedium,
                 ),
               ],
             ),

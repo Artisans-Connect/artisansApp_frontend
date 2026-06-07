@@ -1,13 +1,11 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_constants.dart';
+import '../../core/maps/map_feature_helpers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
-import '../../core/utils/haversine.dart';
 
 /// Client view: job site + live worker marker via Supabase Realtime on [workers].
 class WorkerTrackingMap extends StatefulWidget {
@@ -33,6 +31,7 @@ class WorkerTrackingMap extends StatefulWidget {
 class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
   RealtimeChannel? _channel;
   LatLng? _workerPosition;
+  DateTime? _workerLocationAt;
   GoogleMapController? _mapController;
 
   @override
@@ -45,14 +44,18 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
   Future<void> _loadInitialWorker() async {
     final row = await Supabase.instance.client
         .from('workers')
-        .select('current_lat, current_lng')
+        .select('current_lat, current_lng, location_at')
         .eq('id', widget.workerId)
         .maybeSingle();
     if (row == null || !mounted) return;
     final lat = (row['current_lat'] as num?)?.toDouble();
     final lng = (row['current_lng'] as num?)?.toDouble();
     if (lat != null && lng != null) {
-      _applyWorker(lat, lng);
+      _applyWorker(
+        lat,
+        lng,
+        locationAt: MapFeatureHelpers.asDateTime(row['location_at']),
+      );
     }
   }
 
@@ -71,28 +74,32 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
           callback: (payload) {
             final lat = (payload.newRecord['current_lat'] as num?)?.toDouble();
             final lng = (payload.newRecord['current_lng'] as num?)?.toDouble();
-            if (lat != null && lng != null) _applyWorker(lat, lng);
+            if (lat != null && lng != null) {
+              _applyWorker(
+                lat,
+                lng,
+                locationAt: MapFeatureHelpers.asDateTime(
+                  payload.newRecord['location_at'],
+                ),
+              );
+            }
           },
         )
         .subscribe();
   }
 
-  void _applyWorker(double lat, double lng) {
-    setState(() => _workerPosition = LatLng(lat, lng));
-    final km = haversineKm(widget.jobLat, widget.jobLng, lat, lng);
-    widget.onEtaChanged?.call('~${etaMinutes(km)} min away');
+  void _applyWorker(double lat, double lng, {DateTime? locationAt}) {
+    final worker = LatLng(lat, lng);
+    final job = LatLng(widget.jobLat, widget.jobLng);
+    final estimate = MapRouteEstimate.between(origin: worker, destination: job);
+    setState(() {
+      _workerPosition = worker;
+      _workerLocationAt = locationAt ?? DateTime.now().toUtc();
+    });
+    widget.onEtaChanged?.call('${estimate.etaLabel} away');
     _mapController?.animateCamera(
       CameraUpdate.newLatLngBounds(
-        LatLngBounds(
-          southwest: LatLng(
-            math.min(widget.jobLat, lat),
-            math.min(widget.jobLng, lng),
-          ),
-          northeast: LatLng(
-            math.max(widget.jobLat, lat),
-            math.max(widget.jobLng, lng),
-          ),
-        ),
+        MapFeatureHelpers.boundsFor(<LatLng>[job, worker]),
         48,
       ),
     );
@@ -162,6 +169,7 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
                   _applyWorker(
                     _workerPosition!.latitude,
                     _workerPosition!.longitude,
+                    locationAt: _workerLocationAt,
                   );
                 }
               },
@@ -183,7 +191,9 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
                 child: Text(
                   _workerPosition == null
                       ? 'Waiting for the worker location...'
-                      : 'Live route from worker to job site',
+                      : MapFeatureHelpers.isFreshLocation(_workerLocationAt)
+                          ? 'Estimated route from worker to job site'
+                          : 'Worker location may be stale',
                   style: AppTypography.bodySmall,
                 ),
               ),

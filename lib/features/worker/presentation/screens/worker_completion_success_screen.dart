@@ -31,7 +31,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
         ),
         title: Text(
           'ArtisansConnect',
-          style: AppTypography.titleMd.copyWith(
+          style: AppTypography.titleLarge.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w800,
           ),
@@ -57,11 +57,11 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('Booking Completed!', style: AppTypography.displayMd),
+            Text('Booking Completed!', style: AppTypography.displayMedium),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'The client has been notified and will rate you shortly.',
-              style: AppTypography.bodyMd,
+              style: AppTypography.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -86,7 +86,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                       Text('EARNED TOTAL', style: AppTypography.labelCaps),
                       Text(
                         formatCedis(earned),
-                        style: AppTypography.titleMd.copyWith(
+                        style: AppTypography.titleLarge.copyWith(
                           color: AppColors.success,
                           fontSize: 22,
                         ),
@@ -100,7 +100,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                         backgroundColor: AppColors.primaryFixed,
                         child: Text(
                           job.clientName.substring(0, 1),
-                          style: AppTypography.titleMd.copyWith(
+                          style: AppTypography.titleLarge.copyWith(
                             color: AppColors.primary,
                           ),
                         ),
@@ -112,7 +112,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                           children: [
                             Text(
                               job.clientName,
-                              style: AppTypography.titleMd.copyWith(
+                              style: AppTypography.titleLarge.copyWith(
                                 fontSize: 16,
                               ),
                             ),

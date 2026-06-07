@@ -18,7 +18,7 @@ String userMessageFor(Object? error, {String? fallback}) {
   }
 
   if (error is NetworkException) {
-    return 'No connection. Check your internet and try again.';
+    return _networkMessage();
   }
 
   if (error is AuthException) {
@@ -26,26 +26,50 @@ String userMessageFor(Object? error, {String? fallback}) {
   }
 
   final String raw = error.toString();
+  if (_looksLikeNetworkError(raw)) {
+    return _networkMessage();
+  }
+
+  if (error is String && error.trim().isNotEmpty) {
+    return error.trim();
+  }
+
   if (raw.startsWith('ApiException')) {
     final match = RegExp(r'ApiException\(\d+\): (.+?)(?: \(|$)').firstMatch(raw);
     if (match != null) return match.group(1)!.trim();
   }
 
-  if (raw.contains('SocketException') ||
-      raw.contains('Failed host lookup') ||
-      raw.contains('Connection refused') ||
-      raw.contains('ClientException')) {
-    return 'No connection. Check your internet and try again.';
-  }
-
   if (raw.startsWith('Exception: ')) {
-    return raw.substring('Exception: '.length);
+    final String message = raw.substring('Exception: '.length).trim();
+    if (_looksLikeNetworkError(message)) return _networkMessage();
+    return message;
   }
 
   return fallback ?? 'Something went wrong. Please try again.';
 }
 
+String _networkMessage() => 'Connection problem. Check your internet and try again.';
+
+bool _looksLikeNetworkError(String raw) {
+  final String msg = raw.toLowerCase();
+  return msg.contains('socketexception') ||
+      msg.contains('clientexception') ||
+      msg.contains('failed host lookup') ||
+      msg.contains('connection refused') ||
+      msg.contains('connection reset') ||
+      msg.contains('connection closed') ||
+      msg.contains('network is unreachable') ||
+      msg.contains('software caused connection abort') ||
+      msg.contains('operation timed out') ||
+      msg.contains('timed out') ||
+      msg.contains('xmlhttprequest error') ||
+      msg.contains('failed to fetch');
+}
+
 String _apiMessage(ApiException e) {
+  if (_looksLikeNetworkError(e.message)) {
+    return _networkMessage();
+  }
   switch (e.code) {
     case 'UNAUTHORIZED':
       return e.message.isNotEmpty
@@ -82,6 +106,9 @@ String _apiMessage(ApiException e) {
 
 String _authMessage(AuthException e) {
   final String msg = e.message.toLowerCase();
+  if (_looksLikeNetworkError(msg)) {
+    return _networkMessage();
+  }
   if (msg.contains('invalid login credentials') ||
       msg.contains('invalid email or password')) {
     return 'Incorrect email or password.';

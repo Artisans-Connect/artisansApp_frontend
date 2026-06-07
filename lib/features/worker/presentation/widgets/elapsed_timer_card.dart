@@ -49,7 +49,7 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
           const SizedBox(height: AppSpacing.sm),
           Text(
             _format(_elapsed),
-            style: AppTypography.displayMd.copyWith(
+            style: AppTypography.displayMedium.copyWith(
               fontSize: 36,
               color: AppColors.primary,
             ),
@@ -69,7 +69,7 @@ class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
               const SizedBox(width: 8),
               Text(
                 'Active Session',
-                style: AppTypography.bodyMd.copyWith(
+                style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.success,
                   fontWeight: FontWeight.w600,
                 ),

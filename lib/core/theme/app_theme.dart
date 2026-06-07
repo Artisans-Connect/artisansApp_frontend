@@ -4,9 +4,31 @@ import 'app_colors.dart';
 import 'app_typography.dart';
 import 'app_spacing.dart';
 
+TextTheme _buildTextTheme() {
+  return const TextTheme(
+    displayLarge: AppTypography.displayLarge,
+    displayMedium: AppTypography.displayMedium,
+    displaySmall: AppTypography.displaySmall,
+    headlineLarge: AppTypography.displaySmall,
+    headlineMedium: AppTypography.titleLarge,
+    headlineSmall: AppTypography.titleLarge,
+    titleLarge: AppTypography.titleLarge,
+    titleMedium: AppTypography.labelLarge,
+    titleSmall: AppTypography.labelMedium,
+    bodyLarge: AppTypography.bodyLarge,
+    bodyMedium: AppTypography.bodyMedium,
+    bodySmall: AppTypography.bodySmall,
+    labelLarge: AppTypography.labelLarge,
+    labelMedium: AppTypography.labelMedium,
+    labelSmall: AppTypography.labelSmall,
+  );
+}
+
 ThemeData buildAppTheme() {
   return ThemeData(
     useMaterial3: true,
+    fontFamily: AppTypography.fontFamily,
+    textTheme: _buildTextTheme(),
     scaffoldBackgroundColor: AppColors.background,
     colorScheme: ColorScheme.fromSeed(
       seedColor: AppColors.primary,
@@ -19,7 +41,7 @@ ThemeData buildAppTheme() {
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surface,
-      hintStyle: AppTypography.bodyMd,
+      hintStyle: AppTypography.bodyMedium,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusInput),

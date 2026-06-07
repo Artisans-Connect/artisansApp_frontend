@@ -67,7 +67,7 @@ class _InfoCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   value,
-                  style: AppTypography.titleMd.copyWith(
+                  style: AppTypography.titleLarge.copyWith(
                     color: valueColor,
                     fontSize: 16,
                   ),

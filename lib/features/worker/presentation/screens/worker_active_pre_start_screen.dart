@@ -46,7 +46,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
             ),
             Text(
               job.title,
-              style: AppTypography.titleMd.copyWith(fontSize: 14),
+              style: AppTypography.titleLarge.copyWith(fontSize: 14),
             ),
           ],
         ),
@@ -88,7 +88,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                             backgroundColor: AppColors.primaryFixed,
                             child: Text(
                               job.clientName.substring(0, 1),
-                              style: AppTypography.titleMd.copyWith(
+                              style: AppTypography.titleLarge.copyWith(
                                 color: AppColors.primary,
                               ),
                             ),
@@ -116,7 +116,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(job.clientName, style: AppTypography.titleMd),
+                            Text(job.clientName, style: AppTypography.titleLarge),
                             Row(
                               children: [
                                 Icon(
@@ -126,7 +126,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                                 ),
                                 Text(
                                   ' ${job.clientRating}',
-                                  style: AppTypography.bodyMd,
+                                  style: AppTypography.bodyMedium,
                                 ),
                               ],
                             ),
@@ -161,7 +161,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                       Expanded(
                         child: Text(
                           job.addressLabel,
-                          style: AppTypography.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                             color: AppColors.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
@@ -174,7 +174,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     job.description,
-                    style: AppTypography.bodyMd,
+                    style: AppTypography.bodyMedium,
                     maxLines: 4,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -189,7 +189,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                         : () => _confirmCancel(session, job),
                     child: Text(
                       _isCancelling ? 'Cancelling...' : 'Cancel Booking',
-                      style: AppTypography.bodyLg.copyWith(
+                      style: AppTypography.bodyLarge.copyWith(
                         color: AppColors.error,
                         fontWeight: FontWeight.w600,
                       ),
@@ -455,7 +455,7 @@ class _PhaseHint extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: AppTypography.bodyMd.copyWith(color: AppColors.primary),
+        style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
       ),
     );
   }

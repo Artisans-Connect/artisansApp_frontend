@@ -1,6 +1,5 @@
 import 'dart:async';
  
-import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
  
 import '../../../../core/errors/error_messages.dart';
@@ -11,6 +10,7 @@ import '../utils/worker_job_mapper.dart';
 import '../widgets/skeleton_box.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/error_state_view.dart';
+import '../../../../shared/widgets/job_requests_map.dart';
 import 'job_request_detail_screen.dart';
  
 // ─────────────────────────────────────────────────────────────────────────────
@@ -896,6 +896,11 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           const SizedBox(height: _T.md),
  
           // ── Job cards ────────────────────────────────────────
+          JobRequestsMapPreview(
+            jobs: _jobs,
+            onOpenJob: _openDetail,
+          ),
+          const SizedBox(height: _T.md),
           ..._jobs.map(
             (WorkerJob job) => Padding(
               padding: const EdgeInsets.only(bottom: _T.md),

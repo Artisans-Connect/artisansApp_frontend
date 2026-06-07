@@ -13,7 +13,6 @@ class AppTypography {
     color: AppColors.textPrimary,
     height: 1.2,
   );
-  static const TextStyle displayLg = displayLarge;
 
   static const TextStyle displayMedium = TextStyle(
     fontFamily: displayFontFamily,
@@ -22,7 +21,6 @@ class AppTypography {
     color: AppColors.textPrimary,
     height: 1.2,
   );
-  static const TextStyle displayMd = displayMedium;
 
   static const TextStyle displaySmall = TextStyle(
     fontFamily: displayFontFamily,
@@ -32,7 +30,7 @@ class AppTypography {
     height: 1.2,
   );
 
-  static const TextStyle titleMd = TextStyle(
+  static const TextStyle titleLarge = TextStyle(
     fontFamily: displayFontFamily,
     fontSize: 18,
     fontWeight: FontWeight.w700,
@@ -48,7 +46,6 @@ class AppTypography {
     color: AppColors.textSecondary,
     height: 1.5,
   );
-  static const TextStyle bodyLg = bodyLarge;
 
   static const TextStyle bodyMedium = TextStyle(
     fontFamily: fontFamily,
@@ -57,7 +54,6 @@ class AppTypography {
     color: AppColors.textSecondary,
     height: 1.5,
   );
-  static const TextStyle bodyMd = bodyMedium;
 
   static const TextStyle bodySmall = TextStyle(
     fontFamily: fontFamily,

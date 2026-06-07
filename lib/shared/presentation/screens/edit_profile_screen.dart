@@ -7,7 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../../core/services/profile_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_input.dart';
 import '../../widgets/app_toast.dart';
@@ -259,7 +259,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   )
                 : Text(
                     'Save',
-                    style: AppTextStyles.bodyLg.copyWith(
+                    style: AppTypography.bodyLarge.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
@@ -367,7 +367,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ..._editableSkills.where((String s) => !_trades.contains(s) && s != 'Other').map(
                     (String skill) => InputChip(
                       label: Text(skill),
-                      labelStyle: AppTextStyles.bodyMd.copyWith(color: AppColors.primary),
+                      labelStyle: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
                       backgroundColor: AppColors.primary.withValues(alpha: 0.12),
                       deleteIconColor: AppColors.primary,
                       shape: RoundedRectangleBorder(
@@ -390,7 +390,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               const SizedBox(height: 6),
               Text(
                 'This value is managed through contract negotiations.',
-                style: AppTextStyles.bodyMd,
+                style: AppTypography.bodyMedium,
               ),
               const SizedBox(height: 16),
               _fieldLabel('SERVICE AREAS'),
@@ -416,7 +416,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Expanded(child: _fieldLabel('BIO')),
                 Text(
                   '${_bioController.text.length} / $_bioMaxLength',
-                  style: AppTextStyles.bodyMd,
+                  style: AppTypography.bodyMedium,
                 ),
               ],
             ),
@@ -459,7 +459,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Widget _fieldLabel(String text) {
     return Text(
       text,
-      style: AppTextStyles.labelCaps.copyWith(
+      style: AppTypography.labelCaps.copyWith(
         color: AppColors.textSecondary,
         fontWeight: FontWeight.w700,
       ),

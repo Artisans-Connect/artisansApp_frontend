@@ -21,7 +21,7 @@ class WorkerEarningsScreen extends StatelessWidget {
             : null,
         title: Text(
           'Earnings',
-          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
         actions: [
@@ -68,13 +68,13 @@ class WorkerEarningsScreen extends StatelessWidget {
                     children: [
                       Text(
                         '₵0.00',
-                        style: AppTypography.displayMd.copyWith(
+                        style: AppTypography.displayMedium.copyWith(
                           color: AppColors.accentBlue,
                           fontSize: 28,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text('Coming soon', style: AppTypography.bodyMd),
+                      Text('Coming soon', style: AppTypography.bodyMedium),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -87,7 +87,7 @@ class WorkerEarningsScreen extends StatelessWidget {
                       ),
                       Text(
                         ' +0% this month',
-                        style: AppTypography.bodyMd.copyWith(
+                        style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.success,
                         ),
                       ),
@@ -112,7 +112,7 @@ class WorkerEarningsScreen extends StatelessWidget {
                   Expanded(
                     child: Text(
                       'ArtisansConnect does not process payments. Agree payment directly with each client.',
-                      style: AppTypography.bodyMd.copyWith(
+                      style: AppTypography.bodyMedium.copyWith(
                         color: const Color(0xFF5D4037),
                         fontSize: 13,
                       ),
@@ -144,7 +144,7 @@ class WorkerEarningsScreen extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Payment integration coming in a future update. We\'re working on making secure in-app payments available on ArtisansConnect soon.',
-              style: AppTypography.bodyMd.copyWith(
+              style: AppTypography.bodyMedium.copyWith(
                 fontStyle: FontStyle.italic,
                 fontSize: 12,
               ),

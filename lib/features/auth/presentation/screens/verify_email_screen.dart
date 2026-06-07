@@ -3,7 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import 'sign_in_screen.dart';
@@ -75,19 +75,19 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     const SizedBox(height: 20),
                     Text(
                       'Check your email',
-                      style: AppTextStyles.displayMd.copyWith(fontSize: 28),
+                      style: AppTypography.displayMedium.copyWith(fontSize: 28),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 12),
                     Text(
                       'We sent a confirmation link to',
-                      style: AppTextStyles.bodyLg,
+                      style: AppTypography.bodyLarge,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       widget.email,
-                      style: AppTextStyles.bodyLg.copyWith(
+                      style: AppTypography.bodyLarge.copyWith(
                         fontWeight: FontWeight.w700,
                         color: AppColors.primary,
                       ),
@@ -96,7 +96,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     const SizedBox(height: 12),
                     Text(
                       'Open the link in that email, then come back here to sign in and finish setting up your profile.',
-                      style: AppTextStyles.bodyMd.copyWith(
+                      style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
                       textAlign: TextAlign.center,

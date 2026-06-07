@@ -91,7 +91,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
         ),
         title: Text(
           'Request Details',
-          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
       ),
@@ -112,7 +112,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(job.title, style: AppTypography.titleMd),
+                        child: Text(job.title, style: AppTypography.titleLarge),
                       ),
                       if (job.isUrgent)
                         Container(
@@ -142,7 +142,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                         backgroundColor: AppColors.primaryFixed,
                         child: Text(
                           job.clientName.substring(0, 1),
-                          style: AppTypography.titleMd.copyWith(
+                          style: AppTypography.titleLarge.copyWith(
                             color: AppColors.primary,
                           ),
                         ),
@@ -153,7 +153,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                         children: [
                           Text(
                             job.clientName,
-                            style: AppTypography.bodyLg.copyWith(
+                            style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.onSurface,
                               fontWeight: FontWeight.w700,
                             ),
@@ -167,7 +167,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                               ),
                               Text(
                                 ' ${formatRating(job.clientRating)} (${job.reviewCount} Reviews)',
-                                style: AppTypography.bodyMd,
+                                style: AppTypography.bodyMedium,
                               ),
                             ],
                           ),
@@ -186,7 +186,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                       const SizedBox(width: 6),
                       Text(
                         '${job.distanceText} from your location',
-                        style: AppTypography.bodyMd,
+                        style: AppTypography.bodyMedium,
                       ),
                     ],
                   ),
@@ -208,7 +208,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                   const SizedBox(height: AppSpacing.lg),
                   Text('REQUEST DESCRIPTION', style: AppTypography.labelCaps),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(job.description, style: AppTypography.bodyMd),
+                  Text(job.description, style: AppTypography.bodyMedium),
                   if (job.referencePhotoLabels.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.lg),
                     Row(

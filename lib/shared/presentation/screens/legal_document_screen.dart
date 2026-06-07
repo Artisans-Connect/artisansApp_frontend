@@ -3,7 +3,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../widgets/error_state_view.dart';
 
 class LegalDocumentScreen extends StatefulWidget {
@@ -80,7 +80,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
                   padding: const EdgeInsets.all(20.0),
                   child: Text(
                     _content ?? '',
-                    style: AppTextStyles.bodyMd.copyWith(
+                    style: AppTypography.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                       height: 1.6,
                     ),

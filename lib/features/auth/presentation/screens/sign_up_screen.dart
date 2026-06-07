@@ -6,7 +6,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
@@ -131,7 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Center(
                         child: Text(
                           'Join ArtisansConnect',
-                          style: AppTextStyles.displayMd.copyWith(
+                          style: AppTypography.displayMedium.copyWith(
                             fontSize: 44,
                             fontWeight: FontWeight.bold,
                           ),
@@ -142,7 +142,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         child: Text(
                           'Join our premium community of vetted experts\nand clients today.',
                           textAlign: TextAlign.center,
-                          style: AppTextStyles.bodyLg,
+                          style: AppTypography.bodyLarge,
                         ),
                       ),
                       if (_errorMessage != null) ...<Widget>[
@@ -151,7 +151,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ],
                       const SizedBox(height: 22),
                       Text('Full Name',
-                          style: AppTextStyles.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
@@ -165,7 +165,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 14),
                       Text('Email Address',
-                          style: AppTextStyles.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
@@ -180,7 +180,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 14),
                       Text('Phone',
-                          style: AppTextStyles.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
@@ -195,7 +195,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 14),
                       Text('Password',
-                          style: AppTextStyles.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                               color: AppColors.textPrimary,
                               fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
@@ -221,7 +221,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               padding: const EdgeInsets.only(top: 12),
                               child: Text(
                                 'I agree to the Terms of Service and Privacy Policy.',
-                                style: AppTextStyles.bodyMd,
+                                style: AppTypography.bodyMedium,
                               ),
                             ),
                           ),

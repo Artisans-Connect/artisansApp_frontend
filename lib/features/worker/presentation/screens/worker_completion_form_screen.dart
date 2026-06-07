@@ -100,7 +100,7 @@ class _WorkerCompletionFormScreenState
         ),
         title: Text(
           'Complete Booking',
-          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
       ),
@@ -118,11 +118,11 @@ class _WorkerCompletionFormScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Booking Summary', style: AppTypography.titleMd),
+                  Text('Booking Summary', style: AppTypography.titleLarge),
                   const SizedBox(height: 8),
                   Text(
                     'Confirm your work details to close this booking and notify the client.',
-                    style: AppTypography.bodyMd,
+                    style: AppTypography.bodyMedium,
                   ),
                 ],
               ),
@@ -175,7 +175,7 @@ class _WorkerCompletionFormScreenState
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
                 'Cancel Completion',
-                style: AppTypography.bodyLg.copyWith(
+                style: AppTypography.bodyLarge.copyWith(
                   color: AppColors.primary,
                 ),
               ),
@@ -188,7 +188,7 @@ class _WorkerCompletionFormScreenState
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: AppTypography.bodyMd,
+      hintStyle: AppTypography.bodyMedium,
       filled: true,
       fillColor: AppColors.surfaceContainerLow,
       border: OutlineInputBorder(

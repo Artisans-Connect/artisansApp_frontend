@@ -38,7 +38,7 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
         elevation: 0,
         title: Text(
           'In Progress',
-          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
       ),
@@ -62,7 +62,7 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
                     backgroundColor: AppColors.primaryFixed,
                     child: Text(
                       job.clientName.substring(0, 1),
-                      style: AppTypography.titleMd.copyWith(
+                      style: AppTypography.titleLarge.copyWith(
                         color: AppColors.primary,
                       ),
                     ),
@@ -72,10 +72,10 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(job.clientName, style: AppTypography.titleMd),
+                        Text(job.clientName, style: AppTypography.titleLarge),
                         Text(
                           'Residential Client',
-                          style: AppTypography.bodyMd,
+                          style: AppTypography.bodyMedium,
                         ),
                       ],
                     ),
@@ -251,7 +251,7 @@ class _DetailRow extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 value,
-                style: AppTypography.bodyMd.copyWith(
+                style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.onSurface,
                 ),
                 maxLines: maxLines,

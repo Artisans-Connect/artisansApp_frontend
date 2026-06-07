@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import 'job_receipt_screen.dart';
 import 'messages_list_screen.dart';
 import 'settings_screen.dart';
@@ -73,7 +73,7 @@ class _WorkerDashboardTab extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text('Dashboard',
-            style: AppTextStyles.displayMd.copyWith(fontSize: 22)),
+            style: AppTypography.displayMedium.copyWith(fontSize: 22)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -81,7 +81,7 @@ class _WorkerDashboardTab extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text('Recent jobs',
-                style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700)),
+                style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             _JobCard(
               title: 'Leaking kitchen sink',
@@ -140,10 +140,10 @@ class _JobCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(title,
-                        style: AppTextStyles.bodyLg
+                        style: AppTypography.bodyLarge
                             .copyWith(fontWeight: FontWeight.w700)),
                     const SizedBox(height: 4),
-                    Text(subtitle, style: AppTextStyles.bodyMd),
+                    Text(subtitle, style: AppTypography.bodyMedium),
                   ],
                 ),
               ),

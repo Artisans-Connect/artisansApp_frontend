@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 
 class AuthErrorBanner extends StatelessWidget {
   const AuthErrorBanner({
@@ -37,7 +37,7 @@ class AuthErrorBanner extends StatelessWidget {
               children: <Widget>[
                 Text(
                   message,
-                  style: AppTextStyles.bodyMd.copyWith(color: AppColors.error),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.error),
                 ),
                 if (actionLabel != null && onAction != null) ...<Widget>[
                   const SizedBox(height: 8),

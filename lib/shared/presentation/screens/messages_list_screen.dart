@@ -6,7 +6,7 @@ import '../../../core/navigation/app_routes.dart';
 import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../models/conversation_summary.dart';
 import '../../widgets/conversation_tile.dart';
 import '../../widgets/custom_app_bar.dart';
@@ -276,7 +276,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
             const SizedBox(height: 16),
             Text(
               'No conversations yet',
-              style: AppTextStyles.displayMd.copyWith(fontSize: 20),
+              style: AppTypography.displayMedium.copyWith(fontSize: 20),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
@@ -285,7 +285,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                   ? 'Client conversations will appear here after a booking or enquiry starts.'
                   : 'When you match with an artisan or client, your chats will appear here.',
               textAlign: TextAlign.center,
-              style: AppTextStyles.bodyLg,
+              style: AppTypography.bodyLarge,
             ),
             if (!_isWorkerView) ...<Widget>[
               const SizedBox(height: 16),

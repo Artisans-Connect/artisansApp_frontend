@@ -77,7 +77,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
         ),
         title: Text(
           'History',
-          style: AppTypography.titleMd.copyWith(color: AppColors.onSurface),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.onSurface),
         ),
         centerTitle: true,
         actions: [
@@ -85,7 +85,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
             padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Text(
               'ArtisansConnect',
-              style: AppTypography.titleMd.copyWith(
+              style: AppTypography.titleLarge.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w800,
               ),
@@ -117,7 +117,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
                     ? Center(
                         child: Text(
                           'No history available',
-                          style: AppTypography.bodyLg,
+                          style: AppTypography.bodyLarge,
                         ),
                       )
                     : ListView.builder(

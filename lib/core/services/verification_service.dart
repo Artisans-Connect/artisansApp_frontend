@@ -19,7 +19,11 @@ class VerificationContext {
   final String? applicationNumber;
   final String? verificationLevel;
 
-  bool get hasApplication => status != null && status!.isNotEmpty;
+  bool get hasApplication =>
+      applicationNumber != null && applicationNumber!.trim().isNotEmpty;
+
+  bool get hasUntrackableStatus =>
+      status != null && status!.isNotEmpty && !hasApplication;
 
   factory VerificationContext.fromJson(Map<String, dynamic> json) {
     final Map<String, dynamic>? worker =

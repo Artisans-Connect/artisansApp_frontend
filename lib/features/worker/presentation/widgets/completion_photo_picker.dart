@@ -55,7 +55,7 @@ class CompletionPhotoPicker extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               'Photos will sync when online',
-              style: AppTypography.bodyMd.copyWith(fontSize: 12),
+              style: AppTypography.bodyMedium.copyWith(fontSize: 12),
             ),
           ],
         ),

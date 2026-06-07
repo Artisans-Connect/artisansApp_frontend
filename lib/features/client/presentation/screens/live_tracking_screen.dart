@@ -2,16 +2,13 @@ import 'dart:async';
 import 'dart:math' as math;
  
 import 'package:flutter/material.dart';
-import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
  
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/services/job_realtime_service.dart';
 import '../../../../core/services/jobs_service.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/worker_tracking_map.dart';
 import '../models/client_booking.dart';
@@ -1152,7 +1149,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               Expanded(
                 child: Text(
                   'The worker cancelled this booking',
-                  style: AppTypography.titleMd.copyWith(
+                  style: AppTypography.titleLarge.copyWith(
                     color: _T.textPrimary,
                     fontWeight: FontWeight.w800,
                   ),

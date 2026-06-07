@@ -47,7 +47,7 @@ class RequestJobCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(job.title, style: AppTypography.titleMd),
+                    child: Text(job.title, style: AppTypography.titleLarge),
                   ),
                   _UrgencyPill(label: job.urgencyLabel, isAsap: isAsap),
                 ],
@@ -62,7 +62,7 @@ class RequestJobCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Expanded(
-                    child: Text(job.locationLine, style: AppTypography.bodyMd),
+                    child: Text(job.locationLine, style: AppTypography.bodyMedium),
                   ),
                 ],
               ),
@@ -74,7 +74,7 @@ class RequestJobCard extends StatelessWidget {
                     backgroundColor: AppColors.primaryFixed,
                     child: Text(
                       job.clientName.substring(0, 1),
-                      style: AppTypography.titleMd.copyWith(
+                      style: AppTypography.titleLarge.copyWith(
                         color: AppColors.primary,
                         fontSize: 16,
                       ),
@@ -87,7 +87,7 @@ class RequestJobCard extends StatelessWidget {
                       children: [
                         Text(
                           job.clientName,
-                          style: AppTypography.bodyLg.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                             color: AppColors.onSurface,
                             fontWeight: FontWeight.w600,
                           ),
@@ -102,7 +102,7 @@ class RequestJobCard extends StatelessWidget {
                             const SizedBox(width: 2),
                             Text(
                               '${formatRating(job.clientRating)} (${job.reviewCount} reviews)',
-                              style: AppTypography.bodyMd.copyWith(
+                              style: AppTypography.bodyMedium.copyWith(
                                 fontSize: 12,
                               ),
                             ),

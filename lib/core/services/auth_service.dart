@@ -264,6 +264,13 @@ class AuthService {
     final String msg = e.message.toLowerCase();
     final String? code = e.code?.toLowerCase();
 
+    if (_looksLikeNetworkError(msg)) {
+      return const AuthFailure(
+        AuthFailureCode.network,
+        'Connection problem. Check your internet and try again.',
+      );
+    }
+
     if (msg.contains('email not confirmed') ||
         code == 'email_not_confirmed') {
       return const AuthFailure(
@@ -293,5 +300,20 @@ class AuthService {
       AuthFailureCode.unknown,
       e.message.isNotEmpty ? e.message : 'Authentication failed.',
     );
+  }
+
+  bool _looksLikeNetworkError(String msg) {
+    return msg.contains('socketexception') ||
+        msg.contains('clientexception') ||
+        msg.contains('failed host lookup') ||
+        msg.contains('connection refused') ||
+        msg.contains('connection reset') ||
+        msg.contains('connection closed') ||
+        msg.contains('network is unreachable') ||
+        msg.contains('software caused connection abort') ||
+        msg.contains('operation timed out') ||
+        msg.contains('timed out') ||
+        msg.contains('xmlhttprequest error') ||
+        msg.contains('failed to fetch');
   }
 }

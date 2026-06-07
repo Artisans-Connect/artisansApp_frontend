@@ -9,7 +9,7 @@ import '../../../core/services/auth_service.dart';
 import '../../../core/services/verification_service.dart';
 import '../../../core/session/app_user_session.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../core/errors/error_messages.dart';
 import '../../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../widgets/app_toast.dart';
@@ -142,14 +142,14 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         icon: PhosphorIcons.phone,
                         label: profile.phone!,
                       )
-                    : Text('No phone added yet.', style: AppTextStyles.bodyMd),
+                    : Text('No phone added yet.', style: AppTypography.bodyMedium),
               ),
               const SizedBox(height: 14),
               ProfileSectionCard(
                 title: 'About',
                 child: Text(
                   profile.bio ?? 'No bio yet.',
-                  style: AppTextStyles.bodyLg
+                  style: AppTypography.bodyLarge
                       .copyWith(color: AppColors.textPrimary),
                 ),
               ),
@@ -195,7 +195,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     title: 'Service areas',
                     child: Text(
                       profile.serviceAreas.join(', '),
-                      style: AppTextStyles.bodyLg,
+                      style: AppTypography.bodyLarge,
                     ),
                   ),
                 ],
@@ -205,7 +205,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     title: 'Experience',
                     child: Text(
                       profile.experienceBand!,
-                      style: AppTextStyles.bodyLg,
+                      style: AppTypography.bodyLarge,
                     ),
                   ),
                 ],
@@ -364,7 +364,10 @@ class _VerificationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isVerified = profile.isVerified || (verification?.isVerified ?? false);
-    final String? status = verification?.status;
+    final bool hasTrackableApplication = verification?.hasApplication ?? false;
+    final bool hasUntrackableStatus =
+        !isVerified && (verification?.hasUntrackableStatus ?? false);
+    final String? status = hasTrackableApplication ? verification?.status : null;
 
     return ProfileSectionCard(
       title: 'Verification',
@@ -391,24 +394,28 @@ class _VerificationCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      _verificationTitle(isVerified, status, isLoading),
-                      style: AppTextStyles.bodyLg.copyWith(
+                      hasUntrackableStatus
+                          ? 'Verification needs syncing'
+                          : _verificationTitle(isVerified, status, isLoading),
+                      style: AppTypography.bodyLarge.copyWith(
                         fontWeight: FontWeight.w700,
                         color: AppColors.textPrimary,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _verificationSubtitle(isVerified, status),
-                      style: AppTextStyles.bodyMd.copyWith(
+                      hasUntrackableStatus
+                          ? 'Open the verification portal so we can reconnect your application number.'
+                          : _verificationSubtitle(isVerified, status),
+                      style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    if (verification?.applicationNumber != null) ...<Widget>[
+                    if (hasTrackableApplication) ...<Widget>[
                       const SizedBox(height: 6),
                       Text(
                         verification!.applicationNumber!,
-                        style: AppTextStyles.labelCaps.copyWith(
+                        style: AppTypography.labelCaps.copyWith(
                           color: AppColors.primary,
                         ),
                       ),
@@ -423,7 +430,13 @@ class _VerificationCard extends StatelessWidget {
             OutlinedButton.icon(
               onPressed: isLoading ? null : onOpenPortal,
               icon: Icon(PhosphorIcons.arrowSquareOut),
-              label: Text(status == null ? 'Get verified' : 'Continue verification'),
+              label: Text(
+                status == 'more_info_requested'
+                    ? 'Update application'
+                    : hasTrackableApplication
+                        ? 'Track application'
+                        : 'Open verification portal',
+              ),
             ),
           ],
         ],
@@ -494,7 +507,7 @@ class _RemoteProfileScaffold extends StatelessWidget {
                     fallback: 'Could not load this profile.',
                   ),
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyLg,
+                  style: AppTypography.bodyLarge,
                 ),
               ),
             );
@@ -527,14 +540,14 @@ class _RemoteProfileScaffold extends StatelessWidget {
                             icon: PhosphorIcons.phone,
                             label: profile.phone!,
                           )
-                        : Text('No phone added yet.', style: AppTextStyles.bodyMd),
+                        : Text('No phone added yet.', style: AppTypography.bodyMedium),
                   ),
                   const SizedBox(height: 14),
                   ProfileSectionCard(
                     title: 'About',
                     child: Text(
                       profile.bio ?? 'No bio yet.',
-                      style: AppTextStyles.bodyLg
+                      style: AppTypography.bodyLarge
                           .copyWith(color: AppColors.textPrimary),
                     ),
                   ),
@@ -627,7 +640,7 @@ class _ProfileHero extends StatelessWidget {
                   const SizedBox(height: 14),
                   Text(
                     profile.fullName,
-                    style: AppTextStyles.displayMd,
+                    style: AppTypography.displayMedium,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -639,7 +652,7 @@ class _ProfileHero extends StatelessWidget {
                     ),
                     child: Text(
                       profile.isWorker ? 'Artisan' : 'Client',
-                      style: AppTextStyles.labelCaps.copyWith(color: AppColors.primary),
+                      style: AppTypography.labelCaps.copyWith(color: AppColors.primary),
                     ),
                   ),
                   ],
@@ -668,7 +681,7 @@ class _InfoRow extends StatelessWidget {
         Expanded(
           child: Text(
             label,
-            style: AppTextStyles.bodyLg.copyWith(color: AppColors.textPrimary),
+            style: AppTypography.bodyLarge.copyWith(color: AppColors.textPrimary),
           ),
         ),
       ],
@@ -688,10 +701,10 @@ class _StatBlock extends StatelessWidget {
       children: <Widget>[
         Text(
           value,
-          style: AppTextStyles.displayMd.copyWith(color: AppColors.primary),
+          style: AppTypography.displayMedium.copyWith(color: AppColors.primary),
         ),
         const SizedBox(height: 4),
-        Text(label, style: AppTextStyles.bodyMd),
+        Text(label, style: AppTypography.bodyMedium),
       ],
     );
   }

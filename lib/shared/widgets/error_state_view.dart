@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_typography.dart';
 import 'gradient_button.dart';
 
 /// Full-area error UI with optional retry — for list/detail fetch failures.
@@ -33,14 +33,14 @@ class ErrorStateView extends StatelessWidget {
         SizedBox(height: compact ? 12 : 16),
         Text(
           title,
-          style: AppTextStyles.displayMd.copyWith(fontSize: compact ? 18 : 20),
+          style: AppTypography.displayMedium.copyWith(fontSize: compact ? 18 : 20),
           textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
           message,
           textAlign: TextAlign.center,
-          style: AppTextStyles.bodyLg.copyWith(color: AppColors.textSecondary),
+          style: AppTypography.bodyLarge.copyWith(color: AppColors.textSecondary),
         ),
         if (onRetry != null) ...<Widget>[
           SizedBox(height: compact ? 16 : 24),

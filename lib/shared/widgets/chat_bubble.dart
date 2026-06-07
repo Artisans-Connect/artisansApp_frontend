@@ -55,7 +55,7 @@ class ChatBubble extends StatelessWidget {
                   if (message.content.isNotEmpty)
                     Text(
                       message.content,
-                      style: AppTypography.bodyLg.copyWith(
+                      style: AppTypography.bodyLarge.copyWith(
                         color: message.isMine ? Colors.white : AppColors.textPrimary,
                         height: 1.4,
                       ),
@@ -70,7 +70,7 @@ class ChatBubble extends StatelessWidget {
                 children: <Widget>[
                   Text(
                     _formatTime(message.sentAt),
-                    style: AppTypography.bodyMd.copyWith(
+                    style: AppTypography.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                       fontSize: 11,
                     ),

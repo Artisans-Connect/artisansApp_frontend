@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 
 class WorkerOnboardingHeader extends StatelessWidget {
   const WorkerOnboardingHeader({
@@ -33,7 +33,7 @@ class WorkerOnboardingHeader extends StatelessWidget {
                 child: Text(
                   'ArtisansConnect',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyLg.copyWith(
+                  style: AppTypography.bodyLarge.copyWith(
                     color: AppColors.primary,
                     fontWeight: FontWeight.w700,
                   ),
@@ -47,7 +47,7 @@ class WorkerOnboardingHeader extends StatelessWidget {
             children: <Widget>[
               Text(
                 stepLabel,
-                style: AppTextStyles.labelCaps.copyWith(
+                style: AppTypography.labelCaps.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w700,
                 ),
@@ -55,7 +55,7 @@ class WorkerOnboardingHeader extends StatelessWidget {
               const Spacer(),
               Text(
                 '${(progress * 100).round()}%',
-                style: AppTextStyles.bodyMd.copyWith(fontWeight: FontWeight.w700),
+                style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),

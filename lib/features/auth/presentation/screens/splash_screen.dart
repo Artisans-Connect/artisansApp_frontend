@@ -162,7 +162,7 @@ class _SplashScreenState extends State<SplashScreen> {
             const SizedBox(height: 24),
             Text(
               'ArtisansConnect',
-              style: AppTypography.displayMd.copyWith(
+              style: AppTypography.displayMedium.copyWith(
                 color: Colors.white,
                 fontSize: 42,
               ),

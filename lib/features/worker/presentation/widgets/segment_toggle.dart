@@ -71,7 +71,7 @@ class _SegmentChip extends StatelessWidget {
         alignment: Alignment.center,
         child: Text(
           label,
-          style: AppTypography.bodyLg.copyWith(
+          style: AppTypography.bodyLarge.copyWith(
             color: selected ? AppColors.onPrimary : AppColors.onSurface,
             fontWeight: FontWeight.w600,
             fontSize: 14,

@@ -34,7 +34,7 @@ class HistoryJobCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
-                child: Text(job.title, style: AppTypography.titleMd),
+                child: Text(job.title, style: AppTypography.titleLarge),
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -62,7 +62,7 @@ class HistoryJobCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             'Client: ${job.clientName}',
-            style: AppTypography.bodyMd,
+            style: AppTypography.bodyMedium,
           ),
           if (job.historyRating != null) ...[
             const SizedBox(height: 8),
@@ -81,7 +81,7 @@ class HistoryJobCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   job.historyRating!.toStringAsFixed(1),
-                  style: AppTypography.bodyMd,
+                  style: AppTypography.bodyMedium,
                 ),
               ],
             ),
@@ -97,14 +97,14 @@ class HistoryJobCard extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 job.historyDate ?? '—',
-                style: AppTypography.bodyMd,
+                style: AppTypography.bodyMedium,
               ),
               const Spacer(),
               TextButton(
                 onPressed: onViewDetails,
                 child: Text(
                   'View details >',
-                  style: AppTypography.bodyLg.copyWith(
+                  style: AppTypography.bodyLarge.copyWith(
                     color: AppColors.accentBlue,
                     fontSize: 13,
                   ),

@@ -25,7 +25,7 @@ class WorkerBookingDetailScreen extends StatelessWidget {
         ),
         title: Text(
           'Booking Details',
-          style: AppTypography.titleMd.copyWith(color: AppColors.onSurface),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.onSurface),
         ),
         centerTitle: true,
       ),
@@ -40,16 +40,16 @@ class WorkerBookingDetailScreen extends StatelessWidget {
                 children: <Widget>[
                   Row(
                     children: <Widget>[
-                      Expanded(child: Text(job.title, style: AppTypography.titleMd)),
+                      Expanded(child: Text(job.title, style: AppTypography.titleLarge)),
                       _StatusPill(completed: completed),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.sm),
-                  Text('Client: ${job.clientName}', style: AppTypography.bodyLg),
+                  Text('Client: ${job.clientName}', style: AppTypography.bodyLarge),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(job.addressLabel, style: AppTypography.bodyMd),
+                  Text(job.addressLabel, style: AppTypography.bodyMedium),
                   const SizedBox(height: AppSpacing.sm),
-                  Text(job.estimateDisplay, style: AppTypography.bodyMd),
+                  Text(job.estimateDisplay, style: AppTypography.bodyMedium),
                 ],
               ),
             ),
@@ -64,7 +64,7 @@ class WorkerBookingDetailScreen extends StatelessWidget {
                     job.description.isEmpty
                         ? 'No request details provided.'
                         : job.description,
-                    style: AppTypography.bodyMd,
+                    style: AppTypography.bodyMedium,
                   ),
                 ],
               ),
@@ -150,7 +150,7 @@ class _DetailRow extends StatelessWidget {
         children: <Widget>[
           Text(label, style: AppTypography.labelSmall),
           const SizedBox(height: 4),
-          Text(value, style: AppTypography.bodyMd),
+          Text(value, style: AppTypography.bodyMedium),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/location/device_location_service.dart';
+import '../../../../core/maps/map_feature_helpers.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -50,10 +51,14 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
       final bool isSelected = _selectedWorkerIndex == i;
       markers.add(
         Marker(
-          markerId: MarkerId('worker_$i'),
+          markerId: MarkerId('worker_${w['id'] ?? i}'),
           position: LatLng(w['lat'] as double, w['lng'] as double),
           icon: BitmapDescriptor.defaultMarkerWithHue(
-            isSelected ? BitmapDescriptor.hueGreen : BitmapDescriptor.hueOrange,
+            isSelected
+                ? BitmapDescriptor.hueGreen
+                : w['hasFreshLocation'] == true
+                    ? BitmapDescriptor.hueOrange
+                    : BitmapDescriptor.hueRose,
           ),
           infoWindow: InfoWindow(
             title: w['name'] as String? ?? 'Artisan',
@@ -105,23 +110,24 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
       );
       
       final mappedWorkers = rawArtisans.map((raw) {
+        final point = MapPoint.workerFromApi(raw);
         final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
-        final name = profile['full_name'] as String? ?? 'Artisan';
-        final imageUrl = profile['avatar_url'] as String? ?? '';
         final skills = raw['skills'] as List<dynamic>? ?? [];
-        final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
-        final distanceKm = raw['distance_km'] as num?;
         
         return {
-          'name': name,
-          'profession': profession,
-          'lat': raw['current_lat'] ?? 0.0,
-          'lng': raw['current_lng'] ?? 0.0,
-          'distance': distanceKm != null ? '${distanceKm.toStringAsFixed(1)} km' : 'N/A',
-          'available': raw['is_available'] == true,
-          'imageUrl': imageUrl,
-          'userId': raw['id'],
-          'id': raw['id'],
+          'name': point.title,
+          'profession': point.subtitle,
+          'lat': point.position.latitude,
+          'lng': point.position.longitude,
+          'distance': point.distanceLabel,
+          'distanceKm': point.distanceKm,
+          'rating': point.rating,
+          'verified': point.isVerified,
+          'available': point.isAvailable,
+          'hasFreshLocation': point.hasFreshLocation,
+          'imageUrl': point.avatarUrl ?? '',
+          'userId': point.id,
+          'id': point.id,
           'phone': profile['phone'],
           'profiles': profile,
           'skills': skills.map((dynamic item) => item.toString()).toList(),
@@ -265,7 +271,9 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                         const SizedBox(height: AppSpacing.lg),
 
                         Text(
-                          'Available Near You',
+                          _selectedWorkerIndex == null
+                              ? 'Recommended Near You'
+                              : 'Selected Artisan',
                           style: AppTypography.displaySmall,
                         ),
                         const SizedBox(height: AppSpacing.md),
@@ -292,6 +300,12 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                 nearbyWorkers.length,
                                 (index) {
                                   final worker = nearbyWorkers[index];
+                                  final bool isAvailable =
+                                      worker['available'] == true;
+                                  final bool isFresh =
+                                      worker['hasFreshLocation'] == true;
+                                  final double? rating =
+                                      worker['rating'] as double?;
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: AppSpacing.md),
                                   child: GestureDetector(
@@ -336,15 +350,19 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                         vertical: AppSpacing.xs,
                                                       ),
                                                       decoration: BoxDecoration(
-                                                        color: worker['available']
+                                                        color: isAvailable && isFresh
                                                             ? AppColors.success.withValues(alpha: 0.1)
                                                             : AppColors.outlineVariant.withValues(alpha: 0.1),
                                                         borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
                                                       ),
                                                       child: Text(
-                                                        worker['available'] ? 'Available' : 'Busy',
+                                                        isAvailable
+                                                            ? isFresh
+                                                                ? 'Available'
+                                                                : 'Stale'
+                                                            : 'Busy',
                                                         style: AppTypography.labelSmall.copyWith(
-                                                          color: worker['available']
+                                                          color: isAvailable && isFresh
                                                               ? AppColors.success
                                                               : AppColors.textSecondary,
                                                         ),
@@ -362,6 +380,27 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                     ),
                                                     Row(
                                                       children: [
+                                                        if (worker['verified'] == true) ...[
+                                                          Icon(
+                                                            PhosphorIcons.sealCheck,
+                                                            size: 14,
+                                                            color: AppColors.success,
+                                                          ),
+                                                          const SizedBox(width: 4),
+                                                        ],
+                                                        if (rating != null) ...[
+                                                          Icon(
+                                                            PhosphorIcons.star,
+                                                            size: 14,
+                                                            color: AppColors.accentGold,
+                                                          ),
+                                                          const SizedBox(width: 3),
+                                                          Text(
+                                                            rating.toStringAsFixed(1),
+                                                            style: AppTypography.bodySmall,
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                        ],
                                                         Icon(
                                                           PhosphorIcons.mapPin,
                                                           size: 14,

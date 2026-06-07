@@ -16,7 +16,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
         elevation: 0,
         title: Text(
           'Active Booking',
-          style: AppTypography.titleMd.copyWith(color: AppColors.primary),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
         actions: [
@@ -99,11 +99,11 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            Text('No active job', style: AppTypography.titleMd),
+            Text('No active job', style: AppTypography.titleLarge),
             const SizedBox(height: AppSpacing.sm),
             Text(
               'When you accept a request, it will appear here. Keep your status online to receive new opportunities.',
-              style: AppTypography.bodyMd,
+              style: AppTypography.bodyMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),

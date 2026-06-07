@@ -7,7 +7,7 @@ import '../../../core/navigation/auth_navigation.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/session/app_user_session.dart';
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 import '../../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../../features/auth/presentation/screens/sign_in_screen.dart';
 import '../../utils/shared_user_context.dart';
@@ -170,7 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
                   Text('Notification preferences',
-                      style: AppTextStyles.displayMd.copyWith(fontSize: 22)),
+                      style: AppTypography.displayMedium.copyWith(fontSize: 22)),
                   const SizedBox(height: 20),
                   SwitchListTile(
                     title: const Text('Push notifications'),
@@ -220,7 +220,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Center(
                     child: Text(
                       'ArtisansConnect',
-                      style: AppTextStyles.bodyLg.copyWith(
+                      style: AppTypography.bodyLarge.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
                       ),
@@ -277,12 +277,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: <Widget>[
         Text(
           'Account Preferences',
-          style: AppTextStyles.bodyLg.copyWith(fontWeight: FontWeight.w700),
+          style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 6),
         Text(
           'Manage your account security and notification settings.',
-          style: AppTextStyles.bodyMd,
+          style: AppTypography.bodyMedium,
         ),
         const SizedBox(height: 20),
         SettingsGroup(
@@ -434,13 +434,13 @@ class _ClientSettingsHero extends StatelessWidget {
           children: <Widget>[
             Text(
               'Profile Settings',
-              style: AppTextStyles.displayMd
+              style: AppTypography.displayMedium
                   .copyWith(color: Colors.white, fontSize: 26),
             ),
             const SizedBox(height: 6),
             Text(
               'Manage your ArtisansConnect experience',
-              style: AppTextStyles.bodyLg.copyWith(color: Colors.white70),
+              style: AppTypography.bodyLarge.copyWith(color: Colors.white70),
             ),
             const SizedBox(height: 10),
             TextButton(
@@ -480,7 +480,7 @@ class _CommunityPromoCard extends StatelessWidget {
             ),
             child: Text(
               'COMMUNITY',
-              style: AppTextStyles.labelCaps.copyWith(
+              style: AppTypography.labelCaps.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w700,
               ),
@@ -497,13 +497,13 @@ class _CommunityPromoCard extends StatelessWidget {
                   children: <Widget>[
                     Text(
                       'Join our Artisan Network',
-                      style: AppTextStyles.bodyLg
+                      style: AppTypography.bodyLarge
                           .copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Elite craftsmanship on demand',
-                      style: AppTextStyles.bodyMd,
+                      style: AppTypography.bodyMedium,
                     ),
                   ],
                 ),
@@ -548,13 +548,13 @@ class _PremiumStatusCard extends StatelessWidget {
               children: <Widget>[
                 Text(
                   'Premium Member',
-                  style: AppTextStyles.bodyLg
+                  style: AppTypography.bodyLarge
                       .copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'You are an ArtisansConnect Elite member. Enjoy exclusive benefits.',
-                  style: AppTextStyles.bodyMd,
+                  style: AppTypography.bodyMedium,
                 ),
               ],
             ),
@@ -574,13 +574,13 @@ class _SettingsFooter extends StatelessWidget {
       children: <Widget>[
         Text(
           'ARTISANSCONNECT',
-          style: AppTextStyles.labelCaps.copyWith(
+          style: AppTypography.labelCaps.copyWith(
             color: AppColors.textSecondary,
             letterSpacing: 2,
           ),
         ),
         const SizedBox(height: 4),
-        Text('v1.4.0 · Kumasi, Ghana', style: AppTextStyles.bodyMd),
+        Text('v1.4.0 · Kumasi, Ghana', style: AppTypography.bodyMedium),
       ],
     );
   }

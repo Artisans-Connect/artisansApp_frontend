@@ -15,7 +15,7 @@ import '../../features/client/presentation/screens/live_tracking_screen.dart';
 import '../../features/client/presentation/screens/rate_service_screen.dart';
 import '../session/app_user_session.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
+import '../theme/app_typography.dart';
 import 'app_routes.dart';
 import 'auth_navigation.dart';
 
@@ -197,7 +197,7 @@ class _NotFoundScreenState extends State<_NotFoundScreen> {
               const SizedBox(height: 24),
               Text(
                 'Page not found',
-                style: AppTextStyles.displayMd.copyWith(fontSize: 28),
+                style: AppTypography.displayMedium.copyWith(fontSize: 28),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),
@@ -205,13 +205,13 @@ class _NotFoundScreenState extends State<_NotFoundScreen> {
                 widget.routeName != null
                     ? 'The route "${widget.routeName}" does not exist.'
                     : 'This page does not exist.',
-                style: AppTextStyles.bodyLg,
+                style: AppTypography.bodyLarge,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'Taking you home…',
-                style: AppTextStyles.bodyMd.copyWith(color: AppColors.textSecondary),
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 32),
               FilledButton(

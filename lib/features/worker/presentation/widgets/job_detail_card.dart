@@ -47,7 +47,7 @@ class JobDetailSectionHeader extends StatelessWidget {
         Icon(icon, color: AppColors.primary, size: 20),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: Text(title, style: AppTypography.titleMd.copyWith(fontSize: 16)),
+          child: Text(title, style: AppTypography.titleLarge.copyWith(fontSize: 16)),
         ),
         if (trailing != null) trailing!,
       ],

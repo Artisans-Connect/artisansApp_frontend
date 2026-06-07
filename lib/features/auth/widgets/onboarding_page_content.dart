@@ -70,7 +70,7 @@ class OnboardingPageContent extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.displayMd.copyWith(
+                  style: AppTypography.displayMedium.copyWith(
                     fontSize: titleSize,
                     height: 1.2,
                   ),
@@ -81,7 +81,7 @@ class OnboardingPageContent extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 4,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodyLg.copyWith(
+                  style: AppTypography.bodyLarge.copyWith(
                     fontSize: maxHeight < 520 ? 14.0 : null,
                     height: 1.4,
                   ),
@@ -277,7 +277,7 @@ class _HeroSection extends StatelessWidget {
                         badgeLabel,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodyLg.copyWith(
+                        style: AppTypography.bodyLarge.copyWith(
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
@@ -287,7 +287,7 @@ class _HeroSection extends StatelessWidget {
                         badgeSubtitle,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodyMd.copyWith(fontSize: 12),
+                        style: AppTypography.bodyMedium.copyWith(fontSize: 12),
                       ),
                     ],
                   ),

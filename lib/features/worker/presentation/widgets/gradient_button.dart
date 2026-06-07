@@ -54,7 +54,7 @@ class GradientButton extends StatelessWidget {
                   )
                 : Text(
                     label,
-                    style: AppTypography.bodyLg.copyWith(
+                    style: AppTypography.bodyLarge.copyWith(
                       color: AppColors.onPrimary,
                       fontWeight: FontWeight.w600,
                     ),
@@ -93,7 +93,7 @@ class OutlineButton extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: AppTypography.bodyLg.copyWith(
+        style: AppTypography.bodyLarge.copyWith(
           color: AppColors.onSurface,
           fontWeight: FontWeight.w600,
         ),

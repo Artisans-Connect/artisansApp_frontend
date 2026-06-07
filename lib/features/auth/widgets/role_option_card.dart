@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_text_styles.dart';
+import '../../../core/theme/app_typography.dart';
 
 class RoleOptionCard extends StatelessWidget {
   const RoleOptionCard({
@@ -82,7 +82,7 @@ class RoleOptionCard extends StatelessWidget {
                     AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOutCubic,
-                      style: AppTextStyles.displayMd.copyWith(
+                      style: AppTypography.displayMedium.copyWith(
                         fontSize: 32 * 0.75,
                         color: isSelected ? AppColors.primary : AppColors.textPrimary,
                       ),
@@ -95,7 +95,7 @@ class RoleOptionCard extends StatelessWidget {
                     AnimatedDefaultTextStyle(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOutCubic,
-                      style: AppTextStyles.bodyMd.copyWith(
+                      style: AppTypography.bodyMedium.copyWith(
                         color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
                       ),
                       child: Text(

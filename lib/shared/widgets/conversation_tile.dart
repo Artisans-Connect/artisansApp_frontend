@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_text_styles.dart';
+import '../../core/theme/app_typography.dart';
 import '../models/conversation_summary.dart';
 import '../utils/time_format.dart';
 import 'artisan_logo_avatar.dart';
@@ -60,7 +60,7 @@ class ConversationTile extends StatelessWidget {
                           Expanded(
                             child: Text(
                               conversation.counterpartName,
-                              style: AppTextStyles.bodyLg.copyWith(
+                              style: AppTypography.bodyLarge.copyWith(
                                 color: AppColors.textPrimary,
                                 fontWeight: hasUnread
                                     ? FontWeight.w700
@@ -73,7 +73,7 @@ class ConversationTile extends StatelessWidget {
                           const SizedBox(width: 8),
                           Text(
                             formatRelativeTime(conversation.lastMessageAt),
-                            style: AppTextStyles.bodyMd.copyWith(
+                            style: AppTypography.bodyMedium.copyWith(
                               color: hasUnread
                                   ? AppColors.primary
                                   : AppColors.textSecondary,
@@ -90,7 +90,7 @@ class ConversationTile extends StatelessWidget {
                           Expanded(
                             child: Text(
                               conversation.lastMessagePreview,
-                              style: AppTextStyles.bodyMd.copyWith(
+                              style: AppTypography.bodyMedium.copyWith(
                                 color: AppColors.textSecondary,
                                 fontWeight: hasUnread
                                     ? FontWeight.w500

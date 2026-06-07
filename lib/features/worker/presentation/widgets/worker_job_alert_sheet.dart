@@ -127,7 +127,7 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                   alignment: Alignment.center,
                   child: Text(
                     '$_secondsLeft',
-                    style: AppTypography.titleMd.copyWith(color: timerColor),
+                    style: AppTypography.titleLarge.copyWith(color: timerColor),
                   ),
                 ),
                 const SizedBox(width: 14),
@@ -137,7 +137,7 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                     children: <Widget>[
                       Text('NEW JOB REQUEST', style: AppTypography.labelCaps),
                       const SizedBox(height: 4),
-                      Text(job.title, style: AppTypography.titleMd),
+                      Text(job.title, style: AppTypography.titleLarge),
                     ],
                   ),
                 ),
@@ -151,12 +151,12 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                 Expanded(
                   child: Text(
                     job.clientName,
-                    style: AppTypography.bodyLg.copyWith(
+                    style: AppTypography.bodyLarge.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-                Text(job.estimateDisplay, style: AppTypography.bodyMd),
+                Text(job.estimateDisplay, style: AppTypography.bodyMedium),
               ],
             ),
             const SizedBox(height: 12),
@@ -189,7 +189,7 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
               job.description,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.bodyMd,
+              style: AppTypography.bodyMedium,
             ),
             const SizedBox(height: 18),
             Row(

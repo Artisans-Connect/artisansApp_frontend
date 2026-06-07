@@ -33,7 +33,7 @@ class ReferencePhotosRow extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: Text(
               labels[index],
-              style: AppTypography.bodyMd.copyWith(
+              style: AppTypography.bodyMedium.copyWith(
                 color: AppColors.onSurface,
                 fontWeight: FontWeight.w500,
                 fontSize: 11,
