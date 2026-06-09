@@ -52,7 +52,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final service = widget.service ?? {
+    final Map<String, dynamic> service = widget.service ?? <String, dynamic>{
       'artisan': 'John Smith',
       'profession': 'Professional Plumber',
       'title': 'Fix leaking kitchen faucet',
@@ -113,14 +113,18 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                 onPressed: () async {
                   setState(() => _isSubmitting = true);
                   try {
-                    final jobId = widget.service?['job_id'] ??
-                        widget.service?['jobId'] ??
-                        widget.service?['id'];
-                    final workerId = widget.service?['workerId'] ??
-                        widget.service?['worker_id'] ??
-                        widget.service?['counterpartUserId'];
+                    final String jobId = _stringValue(
+                      widget.service?['job_id'] ??
+                          widget.service?['jobId'] ??
+                          widget.service?['id'],
+                    );
+                    final String workerId = _stringValue(
+                      widget.service?['workerId'] ??
+                          widget.service?['worker_id'] ??
+                          widget.service?['counterpartUserId'],
+                    );
                     
-                    if (jobId == null || workerId == null) {
+                    if (jobId.isEmpty || workerId.isEmpty) {
                       throw Exception('This booking is missing review details.');
                     }
 
@@ -163,6 +167,8 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
   }
 
   Widget _buildServiceInfoCard(Map<String, dynamic> service) {
+    final String imageUrl = _stringValue(service['imageUrl']);
+    final bool hasNetworkImage = imageUrl.startsWith('http');
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceContainerLowest,
@@ -182,16 +188,21 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-              child: Image.network(
-                service['imageUrl'],
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    PhosphorIcons.user,
-                    color: AppColors.onPrimary,
-                  );
-                },
-              ),
+              child: hasNetworkImage
+                  ? Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Icon(
+                          PhosphorIcons.user,
+                          color: AppColors.onPrimary,
+                        );
+                      },
+                    )
+                  : Icon(
+                      PhosphorIcons.user,
+                      color: AppColors.onPrimary,
+                    ),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -202,19 +213,19 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  service['artisan'] ?? 'Artisan Name',
+                  _stringValue(service['artisan'], fallback: 'Artisan Name'),
                   style: AppTypography.labelLarge,
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  service['profession'] ?? 'Professional',
+                  _stringValue(service['profession'], fallback: 'Professional'),
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 Text(
-                  service['title'] ?? 'Service Title',
+                  _stringValue(service['title'], fallback: 'Service Title'),
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.primary,
                   ),
@@ -227,6 +238,11 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
         ],
       ),
     );
+  }
+
+  String _stringValue(Object? value, {String fallback = ''}) {
+    final String text = value?.toString().trim() ?? '';
+    return text.isEmpty ? fallback : text;
   }
 
   Widget _buildRatingSection() {

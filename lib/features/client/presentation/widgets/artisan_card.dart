@@ -6,6 +6,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 
 class ArtisanCard extends StatelessWidget {
+  static const double _imageHeight = 160;
+
   final String name;
   final String profession;
   final double rating;
@@ -51,12 +53,12 @@ class ArtisanCard extends StatelessWidget {
               Stack(
                 children: [
                   Container(
-                    height: 180,
+                    height: _imageHeight,
                     width: double.infinity,
                     color: AppColors.surfaceContainer,
                     child: ArtisanLogoPanel(
                       imageUrl: imageUrl,
-                      height: 180,
+                      height: _imageHeight,
                       fit: BoxFit.cover,
                     ),
                   ),
@@ -64,7 +66,7 @@ class ArtisanCard extends StatelessWidget {
               ),
               // Details
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -74,14 +76,14 @@ class ArtisanCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: AppSpacing.xs),
+                    const SizedBox(height: 4),
                     Text(
                       profession,
                       style: AppTypography.bodySmall,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(
@@ -91,7 +93,7 @@ class ArtisanCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          rating.toString(),
+                          rating.toStringAsFixed(1),
                           style: AppTypography.labelMedium,
                         ),
                         const SizedBox(width: AppSpacing.xs),
@@ -101,7 +103,7 @@ class ArtisanCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.sm),
+                    const SizedBox(height: 6),
                     Row(
                       children: [
                         Icon(

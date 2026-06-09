@@ -10,6 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/legal_agreement_text.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../navigation/client_navigation.dart';
@@ -332,11 +333,15 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12),
-                  child: Text(
-                    'I agree to the platform terms and understand artisans may contact me about this job.',
-                    style: AppTypography.bodyMedium.copyWith(
+                  child: LegalAgreementText(
+                    prefix: 'I agree to the platform ',
+                    includePrivacyPolicy: false,
+                    suffix:
+                        ' and understand artisans may contact me about this job.',
+                    textStyle: AppTypography.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                     ),
+                    linkColor: AppColors.primary,
                   ),
                 ),
               ),

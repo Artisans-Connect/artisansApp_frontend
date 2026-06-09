@@ -254,6 +254,8 @@ class ClientNavigation {
     switch (booking.status) {
       case ClientBookingStatus.inProgress:
         pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
+      case ClientBookingStatus.pendingApproval:
+        pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.completed:
         if (booking.canRate) {
           pushFlow(context, AppRoutes.rateService, arguments: booking.toMap());

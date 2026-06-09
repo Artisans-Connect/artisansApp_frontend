@@ -21,6 +21,7 @@ import '../../models/chat_message.dart';
 import '../../widgets/chat_bubble.dart';
 import '../navigation/shared_route_args.dart';
 import 'user_profile_screen.dart';
+import '../../widgets/custom_back_button.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   const ChatDetailScreen({super.key});
@@ -351,14 +352,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leadingWidth: 36,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: IconButton(
-            onPressed: () => Navigator.maybePop(context),
-            icon: Icon(PhosphorIcons.arrowLeft, color: AppColors.textPrimary),
-          ),
-        ),
+        leading: const CustomBackButton(),
         titleSpacing: 4,
         title: InkWell(
           onTap: () => _openProfile(args),

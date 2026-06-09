@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
  
 import 'package:flutter/material.dart';
  
@@ -13,10 +12,7 @@ import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/worker_tracking_map.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
- 
-// ---------------------------------------------------------------------------
-// Design tokens (mirrors DESIGN.md)
-// ---------------------------------------------------------------------------
+
 class _T {
   static const Color surfaceBase = Color(0xFFFFF8F0);
   static const Color surfaceCard = Color(0xFFFFFFFF);
@@ -27,409 +23,196 @@ class _T {
   static const Color textPrimary = Color(0xFF2C2418);
   static const Color textSecondary = Color(0xFF5C5243);
   static const Color borderSubtle = Color(0x0F000000);
-  static const Color successGreen = Color(0xFF00E676);
+  static const Color successGreen = Color(0xFF34C759);
   static const Color error = Color(0xFFBA1A1A);
- 
-  // Derived
   static const Color primaryContainer = Color(0xFFF7E8E3);
-  static const Color goldContainer = Color(0xFFFDF3DC);
-  static const Color shadowDeep = Color(0x1A2C2418);
-  static const Color shadowMid = Color(0x0D2C2418);
-  static const Color shimmer = Color(0xFFFFF0E6);
+  static const Color shadowDeep = Color(0x142C2418);
+  static const Color shadowMid = Color(0x0A2C2418);
 }
  
-BoxDecoration _premiumCard({
-  Color color = _T.surfaceCard,
-  double radius = 20,
-  bool elevated = true,
-}) =>
-    BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: _T.borderSubtle, width: 1),
-      boxShadow: elevated
-          ? <BoxShadow>[
-              const BoxShadow(
-                color: _T.shadowDeep,
-                blurRadius: 24,
-                offset: Offset(0, 8),
-              ),
-              const BoxShadow(
-                color: _T.shadowMid,
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ]
-          : null,
-    );
- 
 // ---------------------------------------------------------------------------
-// Mini-hero illustrations (pure Flutter / Canvas — no external assets needed)
+// Mini-hero illustrations
 // ---------------------------------------------------------------------------
- 
-/// Wraps a hero SVG-style custom painter with a warm gradient backdrop.
+
 class _MiniHero extends StatelessWidget {
   final Widget child;
   final double height;
-  const _MiniHero({required this.child, this.height = 140});
- 
+  const _MiniHero({required this.child, this.height = 112});
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: height,
+      constraints: BoxConstraints(minHeight: height),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFFFF0E6), Color(0xFFFFF8F0)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _T.borderSubtle),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Stack(
-        children: <Widget>[
-          // decorative circles
-          Positioned(
-            top: -30,
-            right: -30,
-            child: _DecorCircle(size: 120, color: _T.primary.withOpacity(0.07)),
-          ),
-          Positioned(
-            bottom: -20,
-            left: -20,
-            child: _DecorCircle(size: 90, color: _T.accentGold.withOpacity(0.10)),
-          ),
-          Positioned(
-            top: 10,
-            left: 10,
-            child: _DecorCircle(size: 20, color: _T.primary.withOpacity(0.12)),
-          ),
-          Center(child: child),
-        ],
-      ),
+      alignment: Alignment.center,
+      child: child,
     );
   }
 }
- 
-class _DecorCircle extends StatelessWidget {
-  final double size;
-  final Color color;
-  const _DecorCircle({required this.size, required this.color});
- 
+
+Widget _heroForStep(int step) => _StepHero(step: step);
+
+class _StepHero extends StatefulWidget {
+  final int step;
+  const _StepHero({required this.step});
+
   @override
-  Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      );
+  State<_StepHero> createState() => _StepHeroState();
 }
- 
-// Status-specific hero content
-Widget _heroForStep(int step) {
-  switch (step) {
-    case 0:
-      return _ConfirmedHero();
-    case 1:
-      return _OnTheWayHero();
-    case 2:
-      return _ArrivedHero();
-    case 3:
-      return _InProgressHero();
-    case 4:
-      return _CompletedHero();
-    default:
-      return _ConfirmedHero();
-  }
-}
- 
-class _ConfirmedHero extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: _T.primaryContainer,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                  color: _T.primary.withOpacity(0.18),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8)),
-            ],
-          ),
-          child: const Icon(Icons.check_circle_rounded,
-              color: _T.primary, size: 36),
-        ),
-        const SizedBox(height: 12),
-        Text('Booking Confirmed',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _T.textPrimary)),
-        const SizedBox(height: 2),
-        Text('Your artisan has accepted the job',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 12,
-                color: _T.textSecondary)),
-      ],
-    );
-  }
-}
- 
-class _OnTheWayHero extends StatefulWidget {
-  @override
-  State<_OnTheWayHero> createState() => _OnTheWayHeroState();
-}
- 
-class _OnTheWayHeroState extends State<_OnTheWayHero>
+
+class _StepHeroState extends State<_StepHero>
     with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _pulse;
- 
+  late final AnimationController _ctrl;
+  late final Animation<double> _pulse;
+
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1400))
-      ..repeat(reverse: true);
-    _pulse = Tween<double>(begin: 0.92, end: 1.06).animate(
-        CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+    _pulse = Tween<double>(begin: 0.96, end: 1.04).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
   }
- 
+
   @override
   void dispose() {
     _ctrl.dispose();
     super.dispose();
   }
- 
+
   @override
   Widget build(BuildContext context) {
+    final _StepHeroData data = _dataForStep(widget.step);
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: [
+      children: <Widget>[
         ScaleTransition(
           scale: _pulse,
           child: Container(
-            width: 64,
-            height: 64,
+            width: 62,
+            height: 62,
             decoration: BoxDecoration(
-              color: _T.goldContainer,
+              color: data.color,
               shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                    color: _T.accentGold.withOpacity(0.25),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8)),
-              ],
             ),
-            child: const Icon(Icons.directions_bike_rounded,
-                color: _T.accentGold, size: 34),
+            child: Icon(data.icon, color: Colors.white, size: 32),
           ),
         ),
         const SizedBox(height: 12),
-        Text('On the Way',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _T.textPrimary)),
+        Text(
+          data.title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Satoshi',
+            fontSize: 16,
+            fontWeight: FontWeight.w700,
+            color: _T.textPrimary,
+          ),
+        ),
         const SizedBox(height: 2),
-        Text('Your artisan is heading to you',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 12,
-                color: _T.textSecondary)),
+        Text(
+          data.subtitle,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontFamily: 'Satoshi',
+            fontSize: 12,
+            color: _T.textSecondary,
+          ),
+        ),
       ],
     );
   }
+
+  _StepHeroData _dataForStep(int step) {
+    return switch (step) {
+      1 => const _StepHeroData(
+          icon: Icons.directions_bike_rounded,
+          title: 'Artisan on the Way',
+          subtitle: 'Track live location below',
+          color: _T.accentGold,
+        ),
+      2 => const _StepHeroData(
+          icon: Icons.location_on_rounded,
+          title: 'Artisan Arrived',
+          subtitle: 'Service will begin shortly',
+          color: _T.successGreen,
+        ),
+      3 => const _StepHeroData(
+          icon: Icons.settings_rounded,
+          title: 'Work in Progress',
+          subtitle: 'Your job is being handled',
+          color: _T.primary,
+        ),
+      4 => const _StepHeroData(
+          icon: Icons.celebration_rounded,
+          title: 'Job Completed',
+          subtitle: 'Share your experience with a rating',
+          color: _T.primary,
+        ),
+      _ => const _StepHeroData(
+          icon: Icons.check_circle_rounded,
+          title: 'Booking Confirmed',
+          subtitle: 'Your artisan is getting ready',
+          color: _T.primary,
+        ),
+    };
+  }
 }
- 
-class _ArrivedHero extends StatelessWidget {
+
+class _StepHeroData {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  const _StepHeroData({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
+}
+
+class _SectionHeader extends StatelessWidget {
+  final String title;
+  const _SectionHeader({required this.title});
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
+    return Row(
       children: [
         Container(
-          width: 64,
-          height: 64,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE8F5E9),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                  color: _T.successGreen.withOpacity(0.25),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8)),
-            ],
-          ),
-          child: const Icon(Icons.location_on_rounded,
-              color: Color(0xFF2E7D32), size: 36),
+          width: 3,
+          height: 16,
+          margin: const EdgeInsets.only(right: 8),
+          color: _T.primary,
         ),
-        const SizedBox(height: 12),
-        Text('Artisan Arrived',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _T.textPrimary)),
-        const SizedBox(height: 2),
-        Text('Please welcome them in',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 12,
-                color: _T.textSecondary)),
+        Text(
+          title,
+          style: const TextStyle(
+            fontFamily: 'Satoshi',
+            fontSize: 17,
+            fontWeight: FontWeight.w800,
+            color: _T.textPrimary,
+          ),
+        ),
       ],
     );
   }
 }
- 
-class _InProgressHero extends StatefulWidget {
-  @override
-  State<_InProgressHero> createState() => _InProgressHeroState();
-}
- 
-class _InProgressHeroState extends State<_InProgressHero>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _spin;
- 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 3))
-          ..repeat();
-    _spin = Tween<double>(begin: 0, end: 2 * math.pi).animate(_ctrl);
-  }
- 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
- 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AnimatedBuilder(
-          animation: _spin,
-          builder: (_, child) => Transform.rotate(angle: _spin.value, child: child),
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: _T.primaryContainer,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                    color: _T.primary.withOpacity(0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8)),
-              ],
-            ),
-            child: const Icon(Icons.settings_rounded,
-                color: _T.primary, size: 36),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text('Work in Progress',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _T.textPrimary)),
-        const SizedBox(height: 2),
-        Text('Sit back, your artisan is at it',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 12,
-                color: _T.textSecondary)),
-      ],
-    );
-  }
-}
- 
-class _CompletedHero extends StatefulWidget {
-  @override
-  State<_CompletedHero> createState() => _CompletedHeroState();
-}
- 
-class _CompletedHeroState extends State<_CompletedHero>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scale;
- 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700))
-      ..forward();
-    _scale = CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut);
-  }
- 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
- 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ScaleTransition(
-          scale: _scale,
-          child: Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [_T.primary, _T.accentGold],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                    color: _T.primary.withOpacity(0.35),
-                    blurRadius: 24,
-                    offset: const Offset(0, 10)),
-              ],
-            ),
-            child: const Icon(Icons.celebration_rounded,
-                color: Colors.white, size: 34),
-          ),
-        ),
-        const SizedBox(height: 12),
-        Text('Job Completed! 🎉',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _T.textPrimary)),
-        const SizedBox(height: 2),
-        Text('Share your experience with a rating',
-            style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 12,
-                color: _T.textSecondary)),
-      ],
-    );
-  }
-}
- 
+
 // ---------------------------------------------------------------------------
 // Main screen
 // ---------------------------------------------------------------------------
@@ -454,6 +237,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   Map<String, dynamic>? _job;
   bool _loading = true;
   bool _requestingAnotherWorker = false;
+  bool _isReopeningCompletion = false;
   String? _loadError;
   int _currentStep = 0;
   String _etaLabel = 'Calculating ETA…';
@@ -573,6 +357,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       'on_the_way' => 1,
       'arrived' => 2,
       'in_progress' => 3,
+      'pending_client_approval' => 4,
       'completed' => 4,
       _ => 0,
     };
@@ -606,7 +391,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     final String? jobUuid =
         job['job_id'] as String? ?? job['jobId'] as String? ?? job['id'] as String?;
     final String status = (job['status'] as String? ?? '').toLowerCase();
-    final bool canRate = status == 'completed';
+    final bool canRate =
+        status == 'pending_client_approval' || status == 'completed';
+    final bool pendingApproval = status == 'pending_client_approval';
     final bool workerCancelled =
         status == 'cancelled' && (job['cancelled_by'] as String?) == 'worker';
 
@@ -626,7 +413,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               children: <Widget>[
                 if (_loadError != null) _buildErrorBanner(),
                 _MiniHero(
-                  height: 140,
+                  height: 112,
                   child: _heroForStep(0),
                 ),
                 const SizedBox(height: 16),
@@ -676,7 +463,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
  
                     // ── Hero illustration (changes per step)
                     _MiniHero(
-                      height: 140,
+                      height: 112,
                       child: _heroForStep(_currentStep),
                     ),
                     const SizedBox(height: 16),
@@ -695,13 +482,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     const SizedBox(height: 20),
  
                     // ── Progress timeline
-                    _buildSectionLabel('Job Progress'),
+                    const _SectionHeader(title: 'Job Progress'),
                     const SizedBox(height: 14),
                     _buildProgressTimeline(),
                     const SizedBox(height: 20),
  
                     // ── Artisan card
-                    _buildSectionLabel('Your Artisan'),
+                    const _SectionHeader(title: 'Your Artisan'),
                     const SizedBox(height: 14),
                     _buildArtisanDetailCard(job),
                     const SizedBox(height: 20),
@@ -711,7 +498,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     const SizedBox(height: 16),
  
                     // ── Rate button
-                    _buildRateButton(canRate),
+                    _buildCompletionActions(
+                      canRate: canRate,
+                      pendingApproval: pendingApproval,
+                    ),
                     const SizedBox(height: 12),
  
                     // ── View all bookings
@@ -764,7 +554,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: _T.surfaceCard,
+                      // color: _T.surfaceCard,
                       shape: BoxShape.circle,
                       boxShadow: const [
                         BoxShadow(
@@ -892,28 +682,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   }
  
   // ---------------------------------------------------------------------------
-  // Section label
-  // ---------------------------------------------------------------------------
- 
-  Widget _buildSectionLabel(String label) {
-    return Row(
-      children: [
-        Container(width: 3, height: 16, color: _T.primary,
-            margin: const EdgeInsets.only(right: 8)),
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'Satoshi',
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: _T.textPrimary,
-          ),
-        ),
-      ],
-    );
-  }
- 
-  // ---------------------------------------------------------------------------
   // Job info card
   // ---------------------------------------------------------------------------
  
@@ -921,6 +689,28 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     final String pillLabel = _statusPillLabel(job['status'] as String?);
     final Color pillBg = _statusPillColor(job['status'] as String?);
     final Color pillText = _statusPillTextColor(job['status'] as String?);
+    Widget infoText(IconData icon, String label, String value) {
+      return Expanded(
+        child: Row(
+          children: [
+            Icon(icon, size: 14, color: Colors.white70),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                '$label: $value',
+                style: const TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
  
     return Container(
       decoration: BoxDecoration(
@@ -929,35 +719,22 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: _T.primary.withOpacity(0.30),
-              blurRadius: 20,
-              offset: const Offset(0, 8)),
+              color: _T.primary.withOpacity(0.16),
+              blurRadius: 10,
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Stack(
         children: [
-          // Decorative pattern top-right
           Positioned(
-            top: -16,
-            right: -16,
+            top: -24,
+            right: -22,
             child: Container(
-              width: 90,
-              height: 90,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            top: 14,
-            right: 14,
-            child: Container(
-              width: 48,
-              height: 48,
+              width: 92,
+              height: 92,
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.06),
                 shape: BoxShape.circle,
@@ -965,7 +742,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1029,18 +806,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   ],
                 ),
                 const SizedBox(height: 18),
-                Container(
-                  height: 1,
-                  color: Colors.white.withOpacity(0.12),
-                ),
-                const SizedBox(height: 16),
                 Row(
                   children: [
-                    _buildInfoChip(
-                        Icons.access_time_rounded, 'ETA', _etaLabel),
+                    infoText(Icons.access_time_rounded, 'ETA', _etaLabel),
                     const SizedBox(width: 12),
                     if (job['phone'] != null)
-                      _buildInfoChip(
+                      infoText(
                           Icons.phone_rounded, 'Phone', job['phone'] as String),
                   ],
                 ),
@@ -1052,51 +823,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     );
   }
  
-  Widget _buildInfoChip(IconData icon, String label, String value) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, size: 13, color: Colors.white60),
-                const SizedBox(width: 4),
-                Text(label,
-                    style: const TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 10,
-                        color: Colors.white60,
-                        letterSpacing: 0.4)),
-              ],
-            ),
-            const SizedBox(height: 3),
-            Text(
-              value,
-              style: const TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
- 
   String _statusPillLabel(String? statusRaw) {
     return switch ((statusRaw ?? '').toLowerCase()) {
       'on_the_way' => 'On the Way',
       'arrived' => 'Arrived',
       'in_progress' => 'In Progress',
+      'pending_client_approval' => 'Pending Approval',
       'completed' => 'Completed',
       'cancelled' => 'Cancelled',
       'matched' => 'Confirmed',
@@ -1107,6 +839,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   Color _statusPillColor(String? statusRaw) {
     return switch ((statusRaw ?? '').toLowerCase()) {
       'completed' => _T.accentGold.withOpacity(0.2),
+      'pending_client_approval' => _T.accentGold.withOpacity(0.2),
       'in_progress' => Colors.white.withOpacity(0.18),
       _ => Colors.white.withOpacity(0.14),
     };
@@ -1115,6 +848,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   Color _statusPillTextColor(String? statusRaw) {
     return switch ((statusRaw ?? '').toLowerCase()) {
       'completed' => _T.accentGold,
+      'pending_client_approval' => _T.accentGold,
       _ => Colors.white,
     };
   }
@@ -1198,6 +932,94 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       if (mounted) setState(() => _requestingAnotherWorker = false);
     }
   }
+
+  Map<String, dynamic> _ratingPayload() {
+    final Map<String, dynamic> job = _job ?? <String, dynamic>{};
+    return <String, dynamic>{
+      'job_id': job['job_id'] ?? job['jobId'] ?? job['id'],
+      'jobId': job['jobId'] ?? job['job_id'] ?? job['id'],
+      'id': job['id'],
+      'worker_id':
+          job['worker_id'] ?? job['workerId'] ?? job['counterpartUserId'],
+      'workerId':
+          job['workerId'] ?? job['worker_id'] ?? job['counterpartUserId'],
+      'counterpartUserId':
+          job['counterpartUserId'] ?? job['worker_id'] ?? job['workerId'],
+      'artisan': job['artisan'] ?? 'Artisan',
+      'profession': job['profession'] ?? 'Service provider',
+      'title': job['title'] ?? 'Service',
+      'imageUrl': job['imageUrl'],
+      'status': job['status'],
+    };
+  }
+
+  Future<void> _reopenCompletion() async {
+    final String? jobUuid = _currentJobId;
+    if (_isReopeningCompletion || jobUuid == null || jobUuid.isEmpty) return;
+
+    final TextEditingController noteController = TextEditingController();
+    final String? note = await showDialog<String>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: const Text('Job not done?'),
+          content: TextField(
+            controller: noteController,
+            maxLines: 3,
+            decoration: const InputDecoration(
+              hintText: 'Tell the artisan what still needs attention.',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () =>
+                  Navigator.pop(dialogContext, noteController.text.trim()),
+              child: const Text('Reopen job'),
+            ),
+          ],
+        );
+      },
+    );
+    noteController.dispose();
+    if (note == null || !mounted) return;
+
+    setState(() => _isReopeningCompletion = true);
+    try {
+      final dynamic reopened = await _jobsService.reopenJob(
+        jobUuid,
+        body: <String, dynamic>{
+          if (note.isNotEmpty) 'note': note,
+        },
+      );
+      if (!mounted) return;
+      if (reopened is Map<String, dynamic>) {
+        final ClientBooking booking = ClientBooking.fromApiJob(reopened);
+        setState(() => _job = booking.toTrackingMap());
+        _applyStepFromStatus(booking.backendStatus);
+      } else {
+        await _loadJobDetails();
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Job reopened for the artisan.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            userMessageFor(e, fallback: 'Could not reopen this job.'),
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _isReopeningCompletion = false);
+    }
+  }
  
   // ---------------------------------------------------------------------------
   // Map card
@@ -1209,7 +1031,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     required double jobLng,
   }) {
     return Container(
-      decoration: _premiumCard(),
+      decoration: BoxDecoration(
+        color: _T.surfaceCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _T.borderSubtle),
+      ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1251,7 +1077,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   Widget _buildMapPlaceholder() {
     return Container(
       height: 180,
-      decoration: _premiumCard(color: const Color(0xFFFAF5F0)),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFAF5F0),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _T.borderSubtle),
+      ),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -1279,7 +1109,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
  
   Widget _buildProgressTimeline() {
     return Container(
-      decoration: _premiumCard(),
+      decoration: BoxDecoration(
+        color: _T.surfaceCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _T.borderSubtle),
+      ),
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
       child: Column(
         children: List.generate(_steps.length, (int index) {
@@ -1431,7 +1265,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     final double? rating = (job['rating'] as num?)?.toDouble();
  
     return Container(
-      decoration: _premiumCard(),
+      decoration: BoxDecoration(
+        color: _T.surfaceCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _T.borderSubtle),
+      ),
       padding: const EdgeInsets.all(18),
       child: Row(
         children: <Widget>[
@@ -1600,27 +1438,71 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   // Rate button
   // ---------------------------------------------------------------------------
  
-  Widget _buildRateButton(bool canRate) {
-    return GestureDetector(
+  Widget _buildCompletionActions({
+    required bool canRate,
+    required bool pendingApproval,
+  }) {
+    if (pendingApproval) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          _buildRateButton(
+            enabled: true,
+            label: 'Approve & Rate',
+            icon: Icons.star_rounded,
+            onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.rateService,
+              arguments: _ratingPayload(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            onPressed: _isReopeningCompletion ? null : _reopenCompletion,
+            child:
+                Text(_isReopeningCompletion ? 'Reopening...' : 'Job not done'),
+          ),
+        ],
+      );
+    }
+
+    return _buildRateButton(
+      enabled: canRate,
+      label: canRate ? 'Rate Your Experience' : 'Waiting for Completion',
+      icon: canRate ? Icons.star_rounded : Icons.hourglass_top_rounded,
       onTap: canRate
-          ? () => Navigator.pushNamed(context, AppRoutes.rateService,
-              arguments: _job)
+          ? () => Navigator.pushNamed(
+                context,
+                AppRoutes.rateService,
+                arguments: _ratingPayload(),
+              )
           : null,
+    );
+  }
+
+  Widget _buildRateButton({
+    required bool enabled,
+    required String label,
+    required IconData icon,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: enabled ? onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          gradient: canRate
+          gradient: enabled
               ? const LinearGradient(
                   colors: [_T.primary, _T.primaryDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
               : null,
-          color: canRate ? null : const Color(0xFFE8E0D8),
+          color: enabled ? null : const Color(0xFFE8E0D8),
           borderRadius: BorderRadius.circular(14),
-          boxShadow: canRate
+          boxShadow: enabled
               ? [
                   BoxShadow(
                       color: _T.primary.withOpacity(0.30),
@@ -1633,18 +1515,18 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              canRate ? Icons.star_rounded : Icons.hourglass_top_rounded,
-              color: canRate ? _T.accentGold : _T.textSecondary,
+              icon,
+              color: enabled ? _T.accentGold : _T.textSecondary,
               size: 20,
             ),
             const SizedBox(width: 8),
             Text(
-              canRate ? 'Rate Your Experience' : 'Waiting for Completion',
+              label,
               style: TextStyle(
                 fontFamily: 'Satoshi',
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: canRate ? Colors.white : _T.textSecondary,
+                color: enabled ? Colors.white : _T.textSecondary,
               ),
             ),
           ],

@@ -77,6 +77,13 @@ class _SplashScreenState extends State<SplashScreen> {
     return true;
   }
 
+  Future<bool> _routeCachedUserIfAvailable() async {
+    final user = await AuthService.instance.loadCachedUser();
+    if (user == null || !mounted) return false;
+    await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    return true;
+  }
+
   Future<void> _routeAfterAuth() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
@@ -93,10 +100,9 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       } on NetworkException {
         if (!mounted) return;
-        final navigator = Navigator.of(context);
-        await AuthService.instance.signOut();
-        if (!navigator.mounted) return;
-        await navigator.pushReplacementNamed(SignInScreen.routeName);
+        if (await _routeCachedUserIfAvailable()) return;
+        if (!mounted) return;
+        await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       } on ApiException catch (e) {
         if (!mounted) return;
         if (e.isUnauthorized) {
@@ -111,13 +117,14 @@ class _SplashScreenState extends State<SplashScreen> {
           }
         }
         if (!mounted) return;
+        if (await _routeCachedUserIfAvailable()) return;
+        if (!mounted) return;
         await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       } catch (_) {
         if (!mounted) return;
-        final navigator = Navigator.of(context);
-        await AuthService.instance.signOut();
-        if (!navigator.mounted) return;
-        await navigator.pushReplacementNamed(SignInScreen.routeName);
+        if (await _routeCachedUserIfAvailable()) return;
+        if (!mounted) return;
+        await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       }
     } else {
       if (!mounted) return;

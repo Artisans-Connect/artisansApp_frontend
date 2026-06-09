@@ -4,6 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../models/worker_job.dart';
 import '../widgets/job_detail_card.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
 
 class WorkerBookingDetailScreen extends StatelessWidget {
   const WorkerBookingDetailScreen({super.key, required this.job});
@@ -18,11 +19,7 @@ class WorkerBookingDetailScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft, size: 20),
-          color: AppColors.primary,
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
+        leading: const CustomBackButton(),
         title: Text(
           'Booking Details',
           style: AppTypography.titleLarge.copyWith(color: AppColors.onSurface),

@@ -13,6 +13,8 @@ import '../widgets/completion_photo_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/job_detail_card.dart';
 import 'worker_completion_success_screen.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
+
 class WorkerCompletionFormScreen extends StatefulWidget {
   const WorkerCompletionFormScreen({
     super.key,
@@ -93,11 +95,7 @@ class _WorkerCompletionFormScreenState
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft, size: 20),
-          color: AppColors.primary,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: const CustomBackButton(),
         title: Text(
           'Complete Booking',
           style: AppTypography.titleLarge.copyWith(color: AppColors.primary),

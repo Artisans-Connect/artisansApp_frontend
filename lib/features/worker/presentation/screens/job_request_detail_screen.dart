@@ -13,6 +13,8 @@ import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
 import '../widgets/reference_photos_row.dart';
 import '../widgets/timing_estimate_row.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
+
 class JobRequestDetailScreen extends StatefulWidget {
   const JobRequestDetailScreen({
     super.key,
@@ -76,6 +78,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     }
     if (mounted) Navigator.of(context).pop();
   }
+
   @override
   Widget build(BuildContext context) {
     final job = widget.job;
@@ -84,11 +87,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft, size: 20),
-          color: AppColors.primary,
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        leading: const CustomBackButton(),
         title: Text(
           'Request Details',
           style: AppTypography.titleLarge.copyWith(color: AppColors.primary),

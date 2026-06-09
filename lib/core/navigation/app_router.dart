@@ -18,6 +18,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import 'app_routes.dart';
 import 'auth_navigation.dart';
+import '../../shared/presentation/screens/notifications_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -143,6 +144,11 @@ class AppRouter {
           builder: (_) => RateServiceScreen(
             service: settings.arguments as Map<String, dynamic>?,
           ),
+        );
+
+      case AppRoutes.notifications:
+        return MaterialPageRoute(
+          builder: (_) => const NotificationsScreen(),
         );
 
       default:

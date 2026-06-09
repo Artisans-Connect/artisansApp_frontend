@@ -5,6 +5,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../widgets/error_state_view.dart';
+import '../../widgets/custom_back_button.dart';
 
 class LegalDocumentScreen extends StatefulWidget {
   const LegalDocumentScreen({
@@ -55,10 +56,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          onPressed: () => Navigator.maybePop(context),
-          icon: Icon(PhosphorIcons.arrowLeft, color: AppColors.textPrimary),
-        ),
+        leading: const CustomBackButton(),
         title: Text(
           widget.title,
           style: Theme.of(context)

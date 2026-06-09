@@ -13,9 +13,13 @@ class AppConstants {
   static String get supabasePublishableKey =>
       _env('SUPABASE_PUBLISHABLE_KEY') ?? '';
 
-  /// Placeholder redirect for email confirmation (dev). Replace with app deep link in production.
-  static const String supabaseRedirectUrl =
-      'https://qdeznjpvkhrxesjykovi.supabase.co';
+  /// Deep link redirect for email confirmation. Falls back to verification portal if app is not installed.
+  static String get supabaseRedirectUrl {
+    final String portalUrl = verificationPortalUrl.endsWith('/')
+        ? verificationPortalUrl.substring(0, verificationPortalUrl.length - 1)
+        : verificationPortalUrl;
+    return '$portalUrl/email-verified';
+  }
 
   /// Override in `.env` as `EXPRESS_API_BASE_URL` (e.g. `https://artisansapp-backend.onrender.com/api`).
   static String get expressApiBaseUrl =>

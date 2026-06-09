@@ -10,13 +10,13 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../../features/auth/presentation/screens/sign_in_screen.dart';
+import '../navigation/legal_navigation.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/settings_group_tile.dart';
 import 'edit_profile_screen.dart';
-import 'legal_document_screen.dart';
 
 /// Shared settings — client layout (53) vs worker layout (65) on same route.
 class SettingsScreen extends StatefulWidget {
@@ -121,27 +121,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _openPrivacyPolicy() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LegalDocumentScreen(
-          title: 'Privacy Policy',
-          assetPath: 'assets/legal/privacy_policy.txt',
-        ),
-      ),
-    );
+    unawaited(LegalNavigation.openPrivacyPolicy(context));
   }
 
   void _openTermsOfService() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LegalDocumentScreen(
-          title: 'Terms of Service',
-          assetPath: 'assets/legal/terms&conditions.txt',
-        ),
-      ),
-    );
+    unawaited(LegalNavigation.openTermsOfService(context));
   }
 
   Future<void> _openHelpCenter() async {

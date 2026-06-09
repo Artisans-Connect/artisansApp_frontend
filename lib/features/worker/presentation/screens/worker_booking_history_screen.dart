@@ -10,6 +10,7 @@ import '../utils/worker_job_mapper.dart';
 import '../widgets/history_job_card.dart';
 import '../widgets/segment_toggle.dart';
 import 'worker_booking_detail_screen.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
 class WorkerBookingHistoryScreen extends StatefulWidget {
   const WorkerBookingHistoryScreen({super.key});
   @override
@@ -64,9 +65,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft, size: 20),
-          color: AppColors.primary,
+        leading: CustomBackButton(
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).maybePop();

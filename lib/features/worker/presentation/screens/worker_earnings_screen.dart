@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../state/worker_session_state.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
+
 class WorkerEarningsScreen extends StatelessWidget {
   const WorkerEarningsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -13,11 +16,7 @@ class WorkerEarningsScreen extends StatelessWidget {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: Navigator.of(context).canPop()
-            ? IconButton(
-                icon: Icon(PhosphorIcons.caretLeft, size: 20),
-                color: AppColors.primary,
-                onPressed: () => Navigator.of(context).maybePop(),
-              )
+            ? const CustomBackButton()
             : null,
         title: Text(
           'Earnings',

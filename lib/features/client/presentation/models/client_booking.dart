@@ -5,6 +5,7 @@ enum ClientBookingStatus {
   requested,
   accepted,
   inProgress,
+  pendingApproval,
   completed,
   cancelled,
 }
@@ -18,6 +19,8 @@ extension ClientBookingStatusX on ClientBookingStatus {
         return 'Accepted';
       case ClientBookingStatus.inProgress:
         return 'In Progress';
+      case ClientBookingStatus.pendingApproval:
+        return 'Pending Approval';
       case ClientBookingStatus.completed:
         return 'Completed';
       case ClientBookingStatus.cancelled:
@@ -79,18 +82,22 @@ class ClientBooking {
   final String? cancelledAt;
 
   bool get canRate =>
-      status == ClientBookingStatus.completed && rating == null;
+      (status == ClientBookingStatus.pendingApproval ||
+              status == ClientBookingStatus.completed) &&
+          rating == null;
 
   bool get isTrackable {
     final String raw = (backendStatus ?? '').toLowerCase();
     return raw == 'matched' ||
         raw == 'on_the_way' ||
         raw == 'arrived' ||
-        raw == 'in_progress';
+        raw == 'in_progress' ||
+        raw == 'pending_client_approval';
   }
 
   bool get isNavigable =>
       status == ClientBookingStatus.inProgress ||
+      status == ClientBookingStatus.pendingApproval ||
       status == ClientBookingStatus.requested ||
       status == ClientBookingStatus.accepted ||
       canRate;
@@ -157,6 +164,7 @@ class ClientBooking {
       'on_the_way' => ClientBookingStatus.accepted,
       'arrived' => ClientBookingStatus.accepted,
       'in_progress' => ClientBookingStatus.inProgress,
+      'pending_client_approval' => ClientBookingStatus.pendingApproval,
       'completed' => ClientBookingStatus.completed,
       'cancelled' || 'expired' => ClientBookingStatus.cancelled,
       _ => ClientBookingStatus.requested,
@@ -208,7 +216,8 @@ class ClientBooking {
       if (statusRaw == 'matched' ||
           statusRaw == 'on_the_way' ||
           statusRaw == 'arrived' ||
-          statusRaw == 'in_progress') {
+          statusRaw == 'in_progress' ||
+          statusRaw == 'pending_client_approval') {
         return ClientBooking.fromApiJob(json);
       }
     }

@@ -1,10 +1,16 @@
 import '../network/api_client.dart';
+import '../cache/cache_keys.dart';
+import '../cache/cache_store.dart';
 
 class ReviewsService {
   final ApiClient _apiClient = ApiClient.instance;
 
   Future<dynamic> createReview(Map<String, dynamic> body) async {
-    return await _apiClient.post('/reviews', body: body);
+    final dynamic result = await _apiClient.post('/reviews', body: body);
+    await CacheStore.instance.invalidatePrefix(CacheKeys.jobsMinePrefix);
+    await CacheStore.instance.invalidatePrefix(CacheKeys.explorePrefix);
+    await CacheStore.instance.remove(CacheKeys.profileMe);
+    return result;
   }
 
   Future<List<dynamic>> getWorkerReviews(dynamic workerId) async {

@@ -4,6 +4,7 @@ import '../models/worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
 
 class WorkerCompletionSuccessScreen extends StatelessWidget {
   const WorkerCompletionSuccessScreen({
@@ -24,9 +25,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft, size: 20),
-          color: AppColors.primary,
+        leading: CustomBackButton(
           onPressed: () => _goHome(context),
         ),
         title: Text(

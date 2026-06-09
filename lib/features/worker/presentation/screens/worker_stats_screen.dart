@@ -7,6 +7,7 @@ import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import '../models/worker_stats.dart';
 import '../state/worker_session_state.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
 
 class WorkerStatsScreen extends StatefulWidget {
   const WorkerStatsScreen({super.key});
@@ -51,9 +52,7 @@ class _WorkerStatsScreenState extends State<WorkerStatsScreen> {
       appBar: AppBar(
         backgroundColor: AppColors.background,
         elevation: 0,
-        leading: IconButton(
-          icon: Icon(PhosphorIcons.caretLeft, size: 20),
-          color: AppColors.primary,
+        leading: CustomBackButton(
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).maybePop();

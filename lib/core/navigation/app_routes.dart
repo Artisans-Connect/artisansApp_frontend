@@ -19,4 +19,7 @@ class AppRoutes {
   static const bookingHistory = '/booking-history';
   static const liveTracking = '/live-tracking';
   static const rateService = '/rate-service';
+
+  // Shared
+  static const notifications = '/notifications';
 }

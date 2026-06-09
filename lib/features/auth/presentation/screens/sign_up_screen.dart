@@ -10,6 +10,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../../../shared/widgets/legal_agreement_text.dart';
 import '../../models/onboarding_session.dart';
 import '../../widgets/auth_error_banner.dart';
 import 'role_selection_screen.dart';
@@ -219,9 +220,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.only(top: 12),
-                              child: Text(
-                                'I agree to the Terms of Service and Privacy Policy.',
-                                style: AppTypography.bodyMedium,
+                              child: LegalAgreementText(
+                                prefix: 'I agree to the ',
+                                textStyle: AppTypography.bodyMedium,
+                                linkColor: AppColors.primary,
                               ),
                             ),
                           ),

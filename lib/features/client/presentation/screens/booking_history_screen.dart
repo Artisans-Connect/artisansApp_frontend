@@ -35,6 +35,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
   static const List<String> _filters = <String>[
     'All',
     'In Progress',
+    'Pending Approval',
     'Completed',
     'Cancelled',
     'Requested',
