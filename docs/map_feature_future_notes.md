@@ -101,3 +101,8 @@ Instead of retrieving all available workers in Node.js Express memory and doing 
 - Places: Places API enabled for search/autocomplete and reverse geocoding.
 - Billing: alerts and quotas configured before enabling route APIs.
 
+## Implemented Haversine Matching Integration
+*(Added June 2026)*
+
+The multi-factor matching algorithm based on Haversine distance, worker ratings, verification status, location freshness, and experience band has been successfully implemented on the backend (`matchingService.ts`). The frontend now integrates with this smart dispatch engine, relying on the backend to handle the complex scoring and multi-round dispatch rules while the frontend focuses on rendering the results and managing worker acceptance/rejection flows. The suggestions regarding database-side proximity calculations and road-based routing remain valid roadmap items for future optimization.
+

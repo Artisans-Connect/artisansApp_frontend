@@ -50,15 +50,20 @@ The application is built using a modern decoupled architecture:
 - The Express.js server uses the Supabase JWT secret to verify the payload, extracts the user ID/role, and checks permissions.
 
 ### B. Smart Dispatch & Matching Engine (ASAP Mode)
-The "secret sauce" of the matching platform is a scheduled, multi-round worker notification sequence:
+The "secret sauce" of the matching platform is a scheduled, multi-round worker notification sequence using a multi-factor scoring algorithm:
 
 1. **Job Submission**: A client creates a job with `job_mode = 'asap'`.
-2. **Candidate Retrieval**: The Express server queries the database for workers within a target radius (using the Haversine formula) filtering by matching category, availability, and verification status.
-3. **Ranking**: Candidates are ranked by proximity (Ascending) and ratings (Descending).
+2. **Candidate Retrieval & Scoring**: The Express server queries the database for workers within a target radius (using the Haversine formula) filtering by matching category and availability. Candidates are then scored based on multiple factors:
+   - **Proximity**: Closer workers score higher.
+   - **Ratings**: Higher-rated workers receive a boost.
+   - **Verification**: Verified workers receive a significant score multiplier.
+   - **Location Freshness**: Workers with recently updated locations are preferred.
+   - **Experience Band**: More experienced workers receive a slight edge.
+3. **Ranking**: Candidates are ranked by their aggregate score (Descending).
 4. **Dispatch Rounds (3-rounds-of-3)**:
    - **Round 1**: Express notifies the top 3 ranked workers simultaneously via Firebase Cloud Messaging (FCM) and sets the job status to `matching`.
    - **Acceptance Window**: The system waits 90 seconds. If any worker accepts, the job status changes to `matched`, assigning the worker ID, and the dispatch loop stops.
-   - **Round 2/3**: If no worker accepts within 90 seconds, the system notifies the next 3 nearest workers.
+   - **Round 2/3**: If no worker accepts within 90 seconds, the system notifies the next 3 best-scored workers.
    - **Expiry**: If no worker accepts after 3 rounds (4.5 minutes), the job status changes to `expired`, and the client is notified.
 
 ### C. Real-Time Tracking & Chat
@@ -81,53 +86,5 @@ Our relational database structure is designed to enforce data integrity:
 
 ---
 
-## 4. Key Gaps Currently Identified (Disjunctions)
+*This technical overview reflects the implemented state of the Artisans App as of June 2026.*
 
-During code analysis, we identified several discrepancies between the **Flutter UI mockups** and the **Backend Schema**. These are recorded in our docs to be resolved later:
-1. **Category Selection**: The UI uses simple string slugs (e.g., `'plumbing'`), whereas the DB expects UUID foreign keys.
-2. **Location Capture**: The UI maps to a text address only, whereas the backend matching engine requires numeric coordinates (`location_lat`, `location_lng`).
-3. **Budget Modeling**: The UI collects a single `projectBudget` double, whereas the database schema splits ranges into `budget_min` and `budget_max`.
-4. **Scheduling**: The UI captures text time-windows (e.g., `'Morning'`), whereas the DB requires a `timestamptz`.
-5. **Dependencies**: The frontend `pubspec.yaml` needs to integrate the `supabase_flutter` SDK to establish JWT generation and authentication.
-
----
-
-## 5. Architectural Consultations — We Need Your Input!
-
-We would highly value your guidance on the following technical dilemmas:
-
-### Question 1: Atomic Job Acceptance & Concurrency
-When 3 workers are notified simultaneously, there is a possibility of a race condition where multiple workers tap "Accept" at the exact same moment. 
-- **Our proposed solution**: A conditional single-command SQL update:
-  ```sql
-  UPDATE jobs 
-  SET status = 'matched', worker_id = :workerId 
-  WHERE id = :jobId AND status IN ('searching', 'matching')
-  ```
-- **Discussion**: Does this clean conditional `UPDATE` statement in Postgres guarantee atomicity without requiring transaction locks or PG advisory locks? What is the recommended strategy to return a clean `409 Conflict` (already matched) error to the losing workers?
-
-### Question 2: Real-time Worker Location Update Cadence vs. Battery Life
-The system relies on workers pinging their coordinates every 10 seconds via `PUT /api/workers/location` to ensure precise HA/ETA matching and client-side map tracking.
-- **Discussion**: A 10-second HTTP request loop will cause heavy battery drain on mobile devices and high request volumes on our server. What strategy do you recommend?
-  - Should we switch to a WebSocket/gRPC channel for location pings?
-  - Should the frontend implement an adaptive ping frequency (e.g., ping every 10s if moving > 10m, but drop to every 60s if stationary)?
-
-### Question 3: Network Drop & Offline Resilience (Ghana Context)
-In regions with unstable mobile internet (e.g., MTN/Telecel networks in Ghana), users will experience random disconnections during crucial steps like posting a job or accepting a match.
-- **Discussion**: How should we handle request retries on the Flutter client?
-  - For job posting, we planned to implement an `Idempotency-Key` header on `POST /api/jobs/create` to prevent duplicate billing or listings. Is there a preferred pattern for caching and retrying failed requests in Flutter offline stores (e.g., using Hive or SQLite)?
-  - How do we handle matching rounds if a notified worker goes offline mid-round? Should the backend drop them from the current active matching round automatically if they miss a location ping?
-
-### Question 4: State Syncing (Supabase Realtime vs. Express API)
-Clients need to view live updates on their job status (e.g., `searching` -> `matched` -> `worker arrived`). 
-- **Discussion**: 
-  - Should the Flutter client listen to status updates directly through Supabase's Realtime DB channel, or should it poll/stream them through the Express API? 
-  - If Flutter subscribes directly to Supabase tables, what is the best practice to align security (RLS) policies to make sure clients can only listen to their own job statuses?
-
-### Question 5: Database Triggers vs. Express API Controllers
-Currently, certain business rules (e.g., recalculating average worker ratings when a new review is inserted, incrementing total jobs, auto-expiring ASAP jobs) are designed to run as database-level SQL triggers.
-- **Discussion**: Database triggers keep data operations atomic and fast, but they make the codebase harder to version-control, test, and debug. Do you recommend keeping these calculations in PostgreSQL triggers, or should we move them entirely into the Express.js business logic layer?
-
----
-
-*Please review these questions and provide your recommendations. Your feedback will shape the implementation of the matching engine (M4) and the client/worker integration phases (M7).*
