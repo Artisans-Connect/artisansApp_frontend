@@ -12,23 +12,24 @@ import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/worker_tracking_map.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
+import '../../../../core/theme/design_tokens.dart';
 
-class _T {
-  static const Color surfaceBase = Color(0xFFFFF8F0);
-  static const Color surfaceCard = Color(0xFFFFFFFF);
-  static const Color primary = Color(0xFFC15A3D);
-  static const Color primaryDark = Color(0xFF8B3A2A);
-  static const Color accentGold = Color(0xFFE6A017);
-  static const Color accentWarm = Color(0xFFD97706);
-  static const Color textPrimary = Color(0xFF2C2418);
-  static const Color textSecondary = Color(0xFF5C5243);
-  static const Color borderSubtle = Color(0x0F000000);
-  static const Color successGreen = Color(0xFF34C759);
-  static const Color error = Color(0xFFBA1A1A);
-  static const Color primaryContainer = Color(0xFFF7E8E3);
-  static const Color shadowDeep = Color(0x142C2418);
-  static const Color shadowMid = Color(0x0A2C2418);
-}
+// class _T {
+//   static const Color surfaceBase = Color(0xFFFFF8F0);
+//   static const Color surfaceCard = Color(0xFFFFFFFF);
+//   static const Color primary = Color(0xFFC15A3D);
+//   static const Color primaryDark = Color(0xFF8B3A2A);
+//   static const Color accentGold = Color(0xFFE6A017);
+//   static const Color accentWarm = Color(0xFFD97706);
+//   static const Color textPrimary = Color(0xFF2C2418);
+//   static const Color textSecondary = Color(0xFF5C5243);
+//   static const Color borderSubtle = Color(0x0F000000);
+//   static const Color successGreen = Color(0xFF34C759);
+//   static const Color error = Color(0xFFBA1A1A);
+//   static const Color primaryContainer = Color(0xFFF7E8E3);
+//   static const Color shadowDeep = Color(0x142C2418);
+//   static const Color shadowMid = Color(0x0A2C2418);
+// }
  
 // ---------------------------------------------------------------------------
 // Mini-hero illustrations
@@ -51,7 +52,7 @@ class _MiniHero extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _T.borderSubtle),
+        border: Border.all(color: DesignTokens.borderSubtle),
       ),
       alignment: Alignment.center,
       child: child,
@@ -118,7 +119,7 @@ class _StepHeroState extends State<_StepHero>
             fontFamily: 'Satoshi',
             fontSize: 16,
             fontWeight: FontWeight.w700,
-            color: _T.textPrimary,
+            color: DesignTokens.textPrimary,
           ),
         ),
         const SizedBox(height: 2),
@@ -128,7 +129,7 @@ class _StepHeroState extends State<_StepHero>
           style: const TextStyle(
             fontFamily: 'Satoshi',
             fontSize: 12,
-            color: _T.textSecondary,
+            color: DesignTokens.textSecondary,
           ),
         ),
       ],
@@ -141,31 +142,31 @@ class _StepHeroState extends State<_StepHero>
           icon: Icons.directions_bike_rounded,
           title: 'Artisan on the Way',
           subtitle: 'Track live location below',
-          color: _T.accentGold,
+          color: DesignTokens.accentGold,
         ),
       2 => const _StepHeroData(
           icon: Icons.location_on_rounded,
           title: 'Artisan Arrived',
           subtitle: 'Service will begin shortly',
-          color: _T.successGreen,
+          color: DesignTokens.successGreen,
         ),
       3 => const _StepHeroData(
           icon: Icons.settings_rounded,
           title: 'Work in Progress',
           subtitle: 'Your job is being handled',
-          color: _T.primary,
+          color: DesignTokens.primary,
         ),
       4 => const _StepHeroData(
           icon: Icons.celebration_rounded,
           title: 'Job Completed',
           subtitle: 'Share your experience with a rating',
-          color: _T.primary,
+          color: DesignTokens.primary,
         ),
       _ => const _StepHeroData(
           icon: Icons.check_circle_rounded,
           title: 'Booking Confirmed',
           subtitle: 'Your artisan is getting ready',
-          color: _T.primary,
+          color: DesignTokens.primary,
         ),
     };
   }
@@ -197,7 +198,7 @@ class _SectionHeader extends StatelessWidget {
           width: 3,
           height: 16,
           margin: const EdgeInsets.only(right: 8),
-          color: _T.primary,
+          color: DesignTokens.primary,
         ),
         Text(
           title,
@@ -205,7 +206,7 @@ class _SectionHeader extends StatelessWidget {
             fontFamily: 'Satoshi',
             fontSize: 17,
             fontWeight: FontWeight.w800,
-            color: _T.textPrimary,
+            color: DesignTokens.textPrimary,
           ),
         ),
       ],
@@ -238,6 +239,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   bool _loading = true;
   bool _requestingAnotherWorker = false;
   bool _isReopeningCompletion = false;
+  bool _isCancelling = false;
+  bool _isRequestingTermination = false;
   String? _loadError;
   int _currentStep = 0;
   String _etaLabel = 'Calculating ETA…';
@@ -357,6 +360,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       'on_the_way' => 1,
       'arrived' => 2,
       'in_progress' => 3,
+      'termination_requested' => 3,
       'pending_client_approval' => 4,
       'completed' => 4,
       _ => 0,
@@ -399,7 +403,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
     if (!_loading && workerCancelled) {
       return Scaffold(
-        backgroundColor: _T.surfaceBase,
+        backgroundColor: DesignTokens.surfaceBase,
         appBar: _buildAppBar(context),
         body: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -430,9 +434,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                         fontFamily: 'Satoshi',
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: _T.primary,
+                        color: DesignTokens.primary,
                         decoration: TextDecoration.underline,
-                        decorationColor: _T.primary.withOpacity(0.4),
+                        decorationColor: DesignTokens.primary.withOpacity(0.4),
                       ),
                     ),
                   ),
@@ -446,7 +450,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     }
  
     return Scaffold(
-      backgroundColor: _T.surfaceBase,
+      backgroundColor: DesignTokens.surfaceBase,
       appBar: _buildAppBar(context),
       body: _loading
           ? _buildLoader()
@@ -495,8 +499,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
  
                     // ── Action buttons
                     _buildActionRow(job, jobUuid, workerId),
+                    const SizedBox(height: 12),
+
+                    // ── Cancel / Termination
+                    _buildCancelSection(status),
                     const SizedBox(height: 16),
- 
+
                     // ── Rate button
                     _buildCompletionActions(
                       canRate: canRate,
@@ -515,9 +523,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                             fontFamily: 'Satoshi',
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: _T.primary,
+                            color: DesignTokens.primary,
                             decoration: TextDecoration.underline,
-                            decorationColor: _T.primary.withOpacity(0.4),
+                            decorationColor: DesignTokens.primary.withOpacity(0.4),
                           ),
                         ),
                       ),
@@ -539,7 +547,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       preferredSize: const Size.fromHeight(60),
       child: Container(
         decoration: const BoxDecoration(
-          color: _T.surfaceBase,
+          color: DesignTokens.surfaceBase,
           border: Border(
               bottom: BorderSide(color: Color(0x12000000), width: 1)),
         ),
@@ -554,17 +562,17 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      // color: _T.surfaceCard,
+                      // color: DesignTokens.surfaceCard,
                       shape: BoxShape.circle,
                       boxShadow: const [
                         BoxShadow(
-                            color: _T.shadowDeep,
+                            color: DesignTokens.shadowDeep,
                             blurRadius: 8,
                             offset: Offset(0, 2))
                       ],
                     ),
                     child: const Icon(Icons.arrow_back_ios_new_rounded,
-                        size: 16, color: _T.textPrimary),
+                        size: 16, color: DesignTokens.textPrimary),
                   ),
                 ),
                 const Expanded(
@@ -575,7 +583,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                         fontFamily: 'Satoshi',
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: _T.textPrimary,
+                        color: DesignTokens.textPrimary,
                       ),
                     ),
                   ),
@@ -586,10 +594,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: _T.successGreen.withOpacity(0.12),
+                    color: DesignTokens.successGreen.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(
-                        color: _T.successGreen.withOpacity(0.3), width: 1),
+                        color: DesignTokens.successGreen.withOpacity(0.3), width: 1),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -598,7 +606,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                           width: 6,
                           height: 6,
                           decoration: const BoxDecoration(
-                              color: _T.successGreen, shape: BoxShape.circle)),
+                              color: DesignTokens.successGreen, shape: BoxShape.circle)),
                       const SizedBox(width: 5),
                       const Text(
                         'LIVE',
@@ -631,7 +639,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         mainAxisSize: MainAxisSize.min,
         children: [
           const CircularProgressIndicator(
-            color: _T.primary,
+            color: DesignTokens.primary,
             strokeWidth: 2.5,
           ),
           const SizedBox(height: 14),
@@ -640,7 +648,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             style: TextStyle(
               fontFamily: 'Satoshi',
               fontSize: 13,
-              color: _T.textSecondary,
+              color: DesignTokens.textSecondary,
             ),
           ),
         ],
@@ -657,14 +665,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _T.error.withOpacity(0.08),
+        color: DesignTokens.error.withOpacity(0.08),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _T.error.withOpacity(0.2)),
+        border: Border.all(color: DesignTokens.error.withOpacity(0.2)),
       ),
       child: Row(
         children: [
           const Icon(Icons.error_outline_rounded,
-              color: _T.error, size: 18),
+              color: DesignTokens.error, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -672,7 +680,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               style: const TextStyle(
                 fontFamily: 'Satoshi',
                 fontSize: 13,
-                color: _T.error,
+                color: DesignTokens.error,
               ),
             ),
           ),
@@ -715,14 +723,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [_T.primary, _T.primaryDark],
+          colors: [DesignTokens.primary, DesignTokens.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: _T.primary.withOpacity(0.16),
+              color: DesignTokens.primary.withOpacity(0.16),
               blurRadius: 10,
               offset: const Offset(0, 4)),
         ],
@@ -828,6 +836,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       'on_the_way' => 'On the Way',
       'arrived' => 'Arrived',
       'in_progress' => 'In Progress',
+      'termination_requested' => 'Termination Requested',
       'pending_client_approval' => 'Pending Approval',
       'completed' => 'Completed',
       'cancelled' => 'Cancelled',
@@ -838,8 +847,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
  
   Color _statusPillColor(String? statusRaw) {
     return switch ((statusRaw ?? '').toLowerCase()) {
-      'completed' => _T.accentGold.withOpacity(0.2),
-      'pending_client_approval' => _T.accentGold.withOpacity(0.2),
+      'completed' => DesignTokens.accentGold.withOpacity(0.2),
+      'pending_client_approval' => DesignTokens.accentGold.withOpacity(0.2),
+      'termination_requested' => DesignTokens.error.withOpacity(0.2),
       'in_progress' => Colors.white.withOpacity(0.18),
       _ => Colors.white.withOpacity(0.14),
     };
@@ -847,8 +857,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
  
   Color _statusPillTextColor(String? statusRaw) {
     return switch ((statusRaw ?? '').toLowerCase()) {
-      'completed' => _T.accentGold,
-      'pending_client_approval' => _T.accentGold,
+      'completed' => DesignTokens.accentGold,
+      'pending_client_approval' => DesignTokens.accentGold,
+      'termination_requested' => DesignTokens.error,
       _ => Colors.white,
     };
   }
@@ -859,9 +870,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: _T.surfaceCard,
+        color: DesignTokens.surfaceCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: _T.error.withOpacity(0.18)),
+        border: Border.all(color: DesignTokens.error.withOpacity(0.18)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -876,15 +887,15 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           Row(
             children: <Widget>[
               CircleAvatar(
-                backgroundColor: _T.error.withOpacity(0.12),
-                child: Icon(Icons.error_outline_rounded, color: _T.error),
+                backgroundColor: DesignTokens.error.withOpacity(0.12),
+                child: Icon(Icons.error_outline_rounded, color: DesignTokens.error),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'The worker cancelled this booking',
                   style: AppTypography.titleLarge.copyWith(
-                    color: _T.textPrimary,
+                    color: DesignTokens.textPrimary,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
@@ -896,7 +907,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             reason.isNotEmpty
                 ? reason
                 : 'You can reopen this same job and we will search for another available worker.',
-            style: AppTypography.bodyMedium.copyWith(color: _T.textSecondary),
+            style: AppTypography.bodyMedium.copyWith(color: DesignTokens.textSecondary),
           ),
           const SizedBox(height: 16),
           PrimaryButton(
@@ -1020,7 +1031,371 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       if (mounted) setState(() => _isReopeningCompletion = false);
     }
   }
- 
+
+  // ---------------------------------------------------------------------------
+  // Cancel / Termination
+  // ---------------------------------------------------------------------------
+
+  Widget _buildCancelSection(String status) {
+    if (status == 'termination_requested') {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        decoration: BoxDecoration(
+          color: DesignTokens.accentWarm.withOpacity(0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: DesignTokens.accentWarm.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.hourglass_top_rounded, color: DesignTokens.accentWarm, size: 20),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Waiting for artisan to respond to your termination request\u2026',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 13,
+                  color: DesignTokens.accentWarm,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final bool showCancel = status == 'matched' || status == 'on_the_way' || status == 'arrived';
+    final bool showTermination = status == 'in_progress';
+
+    if (!showCancel && !showTermination) return const SizedBox.shrink();
+
+    if (showTermination) {
+      return OutlinedButton.icon(
+        onPressed: _isRequestingTermination ? null : _handleRequestTermination,
+        icon: _isRequestingTermination
+            ? const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.front_hand_rounded, size: 16),
+        label: Text(_isRequestingTermination ? 'Sending\u2026' : 'Request Termination'),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: DesignTokens.accentWarm,
+          side: BorderSide(color: DesignTokens.accentWarm.withOpacity(0.4)),
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          minimumSize: const Size(double.infinity, 44),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+
+    // Cancel button
+    return OutlinedButton.icon(
+      onPressed: _isCancelling ? null : _handleCancelJob,
+      icon: _isCancelling
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.cancel_outlined, size: 16),
+      label: Text(_isCancelling ? 'Cancelling\u2026' : 'Cancel Job'),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: DesignTokens.error,
+        side: BorderSide(color: DesignTokens.error.withOpacity(0.4)),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        minimumSize: const Size(double.infinity, 44),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
+  Future<void> _handleCancelJob() async {
+    final String? jobUuid = _currentJobId;
+    if (_isCancelling || jobUuid == null || jobUuid.isEmpty) return;
+
+    // Fetch cancellation preview
+    setState(() => _isCancelling = true);
+    try {
+      final dynamic preview = await _jobsService.getCancellationPreview(jobUuid);
+      if (!mounted) return;
+
+      if (preview is! Map<String, dynamic>) {
+        setState(() => _isCancelling = false);
+        return;
+      }
+
+      final bool canCancel = preview['can_cancel'] as bool? ?? false;
+      if (!canCancel) {
+        setState(() => _isCancelling = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(preview['warning_message'] as String? ?? 'Cannot cancel this job.')),
+        );
+        return;
+      }
+
+      final double fee = (preview['fee_amount'] as num?)?.toDouble() ?? 0;
+      final String warningTitle = preview['warning_title'] as String? ?? 'Cancel this job?';
+      final String warningMessage = preview['warning_message'] as String? ?? 'Are you sure?';
+
+      // Show confirmation dialog
+      final TextEditingController reasonCtrl = TextEditingController();
+      final bool? confirmed = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext ctx) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(
+                  fee > 0 ? Icons.warning_amber_rounded : Icons.cancel_outlined,
+                  color: fee > 0 ? DesignTokens.accentWarm : DesignTokens.error,
+                  size: 24,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    warningTitle,
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  warningMessage,
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 14,
+                    color: DesignTokens.textSecondary,
+                  ),
+                ),
+                if (fee > 0) ...[
+                  const SizedBox(height: 14),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: DesignTokens.accentWarm.withOpacity(0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: DesignTokens.accentWarm.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.payments_rounded, color: DesignTokens.accentWarm, size: 20),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'GH\u20B5 ${fee.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: DesignTokens.accentWarm,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Please pay this amount directly to the artisan.',
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      color: DesignTokens.textSecondary.withOpacity(0.8),
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonCtrl,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    hintText: 'Reason for cancellation (optional)',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Keep Job'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: DesignTokens.error),
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Yes, Cancel'),
+              ),
+            ],
+          );
+        },
+      );
+
+      if (confirmed != true || !mounted) {
+        reasonCtrl.dispose();
+        setState(() => _isCancelling = false);
+        return;
+      }
+
+      final String reasonText = reasonCtrl.text.trim();
+      reasonCtrl.dispose();
+
+      // Execute cancellation
+      await _jobsService.cancelJobWithReason(
+        jobUuid,
+        reason: reasonText.isNotEmpty ? reasonText : null,
+      );
+      if (!mounted) return;
+
+      String snackMessage = 'Job cancelled.';
+      if (fee > 0) {
+        snackMessage = 'Job cancelled. Please pay GH\u20B5 ${fee.toStringAsFixed(2)} to the artisan.';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(snackMessage)),
+      );
+      ClientNavigation.goToBookingsTab(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(userMessageFor(e, fallback: 'Could not cancel this job.'))),
+      );
+    } finally {
+      if (mounted) setState(() => _isCancelling = false);
+    }
+  }
+
+  Future<void> _handleRequestTermination() async {
+    final String? jobUuid = _currentJobId;
+    if (_isRequestingTermination || jobUuid == null || jobUuid.isEmpty) return;
+
+    final TextEditingController reasonCtrl = TextEditingController();
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(
+                Icons.front_hand_rounded,
+                color: DesignTokens.accentWarm,
+                size: 24,
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Request Termination',
+                  style: TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Work has already started. Your artisan will be notified and can accept or decline the termination.',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 14,
+                  color: DesignTokens.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: DesignTokens.accentWarm.withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Note: This is not an instant cancellation. The artisan must agree to stop work.',
+                  style: TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 12,
+                    color: DesignTokens.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: reasonCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  hintText: 'Why do you want to terminate this job?',
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep Job'),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(backgroundColor: DesignTokens.accentWarm),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Request Termination'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) {
+      reasonCtrl.dispose();
+      return;
+    }
+
+    final String reasonText = reasonCtrl.text.trim();
+    reasonCtrl.dispose();
+
+    setState(() => _isRequestingTermination = true);
+    try {
+      await _jobsService.requestTermination(
+        jobUuid,
+        reason: reasonText.isNotEmpty ? reasonText : null,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Termination request sent to the artisan.')),
+      );
+      // Refresh job data
+      await _loadJobDetails();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(userMessageFor(e, fallback: 'Could not send termination request.'))),
+      );
+    } finally {
+      if (mounted) setState(() => _isRequestingTermination = false);
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Map card
   // ---------------------------------------------------------------------------
@@ -1032,9 +1407,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: _T.surfaceCard,
+        color: DesignTokens.surfaceCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _T.borderSubtle),
+        border: Border.all(color: DesignTokens.borderSubtle),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -1044,7 +1419,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
             child: Row(
               children: [
-                const Icon(Icons.map_rounded, size: 16, color: _T.primary),
+                const Icon(Icons.map_rounded, size: 16, color: DesignTokens.primary),
                 const SizedBox(width: 6),
                 const Text(
                   'Live Location',
@@ -1052,7 +1427,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     fontFamily: 'Satoshi',
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: _T.textPrimary,
+                    color: DesignTokens.textPrimary,
                   ),
                 ),
                 const Spacer(),
@@ -1080,21 +1455,21 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       decoration: BoxDecoration(
         color: const Color(0xFFFAF5F0),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _T.borderSubtle),
+        border: Border.all(color: DesignTokens.borderSubtle),
       ),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.location_searching_rounded,
-                size: 36, color: _T.textSecondary.withOpacity(0.4)),
+                size: 36, color: DesignTokens.textSecondary.withOpacity(0.4)),
             const SizedBox(height: 10),
             Text(
               'Waiting for artisan location…',
               style: TextStyle(
                 fontFamily: 'Satoshi',
                 fontSize: 13,
-                color: _T.textSecondary.withOpacity(0.7),
+                color: DesignTokens.textSecondary.withOpacity(0.7),
               ),
             ),
           ],
@@ -1110,9 +1485,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   Widget _buildProgressTimeline() {
     return Container(
       decoration: BoxDecoration(
-        color: _T.surfaceCard,
+        color: DesignTokens.surfaceCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _T.borderSubtle),
+        border: Border.all(color: DesignTokens.borderSubtle),
       ),
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 18),
       child: Column(
@@ -1142,7 +1517,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       decoration: BoxDecoration(
                         gradient: isCompleted
                             ? const LinearGradient(
-                                colors: [_T.primary, _T.primaryDark],
+                                colors: [DesignTokens.primary, DesignTokens.primaryDark],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               )
@@ -1154,14 +1529,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                    color: _T.primary.withOpacity(0.30),
+                                    color: DesignTokens.primary.withOpacity(0.30),
                                     blurRadius: 14,
                                     offset: const Offset(0, 4))
                               ]
                             : isCompleted
                                 ? [
                                     BoxShadow(
-                                        color: _T.primary.withOpacity(0.15),
+                                        color: DesignTokens.primary.withOpacity(0.15),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3))
                                   ]
@@ -1171,7 +1546,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                         step['icon'] as IconData,
                         color: isCompleted
                             ? Colors.white
-                            : _T.textSecondary.withOpacity(0.45),
+                            : DesignTokens.textSecondary.withOpacity(0.45),
                         size: 20,
                       ),
                     ),
@@ -1190,10 +1565,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                                 ? FontWeight.w800
                                 : FontWeight.w600,
                             color: isCurrent
-                                ? _T.primary
+                                ? DesignTokens.primary
                                 : isCompleted
-                                    ? _T.textPrimary
-                                    : _T.textSecondary.withOpacity(0.5),
+                                    ? DesignTokens.textPrimary
+                                    : DesignTokens.textSecondary.withOpacity(0.5),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1203,8 +1578,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                             fontFamily: 'Satoshi',
                             fontSize: 12,
                             color: isUpcoming
-                                ? _T.textSecondary.withOpacity(0.35)
-                                : _T.textSecondary,
+                                ? DesignTokens.textSecondary.withOpacity(0.35)
+                                : DesignTokens.textSecondary,
                           ),
                         ),
                       ],
@@ -1215,13 +1590,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: _T.primary,
+                        color: DesignTokens.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
                   if (index < _currentStep)
                     const Icon(Icons.check_rounded,
-                        color: _T.primary, size: 18),
+                        color: DesignTokens.primary, size: 18),
                 ],
               ),
               if (index < _steps.length - 1)
@@ -1236,7 +1611,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                             ? Container(
                                 decoration: const BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: [_T.primary, _T.primaryDark],
+                                    colors: [DesignTokens.primary, DesignTokens.primaryDark],
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                   ),
@@ -1266,9 +1641,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
  
     return Container(
       decoration: BoxDecoration(
-        color: _T.surfaceCard,
+        color: DesignTokens.surfaceCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _T.borderSubtle),
+        border: Border.all(color: DesignTokens.borderSubtle),
       ),
       padding: const EdgeInsets.all(18),
       child: Row(
@@ -1281,14 +1656,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                 height: 72,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [_T.primaryContainer, Color(0xFFF7E8E3)],
+                    colors: [DesignTokens.primaryContainer, Color(0xFFF7E8E3)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                        color: _T.primary.withOpacity(0.15),
+                        color: DesignTokens.primary.withOpacity(0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 4))
                   ],
@@ -1301,12 +1676,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => const Icon(
                               Icons.person_rounded,
-                              color: _T.primary,
+                              color: DesignTokens.primary,
                               size: 36),
                         ),
                       )
                     : const Icon(Icons.person_rounded,
-                        color: _T.primary, size: 36),
+                        color: DesignTokens.primary, size: 36),
               ),
               // Online dot
               Positioned(
@@ -1316,12 +1691,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   width: 14,
                   height: 14,
                   decoration: BoxDecoration(
-                    color: _T.successGreen,
+                    color: DesignTokens.successGreen,
                     shape: BoxShape.circle,
-                    border: Border.all(color: _T.surfaceCard, width: 2),
+                    border: Border.all(color: DesignTokens.surfaceCard, width: 2),
                     boxShadow: [
                       BoxShadow(
-                          color: _T.successGreen.withOpacity(0.4),
+                          color: DesignTokens.successGreen.withOpacity(0.4),
                           blurRadius: 6)
                     ],
                   ),
@@ -1340,7 +1715,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     fontFamily: 'Satoshi',
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: _T.textPrimary,
+                    color: DesignTokens.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 3),
@@ -1349,7 +1724,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   style: const TextStyle(
                     fontFamily: 'Satoshi',
                     fontSize: 13,
-                    color: _T.textSecondary,
+                    color: DesignTokens.textSecondary,
                   ),
                 ),
                 if (rating != null) ...[
@@ -1363,15 +1738,15 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
             decoration: BoxDecoration(
-              color: _T.accentGold.withOpacity(0.12),
+              color: DesignTokens.accentGold.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: _T.accentGold.withOpacity(0.25), width: 1),
+                  color: DesignTokens.accentGold.withOpacity(0.25), width: 1),
             ),
             child: Column(
               children: [
                 const Icon(Icons.verified_rounded,
-                    color: _T.accentGold, size: 18),
+                    color: DesignTokens.accentGold, size: 18),
                 const SizedBox(height: 2),
                 Text(
                   'Verified',
@@ -1379,7 +1754,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     fontFamily: 'Satoshi',
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
-                    color: _T.accentWarm,
+                    color: DesignTokens.accentWarm,
                     letterSpacing: 0.3,
                   ),
                 ),
@@ -1495,7 +1870,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         decoration: BoxDecoration(
           gradient: enabled
               ? const LinearGradient(
-                  colors: [_T.primary, _T.primaryDark],
+                  colors: [DesignTokens.primary, DesignTokens.primaryDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )
@@ -1505,7 +1880,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           boxShadow: enabled
               ? [
                   BoxShadow(
-                      color: _T.primary.withOpacity(0.30),
+                      color: DesignTokens.primary.withOpacity(0.30),
                       blurRadius: 16,
                       offset: const Offset(0, 6))
                 ]
@@ -1516,7 +1891,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           children: [
             Icon(
               icon,
-              color: enabled ? _T.accentGold : _T.textSecondary,
+              color: enabled ? DesignTokens.accentGold : DesignTokens.textSecondary,
               size: 20,
             ),
             const SizedBox(width: 8),
@@ -1526,7 +1901,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                 fontFamily: 'Satoshi',
                 fontSize: 15,
                 fontWeight: FontWeight.w700,
-                color: enabled ? Colors.white : _T.textSecondary,
+                color: enabled ? Colors.white : DesignTokens.textSecondary,
               ),
             ),
           ],
@@ -1573,7 +1948,7 @@ class _LiveDotState extends State<_LiveDot>
             width: 7,
             height: 7,
             decoration: BoxDecoration(
-              color: _T.successGreen.withOpacity(0.4 + _ctrl.value * 0.6),
+              color: DesignTokens.successGreen.withOpacity(0.4 + _ctrl.value * 0.6),
               shape: BoxShape.circle,
             ),
           ),
@@ -1584,7 +1959,7 @@ class _LiveDotState extends State<_LiveDot>
               fontFamily: 'Satoshi',
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: _T.successGreen.withOpacity(0.7 + _ctrl.value * 0.3),
+              color: DesignTokens.successGreen.withOpacity(0.7 + _ctrl.value * 0.3),
             ),
           ),
         ],
@@ -1613,16 +1988,16 @@ class _ActionButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isEnabled ? _T.surfaceCard : const Color(0xFFF5F0EC),
+          color: isEnabled ? DesignTokens.surfaceCard : const Color(0xFFF5F0EC),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isEnabled ? _T.primary.withOpacity(0.25) : _T.borderSubtle,
+            color: isEnabled ? DesignTokens.primary.withOpacity(0.25) : DesignTokens.borderSubtle,
             width: 1.2,
           ),
           boxShadow: isEnabled
               ? const [
                   BoxShadow(
-                      color: _T.shadowMid,
+                      color: DesignTokens.shadowMid,
                       blurRadius: 10,
                       offset: Offset(0, 3))
                 ]
@@ -1634,7 +2009,7 @@ class _ActionButton extends StatelessWidget {
             Icon(
               icon,
               size: 18,
-              color: isEnabled ? _T.primary : _T.textSecondary.withOpacity(0.4),
+              color: isEnabled ? DesignTokens.primary : DesignTokens.textSecondary.withOpacity(0.4),
             ),
             const SizedBox(width: 8),
             Text(
@@ -1644,8 +2019,8 @@ class _ActionButton extends StatelessWidget {
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: isEnabled
-                    ? _T.primary
-                    : _T.textSecondary.withOpacity(0.4),
+                    ? DesignTokens.primary
+                    : DesignTokens.textSecondary.withOpacity(0.4),
               ),
             ),
           ],
@@ -1673,7 +2048,7 @@ class _StarRating extends StatelessWidget {
                     ? Icons.star_half_rounded
                     : Icons.star_outline_rounded,
             size: 14,
-            color: _T.accentGold,
+            color: DesignTokens.accentGold,
           );
         }),
         const SizedBox(width: 5),
@@ -1683,7 +2058,7 @@ class _StarRating extends StatelessWidget {
             fontFamily: 'Satoshi',
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: _T.textSecondary,
+            color: DesignTokens.textSecondary,
           ),
         ),
       ],

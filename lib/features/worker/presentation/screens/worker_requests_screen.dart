@@ -1,7 +1,5 @@
 import 'dart:async';
- 
 import 'package:flutter/material.dart';
- 
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
 import '../models/worker_job.dart';
@@ -12,39 +10,40 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import '../../../../shared/widgets/job_requests_map.dart';
 import 'job_request_detail_screen.dart';
+import '../../../../core/theme/design_tokens.dart';
  
-// ─────────────────────────────────────────────────────────────────────────────
-// Design tokens (from DESIGN.md)
-// ─────────────────────────────────────────────────────────────────────────────
-class _T {
-  static const Color surfaceBase  = Color(0xFFFFF8F0);
-  static const Color surfaceCard  = Color(0xFFFFFFFF);
-  static const Color primary      = Color(0xFFC15A3D);
-  static const Color primaryDark  = Color(0xFF8B3A2A);
-  static const Color textPrimary  = Color(0xFF2C2418);
-  static const Color textSecondary= Color(0xFF5C5243);
-  static const Color textMuted    = Color(0xFF9B8F83);
-  static const Color borderSubtle = Color(0x0F000000);
-  static const Color successGreen = Color(0xFF1D9E75);
-  static const Color error        = Color(0xFFBA1A1A);
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Design tokens (from DESIGN.md)
+// // ─────────────────────────────────────────────────────────────────────────────
+// class _T {
+//   static const Color surfaceBase  = Color(0xFFFFF8F0);
+//   static const Color surfaceCard  = Color(0xFFFFFFFF);
+//   static const Color primary      = Color(0xFFC15A3D);
+//   static const Color primaryDark  = Color(0xFF8B3A2A);
+//   static const Color textPrimary  = Color(0xFF2C2418);
+//   static const Color textSecondary= Color(0xFF5C5243);
+//   static const Color textMuted    = Color(0xFF9B8F83);
+//   static const Color borderSubtle = Color(0x0F000000);
+//   static const Color successGreen = Color(0xFF1D9E75);
+//   static const Color error        = Color(0xFFBA1A1A);
  
-  // Derived
-  static const Color primaryTint08 = Color(0x14C15A3D);
-  static const Color primaryTint16 = Color(0x29C15A3D);
-  static const Color warmTint      = Color(0xFFF4EDE6);
-  static const Color warmBorder    = Color(0xFFE8D5CB);
-  static const Color offlineSurface= Color(0xFFE8DDD4);
+//   // Derived
+//   static const Color primaryTint08 = Color(0x14C15A3D);
+//   static const Color primaryTint16 = Color(0x29C15A3D);
+//   static const Color warmTint      = Color(0xFFF4EDE6);
+//   static const Color warmBorder    = Color(0xFFE8D5CB);
+//   static const Color offlineSurface= Color(0xFFE8DDD4);
  
-  static const double radiusMd   = 12;
-  static const double radiusLg   = 16;
-  static const double radiusXl   = 20;
-  static const double radiusFull = 999;
+//   static const double radiusMd   = 12;
+//   static const double radiusLg   = 16;
+//   static const double radiusXl   = 20;
+//   static const double radiusFull = 999;
  
-  static const double gutter = 20;
-  static const double sm     = 8;
-  static const double md     = 16;
-  static const double lg     = 24;
-}
+//   static const double gutter = 20;
+//   static const double sm     = 8;
+//   static const double md     = 16;
+//   static const double lg     = 24;
+// }
  
 // ─────────────────────────────────────────────────────────────────────────────
 // Local reusable widgets
@@ -97,7 +96,7 @@ class _PulseDotState extends State<_PulseDot>
   @override
   Widget build(BuildContext context) {
     final Color dotColor =
-        widget.online ? _T.successGreen : _T.offlineSurface;
+        widget.online ? DesignTokens.successGreen : DesignTokens.offlineSurface;
     return SizedBox(
       width: 14,
       height: 14,
@@ -111,7 +110,7 @@ class _PulseDotState extends State<_PulseDot>
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: _T.successGreen.withOpacity(0.25),
+                  color: DesignTokens.successGreen.withOpacity(0.25),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -156,12 +155,12 @@ class _AvailabilityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.all(_T.md),
+      padding: const EdgeInsets.all(DesignTokens.md),
       decoration: BoxDecoration(
-        color: _T.surfaceCard,
-        borderRadius: BorderRadius.circular(_T.radiusXl),
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
         border: Border.all(
-          color: isAvailable ? _T.primaryTint16 : _T.borderSubtle,
+          color: isAvailable ? DesignTokens.primaryTint16 : DesignTokens.borderSubtle,
           width: isAvailable ? 1.5 : 1,
         ),
       ),
@@ -182,7 +181,7 @@ class _AvailabilityCard extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.08,
-                        color: _T.textSecondary,
+                        color: DesignTokens.textSecondary,
                       ),
                     ),
                     const SizedBox(height: 3),
@@ -196,8 +195,8 @@ class _AvailabilityCard extends StatelessWidget {
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
                           color: isAvailable
-                              ? _T.successGreen
-                              : _T.textMuted,
+                              ? DesignTokens.successGreen
+                              : DesignTokens.textMuted,
                         ),
                       ),
                     ),
@@ -208,9 +207,9 @@ class _AvailabilityCard extends StatelessWidget {
                 value: isAvailable,
                 onChanged: onChanged,
                 activeColor: Colors.white,
-                activeTrackColor: _T.successGreen,
+                activeTrackColor: DesignTokens.successGreen,
                 inactiveThumbColor: Colors.white,
-                inactiveTrackColor: _T.offlineSurface,
+                inactiveTrackColor: DesignTokens.offlineSurface,
               ),
             ],
           ),
@@ -229,7 +228,7 @@ class _AvailabilityCard extends StatelessWidget {
                     fontFamily: 'Satoshi',
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
-                    color: isAvailable ? _T.textSecondary : _T.textMuted,
+                    color: isAvailable ? DesignTokens.textSecondary : DesignTokens.textMuted,
                   ),
                 ),
               ),
@@ -240,7 +239,7 @@ class _AvailabilityCard extends StatelessWidget {
                   child: CircularProgressIndicator(
                     strokeWidth: 1.5,
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(_T.primary),
+                        AlwaysStoppedAnimation<Color>(DesignTokens.primary),
                   ),
                 )
               else if (lastCheckedAt != null)
@@ -249,7 +248,7 @@ class _AvailabilityCard extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'Satoshi',
                     fontSize: 11,
-                    color: _T.textMuted,
+                    color: DesignTokens.textMuted,
                   ),
                 ),
             ],
@@ -277,7 +276,7 @@ class _SectionHeader extends StatelessWidget {
             fontSize: 11,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.08,
-            color: _T.textSecondary,
+            color: DesignTokens.textSecondary,
           ),
         ),
         if (count != null) ...<Widget>[
@@ -286,8 +285,8 @@ class _SectionHeader extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
             decoration: BoxDecoration(
-              color: _T.primary,
-              borderRadius: BorderRadius.circular(_T.radiusFull),
+              color: DesignTokens.primary,
+              borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
             ),
             child: Text(
               '$count',
@@ -317,10 +316,10 @@ class _JobTag extends StatelessWidget {
       padding:
           const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: isDistance ? _T.warmTint : _T.surfaceBase,
-        borderRadius: BorderRadius.circular(_T.radiusFull),
+        color: isDistance ? DesignTokens.warmTint : DesignTokens.surfaceBase,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
         border: Border.all(
-          color: isDistance ? _T.warmBorder : _T.borderSubtle,
+          color: isDistance ? DesignTokens.warmBorder : DesignTokens.borderSubtle,
         ),
       ),
       child: Text(
@@ -329,7 +328,7 @@ class _JobTag extends StatelessWidget {
           fontFamily: 'Satoshi',
           fontSize: 11,
           fontWeight: FontWeight.w600,
-          color: isDistance ? _T.primaryDark : _T.textSecondary,
+          color: isDistance ? DesignTokens.primaryDark : DesignTokens.textSecondary,
         ),
       ),
     );
@@ -370,9 +369,9 @@ class _RequestJobCard extends StatelessWidget {
  
     return Container(
       decoration: BoxDecoration(
-        color: _T.surfaceCard,
-        borderRadius: BorderRadius.circular(_T.radiusXl),
-        border: Border.all(color: _T.borderSubtle),
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        border: Border.all(color: DesignTokens.borderSubtle),
       ),
       child: Column(
         children: <Widget>[
@@ -387,7 +386,7 @@ class _RequestJobCard extends StatelessWidget {
                   width: 46,
                   height: 46,
                   decoration: BoxDecoration(
-                    color: _T.warmTint,
+                    color: DesignTokens.warmTint,
                     borderRadius: BorderRadius.circular(14),
                   ),
                   alignment: Alignment.center,
@@ -397,7 +396,7 @@ class _RequestJobCard extends StatelessWidget {
                       fontFamily: 'Satoshi',
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
-                      color: _T.primary,
+                      color: DesignTokens.primary,
                     ),
                   ),
                 ),
@@ -413,7 +412,7 @@ class _RequestJobCard extends StatelessWidget {
                           fontFamily: 'Satoshi',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: _T.textPrimary,
+                          color: DesignTokens.textPrimary,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -422,7 +421,7 @@ class _RequestJobCard extends StatelessWidget {
                         style: const TextStyle(
                           fontFamily: 'Satoshi',
                           fontSize: 12,
-                          color: _T.textSecondary,
+                          color: DesignTokens.textSecondary,
                           height: 1.4,
                         ),
                         maxLines: 2,
@@ -438,7 +437,7 @@ class _RequestJobCard extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'Satoshi',
                     fontSize: 11,
-                    color: _T.textMuted,
+                    color: DesignTokens.textMuted,
                   ),
                 ),
               ],
@@ -457,7 +456,7 @@ class _RequestJobCard extends StatelessWidget {
             ),
  
           // ── Divider ──
-          const Divider(height: 1, thickness: 0.5, color: _T.borderSubtle),
+          const Divider(height: 1, thickness: 0.5, color: DesignTokens.borderSubtle),
  
           // ── Actions row ──
           IntrinsicHeight(
@@ -467,11 +466,11 @@ class _RequestJobCard extends StatelessWidget {
                   child: TextButton(
                     onPressed: onViewDetails,
                     style: TextButton.styleFrom(
-                      foregroundColor: _T.textSecondary,
+                      foregroundColor: DesignTokens.textSecondary,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(_T.radiusXl),
+                          bottomLeft: Radius.circular(DesignTokens.radiusXl),
                         ),
                       ),
                     ),
@@ -488,17 +487,17 @@ class _RequestJobCard extends StatelessWidget {
                 const VerticalDivider(
                   width: 0.5,
                   thickness: 0.5,
-                  color: _T.borderSubtle,
+                  color: DesignTokens.borderSubtle,
                 ),
                 Expanded(
                   child: TextButton(
                     onPressed: onAccept,
                     style: TextButton.styleFrom(
-                      foregroundColor: _T.primary,
+                      foregroundColor: DesignTokens.primary,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(_T.radiusXl),
+                          bottomRight: Radius.circular(DesignTokens.radiusXl),
                         ),
                       ),
                     ),
@@ -565,13 +564,13 @@ class _EmptyState extends StatelessWidget {
             width: 68,
             height: 68,
             decoration: BoxDecoration(
-              color: _T.warmTint,
+              color: DesignTokens.warmTint,
               shape: BoxShape.circle,
-              border: Border.all(color: _T.warmBorder, width: 1.5),
+              border: Border.all(color: DesignTokens.warmBorder, width: 1.5),
             ),
             child: Icon(
               isOnline ? Icons.radar_rounded : Icons.power_settings_new,
-              color: isOnline ? _T.primary : _T.textMuted,
+              color: isOnline ? DesignTokens.primary : DesignTokens.textMuted,
               size: 30,
             ),
           ),
@@ -582,7 +581,7 @@ class _EmptyState extends StatelessWidget {
               fontFamily: 'Satoshi',
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: _T.textPrimary,
+              color: DesignTokens.textPrimary,
             ),
           ),
           const SizedBox(height: 8),
@@ -596,7 +595,7 @@ class _EmptyState extends StatelessWidget {
               style: const TextStyle(
                 fontFamily: 'Satoshi',
                 fontSize: 13,
-                color: _T.textSecondary,
+                color: DesignTokens.textSecondary,
                 height: 1.55,
               ),
             ),
@@ -608,7 +607,7 @@ class _EmptyState extends StatelessWidget {
               style: const TextStyle(
                 fontFamily: 'Satoshi',
                 fontSize: 12,
-                color: _T.textMuted,
+                color: DesignTokens.textMuted,
               ),
             ),
           ],
@@ -617,8 +616,8 @@ class _EmptyState extends StatelessWidget {
             OutlinedButton(
               onPressed: onRefresh,
               style: OutlinedButton.styleFrom(
-                foregroundColor: _T.primary,
-                side: const BorderSide(color: _T.primary, width: 1.5),
+                foregroundColor: DesignTokens.primary,
+                side: const BorderSide(color: DesignTokens.primary, width: 1.5),
                 padding: const EdgeInsets.symmetric(
                     horizontal: 24, vertical: 10),
                 shape: const StadiumBorder(),
@@ -767,7 +766,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     final WorkerSessionState session = WorkerScope.of(context);
  
     return Scaffold(
-      backgroundColor: _T.surfaceBase,
+      backgroundColor: DesignTokens.surfaceBase,
       appBar: _buildAppBar(),
       body: Column(
         children: <Widget>[
@@ -778,15 +777,15 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
             child: _isSilentRefreshing
                 ? LinearProgressIndicator(
                     minHeight: 2,
-                    backgroundColor: _T.surfaceBase,
-                    color: _T.primary.withOpacity(0.45),
+                    backgroundColor: DesignTokens.surfaceBase,
+                    color: DesignTokens.primary.withOpacity(0.45),
                   )
                 : const SizedBox.shrink(),
           ),
           Expanded(
             child: RefreshIndicator(
-              color: _T.primary,
-              backgroundColor: _T.surfaceCard,
+              color: DesignTokens.primary,
+              backgroundColor: DesignTokens.surfaceCard,
               onRefresh: _load,
               child: _buildBody(session),
             ),
@@ -799,7 +798,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
       automaticallyImplyLeading: false,
-      backgroundColor: _T.surfaceBase,
+      backgroundColor: DesignTokens.surfaceBase,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
       centerTitle: true,
@@ -809,7 +808,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           fontFamily: 'Satoshi',
           fontSize: 17,
           fontWeight: FontWeight.w800,
-          color: _T.primary,
+          color: DesignTokens.primary,
           letterSpacing: 0.01,
         ),
       ),
@@ -822,12 +821,12 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     // Loading skeleton
     if (_viewState == RequestsViewState.loading) {
       return ListView(
-        padding: const EdgeInsets.all(_T.gutter),
+        padding: const EdgeInsets.all(DesignTokens.gutter),
         children: const <Widget>[
           SkeletonBox(height: 112),
-          SizedBox(height: _T.md),
+          SizedBox(height: DesignTokens.md),
           SkeletonBox(height: 170),
-          SizedBox(height: _T.md),
+          SizedBox(height: DesignTokens.md),
           SkeletonBox(height: 170),
         ],
       );
@@ -851,10 +850,10 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
-        _T.gutter,
-        _T.md,
-        _T.gutter,
-        _T.gutter,
+        DesignTokens.gutter,
+        DesignTokens.md,
+        DesignTokens.gutter,
+        DesignTokens.gutter,
       ),
       children: <Widget>[
         // ── Availability card ──────────────────────────────────
@@ -877,7 +876,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           },
         ),
  
-        const SizedBox(height: _T.lg),
+        const SizedBox(height: DesignTokens.lg),
  
         // ── Empty state ────────────────────────────────────────
         if (_viewState == RequestsViewState.empty)
@@ -893,17 +892,17 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
             label: 'Open requests',
             count: _jobs.length,
           ),
-          const SizedBox(height: _T.md),
+          const SizedBox(height: DesignTokens.md),
  
           // ── Job cards ────────────────────────────────────────
           JobRequestsMapPreview(
             jobs: _jobs,
             onOpenJob: _openDetail,
           ),
-          const SizedBox(height: _T.md),
+          const SizedBox(height: DesignTokens.md),
           ..._jobs.map(
             (WorkerJob job) => Padding(
-              padding: const EdgeInsets.only(bottom: _T.md),
+              padding: const EdgeInsets.only(bottom: DesignTokens.md),
               child: _RequestJobCard(
                 job: job,
                 onViewDetails: () => _openDetail(job),

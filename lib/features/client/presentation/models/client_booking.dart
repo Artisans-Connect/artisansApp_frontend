@@ -39,6 +39,7 @@ extension ClientBookingStatusX on ClientBookingStatus {
 class ClientBooking {
   const ClientBooking({
     required this.id,
+    this.jobUuid,
     required this.title,
     required this.artisan,
     required this.profession,
@@ -49,7 +50,6 @@ class ClientBooking {
     this.imageUrl,
     this.conversationId,
     this.counterpartUserId,
-    this.jobUuid,
     this.backendStatus,
     this.workerId,
     this.locationLat,
@@ -58,6 +58,9 @@ class ClientBooking {
     this.cancelledBy,
     this.cancelledReason,
     this.cancelledAt,
+    this.cancellationStage,
+    this.cancellationFee,
+    this.cancellationFeeCurrency,
   });
 
   final String id;
@@ -80,11 +83,24 @@ class ClientBooking {
   final String? cancelledBy;
   final String? cancelledReason;
   final String? cancelledAt;
+  final String? cancellationStage;
+  final double? cancellationFee;
+  final String? cancellationFeeCurrency;
 
   bool get canRate =>
       (status == ClientBookingStatus.pendingApproval ||
               status == ClientBookingStatus.completed) &&
           rating == null;
+
+  /// Whether this job can be cancelled by the client from the tracking screen
+  bool get isClientCancellable =>
+      backendStatus == 'matched' ||
+      backendStatus == 'on_the_way' ||
+      backendStatus == 'arrived';
+
+  /// Whether this job allows termination requests
+  bool get isTerminationRequestable =>
+      backendStatus == 'in_progress';
 
   bool get isTrackable {
     final String raw = (backendStatus ?? '').toLowerCase();
@@ -92,7 +108,8 @@ class ClientBooking {
         raw == 'on_the_way' ||
         raw == 'arrived' ||
         raw == 'in_progress' ||
-        raw == 'pending_client_approval';
+        raw == 'pending_client_approval' ||
+        raw == 'termination_requested';
   }
 
   bool get isNavigable =>
@@ -125,6 +142,9 @@ class ClientBooking {
         'cancelled_by': cancelledBy,
         'cancelled_reason': cancelledReason,
         'cancelled_at': cancelledAt,
+        'cancellation_stage': cancellationStage,
+        'cancellation_fee': cancellationFee,
+        'cancellation_fee_currency': cancellationFeeCurrency,
         'eta': 'Calculating ETA…',
       };
 
@@ -164,6 +184,7 @@ class ClientBooking {
       'on_the_way' => ClientBookingStatus.accepted,
       'arrived' => ClientBookingStatus.accepted,
       'in_progress' => ClientBookingStatus.inProgress,
+      'termination_requested' => ClientBookingStatus.inProgress,
       'pending_client_approval' => ClientBookingStatus.pendingApproval,
       'completed' => ClientBookingStatus.completed,
       'cancelled' || 'expired' => ClientBookingStatus.cancelled,
@@ -206,6 +227,9 @@ class ClientBooking {
       cancelledBy: json['cancelled_by'] as String?,
       cancelledReason: json['cancelled_reason'] as String?,
       cancelledAt: json['cancelled_at'] as String?,
+      cancellationStage: json['cancellation_stage'] as String?,
+      cancellationFee: (json['cancellation_fee'] as num?)?.toDouble(),
+      cancellationFeeCurrency: json['cancellation_fee_currency'] as String?,
     );
   }
 

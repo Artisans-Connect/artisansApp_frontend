@@ -92,4 +92,29 @@ class JobsService {
   Future<dynamic> getMatchingProgress(dynamic id) async {
     return await _apiClient.get('/jobs/$id/matching-progress');
   }
+
+  /// Preview what happens if the client cancels this job
+  Future<dynamic> getCancellationPreview(dynamic id) async {
+    return await _apiClient.get('/jobs/$id/cancellation-preview');
+  }
+
+  /// Cancel a job with optional reason
+  Future<dynamic> cancelJobWithReason(dynamic id, {String? reason}) async {
+    final dynamic result = await _apiClient.post(
+      '/jobs/$id/cancel',
+      body: reason != null ? {'reason': reason} : null,
+    );
+    await _invalidateJobsCache();
+    return result;
+  }
+
+  /// Request termination for in-progress jobs (dispute workflow)
+  Future<dynamic> requestTermination(dynamic id, {String? reason}) async {
+    final dynamic result = await _apiClient.post(
+      '/jobs/$id/request-termination',
+      body: reason != null ? {'reason': reason} : null,
+    );
+    await _invalidateJobsCache();
+    return result;
+  }
 }

@@ -17,53 +17,54 @@ import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
 import '../../widgets/role_option_card.dart';
+import '../../../../core/theme/design_tokens.dart';
  
-// ─────────────────────────────────────────────────────────────────────────────
-// Design tokens (mirrored from DESIGN.md)
-// ─────────────────────────────────────────────────────────────────────────────
-class _T {
-  // Surfaces
-  static const Color surfaceBase = Color(0xFFFFF8F0);
-  static const Color surfaceCard = Color(0xFFFFFFFF);
+// // ─────────────────────────────────────────────────────────────────────────────
+// // Design tokens (mirrored from DESIGN.md)
+// // ─────────────────────────────────────────────────────────────────────────────
+// class _T {
+//   // Surfaces
+//   static const Color surfaceBase = Color(0xFFFFF8F0);
+//   static const Color surfaceCard = Color(0xFFFFFFFF);
  
-  // Brand
-  static const Color primary     = Color(0xFFC15A3D); // terracotta
-  static const Color primaryDark = Color(0xFF8B3A2A);
-  static const Color accentGold  = Color(0xFFE6A017); // Kente gold
-  static const Color accentWarm  = Color(0xFFD97706);
+//   // Brand
+//   static const Color primary     = Color(0xFFC15A3D); // terracotta
+//   static const Color primaryDark = Color(0xFF8B3A2A);
+//   static const Color accentGold  = Color(0xFFE6A017); // Kente gold
+//   static const Color accentWarm  = Color(0xFFD97706);
  
-  // Text
-  static const Color textPrimary   = Color(0xFF2C2418);
-  static const Color textSecondary = Color(0xFF5C5243);
+//   // Text
+//   static const Color textPrimary   = Color(0xFF2C2418);
+//   static const Color textSecondary = Color(0xFF5C5243);
  
-  // Borders
-  static const Color borderSubtle = Color(0x0F000000); // rgba(0,0,0,0.06)
+//   // Borders
+//   static const Color borderSubtle = Color(0x0F000000); // rgba(0,0,0,0.06)
  
-  // Feedback
-  static const Color successGreen = Color(0xFF00E676);
-  static const Color error        = Color(0xFFBA1A1A);
+//   // Feedback
+//   static const Color successGreen = Color(0xFF00E676);
+//   static const Color error        = Color(0xFFBA1A1A);
  
-  // Derived tints used in the redesigned screens
-  static const Color primaryTint12 = Color(0x1FC15A3D); // 12% primary
-  static const Color primaryTint08 = Color(0x14C15A3D); // 8%
-  static const Color goldTint12    = Color(0x1FE6A017);
-  static const Color warmSurface   = Color(0xFFFAF2EA); // slightly richer off-white
+//   // Derived tints used in the redesigned screens
+//   static const Color primaryTint12 = Color(0x1FC15A3D); // 12% primary
+//   static const Color primaryTint08 = Color(0x14C15A3D); // 8%
+//   static const Color goldTint12    = Color(0x1FE6A017);
+//   static const Color warmSurface   = Color(0xFFFAF2EA); // slightly richer off-white
  
-  // Radii
-  static const double radiusSm  = 4;
-  static const double radiusMd  = 12;
-  static const double radiusLg  = 16;
-  static const double radiusXl  = 24;
-  static const double radiusFull = 999;
+//   // Radii
+//   static const double radiusSm  = 4;
+//   static const double radiusMd  = 12;
+//   static const double radiusLg  = 16;
+//   static const double radiusXl  = 24;
+//   static const double radiusFull = 999;
  
-  // Spacing
-  static const double xs     = 4;
-  static const double sm     = 8;
-  static const double md     = 16;
-  static const double lg     = 24;
-  static const double xl     = 40;
-  static const double gutter = 20;
-}
+//   // Spacing
+//   static const double xs     = 4;
+//   static const double sm     = 8;
+//   static const double md     = 16;
+//   static const double lg     = 24;
+//   static const double xl     = 40;
+//   static const double gutter = 20;
+// }
  
 // ─────────────────────────────────────────────────────────────────────────────
 // Small reusable local widgets
@@ -88,8 +89,8 @@ class _StepDots extends StatelessWidget {
           width: active ? 20 : 7,
           height: 7,
           decoration: BoxDecoration(
-            color: active ? _T.primary : _T.primary.withOpacity(0.22),
-            borderRadius: BorderRadius.circular(_T.radiusFull),
+            color: active ? DesignTokens.primary : DesignTokens.primary.withOpacity(0.22),
+            borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           ),
         );
       }),
@@ -119,11 +120,11 @@ class _HeroHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(_T.gutter, 28, _T.gutter, 22),
+      padding: const EdgeInsets.fromLTRB(DesignTokens.gutter, 28, DesignTokens.gutter, 22),
       decoration: const BoxDecoration(
-        color: _T.surfaceCard,
+        color: DesignTokens.surfaceCard,
         border: Border(
-          bottom: BorderSide(color: _T.borderSubtle, width: 1),
+          bottom: BorderSide(color: DesignTokens.borderSubtle, width: 1),
         ),
       ),
       child: Column(
@@ -134,7 +135,7 @@ class _HeroHeader extends StatelessWidget {
             decoration: BoxDecoration(
               color: bgColor,
               shape: BoxShape.circle,
-              border: Border.all(color: _T.borderSubtle, width: 1.5),
+              border: Border.all(color: DesignTokens.borderSubtle, width: 1.5),
             ),
             child: Center(child: icon),
           ),
@@ -148,7 +149,7 @@ class _HeroHeader extends StatelessWidget {
               fontFamily: 'Satoshi',
               fontSize: 22,
               fontWeight: FontWeight.w800,
-              color: _T.textPrimary,
+              color: DesignTokens.textPrimary,
               height: 1.2,
             ),
           ),
@@ -160,7 +161,7 @@ class _HeroHeader extends StatelessWidget {
               fontFamily: 'Satoshi',
               fontSize: 14,
               fontWeight: FontWeight.w400,
-              color: _T.textSecondary,
+              color: DesignTokens.textSecondary,
               height: 1.5,
             ),
           ),
@@ -192,10 +193,10 @@ class _TradeChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? _T.primaryTint08 : _T.surfaceCard,
-          borderRadius: BorderRadius.circular(_T.radiusLg),
+          color: selected ? DesignTokens.primaryTint08 : DesignTokens.surfaceCard,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
           border: Border.all(
-            color: selected ? _T.primary : _T.borderSubtle,
+            color: selected ? DesignTokens.primary : DesignTokens.borderSubtle,
             width: selected ? 1.8 : 1,
           ),
         ),
@@ -210,14 +211,14 @@ class _TradeChip extends StatelessWidget {
                   height: 40,
                   decoration: BoxDecoration(
                     color: selected
-                        ? _T.primaryTint12
-                        : _T.surfaceBase,
+                        ? DesignTokens.primaryTint12
+                        : DesignTokens.surfaceBase,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
                     icon,
                     size: 20,
-                    color: selected ? _T.primary : _T.textSecondary,
+                    color: selected ? DesignTokens.primary : DesignTokens.textSecondary,
                   ),
                 ),
                 const Spacer(),
@@ -226,7 +227,7 @@ class _TradeChip extends StatelessWidget {
                     width: 20,
                     height: 20,
                     decoration: const BoxDecoration(
-                      color: _T.primary,
+                      color: DesignTokens.primary,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -244,7 +245,7 @@ class _TradeChip extends StatelessWidget {
                 fontFamily: 'Satoshi',
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: selected ? _T.primary : _T.textPrimary,
+                color: selected ? DesignTokens.primary : DesignTokens.textPrimary,
               ),
             ),
           ],
@@ -274,10 +275,10 @@ class _AreaPill extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          color: selected ? _T.primary : _T.surfaceCard,
-          borderRadius: BorderRadius.circular(_T.radiusFull),
+          color: selected ? DesignTokens.primary : DesignTokens.surfaceCard,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           border: Border.all(
-            color: selected ? _T.primary : _T.borderSubtle,
+            color: selected ? DesignTokens.primary : DesignTokens.borderSubtle,
             width: 1.2,
           ),
         ),
@@ -288,7 +289,7 @@ class _AreaPill extends StatelessWidget {
             fontFamily: 'Satoshi',
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : _T.textSecondary,
+            color: selected ? Colors.white : DesignTokens.textSecondary,
           ),
         ),
       ),
@@ -317,10 +318,10 @@ class _ExpCard extends StatelessWidget {
           duration: const Duration(milliseconds: 180),
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: selected ? _T.primaryTint08 : _T.surfaceCard,
-            borderRadius: BorderRadius.circular(_T.radiusMd),
+            color: selected ? DesignTokens.primaryTint08 : DesignTokens.surfaceCard,
+            borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
             border: Border.all(
-              color: selected ? _T.primary : _T.borderSubtle,
+              color: selected ? DesignTokens.primary : DesignTokens.borderSubtle,
               width: selected ? 1.8 : 1,
             ),
           ),
@@ -332,7 +333,7 @@ class _ExpCard extends StatelessWidget {
                   fontFamily: 'Satoshi',
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
-                  color: selected ? _T.primary : _T.textPrimary,
+                  color: selected ? DesignTokens.primary : DesignTokens.textPrimary,
                 ),
               ),
               const SizedBox(height: 2),
@@ -343,7 +344,7 @@ class _ExpCard extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
                   letterSpacing: 0.05,
-                  color: selected ? _T.primary : _T.textSecondary,
+                  color: selected ? DesignTokens.primary : DesignTokens.textSecondary,
                 ),
               ),
             ],
@@ -364,14 +365,14 @@ class _InfoStrip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _T.primaryTint08,
-        borderRadius: BorderRadius.circular(_T.radiusMd),
-        border: Border.all(color: _T.primaryTint12),
+        color: DesignTokens.primaryTint08,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+        border: Border.all(color: DesignTokens.primaryTint12),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Icon(PhosphorIcons.info, color: _T.primary, size: 16),
+          Icon(PhosphorIcons.info, color: DesignTokens.primary, size: 16),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -379,7 +380,7 @@ class _InfoStrip extends StatelessWidget {
               style: const TextStyle(
                 fontFamily: 'Satoshi',
                 fontSize: 12,
-                color: _T.primaryDark,
+                color: DesignTokens.primaryDark,
                 height: 1.5,
               ),
             ),
@@ -406,7 +407,7 @@ class _SectionLabel extends StatelessWidget {
           fontSize: 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.08,
-          color: _T.textSecondary,
+          color: DesignTokens.textSecondary,
         ),
       ),
     );
@@ -425,13 +426,13 @@ class _TrustChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
-          color: _T.primaryTint08,
-          borderRadius: BorderRadius.circular(_T.radiusMd),
-          border: Border.all(color: _T.primaryTint12),
+          color: DesignTokens.primaryTint08,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+          border: Border.all(color: DesignTokens.primaryTint12),
         ),
         child: Column(
           children: <Widget>[
-            Icon(icon, color: _T.primary, size: 18),
+            Icon(icon, color: DesignTokens.primary, size: 18),
             const SizedBox(height: 5),
             Text(
               label,
@@ -441,7 +442,7 @@ class _TrustChip extends StatelessWidget {
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.05,
-                color: _T.primaryDark,
+                color: DesignTokens.primaryDark,
               ),
             ),
           ],
@@ -687,7 +688,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     unawaited(showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(_T.radiusXl)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXl)),
       ),
       builder: (BuildContext ctx) {
         return SafeArea(
@@ -701,13 +702,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
-                    color: _T.borderSubtle,
-                    borderRadius: BorderRadius.circular(_T.radiusFull),
+                    color: DesignTokens.borderSubtle,
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
                   ),
                 ),
                 ListTile(
                   leading:
-                      Icon(PhosphorIcons.images, color: _T.primary),
+                      Icon(PhosphorIcons.images, color: DesignTokens.primary),
                   title: const Text('Choose from Gallery'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -723,7 +724,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 ),
                 ListTile(
                   leading:
-                      Icon(PhosphorIcons.camera, color: _T.primary),
+                      Icon(PhosphorIcons.camera, color: DesignTokens.primary),
                   title: const Text('Take a Photo'),
                   onTap: () async {
                     Navigator.pop(ctx);
@@ -768,7 +769,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _T.surfaceBase,
+      backgroundColor: DesignTokens.surfaceBase,
       body: SafeArea(
         child: Column(
           children: <Widget>[
@@ -818,11 +819,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
  
     return Container(
       padding: const EdgeInsets.fromLTRB(
-          _T.gutter, 12, _T.gutter, 28),
+          DesignTokens.gutter, 12, DesignTokens.gutter, 28),
       decoration: const BoxDecoration(
-        color: _T.surfaceBase,
+        color: DesignTokens.surfaceBase,
         border: Border(
-          top: BorderSide(color: _T.borderSubtle),
+          top: BorderSide(color: DesignTokens.borderSubtle),
         ),
       ),
       child: GradientButton(
@@ -839,7 +840,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
  
   Widget _buildRoleSelectionPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(_T.gutter),
+      padding: const EdgeInsets.all(DesignTokens.gutter),
       child: Column(
         children: <Widget>[
           const SizedBox(height: 14),
@@ -888,10 +889,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         _HeroHeader(
           icon: const Icon(
             PhosphorIcons.toolbox,
-            color: _T.primary,
+            color: DesignTokens.primary,
             size: 34,
           ),
-          bgColor: _T.primaryTint12,
+          bgColor: DesignTokens.primaryTint12,
           title: 'What work\ndo you do?',
           subtitle:
               'Pick all your trades — clients match\nyou based on these.',
@@ -902,7 +903,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         // Scrollable content
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(_T.gutter),
+            padding: const EdgeInsets.all(DesignTokens.gutter),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -950,23 +951,23 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
-                            color: _T.goldTint12,
+                            color: DesignTokens.goldTint12,
                             borderRadius:
-                                BorderRadius.circular(_T.radiusMd),
+                                BorderRadius.circular(DesignTokens.radiusMd),
                             border:
-                                Border.all(color: _T.accentGold, width: 1),
+                                Border.all(color: DesignTokens.accentGold, width: 1),
                           ),
                           child: Row(
                             children: <Widget>[
                               Icon(PhosphorIcons.checkCircle,
-                                  color: _T.accentWarm, size: 16),
+                                  color: DesignTokens.accentWarm, size: 16),
                               const SizedBox(width: 8),
                               Text(
                                 '$selectedCount trade${selectedCount > 1 ? 's' : ''} selected — add more any time from settings.',
                                 style: const TextStyle(
                                   fontFamily: 'Satoshi',
                                   fontSize: 12,
-                                  color: _T.accentWarm,
+                                  color: DesignTokens.accentWarm,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -1008,7 +1009,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         // Scrollable body
         Expanded(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(_T.gutter),
+            padding: const EdgeInsets.all(DesignTokens.gutter),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
@@ -1034,7 +1035,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   }).toList(),
                 ),
  
-                const SizedBox(height: _T.lg),
+                const SizedBox(height: DesignTokens.lg),
  
                 // ── Experience ──
                 const _SectionLabel('Experience level'),
@@ -1055,12 +1056,12 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   }).toList(),
                 ),
  
-                const SizedBox(height: _T.md),
+                const SizedBox(height: DesignTokens.md),
                 const _InfoStrip(
                   text:
                       'Hourly rates are negotiated per job — you set them after accepting a request.',
                 ),
-                const SizedBox(height: _T.md),
+                const SizedBox(height: DesignTokens.md),
               ],
             ),
           ),
@@ -1075,7 +1076,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
  
   Widget _buildPhotoLocationPage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(_T.gutter),
+      padding: const EdgeInsets.all(DesignTokens.gutter),
       child: Column(
         children: <Widget>[
           Text(
@@ -1091,11 +1092,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
           const SizedBox(height: 22),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(_T.gutter),
+            padding: const EdgeInsets.all(DesignTokens.gutter),
             decoration: BoxDecoration(
-              color: _T.surfaceCard,
-              borderRadius: BorderRadius.circular(_T.radiusXl),
-              border: Border.all(color: _T.borderSubtle),
+              color: DesignTokens.surfaceCard,
+              borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+              border: Border.all(color: DesignTokens.borderSubtle),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1111,9 +1112,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           height: 150,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: _T.warmSurface,
+                            color: DesignTokens.warmSurface,
                             border: Border.all(
-                              color: _T.borderSubtle,
+                              color: DesignTokens.borderSubtle,
                               width: 2,
                               strokeAlign: BorderSide.strokeAlignOutside,
                             ),
@@ -1124,14 +1125,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                       fit: BoxFit.cover),
                                 )
                               : Icon(PhosphorIcons.cameraPlus,
-                                  color: _T.textSecondary, size: 42),
+                                  color: DesignTokens.textSecondary, size: 42),
                         ),
                         Positioned(
                           bottom: 0,
                           right: 0,
                           child: CircleAvatar(
                             radius: 20,
-                            backgroundColor: _T.primary,
+                            backgroundColor: DesignTokens.primary,
                             child: const Icon(
                               PhosphorIcons.pencilSimple,
                               color: Colors.white,
@@ -1152,7 +1153,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.08,
-                      color: _T.primary,
+                      color: DesignTokens.primary,
                     ),
                   ),
                 ),
@@ -1161,24 +1162,24 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 // Account type display
                 const _SectionLabel('Account type'),
                 Container(
-                  padding: const EdgeInsets.all(_T.md),
+                  padding: const EdgeInsets.all(DesignTokens.md),
                   decoration: BoxDecoration(
-                    color: _T.warmSurface,
-                    borderRadius: BorderRadius.circular(_T.radiusLg),
-                    border: Border.all(color: _T.borderSubtle),
+                    color: DesignTokens.warmSurface,
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
+                    border: Border.all(color: DesignTokens.borderSubtle),
                   ),
                   child: Row(
                     children: <Widget>[
                       CircleAvatar(
                         radius: 24,
                         backgroundColor: _session.isClient
-                            ? _T.primaryTint12
-                            : _T.primaryTint12,
+                            ? DesignTokens.primaryTint12
+                            : DesignTokens.primaryTint12,
                         child: Icon(
                           _session.isClient
                               ? PhosphorIcons.desktop
                               : PhosphorIcons.identificationCard,
-                          color: _T.primary,
+                          color: DesignTokens.primary,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -1193,7 +1194,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                 fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: 0.08,
-                                color: _T.textSecondary,
+                                color: DesignTokens.textSecondary,
                               ),
                             ),
                             Text(
@@ -1204,14 +1205,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                 fontFamily: 'Satoshi',
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
-                                color: _T.textPrimary,
+                                color: DesignTokens.textPrimary,
                               ),
                             ),
                           ],
                         ),
                       ),
                       const Icon(PhosphorIcons.checkCircle,
-                          color: _T.successGreen, size: 20),
+                          color: DesignTokens.successGreen, size: 20),
                     ],
                   ),
                 ),
@@ -1244,10 +1245,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         _HeroHeader(
           icon: const Icon(
             PhosphorIcons.userCircle,
-            color: _T.primary,
+            color: DesignTokens.primary,
             size: 34,
           ),
-          bgColor: _T.primaryTint12,
+          bgColor: DesignTokens.primaryTint12,
           title: _session.isClient
               ? 'Tell us about\nyourself'
               : 'Write your\nprofessional bio',
@@ -1264,14 +1265,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
             child: Form(
               key: _bioFormKey,
               child: Padding(
-                padding: const EdgeInsets.all(_T.gutter),
+                padding: const EdgeInsets.all(DesignTokens.gutter),
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(_T.gutter),
+                  padding: const EdgeInsets.all(DesignTokens.gutter),
                   decoration: BoxDecoration(
-                    color: _T.surfaceCard,
-                    borderRadius: BorderRadius.circular(_T.radiusXl),
-                    border: Border.all(color: _T.borderSubtle),
+                    color: DesignTokens.surfaceCard,
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                    border: Border.all(color: DesignTokens.borderSubtle),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1302,10 +1303,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                     child: CustomPaint(
                                       painter: _RingPainter(
                                         progress: progress.clamp(0, 1),
-                                        trackColor: _T.borderSubtle,
+                                        trackColor: DesignTokens.borderSubtle,
                                         fillColor: progress > 0.9
-                                            ? _T.error
-                                            : _T.primary,
+                                            ? DesignTokens.error
+                                            : DesignTokens.primary,
                                       ),
                                     ),
                                   ),
@@ -1315,7 +1316,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                                     style: const TextStyle(
                                       fontFamily: 'Satoshi',
                                       fontSize: 11,
-                                      color: _T.textSecondary,
+                                      color: DesignTokens.textSecondary,
                                     ),
                                   ),
                                 ],
@@ -1374,13 +1375,13 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                             style: const TextStyle(
                               fontFamily: 'Satoshi',
                               fontSize: 12,
-                              color: _T.textSecondary,
+                              color: DesignTokens.textSecondary,
                             ),
                             children: <InlineSpan>[
                               TextSpan(
                                 text: 'Community Guidelines',
                                 style: const TextStyle(
-                                  color: _T.primary,
+                                  color: DesignTokens.primary,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
