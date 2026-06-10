@@ -139,9 +139,10 @@ class _SignInScreenState extends State<SignInScreen> {
                         child: Text(
                           'Welcome Back',
                           style: AppTypography.displayMedium.copyWith(
-                            fontSize: 44,
+                            fontSize: 36,
                             fontWeight: FontWeight.bold,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ),
                       const SizedBox(height: 8),

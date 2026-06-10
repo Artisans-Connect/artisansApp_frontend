@@ -130,12 +130,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       ),
                       const SizedBox(height: 16),
                       Center(
-                        child: Text(
+                        child: Center(
+                          child: Text(
                           'Join CraftMatch',
                           style: AppTypography.displayMedium.copyWith(
-                            fontSize: 44,
+                            fontSize: 36,
                             fontWeight: FontWeight.bold,
+                            
                           ),
+                          textAlign: TextAlign.center,
+                        )
                         ),
                       ),
                       const SizedBox(height: 8),
