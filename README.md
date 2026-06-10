@@ -1,8 +1,8 @@
-# Artisans – On‑Demand Artisan Platform (Ghana)
+# CraftMatch – On‑Demand Artisan Platform (Ghana)
 
 **Status:** IMPLEMENTED (June 2026)
 
-The Artisans platform is a localized on-demand service marketplace designed to connect clients with local skilled artisans in Ghana. This ecosystem consists of a Flutter mobile application for clients and workers, a Node.js Express backend, and a dedicated React-based verification portal for administrative management.
+The CraftMatch platform is a localized on-demand service marketplace designed to connect clients with local skilled artisans in Ghana. This ecosystem consists of a Flutter mobile application for clients and workers, a Node.js Express backend, and a dedicated React-based verification portal for administrative management.
 
 ---
 
@@ -42,7 +42,7 @@ The project is organized into the following main repositories:
 
 ## Setup & Running
 
-### 1. Artisans App (Flutter)
+### 1. CraftMatch App (Flutter)
 ```bash
 cd artisansApp_frontend
 flutter pub get
@@ -80,5 +80,5 @@ npm run dev
 - Haversine-based matching for efficient discovery.
 - Scalable decoupled architecture.
 
-**Artisans Connect — Empowering Local Skill.**
+**CraftMatch — Empowering Local Skill.**
 

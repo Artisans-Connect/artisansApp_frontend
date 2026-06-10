@@ -110,7 +110,7 @@ class WorkerEarningsScreen extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'ArtisansConnect does not process payments. Agree payment directly with each client.',
+                      'CraftMatch does not process payments. Agree payment directly with each client.',
                       style: AppTypography.bodyMedium.copyWith(
                         color: const Color(0xFF5D4037),
                         fontSize: 13,
@@ -142,7 +142,7 @@ class WorkerEarningsScreen extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'Payment integration coming in a future update. We\'re working on making secure in-app payments available on ArtisansConnect soon.',
+              'Payment integration coming in a future update. We\'re working on making secure in-app payments available on CraftMatch soon.',
               style: AppTypography.bodyMedium.copyWith(
                 fontStyle: FontStyle.italic,
                 fontSize: 12,

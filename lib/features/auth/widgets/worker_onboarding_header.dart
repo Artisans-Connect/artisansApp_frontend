@@ -31,7 +31,7 @@ class WorkerOnboardingHeader extends StatelessWidget {
               ),
               Expanded(
                 child: Text(
-                  'ArtisansConnect',
+                  'CraftMatch',
                   textAlign: TextAlign.center,
                   style: AppTypography.bodyLarge.copyWith(
                     color: AppColors.primary,

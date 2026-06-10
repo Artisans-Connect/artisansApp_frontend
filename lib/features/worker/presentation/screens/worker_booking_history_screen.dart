@@ -83,7 +83,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Text(
-              'ArtisansConnect',
+              'CraftMatch',
               style: AppTypography.titleLarge.copyWith(
                 color: AppColors.primary,
                 fontWeight: FontWeight.w800,

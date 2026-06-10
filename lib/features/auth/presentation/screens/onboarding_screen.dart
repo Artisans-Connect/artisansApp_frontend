@@ -76,7 +76,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   if (_currentPage > 0) const SizedBox(width: 8),
                   Text(
-                    'ArtisansConnect',
+                    'CraftMatch',
                     style: AppTypography.displayMedium.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w800,

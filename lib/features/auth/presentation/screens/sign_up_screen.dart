@@ -131,7 +131,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
                       Center(
                         child: Text(
-                          'Join ArtisansConnect',
+                          'Join CraftMatch',
                           style: AppTypography.displayMedium.copyWith(
                             fontSize: 44,
                             fontWeight: FontWeight.bold,

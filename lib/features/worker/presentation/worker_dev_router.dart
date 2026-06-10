@@ -9,7 +9,7 @@ class WorkerDevRouter extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'ArtisansConnect — Worker',
+      title: 'CraftMatch — Worker',
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: AppColors.background,

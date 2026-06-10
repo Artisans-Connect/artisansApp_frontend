@@ -42,7 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
         title: const Text('Log out?'),
-        content: const Text('You will need to sign in again to use ArtisansConnect.'),
+        content: const Text('You will need to sign in again to use CraftMatch.'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -203,7 +203,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.only(right: 12),
                   child: Center(
                     child: Text(
-                      'ArtisansConnect',
+                      'CraftMatch',
                       style: AppTypography.bodyLarge.copyWith(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w700,
@@ -345,7 +345,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
               SettingsTile(
                 icon: PhosphorIcons.fileText,
                 title: 'Terms of Service',
-                subtitle: 'Rules of the ArtisansConnect platform',
+                subtitle: 'Rules of the CraftMatch platform',
                 onTap: onTerms,
               ),
               SettingsTile(
@@ -423,7 +423,7 @@ class _ClientSettingsHero extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'Manage your ArtisansConnect experience',
+              'Manage your CraftMatch experience',
               style: AppTypography.bodyLarge.copyWith(color: Colors.white70),
             ),
             const SizedBox(height: 10),
@@ -537,7 +537,7 @@ class _PremiumStatusCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'You are an ArtisansConnect Elite member. Enjoy exclusive benefits.',
+                  'You are an CraftMatch Elite member. Enjoy exclusive benefits.',
                   style: AppTypography.bodyMedium,
                 ),
               ],
@@ -557,7 +557,7 @@ class _SettingsFooter extends StatelessWidget {
     return Column(
       children: <Widget>[
         Text(
-          'ARTISANSCONNECT',
+          'CraftMatch',
           style: AppTypography.labelCaps.copyWith(
             color: AppColors.textSecondary,
             letterSpacing: 2,

@@ -1,6 +1,6 @@
-# Artisans App — Technical Project Overview & Consultation
+# CraftMatch App — Technical Project Overview & Consultation
 
-This document provides a comprehensive technical breakdown of the **Artisans App**, a localized on-demand service marketplace designed to connect clients/customers with local skilled artisans (workers) in Ghana (e.g., plumbers, electricians, carpenters). 
+This document provides a comprehensive technical breakdown of the **CraftMatch App**, a localized on-demand service marketplace designed to connect clients/customers with local skilled artisans (workers) in Ghana (e.g., plumbers, electricians, carpenters). 
 
 This guide is structured to help technical reviewers, examiners, and advisors quickly understand the architecture, database schema, data flows, and active integration challenges. At the end of this document, we highlight several **architectural decisions** where we seek technical feedback and input.
 

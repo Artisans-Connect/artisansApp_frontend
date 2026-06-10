@@ -39,7 +39,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       navigatorKey: NotificationService.instance.navigatorKey,
       debugShowCheckedModeBanner: false,
-      title: 'ArtisansConnect',
+      title: 'CraftMatch',
       theme: buildAppTheme(),
       initialRoute: '/',
       routes: <String, WidgetBuilder>{

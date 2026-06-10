@@ -147,7 +147,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       const SizedBox(height: 8),
                       Center(
                         child: Text(
-                          'Sign in to continue to ArtisansConnect.',
+                          'Sign in to continue to CraftMatch.',
                           textAlign: TextAlign.center,
                           style: AppTypography.bodyLarge,
                         ),

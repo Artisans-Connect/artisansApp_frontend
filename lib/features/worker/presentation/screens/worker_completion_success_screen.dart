@@ -29,7 +29,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
           onPressed: () => _goHome(context),
         ),
         title: Text(
-          'ArtisansConnect',
+          'CraftMatch',
           style: AppTypography.titleLarge.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w800,
