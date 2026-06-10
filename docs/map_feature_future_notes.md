@@ -49,6 +49,50 @@ The map can show these signals, but the backend should continue to decide rankin
 - Add stale-location messaging everywhere a worker marker appears.
 - Add route-aware travel cost once paid route APIs are approved.
 
+## Architectural & Security Recommendations
+
+### 1. Realtime Security & Row Level Security (RLS) for Dispatches
+> [!IMPORTANT]
+> When using `Supabase.instance.client.channel(...)` to listen to job dispatches in real-time on the client application, **strict Row Level Security (RLS)** is required.
+* **Security Risk:** If RLS is misconfigured or disabled on `job_dispatches`, any worker could potentially listen to channels or fetch records meant for other workers.
+* **Mitigation:** Ensure the `job_dispatches` table has RLS enabled with a select policy that restricts access only to the authenticated worker:
+  ```sql
+  ALTER TABLE job_dispatches ENABLE ROW LEVEL SECURITY;
+  
+  CREATE POLICY "Workers view own dispatches" ON job_dispatches
+    FOR SELECT USING (auth.uid() = worker_id);
+  ```
+* **Client-side Subscription:** The client should use a filtered subscription channel to avoid receiving other workers' events:
+  ```dart
+  Supabase.instance.client
+      .channel('my-dispatches')
+      .onPostgresChanges(
+        event: PostgresChangeEvent.insert,
+        schema: 'public',
+        table: 'job_dispatches',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'worker_id',
+          value: myUserId,
+        ),
+        callback: (payload) => _onNewDispatch(payload.newRecord),
+      )
+      .subscribe();
+  ```
+
+### 2. Database-Side Proximity Calculation (Supabase RPC)
+Instead of retrieving all available workers in Node.js Express memory and doing Haversine math, compute the proximity directly in the PostgreSQL database.
+* **Scalability:** Doing JavaScript-based filtering in-memory on every matching round or search request will cause high memory and CPU utilization as the worker base grows.
+* **Solution:** Create a Postgres function (RPC) using the standard `earthdistance` extension (which calculates distances based on lat/lng coordinates) to return only the pre-filtered, ordered list of nearby workers within the search radius.
+
+### 3. Background/Foreground Native GPS Tracking
+* **App Suspension:** In Flutter, normal Dart streams (e.g., `Geolocator.getPositionStream()`) get suspended by iOS/Android when the screen locks or the application enters the background.
+* **Solution:** Implement a native wrapper package such as `flutter_background_geolocation` or `flutter_foreground_task` to run a persistent OS service that continues updating the worker's coordinates on a periodic interval.
+
+### 4. Road-Based Routing and Traffic-Aware ETA
+* **Directions API:** Replace the current visual straight-line `Polyline` and flat 25 km/h ETA estimation with real street pathing.
+* **Solution:** Call OSRM (Open Source Routing Machine) or Google Routes API to fetch actual street geometries and traffic-adjusted travel times.
+
 ## Configuration Checklist
 
 - Android: `GOOGLE_MAPS_API_KEY` in `local.properties`, Maps SDK for Android enabled, key restricted to Android app.
@@ -56,3 +100,4 @@ The map can show these signals, but the backend should continue to decide rankin
 - Web: `.env` `GOOGLE_MAPS_API_KEY`, Maps JavaScript API enabled if web demo is required.
 - Places: Places API enabled for search/autocomplete and reverse geocoding.
 - Billing: alerts and quotas configured before enabling route APIs.
+
