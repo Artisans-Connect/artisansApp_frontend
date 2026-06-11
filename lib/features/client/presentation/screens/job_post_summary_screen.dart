@@ -259,21 +259,21 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             amount: _estimate!.verificationPremium,
                           ),
                         const Divider(height: 20),
-                        _PriceBreakdownRow(
-                          label: 'Recommended fee',
-                          amount: _estimate!.minimumFee,
-                          isBold: true,
-                        ),
+                        // _PriceBreakdownRow(
+                        //   label: 'Recommended fee',
+                        //   amount: _estimate!.minimumFee,
+                        //   isBold: true,
+                        // ),
                       ],
                       // ── Optional premium ───────────────────────
-                      const SizedBox(height: AppSpacing.md),
-                      Text(
-                        'Add a premium for faster matching (optional)',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
+                      // const SizedBox(height: AppSpacing.md),
+                      // Text(
+                      //   'Add a premium for faster matching (optional)',
+                      //   style: AppTypography.bodySmall.copyWith(
+                      //     color: AppColors.textSecondary,
+                      //   ),
+                      // ),
+                      // const SizedBox(height: AppSpacing.sm),
                       // Row(
                       //   children: [
                       //     Text(
@@ -301,7 +301,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                       //     ),
                       //   ],
                       // ),
-                      const Divider(height: 20),
+                      // const Divider(height: 20),
                       Row(
                         mainAxisAlignment:
                             MainAxisAlignment.spaceBetween,
