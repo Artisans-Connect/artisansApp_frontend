@@ -12,6 +12,7 @@ import '../widgets/artisan_card.dart';
 import '../../../../shared/widgets/search_bar.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/jobs_service.dart';
+import '../../../../core/session/app_user_session.dart';
 import '../../services/explore_service.dart';
 
 
@@ -64,48 +65,53 @@ class _HomeHero extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text(
-                greeting.toUpperCase(),
-                style: const TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white60,
-                  letterSpacing: 0.9,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                name,
-                style: const TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  height: 1.15,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.14),
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
-                ),
-                child: const Text(
-                  'What do you need fixed today?',
-                  style: TextStyle(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  greeting.toUpperCase(),
+                  style: const TextStyle(
                     fontFamily: 'Satoshi',
-                    fontSize: 12,
-                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white60,
+                    letterSpacing: 0.9,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    height: 1.15,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.14),
+                    borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+                  ),
+                  child: const Text(
+                    'What do you need fixed today?',
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(width: 16),
           Container(
             width: 52,
             height: 52,
@@ -628,9 +634,12 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   }
  
   Future<void> _fetchFeaturedArtisans() async {
+    if (!mounted) return;
+    setState(() => _isLoadingFeatured = true);
     try {
       final List<Map<String, dynamic>> artisans =
           await ExploreService.instance.getArtisans(
+        categoryId: _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
         limit: 5,
         onRefreshed: (List<Map<String, dynamic>> fresh) {
           if (!mounted) return;
@@ -684,10 +693,9 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
         ...skills.map((dynamic s) => s.toString()),
       ].join(' ').toLowerCase();
  
-      if (_selectedCategory.isNotEmpty &&
-          !haystack.contains(_selectedCategory.toLowerCase())) return false;
-      if (_searchQuery.isNotEmpty &&
-          !haystack.contains(_searchQuery.toLowerCase())) return false;
+      final String trimmedQuery = _searchQuery.trim();
+      if (trimmedQuery.isNotEmpty &&
+          !haystack.contains(trimmedQuery.toLowerCase())) return false;
       return true;
     }).toList();
   }
@@ -708,7 +716,19 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate(<Widget>[
                   // Hero
-                  _HomeHero(greeting: _greeting, name: 'Welcome back 👋'),
+                  AnimatedBuilder(
+                    animation: AppUserSession.instance,
+                    builder: (BuildContext context, Widget? child) {
+                      final String fullName =
+                          AppUserSession.instance.currentUser?.fullName ?? '';
+                      final String firstName =
+                          fullName.trim().split(' ').first;
+                      final String name = firstName.isNotEmpty
+                          ? 'Welcome, $firstName 🙃'
+                          : 'Welcome back 🙃';
+                      return _HomeHero(greeting: _greeting, name: name);
+                    },
+                  ),
                   const SizedBox(height: 18),
  
                   // Active job banner
@@ -730,7 +750,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                       context,
                       AppRoutes.exploreArtisans,
                       arguments: <String, dynamic>{
-                        'query': _searchQuery,
+                        'query': _searchQuery.trim(),
                         if (_selectedCategory.isNotEmpty)
                           'category': _selectedCategory,
                         if (_selectedCategoryId.isNotEmpty)
@@ -790,7 +810,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                       context,
                       AppRoutes.exploreArtisans,
                       arguments: <String, dynamic>{
-                        if (_searchQuery.isNotEmpty) 'query': _searchQuery,
+                        if (_searchQuery.trim().isNotEmpty) 'query': _searchQuery.trim(),
                         if (_selectedCategory.isNotEmpty)
                           'category': _selectedCategory,
                         if (_selectedCategoryId.isNotEmpty)
@@ -840,7 +860,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               ),
               const SizedBox(width: 9),
               const Text(
-                'Artisans',
+                'CraftMatch',
                 style: TextStyle(
                   fontFamily: 'Satoshi',
                   fontSize: 18,
@@ -918,10 +938,13 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               label: label,
               icon: _categoryIcon(cat),
               isSelected: selected,
-              onTap: () => setState(() {
-                _selectedCategory   = selected ? '' : label;
-                _selectedCategoryId = selected ? '' : catId;
-              }),
+              onTap: () {
+                setState(() {
+                  _selectedCategory   = selected ? '' : label;
+                  _selectedCategoryId = selected ? '' : catId;
+                });
+                _fetchFeaturedArtisans();
+              },
             ),
           );
         }).toList(),

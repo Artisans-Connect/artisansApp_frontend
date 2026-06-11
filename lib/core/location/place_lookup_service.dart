@@ -103,4 +103,62 @@ class PlaceLookupService {
     final String address = (first['formatted_address'] ?? '').toString();
     return address.isEmpty ? null : address;
   }
+
+  Future<String?> reverseGeocodeToCity(LatLng position) async {
+    if (!isConfigured) return null;
+    final Uri uri = Uri.parse('$_baseUrl/geocode/json').replace(
+      queryParameters: <String, String>{
+        'latlng': '${position.latitude},${position.longitude}',
+        'key': AppConstants.googleMapsApiKey,
+      },
+    );
+    final http.Response response = await http.get(uri);
+    final dynamic decoded = jsonDecode(response.body);
+    if (decoded is! Map<String, dynamic>) return null;
+    final dynamic results = decoded['results'];
+    if (results is! List || results.isEmpty) return null;
+
+    for (final dynamic result in results) {
+      if (result is! Map<String, dynamic>) continue;
+      final dynamic components = result['address_components'];
+      if (components is! List) continue;
+
+      String? locality;
+      String? adminArea2;
+      String? adminArea1;
+
+      for (final dynamic comp in components) {
+        if (comp is! Map<String, dynamic>) continue;
+        final dynamic types = comp['types'];
+        if (types is! List) continue;
+
+        if (types.contains('locality')) {
+          locality = comp['long_name'] as String?;
+        } else if (types.contains('administrative_area_level_2')) {
+          adminArea2 = comp['long_name'] as String?;
+        } else if (types.contains('administrative_area_level_1')) {
+          adminArea1 = comp['long_name'] as String?;
+        }
+      }
+
+      final String? city = locality ?? adminArea2 ?? adminArea1;
+      if (city != null && city.isNotEmpty) {
+        return city;
+      }
+    }
+
+    final dynamic first = results.first;
+    if (first is Map<String, dynamic>) {
+      final String address = (first['formatted_address'] ?? '').toString();
+      if (address.isNotEmpty) {
+        final List<String> parts = address.split(',');
+        if (parts.length >= 2) {
+          return parts[parts.length - 2].trim();
+        }
+        return parts.first.trim();
+      }
+    }
+    return null;
+  }
 }
+

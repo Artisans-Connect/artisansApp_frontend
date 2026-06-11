@@ -118,8 +118,9 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
   }
 
   List<ConversationSummary> get _filteredConversations {
-    if (_searchQuery.isEmpty) return _conversations;
-    final String query = _searchQuery.toLowerCase();
+    final String trimmedQuery = _searchQuery.trim();
+    if (trimmedQuery.isEmpty) return _conversations;
+    final String query = trimmedQuery.toLowerCase();
     return _conversations
         .where((ConversationSummary c) =>
             c.counterpartName.toLowerCase().contains(query) ||
@@ -148,7 +149,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
     Navigator.pushNamed(
       context,
       AppRoutes.exploreArtisans,
-      arguments: <String, dynamic>{'query': _searchQuery},
+      arguments: <String, dynamic>{'query': _searchQuery.trim()},
     ).whenComplete(() {
       if (mounted) setState(() => _openingSearch = false);
     });

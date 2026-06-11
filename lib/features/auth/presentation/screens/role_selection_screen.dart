@@ -4,7 +4,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
- 
+import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../../../../core/location/device_location_service.dart';
+import '../../../../core/location/place_lookup_service.dart';
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/storage_service.dart';
@@ -476,7 +479,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
- 
+  bool _isLoadingLocation = false;
+
   int _currentIndex = 0;
   bool _isBecomingWorker = false;
   bool _parsedRouteArgs = false;
@@ -762,6 +766,48 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     ));
   }
  
+  Future<void> _autoDetectLocation() async {
+    if (_isLoadingLocation) return;
+    setState(() => _isLoadingLocation = true);
+    try {
+      final loc = await DeviceLocationService.getCurrentOrDefault();
+      if (!mounted) return;
+      if (loc.isFallback) {
+        AppToast.showError(
+          context,
+          Exception('Could not access your GPS. Please check permission.'),
+          fallback: 'Could not access GPS',
+        );
+        return;
+      }
+
+      final LatLng position = LatLng(loc.latitude, loc.longitude);
+      final String? city =
+          await PlaceLookupService.instance.reverseGeocodeToCity(position);
+      if (!mounted) return;
+
+      if (city != null && city.isNotEmpty) {
+        setState(() {
+          _locationController.text = city;
+        });
+      } else {
+        AppToast.showError(
+          context,
+          Exception('Could not determine city for your location.'),
+          fallback: 'Could not resolve city',
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not auto detect location.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingLocation = false);
+      }
+    }
+  }
+
   // ─────────────────────────────────────────────────────────────────────────
   // Build
   // ─────────────────────────────────────────────────────────────────────────
@@ -845,7 +891,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         children: <Widget>[
           const SizedBox(height: 14),
           Text(
-            'How will you use\nArtisansConnect?',
+            'How will you use\nCraftMatch?',
             textAlign: TextAlign.center,
             style: AppTypography.displayMedium.copyWith(fontSize: 50 * 0.78),
           ),
@@ -1225,6 +1271,27 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   controller: _locationController,
                   hint: 'e.g., East Legon, Accra',
                   prefixIcon: PhosphorIcons.mapPin,
+                  suffixIcon: _isLoadingLocation
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                DesignTokens.primary,
+                              ),
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: Icon(
+                            PhosphorIcons.crosshair,
+                            color: DesignTokens.primary,
+                          ),
+                          onPressed: _autoDetectLocation,
+                        ),
                 ),
               ],
             ),

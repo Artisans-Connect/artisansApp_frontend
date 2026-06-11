@@ -31,8 +31,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
   bool _agreed = false;
   bool _isSubmitting = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   String? _errorMessage;
 
   @override
@@ -41,6 +44,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -207,10 +211,52 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       AppInput(
                         controller: _passwordController,
                         hint: '••••••••',
-                        obscureText: true,
+                        obscureText: _obscurePassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword ? PhosphorIcons.eyeClosed : PhosphorIcons.eye,
+                            color: AppColors.textSecondary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                         validator: (String? v) => (v == null || v.length < 6)
                             ? 'Enter at least 6 characters.'
                             : null,
+                      ),
+                      const SizedBox(height: 14),
+                      Text('Confirm Password',
+                          style: AppTypography.bodyLarge.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 8),
+                      AppInput(
+                        controller: _confirmPasswordController,
+                        hint: '••••••••',
+                        obscureText: _obscureConfirmPassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureConfirmPassword ? PhosphorIcons.eyeClosed : PhosphorIcons.eye,
+                            color: AppColors.textSecondary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                            });
+                          },
+                        ),
+                        validator: (String? v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Confirm your password.';
+                          }
+                          if (v != _passwordController.text) {
+                            return 'Passwords do not match.';
+                          }
+                          return null;
+                        },
                       ),
                       const SizedBox(height: 14),
                       Row(

@@ -9,6 +9,7 @@ class AppInput extends StatelessWidget {
     this.obscureText = false,
     this.validator,
     this.prefixIcon,
+    this.suffixIcon,
     this.maxLines = 1,
     this.maxLength,
   });
@@ -19,6 +20,7 @@ class AppInput extends StatelessWidget {
   final bool obscureText;
   final String? Function(String?)? validator;
   final IconData? prefixIcon;
+  final Widget? suffixIcon;
   final int maxLines;
   final int? maxLength;
 
@@ -35,7 +37,9 @@ class AppInput extends StatelessWidget {
         hintText: hint,
         counterText: '',
         prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+        suffixIcon: suffixIcon,
       ),
     );
   }
 }
+

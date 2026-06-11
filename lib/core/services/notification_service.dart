@@ -113,13 +113,19 @@ class NotificationService {
   void _handleMessageTap(RemoteMessage message) {
     final type = message.data['type'];
     final jobId = message.data['jobId'];
-    if (type != 'new_job' || jobId is! String || jobId.isEmpty) return;
-
-    if (navigatorKey.currentState == null) {
-      _pendingJobRequestId = jobId;
-      return;
+    
+    if (type == 'new_job' && jobId is String && jobId.isNotEmpty) {
+      if (navigatorKey.currentState == null) {
+        _pendingJobRequestId = jobId;
+        return;
+      }
+      _openWorkerRequest(jobId);
+    } else if (type == 'chat_message') {
+      final navigator = navigatorKey.currentState;
+      if (navigator != null) {
+        navigator.pushNamed('/shared/messages');
+      }
     }
-    _openWorkerRequest(jobId);
   }
 
   void _openWorkerRequest(String jobId) {
@@ -141,5 +147,24 @@ class NotificationService {
       (_) => false,
       arguments: <String, dynamic>{'openJobRequestId': jobId},
     );
+  }
+
+  // ── Notification API methods ──────────────────────────────────────
+
+  /// Fetches the current user's notifications from the backend.
+  Future<List<dynamic>> getNotifications({int limit = 50}) async {
+    final dynamic result = await _api.get('/notifications?limit=$limit');
+    if (result is List) return result;
+    return <dynamic>[];
+  }
+
+  /// Marks a single notification as read.
+  Future<void> markAsRead(String notificationId) async {
+    await _api.patch('/notifications/$notificationId/read');
+  }
+
+  /// Marks all unread notifications as read.
+  Future<void> markAllAsRead() async {
+    await _api.patch('/notifications/read-all');
   }
 }

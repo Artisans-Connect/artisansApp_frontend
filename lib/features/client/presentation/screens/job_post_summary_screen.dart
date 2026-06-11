@@ -274,33 +274,33 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                         ),
                       ),
                       const SizedBox(height: AppSpacing.sm),
-                      Row(
-                        children: [
-                          Text(
-                            'GH₵${_clientPremium.toStringAsFixed(0)}',
-                            style: AppTypography.labelLarge,
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Slider(
-                              value: _clientPremium,
-                              min: 0,
-                              max: 200,
-                              divisions: 20,
-                              label:
-                                  'GH₵${_clientPremium.toStringAsFixed(0)}',
-                              onChanged: (double v) {
-                                setState(() {
-                                  _clientPremium = v;
-                                  _draft.merge(<String, dynamic>{
-                                    'clientPremium': v,
-                                  });
-                                });
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
+                      // Row(
+                      //   children: [
+                      //     Text(
+                      //       'GH₵${_clientPremium.toStringAsFixed(0)}',
+                      //       style: AppTypography.labelLarge,
+                      //     ),
+                      //     const SizedBox(width: AppSpacing.sm),
+                      //     Expanded(
+                      //       child: Slider(
+                      //         value: _clientPremium,
+                      //         min: 0,
+                      //         max: 200,
+                      //         divisions: 20,
+                      //         label:
+                      //             'GH₵${_clientPremium.toStringAsFixed(0)}',
+                      //         onChanged: (double v) {
+                      //           setState(() {
+                      //             _clientPremium = v;
+                      //             _draft.merge(<String, dynamic>{
+                      //               'clientPremium': v,
+                      //             });
+                      //           });
+                      //         },
+                      //       ),
+                      //     ),
+                      //   ],
+                      // ),
                       const Divider(height: 20),
                       Row(
                         mainAxisAlignment:

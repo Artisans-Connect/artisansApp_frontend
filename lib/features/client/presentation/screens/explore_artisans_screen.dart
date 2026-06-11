@@ -11,6 +11,7 @@ import '../../../../shared/widgets/search_bar.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../navigation/client_navigation.dart';
 import '../../services/explore_service.dart';
+import '../../../../core/location/device_location_service.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
   const ExploreArtisansScreen({
@@ -60,8 +61,11 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
 
   Future<void> _fetchArtisans() async {
     try {
+      final loc = await DeviceLocationService.getCurrentOrDefault();
       final rawArtisans = await ExploreService.instance.getArtisans(
         limit: 50,
+        lat: loc.latitude,
+        lng: loc.longitude,
         categoryId: _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
       );
       
@@ -116,9 +120,14 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
               .map((dynamic item) => item.toString().toLowerCase())
               .toList();
       final String skillText = skills.join(' ');
-      if (_searchQuery.isNotEmpty) {
-        final String q = _searchQuery.toLowerCase();
-        if (!name.contains(q) && !profession.contains(q) && !skillText.contains(q)) return false;
+      final String trimmedQuery = _searchQuery.trim();
+      if (trimmedQuery.isNotEmpty) {
+        final List<String> queryParts = trimmedQuery.toLowerCase().split(RegExp(r'\s+'));
+        for (final String part in queryParts) {
+          if (!name.contains(part) && !profession.contains(part) && !skillText.contains(part)) {
+            return false;
+          }
+        }
       }
       if (_selectedCategory.isNotEmpty && _selectedCategoryId.isEmpty) {
         final String category = _selectedCategory.toLowerCase();

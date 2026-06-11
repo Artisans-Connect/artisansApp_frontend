@@ -79,8 +79,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ProfileArgs? args =
-        ModalRoute.of(context)?.settings.arguments as ProfileArgs?;
+    final Object? rawArgs = ModalRoute.of(context)?.settings.arguments;
+    final ProfileArgs? args = rawArgs is ProfileArgs ? rawArgs : null;
     final bool isOwnProfile = SharedUserContext.isOwnProfile(args?.userId);
     if (!isOwnProfile && args?.profileData == null && args?.userId.isNotEmpty == true) {
       return _RemoteProfileScaffold(userId: args!.userId);
