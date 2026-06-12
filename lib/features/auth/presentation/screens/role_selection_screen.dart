@@ -10,7 +10,10 @@ import '../../../../core/location/device_location_service.dart';
 import '../../../../core/location/place_lookup_service.dart';
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../core/utils/icon_mapper.dart';
+import '../../../../core/utils/color_mapper.dart';
 import '../../../worker/presentation/worker_shell.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -480,23 +483,18 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
   bool _isLoadingLocation = false;
+  bool _isLoadingTrades = true;
+  String? _tradesError;
 
   int _currentIndex = 0;
   bool _isBecomingWorker = false;
   bool _parsedRouteArgs = false;
+  
+  // Dynamic trades loaded from database
+  List<_TradeEntry> _trades = <_TradeEntry>[];
+  final CategoriesService _categoriesService = CategoriesService();
  
   // ── Static data ────────────────────────────────────────────────────────────
- 
-  static const List<_TradeEntry> _trades = <_TradeEntry>[
-    _TradeEntry('Electrician',     PhosphorIcons.lightning),
-    _TradeEntry('Plumber',         PhosphorIcons.drop),
-    _TradeEntry('Carpenter',       PhosphorIcons.hammer),
-    _TradeEntry('Mason',           PhosphorIcons.wall),
-    _TradeEntry('Painter',         PhosphorIcons.paintBrush),
-    _TradeEntry('Welder',          PhosphorIcons.flame),
-    _TradeEntry('Appliance Repair',PhosphorIcons.wrench),
-    _TradeEntry('Other',           PhosphorIcons.dotsThree),
-  ];
  
   static const List<String> _areas = <String>[
     'Adum', 'Asokwa', 'Bantama', 'Suame',
@@ -508,7 +506,40 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   ];
  
   // ── Lifecycle ──────────────────────────────────────────────────────────────
- 
+  
+  @override
+  void initState() {
+    super.initState();
+    _loadTrades();
+  }
+  
+  Future<void> _loadTrades() async {
+    try {
+      final categories = await _categoriesService.listCategories();
+      final List<_TradeEntry> trades = <_TradeEntry>[];
+      
+      for (final category in categories) {
+        if (category is Map<String, dynamic>) {
+          final String name = category['name'] ?? '';
+          final String? iconName = category['icon_name'];
+          final IconData icon = PhosphorIconMapper.fromString(iconName);
+          
+          trades.add(_TradeEntry(name, icon));
+        }
+      }
+      
+      setState(() {
+        _trades = trades;
+        _isLoadingTrades = false;
+      });
+    } catch (e) {
+      setState(() {
+        _tradesError = 'Could not load trades. Please try again.';
+        _isLoadingTrades = false;
+      });
+    }
+  }
+  
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -928,6 +959,68 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
  
   Widget _buildTradeSelectionPage() {
     final int selectedCount = _session.selectedTrades.length;
+
+    // Show loading state
+    if (_isLoadingTrades) {
+      return Column(
+        children: <Widget>[
+          _HeroHeader(
+            icon: const Icon(
+              PhosphorIcons.toolbox,
+              color: DesignTokens.primary,
+              size: 34,
+            ),
+            bgColor: DesignTokens.primaryTint12,
+            title: 'What work\ndo you do?',
+            subtitle:
+                'Pick all your trades — clients match\nyou based on these.',
+            totalDots: _totalDots,
+            currentDot: _isBecomingWorker ? 0 : 1,
+          ),
+          Expanded(
+            child: Center(
+              child: CircularProgressIndicator(),
+            ),
+          ),
+        ],
+      );
+    }
+
+    // Show error state
+    if (_tradesError != null) {
+      return Column(
+        children: <Widget>[
+          _HeroHeader(
+            icon: const Icon(
+              PhosphorIcons.toolbox,
+              color: DesignTokens.primary,
+              size: 34,
+            ),
+            bgColor: DesignTokens.primaryTint12,
+            title: 'What work\ndo you do?',
+            subtitle:
+                'Pick all your trades — clients match\nyou based on these.',
+            totalDots: _totalDots,
+            currentDot: _isBecomingWorker ? 0 : 1,
+          ),
+          Expanded(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(_tradesError!),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _loadTrades,
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
  
     return Column(
       children: <Widget>[

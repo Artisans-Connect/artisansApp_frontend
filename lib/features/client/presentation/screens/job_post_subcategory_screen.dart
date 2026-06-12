@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/services/categories_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -26,6 +27,10 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
   String _selectedSubcategoryId = '';
   late ClientJobDraft _draft;
   late TextEditingController _searchController;
+  List<Map<String, dynamic>> _subcategories = [];
+  bool _isLoading = true;
+  String? _error;
+  final CategoriesService _categoriesService = CategoriesService();
 
   @override
   void initState() {
@@ -33,6 +38,26 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
     _draft = ClientJobDraft.fromMap(widget.jobData);
     _selectedSubcategoryId = _draft.subcategoryId ?? '';
     _searchController = TextEditingController();
+    _loadSubcategories();
+  }
+
+  Future<void> _loadSubcategories() async {
+    try {
+      final subcategories = await _categoriesService
+          .getSubcategoriesFor(_draft.categorySlug);
+      
+      setState(() {
+        _subcategories = List<Map<String, dynamic>>.from(
+          subcategories.cast<Map<String, dynamic>>(),
+        );
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Could not load subcategories.';
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -41,23 +66,20 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
     super.dispose();
   }
 
-  List<Map<String, dynamic>> get _options =>
-      JobPostSubcategoryCatalog.forCategory(_draft.categorySlug);
-
   List<Map<String, dynamic>> get _filtered {
     final String q = _searchController.text.toLowerCase();
-    if (q.isEmpty) return _options;
-    return _options
+    if (q.isEmpty) return _subcategories;
+    return _subcategories
         .where(
           (Map<String, dynamic> sub) =>
-              (sub['name'] as String).toLowerCase().contains(q) ||
-              (sub['description'] as String).toLowerCase().contains(q),
+              (sub['name'] as String?)?.toLowerCase().contains(q) ?? false ||
+              (sub['description'] as String?)?.toLowerCase().contains(q) == true,
         )
         .toList();
   }
 
   void _continue() {
-    final List<Map<String, dynamic>> matches = _options
+    final List<Map<String, dynamic>> matches = _subcategories
         .where((Map<String, dynamic> s) => s['id'] == _selectedSubcategoryId)
         .toList();
     if (matches.isEmpty) return;
@@ -94,64 +116,102 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: 'Search service types…',
-              prefixIcon: Icon(PhosphorIcons.magnifyingGlass),
-              filled: true,
-              fillColor: AppColors.surfaceContainerLowest,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                borderSide: const BorderSide(color: AppColors.outlineVariant),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          ...filtered.map((Map<String, dynamic> sub) {
-            final bool isSelected = _selectedSubcategoryId == sub['id'];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.md),
-              child: InkWell(
-                onTap: () =>
-                    setState(() => _selectedSubcategoryId = sub['id'] as String),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primaryContainer.withValues(alpha: 0.3)
-                        : AppColors.surfaceContainerLowest,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusLarge),
-                    border: Border.all(
-                      color: isSelected
-                          ? AppColors.primary
-                          : AppColors.borderSubtle,
-                      width: isSelected ? 2 : 1,
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_error != null)
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                children: [
+                  Text(
+                    _error!,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.error,
                     ),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(sub['name'] as String, style: AppTypography.labelLarge),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        sub['description'] as String,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: AppSpacing.md),
+                  ElevatedButton(
+                    onPressed: _loadSubcategories,
+                    child: const Text('Retry'),
                   ),
+                ],
+              ),
+            )
+          else if (_subcategories.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Text(
+                'No subcategories available for this category.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
-            );
-          }),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _searchController,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: 'Search service types…',
+                    prefixIcon: Icon(PhosphorIcons.magnifyingGlass),
+                    filled: true,
+                    fillColor: AppColors.surfaceContainerLowest,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                      borderSide: const BorderSide(color: AppColors.outlineVariant),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                ...filtered.map((Map<String, dynamic> sub) {
+                  final bool isSelected = _selectedSubcategoryId == sub['id'];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: InkWell(
+                      onTap: () =>
+                          setState(() => _selectedSubcategoryId = sub['id'] as String),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppColors.primaryContainer.withValues(alpha: 0.3)
+                              : AppColors.surfaceContainerLowest,
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.radiusLarge),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppColors.primary
+                                : AppColors.borderSubtle,
+                            width: isSelected ? 2 : 1,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(sub['name'] as String, style: AppTypography.labelLarge),
+                            const SizedBox(height: AppSpacing.xs),
+                            Text(
+                              sub['description'] as String? ?? '',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            ),
         ],
       ),
     );
   }
 }
+
