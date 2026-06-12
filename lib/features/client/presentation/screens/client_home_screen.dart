@@ -2,7 +2,6 @@ import '../../../../core/theme/design_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
@@ -13,6 +12,7 @@ import '../../../../shared/widgets/search_bar.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/session/app_user_session.dart';
+import '../../../../core/utils/icon_mapper.dart';
 import '../../services/explore_service.dart';
 
 
@@ -662,23 +662,21 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   // ── Static fallbacks ───────────────────────────────────────────────────────
   static final List<Map<String, dynamic>> _fallbackCategories =
       <Map<String, dynamic>>[
-    <String, dynamic>{'id': '', 'name': 'Plumbing',   'icon': PhosphorIcons.drop},
-    <String, dynamic>{'id': '', 'name': 'Electrical', 'icon': PhosphorIcons.lightning},
-    <String, dynamic>{'id': '', 'name': 'Carpentry',  'icon': PhosphorIcons.wrench},
-    <String, dynamic>{'id': '', 'name': 'Cleaning',   'icon': PhosphorIcons.broom},
-    <String, dynamic>{'id': '', 'name': 'Painting',   'icon': PhosphorIcons.palette},
+    <String, dynamic>{'id': 'plumbing', 'name': 'Plumbing', 'icon_name': 'drop'},
+    <String, dynamic>{
+      'id': 'electrical',
+      'name': 'Electrical',
+      'icon_name': 'lightning',
+    },
+    <String, dynamic>{'id': 'carpentry', 'name': 'Carpentry', 'icon_name': 'wrench'},
+    <String, dynamic>{'id': 'cleaning', 'name': 'Cleaning', 'icon_name': 'broom'},
+    <String, dynamic>{'id': 'painting', 'name': 'Painting', 'icon_name': 'palette'},
   ];
  
   IconData _categoryIcon(Map<String, dynamic> category) {
-    final String slug =
-        (category['slug'] ?? category['name'] ?? '').toString().toLowerCase();
-    if (slug.contains('plumb'))             return PhosphorIcons.drop;
-    if (slug.contains('electric'))          return PhosphorIcons.lightning;
-    if (slug.contains('carpent') ||
-        slug.contains('wood'))              return PhosphorIcons.wrench;
-    if (slug.contains('clean'))             return PhosphorIcons.broom;
-    if (slug.contains('paint'))             return PhosphorIcons.palette;
-    return category['icon'] as IconData? ?? PhosphorIcons.squaresFour;
+    final Object? icon = category['icon'];
+    if (icon is IconData) return icon;
+    return PhosphorIconMapper.fromString(category['icon_name']?.toString());
   }
  
   // ── Filtered artisans ──────────────────────────────────────────────────────

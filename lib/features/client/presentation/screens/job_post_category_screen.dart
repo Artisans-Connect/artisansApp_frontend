@@ -1,15 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/utils/icon_mapper.dart';
 import '../../../../core/utils/color_mapper.dart';
-import '../../../../shared/widgets/error_state_view.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../navigation/client_navigation.dart';
@@ -42,12 +38,13 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
   Future<void> _fetchCategories() async {
     try {
       final data = await _categoriesService.listCategories();
+      if (!mounted) return;
       setState(() {
         _categories = data;
         _isLoading = false;
       });
     } catch (e) {
-      // Fallback is used automatically by service
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -57,7 +54,9 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
   Map<String, dynamic>? get _selectedCategory {
     if (_selectedCategoryId == null) return null;
     for (final c in _categories) {
-      if (c['id'] == _selectedCategoryId) return c as Map<String, dynamic>;
+      if (c is Map && c['id'] == _selectedCategoryId) {
+        return Map<String, dynamic>.from(c);
+      }
     }
     return null;
   }
@@ -112,14 +111,21 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
               ),
               itemCount: _categories.length,
               itemBuilder: (BuildContext context, int index) {
-                final category = _categories[index];
-                final bool isSelected = _selectedCategoryId == category['id'];
-                final String name = category['name'] ?? 'Unknown';
-                final Color color = ColorMapper.fromHex(category['color_hex']);
-                final IconData icon = PhosphorIconMapper.fromString(category['icon_name']);
+                final Map<String, dynamic> category =
+                    Map<String, dynamic>.from(_categories[index] as Map);
+                final String id = (category['id'] ?? '').toString();
+                final bool isSelected = _selectedCategoryId == id;
+                final String name = (category['name'] ?? 'Unknown').toString();
+                final Color color =
+                    ColorMapper.fromHex(category['color_hex']?.toString());
+                final IconData icon = PhosphorIconMapper.fromString(
+                  category['icon_name']?.toString(),
+                );
 
                 return GestureDetector(
-                  onTap: () => setState(() => _selectedCategoryId = category['id']),
+                  onTap: id.isEmpty
+                      ? null
+                      : () => setState(() => _selectedCategoryId = id),
                   child: Container(
                     decoration: BoxDecoration(
                       color: AppColors.surfaceContainerLowest,

@@ -25,33 +25,44 @@ class PhosphorIconMapper {
     switch (iconName.toLowerCase().trim()) {
       // Plumbing
       case 'drop':
+      case 'plumbing':
         return PhosphorIcons.drop;
 
       // Electrical
       case 'lightning':
+      case 'electrical':
+      case 'electrical_services':
         return PhosphorIcons.lightning;
 
       // Carpentry
+      case 'carpenter':
       case 'wrench':
         return PhosphorIcons.wrench;
 
       // Cleaning
       case 'broom':
+      case 'cleaning':
+      case 'cleaning_services':
         return PhosphorIcons.broom;
 
       // Painting
+      case 'format_paint':
       case 'palette':
         return PhosphorIcons.palette;
 
       // Construction
       case 'barricade':
+      case 'construction':
         return PhosphorIcons.barricade;
 
       // HVAC
+      case 'hvac':
       case 'snowflake':
         return PhosphorIcons.snowflake;
 
       // Landscaping
+      case 'grass':
+      case 'landscaping':
       case 'mountains':
         return PhosphorIcons.mountains;
 
@@ -76,12 +87,23 @@ class PhosphorIconMapper {
   /// All supported icon names.
   static const Set<String> supportedIcons = <String>{
     'drop',
+    'plumbing',
     'lightning',
+    'electrical',
+    'electrical_services',
+    'carpenter',
     'wrench',
     'broom',
+    'cleaning',
+    'cleaning_services',
+    'format_paint',
     'palette',
     'barricade',
+    'construction',
+    'hvac',
     'snowflake',
+    'grass',
+    'landscaping',
     'mountains',
     'gear',
     'hammer',

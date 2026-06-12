@@ -42,17 +42,22 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
 
   Future<void> _loadSubcategories() async {
     try {
-      final subcategories = await _categoriesService
-          .getSubcategoriesFor(_draft.categorySlug);
-      
+      final String? categoryKey = _draft.categorySlug ?? _draft.categoryId;
+      final subcategories =
+          await _categoriesService.getSubcategoriesFor(categoryKey);
+
+      if (!mounted) return;
       setState(() {
         _subcategories = List<Map<String, dynamic>>.from(
-          subcategories.cast<Map<String, dynamic>>(),
+          subcategories
+              .whereType<Map<dynamic, dynamic>>()
+              .map((Map<dynamic, dynamic> item) =>
+                  Map<String, dynamic>.from(item)),
         );
         _isLoading = false;
       });
     } catch (e) {
-      // Fallback is used automatically by service
+      if (!mounted) return;
       setState(() {
         _isLoading = false;
       });
@@ -70,9 +75,12 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
     if (q.isEmpty) return _subcategories;
     return _subcategories
         .where(
-          (Map<String, dynamic> sub) =>
-              (sub['name'] as String?)?.toLowerCase().contains(q) ?? false ||
-              (sub['description'] as String?)?.toLowerCase().contains(q) == true,
+          (Map<String, dynamic> sub) {
+            final String name = (sub['name'] ?? '').toString().toLowerCase();
+            final String description =
+                (sub['description'] ?? '').toString().toLowerCase();
+            return name.contains(q) || description.contains(q);
+          },
         )
         .toList();
   }
@@ -117,6 +125,22 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
           const SizedBox(height: AppSpacing.md),
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
+          else if (_subcategories.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: AppColors.surfaceContainerLowest,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+                border: Border.all(color: AppColors.borderSubtle),
+              ),
+              child: Text(
+                'No service types are available for this category yet.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            )
           else
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,7 +166,8 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
                     padding: const EdgeInsets.only(bottom: AppSpacing.md),
                     child: InkWell(
                       onTap: () =>
-                          setState(() => _selectedSubcategoryId = sub['id'] as String),
+                          setState(() => _selectedSubcategoryId =
+                              (sub['id'] ?? '').toString()),
                       borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                       child: Container(
                         width: double.infinity,
@@ -163,7 +188,10 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(sub['name'] as String, style: AppTypography.labelLarge),
+                            Text(
+                              (sub['name'] ?? 'Service type').toString(),
+                              style: AppTypography.labelLarge,
+                            ),
                             const SizedBox(height: AppSpacing.xs),
                             Text(
                               sub['description'] as String? ?? '',

@@ -124,28 +124,28 @@ class CategoriesService {
   /// Results are cached according to [CacheKeys.categoriesTtl].
   /// Pass [forceRefresh] = true to bypass the cache and fetch fresh data.
   Future<List<dynamic>> listCategories({bool forceRefresh = false}) async {
-    return CachedFetch.get<List<dynamic>>(
+    final List<dynamic> cachedOrFresh = await CachedFetch.get<List<dynamic>>(
       key: CacheKeys.categories,
       ttl: CacheKeys.categoriesTtl,
       forceRefresh: forceRefresh,
       fetch: () async {
         try {
           final response = await _apiClient.get('/categories');
-          final data = response as List<dynamic>?;
-          
-          // If API returned data, use it
-          if (data != null && data.isNotEmpty) {
-            return data;
-          }
-          
-          // API returned empty, use fallback
+          final List<Map<String, dynamic>> data = _normalizeCategories(
+            _readListResponse(response),
+          );
+
+          if (data.isNotEmpty) return data;
+
           return _fallbackCategories;
         } catch (e) {
-          // Network error or other issue, use fallback
           return _fallbackCategories;
         }
       },
     );
+    final List<Map<String, dynamic>> normalized =
+        _normalizeCategories(cachedOrFresh);
+    return normalized.isNotEmpty ? normalized : _fallbackCategories;
   }
 
   /// Gets subcategories for a specific category by ID or slug.
@@ -169,12 +169,105 @@ class CategoriesService {
       );
 
       if (category is Map && category['subcategories'] is List) {
-        return category['subcategories'] as List<dynamic>;
+        return _normalizeSubcategories(category['subcategories'] as List);
       }
 
       return <dynamic>[];
     } catch (e) {
       return <dynamic>[];
     }
+  }
+
+  List<dynamic> _readListResponse(dynamic response) {
+    if (response is List) return response;
+    if (response is Map<String, dynamic> && response['data'] is List) {
+      return response['data'] as List;
+    }
+    return <dynamic>[];
+  }
+
+  List<Map<String, dynamic>> _normalizeCategories(List<dynamic> raw) {
+    final List<Map<String, dynamic>> categories = raw
+        .whereType<Map<dynamic, dynamic>>()
+        .map((Map<dynamic, dynamic> item) {
+          final Map<String, dynamic> category = Map<String, dynamic>.from(item);
+          category['id'] = (category['id'] ?? category['slug'] ?? '').toString();
+          category['name'] = (category['name'] ?? 'Service').toString();
+          category['slug'] = (category['slug'] ?? category['id']).toString();
+          category['icon_name'] = category['icon_name']?.toString();
+          category['color_hex'] = category['color_hex']?.toString();
+          category['description'] = category['description']?.toString();
+          final Map<String, dynamic>? fallback = _fallbackCategoryFor(category);
+          category['icon_name'] ??= fallback?['icon_name']?.toString();
+          category['color_hex'] ??= fallback?['color_hex']?.toString();
+          category['description'] ??= fallback?['description']?.toString();
+
+          final List<Map<String, dynamic>> subcategories = _normalizeSubcategories(
+            category['subcategories'] is List
+                ? category['subcategories'] as List
+                : const <dynamic>[],
+          );
+          category['subcategories'] = subcategories.isNotEmpty
+              ? subcategories
+              : _normalizeSubcategories(
+                  fallback?['subcategories'] is List
+                      ? fallback!['subcategories'] as List
+                      : const <dynamic>[],
+                );
+          return category;
+        })
+        .where((Map<String, dynamic> category) =>
+            (category['id'] as String).isNotEmpty)
+        .toList();
+
+    categories.sort(_compareSortOrder);
+    return categories;
+  }
+
+  List<Map<String, dynamic>> _normalizeSubcategories(List<dynamic> raw) {
+    final List<Map<String, dynamic>> subcategories = raw
+        .whereType<Map<dynamic, dynamic>>()
+        .map((Map<dynamic, dynamic> item) {
+          final Map<String, dynamic> subcategory = Map<String, dynamic>.from(item);
+          subcategory['id'] =
+              (subcategory['id'] ?? subcategory['slug'] ?? '').toString();
+          subcategory['name'] = (subcategory['name'] ?? 'Service type').toString();
+          subcategory['slug'] = (subcategory['slug'] ?? subcategory['id']).toString();
+          subcategory['description'] = subcategory['description']?.toString();
+          return subcategory;
+        })
+        .where((Map<String, dynamic> subcategory) =>
+            (subcategory['id'] as String).isNotEmpty)
+        .toList();
+
+    subcategories.sort(_compareSortOrder);
+    return subcategories;
+  }
+
+  Map<String, dynamic>? _fallbackCategoryFor(Map<String, dynamic> category) {
+    final String id = (category['id'] ?? '').toString().toLowerCase();
+    final String slug = (category['slug'] ?? '').toString().toLowerCase();
+    final String name = (category['name'] ?? '').toString().toLowerCase();
+
+    for (final Map<String, dynamic> fallback in _fallbackCategories) {
+      final String fallbackId = fallback['id'].toString().toLowerCase();
+      final String fallbackSlug = fallback['slug'].toString().toLowerCase();
+      final String fallbackName = fallback['name'].toString().toLowerCase();
+      if (id == fallbackId ||
+          id == fallbackSlug ||
+          slug == fallbackSlug ||
+          slug == fallbackId ||
+          name == fallbackName) {
+        return fallback;
+      }
+    }
+    return null;
+  }
+
+  int _compareSortOrder(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final int orderA = (a['sort_order'] as num?)?.toInt() ?? 0;
+    final int orderB = (b['sort_order'] as num?)?.toInt() ?? 0;
+    if (orderA != orderB) return orderA.compareTo(orderB);
+    return (a['name'] as String).compareTo(b['name'] as String);
   }
 }

@@ -13,7 +13,6 @@ import '../../../../core/services/auth_service.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/utils/icon_mapper.dart';
-import '../../../../core/utils/color_mapper.dart';
 import '../../../worker/presentation/worker_shell.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -518,21 +517,24 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       final List<_TradeEntry> trades = <_TradeEntry>[];
       
       for (final category in categories) {
-        if (category is Map<String, dynamic>) {
-          final String name = category['name'] ?? '';
-          final String? iconName = category['icon_name'];
+        if (category is Map) {
+          final Map<String, dynamic> categoryMap =
+              Map<String, dynamic>.from(category);
+          final String name = (categoryMap['name'] ?? '').toString();
+          final String? iconName = categoryMap['icon_name']?.toString();
           final IconData icon = PhosphorIconMapper.fromString(iconName);
-          
-          trades.add(_TradeEntry(name, icon));
+
+          if (name.isNotEmpty) trades.add(_TradeEntry(name, icon));
         }
       }
-      
+
+      if (!mounted) return;
       setState(() {
         _trades = trades;
         _isLoadingTrades = false;
       });
     } catch (e) {
-      // Fallback is used automatically by service
+      if (!mounted) return;
       setState(() {
         _isLoadingTrades = false;
       });
@@ -981,11 +983,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               child: CircularProgressIndicator(),
             ),
           ),
-        ],
-      );
-    }
- 
-    return Column(
         ],
       );
     }
