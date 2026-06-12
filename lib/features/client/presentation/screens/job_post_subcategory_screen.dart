@@ -29,7 +29,6 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
   late TextEditingController _searchController;
   List<Map<String, dynamic>> _subcategories = [];
   bool _isLoading = true;
-  String? _error;
   final CategoriesService _categoriesService = CategoriesService();
 
   @override
@@ -53,8 +52,8 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      // Fallback is used automatically by service
       setState(() {
-        _error = 'Could not load subcategories.';
         _isLoading = false;
       });
     }
@@ -118,35 +117,6 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
           const SizedBox(height: AppSpacing.md),
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
-          else if (_error != null)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                children: [
-                  Text(
-                    _error!,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.error,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  ElevatedButton(
-                    onPressed: _loadSubcategories,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            )
-          else if (_subcategories.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Text(
-                'No subcategories available for this category.',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            )
           else
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,

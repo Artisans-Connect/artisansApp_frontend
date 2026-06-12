@@ -484,7 +484,6 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   bool _isSubmitting = false;
   bool _isLoadingLocation = false;
   bool _isLoadingTrades = true;
-  String? _tradesError;
 
   int _currentIndex = 0;
   bool _isBecomingWorker = false;
@@ -533,8 +532,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         _isLoadingTrades = false;
       });
     } catch (e) {
+      // Fallback is used automatically by service
       setState(() {
-        _tradesError = 'Could not load trades. Please try again.';
         _isLoadingTrades = false;
       });
     }
@@ -985,39 +984,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         ],
       );
     }
-
-    // Show error state
-    if (_tradesError != null) {
-      return Column(
-        children: <Widget>[
-          _HeroHeader(
-            icon: const Icon(
-              PhosphorIcons.toolbox,
-              color: DesignTokens.primary,
-              size: 34,
-            ),
-            bgColor: DesignTokens.primaryTint12,
-            title: 'What work\ndo you do?',
-            subtitle:
-                'Pick all your trades — clients match\nyou based on these.',
-            totalDots: _totalDots,
-            currentDot: _isBecomingWorker ? 0 : 1,
-          ),
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(_tradesError!),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: _loadTrades,
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
-          ),
+ 
+    return Column(
         ],
       );
     }

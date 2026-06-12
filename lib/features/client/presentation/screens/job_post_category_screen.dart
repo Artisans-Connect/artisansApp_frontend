@@ -29,7 +29,6 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
   late ClientJobDraft _draft;
   List<dynamic> _categories = [];
   bool _isLoading = true;
-  String? _error;
   final CategoriesService _categoriesService = CategoriesService();
 
   @override
@@ -48,8 +47,8 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
         _isLoading = false;
       });
     } catch (e) {
+      // Fallback is used automatically by service
       setState(() {
-        _error = userMessageFor(e, fallback: 'Could not load categories.');
         _isLoading = false;
       });
     }
@@ -101,13 +100,6 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
           const SizedBox(height: AppSpacing.lg),
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
-          else if (_error != null)
-            ErrorStateView(
-              message: _error!,
-              title: 'Could not load categories',
-              compact: true,
-              onRetry: _fetchCategories,
-            )
           else
             GridView.builder(
               shrinkWrap: true,
