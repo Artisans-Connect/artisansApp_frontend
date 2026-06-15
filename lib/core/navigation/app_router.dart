@@ -11,6 +11,7 @@ import '../../features/client/presentation/screens/job_post_subcategory_screen.d
 import '../../features/client/presentation/screens/job_post_details_screen.dart';
 import '../../features/client/presentation/screens/job_post_location_schedule_screen.dart';
 import '../../features/client/presentation/screens/job_post_summary_screen.dart';
+import '../../features/client/presentation/screens/job_applicants_screen.dart';
 import '../../features/client/presentation/screens/live_tracking_screen.dart';
 import '../../features/client/presentation/screens/rate_service_screen.dart';
 import '../session/app_user_session.dart';
@@ -135,6 +136,13 @@ class AppRouter {
       case AppRoutes.liveTracking:
         return MaterialPageRoute(
           builder: (_) => LiveTrackingScreen(
+            job: settings.arguments as Map<String, dynamic>?,
+          ),
+        );
+
+      case AppRoutes.jobApplicants:
+        return MaterialPageRoute(
+          builder: (_) => JobApplicantsScreen(
             job: settings.arguments as Map<String, dynamic>?,
           ),
         );

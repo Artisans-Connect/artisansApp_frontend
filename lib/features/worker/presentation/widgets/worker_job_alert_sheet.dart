@@ -57,11 +57,15 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
     if (_accepting || _declining) return;
     setState(() => _accepting = true);
     try {
-      final dynamic accepted = await _workersService.acceptJob(widget.job.id);
+      final dynamic application = await _workersService.applyToJob(widget.job.id);
       if (!mounted) return;
-      if (accepted is Map<String, dynamic>) {
-        widget.onAccepted(accepted);
+      if (application is Map<String, dynamic>) {
+        widget.onAccepted(application);
       }
+      AppToast.showSuccess(
+        context,
+        'Application sent. The client will choose an artisan.',
+      );
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
@@ -204,7 +208,7 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                 Expanded(
                   flex: 2,
                   child: GradientButton(
-                    label: 'Accept Job',
+                    label: 'Apply for Job',
                     isLoading: _accepting,
                     enabled: !_declining,
                     onPressed: _accept,

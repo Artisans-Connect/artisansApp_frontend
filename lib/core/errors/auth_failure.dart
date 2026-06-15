@@ -4,6 +4,7 @@ enum AuthFailureCode {
   invalidCredentials,
   profileNotFound,
   profileCreateFailed,
+  accountSuspended,
   accountAlreadyExists,
   signUpFailed,
   network,

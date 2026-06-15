@@ -35,6 +35,12 @@ class ClientJobDraft {
 
   String? get subcategoryName => data['subcategoryName'] as String?;
 
+  List<dynamic> get categorySubcategories {
+    final Object? raw = data['categorySubcategories'];
+    if (raw is List) return raw;
+    return const <dynamic>[];
+  }
+
   String? get title => data['title'] as String?;
 
   String? get description => data['description'] as String?;

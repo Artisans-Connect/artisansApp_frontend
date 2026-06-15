@@ -69,6 +69,8 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
       'categorySlug': cat['slug'],
       'categoryName': cat['name'],
       'category': cat['name'],
+      if (cat['subcategories'] is List)
+        'categorySubcategories': cat['subcategories'],
     });
     Navigator.pushNamed(
       context,

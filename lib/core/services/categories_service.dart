@@ -158,23 +158,33 @@ class CategoriesService {
     }
 
     try {
-      final List<dynamic> categories = await listCategories();
-      
-      // Find the category by slug or id
-      final dynamic category = categories.firstWhere(
-        (dynamic c) =>
-            (c is Map && (c['slug'] == categorySlugOrId || c['id'] == categorySlugOrId)) ||
-            (c is Map && c['categoryKey'] == categorySlugOrId),
-        orElse: () => null,
+      final List<Map<String, dynamic>> cachedCategories =
+          _normalizeCategories(await listCategories());
+      final List<Map<String, dynamic>> cachedSubcategories =
+          _subcategoriesFromCategories(cachedCategories, categorySlugOrId);
+      if (cachedSubcategories.isNotEmpty) return cachedSubcategories;
+
+      final List<Map<String, dynamic>> freshCategories =
+          _normalizeCategories(await listCategories(forceRefresh: true));
+      final List<Map<String, dynamic>> freshSubcategories =
+          _subcategoriesFromCategories(freshCategories, categorySlugOrId);
+      if (freshSubcategories.isNotEmpty) return freshSubcategories;
+
+      final Map<String, dynamic>? fallback =
+          _fallbackCategoryForKey(categorySlugOrId);
+      return _normalizeSubcategories(
+        fallback?['subcategories'] is List
+            ? fallback!['subcategories'] as List
+            : const <dynamic>[],
       );
-
-      if (category is Map && category['subcategories'] is List) {
-        return _normalizeSubcategories(category['subcategories'] as List);
-      }
-
-      return <dynamic>[];
     } catch (e) {
-      return <dynamic>[];
+      final Map<String, dynamic>? fallback =
+          _fallbackCategoryForKey(categorySlugOrId);
+      return _normalizeSubcategories(
+        fallback?['subcategories'] is List
+            ? fallback!['subcategories'] as List
+            : const <dynamic>[],
+      );
     }
   }
 
@@ -224,6 +234,29 @@ class CategoriesService {
     return categories;
   }
 
+  List<Map<String, dynamic>> _subcategoriesFromCategories(
+    List<Map<String, dynamic>> categories,
+    String categorySlugOrId,
+  ) {
+    final String key = _normalizeLookupKey(categorySlugOrId);
+    for (final Map<String, dynamic> category in categories) {
+      final Set<String> values = <String>{
+        _normalizeLookupKey(category['id']),
+        _normalizeLookupKey(category['slug']),
+        _normalizeLookupKey(category['name']),
+        _normalizeLookupKey(category['categoryKey']),
+      }..remove('');
+      if (values.contains(key)) {
+        return _normalizeSubcategories(
+          category['subcategories'] is List
+              ? category['subcategories'] as List
+              : const <dynamic>[],
+        );
+      }
+    }
+    return <Map<String, dynamic>>[];
+  }
+
   List<Map<String, dynamic>> _normalizeSubcategories(List<dynamic> raw) {
     final List<Map<String, dynamic>> subcategories = raw
         .whereType<Map<dynamic, dynamic>>()
@@ -245,23 +278,47 @@ class CategoriesService {
   }
 
   Map<String, dynamic>? _fallbackCategoryFor(Map<String, dynamic> category) {
-    final String id = (category['id'] ?? '').toString().toLowerCase();
-    final String slug = (category['slug'] ?? '').toString().toLowerCase();
-    final String name = (category['name'] ?? '').toString().toLowerCase();
+    final String id = _normalizeLookupKey(category['id']);
+    final String slug = _normalizeLookupKey(category['slug']);
+    final String name = _normalizeLookupKey(category['name']);
+    final String categoryKey = _normalizeLookupKey(category['categoryKey']);
 
     for (final Map<String, dynamic> fallback in _fallbackCategories) {
-      final String fallbackId = fallback['id'].toString().toLowerCase();
-      final String fallbackSlug = fallback['slug'].toString().toLowerCase();
-      final String fallbackName = fallback['name'].toString().toLowerCase();
+      final String fallbackId = _normalizeLookupKey(fallback['id']);
+      final String fallbackSlug = _normalizeLookupKey(fallback['slug']);
+      final String fallbackName = _normalizeLookupKey(fallback['name']);
       if (id == fallbackId ||
           id == fallbackSlug ||
           slug == fallbackSlug ||
           slug == fallbackId ||
-          name == fallbackName) {
+          name == fallbackName ||
+          categoryKey == fallbackId ||
+          categoryKey == fallbackSlug) {
         return fallback;
       }
     }
     return null;
+  }
+
+  Map<String, dynamic>? _fallbackCategoryForKey(String key) {
+    final String normalized = _normalizeLookupKey(key);
+    for (final Map<String, dynamic> fallback in _fallbackCategories) {
+      final Set<String> values = <String>{
+        _normalizeLookupKey(fallback['id']),
+        _normalizeLookupKey(fallback['slug']),
+        _normalizeLookupKey(fallback['name']),
+      };
+      if (values.contains(normalized)) return fallback;
+    }
+    return null;
+  }
+
+  String _normalizeLookupKey(Object? value) {
+    return (value ?? '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\s-]+'), '_');
   }
 
   int _compareSortOrder(Map<String, dynamic> a, Map<String, dynamic> b) {

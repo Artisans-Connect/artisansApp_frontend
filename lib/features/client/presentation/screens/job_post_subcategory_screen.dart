@@ -42,18 +42,17 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
 
   Future<void> _loadSubcategories() async {
     try {
-      final String? categoryKey = _draft.categorySlug ?? _draft.categoryId;
-      final subcategories =
-          await _categoriesService.getSubcategoriesFor(categoryKey);
+      final List<Map<String, dynamic>> carriedSubcategories =
+          _normalizeSubcategories(_draft.categorySubcategories);
+      final List<dynamic> subcategories = carriedSubcategories.isNotEmpty
+          ? carriedSubcategories
+          : await _categoriesService.getSubcategoriesFor(
+              _draft.categorySlug ?? _draft.categoryId ?? _draft.categoryName,
+            );
 
       if (!mounted) return;
       setState(() {
-        _subcategories = List<Map<String, dynamic>>.from(
-          subcategories
-              .whereType<Map<dynamic, dynamic>>()
-              .map((Map<dynamic, dynamic> item) =>
-                  Map<String, dynamic>.from(item)),
-        );
+        _subcategories = _normalizeSubcategories(subcategories);
         _isLoading = false;
       });
     } catch (e) {
@@ -62,6 +61,20 @@ class _JobPostSubcategoryScreenState extends State<JobPostSubcategoryScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  List<Map<String, dynamic>> _normalizeSubcategories(List<dynamic> raw) {
+    return raw
+        .whereType<Map<dynamic, dynamic>>()
+        .map((Map<dynamic, dynamic> item) => Map<String, dynamic>.from(item))
+        .where((Map<String, dynamic> item) =>
+            (item['id'] ?? item['slug'] ?? '').toString().isNotEmpty)
+        .map((Map<String, dynamic> item) {
+      item['id'] = (item['id'] ?? item['slug']).toString();
+      item['name'] = (item['name'] ?? 'Service type').toString();
+      item['description'] = item['description']?.toString();
+      return item;
+    }).toList();
   }
 
   @override

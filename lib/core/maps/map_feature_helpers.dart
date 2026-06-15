@@ -6,6 +6,53 @@ import '../utils/haversine.dart' as distance_utils;
 
 enum MapRouteEstimateSource { haversine, googleRoutes }
 
+enum MapMarkerKind {
+  client,
+  worker,
+  job,
+  currentUser,
+  selectedWorker,
+  selectedJob,
+  staleWorker,
+  urgentJob,
+}
+
+enum MapAction {
+  viewProfile,
+  request,
+  chat,
+  accept,
+  decline,
+  navigate,
+}
+
+abstract class RouteProvider {
+  const RouteProvider();
+
+  Future<MapRouteEstimate> estimate({
+    required LatLng origin,
+    required LatLng destination,
+  });
+}
+
+class HaversineRouteProvider extends RouteProvider {
+  const HaversineRouteProvider({this.speedKmh = 25});
+
+  final double speedKmh;
+
+  @override
+  Future<MapRouteEstimate> estimate({
+    required LatLng origin,
+    required LatLng destination,
+  }) async {
+    return MapRouteEstimate.between(
+      origin: origin,
+      destination: destination,
+      speedKmh: speedKmh,
+    );
+  }
+}
+
 class MapRouteEstimate {
   const MapRouteEstimate({
     required this.distanceKm,
@@ -58,6 +105,7 @@ class MapPoint {
     this.isAvailable = false,
     this.locationAt,
     this.avatarUrl,
+    this.markerKind,
     this.raw = const <String, dynamic>{},
   });
 
@@ -70,6 +118,8 @@ class MapPoint {
         : (raw['profession'] ?? 'Professional').toString();
     final lat = MapFeatureHelpers.asDouble(raw['current_lat'] ?? raw['lat']);
     final lng = MapFeatureHelpers.asDouble(raw['current_lng'] ?? raw['lng']);
+    final locationAt = MapFeatureHelpers.asDateTime(raw['location_at']);
+    final isAvailable = raw['is_available'] == true || raw['available'] == true;
 
     return MapPoint(
       id: (raw['id'] ?? raw['worker_id'] ?? '').toString(),
@@ -80,9 +130,12 @@ class MapPoint {
       distanceKm: MapFeatureHelpers.asDouble(raw['distance_km']),
       rating: MapFeatureHelpers.asDouble(raw['rating']),
       isVerified: raw['is_verified'] == true,
-      isAvailable: raw['is_available'] == true || raw['available'] == true,
-      locationAt: MapFeatureHelpers.asDateTime(raw['location_at']),
+      isAvailable: isAvailable,
+      locationAt: locationAt,
       avatarUrl: (profile['avatar_url'] ?? raw['imageUrl'])?.toString(),
+      markerKind: isAvailable && MapFeatureHelpers.isFreshLocation(locationAt)
+          ? MapMarkerKind.worker
+          : MapMarkerKind.staleWorker,
       raw: raw,
     );
   }
@@ -98,6 +151,7 @@ class MapPoint {
   final bool isAvailable;
   final DateTime? locationAt;
   final String? avatarUrl;
+  final MapMarkerKind? markerKind;
   final Map<String, dynamic> raw;
 
   bool get hasFreshLocation => MapFeatureHelpers.isFreshLocation(locationAt);
@@ -115,6 +169,25 @@ class MapFeatureHelpers {
 
   static const Duration locationFreshnessWindow = Duration(minutes: 15);
   static const LatLng accraDefault = LatLng(5.6037, -0.1870);
+
+  static const RouteProvider defaultRouteProvider = HaversineRouteProvider();
+
+  static double markerHueFor(MapMarkerKind kind) {
+    return switch (kind) {
+      MapMarkerKind.client => BitmapDescriptor.hueViolet,
+      MapMarkerKind.worker => BitmapDescriptor.hueOrange,
+      MapMarkerKind.job => BitmapDescriptor.hueOrange,
+      MapMarkerKind.currentUser => BitmapDescriptor.hueAzure,
+      MapMarkerKind.selectedWorker => BitmapDescriptor.hueGreen,
+      MapMarkerKind.selectedJob => BitmapDescriptor.hueGreen,
+      MapMarkerKind.staleWorker => BitmapDescriptor.hueRose,
+      MapMarkerKind.urgentJob => BitmapDescriptor.hueRed,
+    };
+  }
+
+  static BitmapDescriptor markerIconFor(MapMarkerKind kind) {
+    return BitmapDescriptor.defaultMarkerWithHue(markerHueFor(kind));
+  }
 
   static bool isFreshLocation(DateTime? locationAt) {
     if (locationAt == null) return false;

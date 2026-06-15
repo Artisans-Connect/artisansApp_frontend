@@ -187,11 +187,14 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final String subtitle = booking.status == ClientBookingStatus.requested
+        ? 'View interested artisans'
+        : '${booking.artisan} · ${booking.status.displayLabel}';
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: ListTile(
         title: Text(booking.title),
-        subtitle: Text('${booking.artisan} · ${booking.status.displayLabel}'),
+        subtitle: Text(subtitle),
         trailing: Icon(PhosphorIcons.caretRight),
         onTap: onTap,
       ),

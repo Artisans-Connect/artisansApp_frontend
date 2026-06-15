@@ -56,6 +56,11 @@ class WorkersService {
     return response as List<dynamic>;
   }
 
+  Future<List<dynamic>> getApplications() async {
+    final response = await _api.get('/workers/me/applications');
+    return response as List<dynamic>;
+  }
+
   Future<dynamic> getJobRequestById(String jobId) async {
     return await _api.get('/workers/me/job-requests/$jobId');
   }
@@ -72,9 +77,11 @@ class WorkersService {
     return response as List<dynamic>;
   }
 
-  Future<dynamic> acceptJob(String jobId) async {
+  Future<dynamic> applyToJob(String jobId) async {
     return await _api.post('/workers/accept/$jobId');
   }
+
+  Future<dynamic> acceptJob(String jobId) => applyToJob(jobId);
 
   Future<dynamic> declineJob(String jobId) async {
     return await _api.post('/workers/decline/$jobId');

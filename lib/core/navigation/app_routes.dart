@@ -18,6 +18,7 @@ class AppRoutes {
   // Service Tracking Flow
   static const bookingHistory = '/booking-history';
   static const liveTracking = '/live-tracking';
+  static const jobApplicants = '/job-applicants';
   static const rateService = '/rate-service';
 
   // Shared

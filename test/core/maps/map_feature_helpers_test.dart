@@ -26,6 +26,16 @@ void main() {
       expect(estimate.distanceLabel, '420 m');
       expect(estimate.etaLabel, '~2 min');
     });
+
+    test('default route provider uses haversine estimates', () async {
+      final estimate = await MapFeatureHelpers.defaultRouteProvider.estimate(
+        origin: const LatLng(5.6037, -0.1870),
+        destination: const LatLng(5.6500, -0.1900),
+      );
+
+      expect(estimate.source, MapRouteEstimateSource.haversine);
+      expect(estimate.distanceKm, greaterThan(0));
+    });
   });
 
   group('MapFeatureHelpers', () {
@@ -49,6 +59,21 @@ void main() {
       expect(MapFeatureHelpers.isFreshLocation(fresh), isTrue);
       expect(MapFeatureHelpers.isFreshLocation(stale), isFalse);
       expect(MapFeatureHelpers.isFreshLocation(null), isFalse);
+    });
+
+    test('provides marker hues for Route Rich map states', () {
+      expect(
+        MapFeatureHelpers.markerHueFor(MapMarkerKind.currentUser),
+        BitmapDescriptor.hueAzure,
+      );
+      expect(
+        MapFeatureHelpers.markerHueFor(MapMarkerKind.selectedWorker),
+        BitmapDescriptor.hueGreen,
+      );
+      expect(
+        MapFeatureHelpers.markerHueFor(MapMarkerKind.staleWorker),
+        BitmapDescriptor.hueRose,
+      );
     });
   });
 

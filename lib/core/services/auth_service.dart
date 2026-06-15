@@ -68,6 +68,13 @@ class AuthService {
     } on AuthException catch (e) {
       throw _mapAuthException(e);
     } on ApiException catch (e) {
+      if (e.code == 'ACCOUNT_SUSPENDED') {
+        await signOut();
+        throw const AuthFailure(
+          AuthFailureCode.accountSuspended,
+          'Your account has been suspended. Please contact admin/support if you think this is a mistake.',
+        );
+      }
       if (e.code == 'PROFILE_NOT_FOUND') {
         throw const AuthFailure(
           AuthFailureCode.profileNotFound,
@@ -243,9 +250,14 @@ class AuthService {
   Future<void> signOut() async {
     try {
       await NotificationService.instance.unregisterCurrentDevice();
+    } catch (_) {
+      // Ignore notification errors to ensure auth state still clears.
+    }
+
+    try {
       await _supabaseAuth.signOut();
     } catch (_) {
-      // Ignore remote errors to ensure local session always clears
+      // Ignore remote auth errors to ensure local session always clears.
     } finally {
       _session.clear();
       await CacheStore.instance.clearOnSignOut();

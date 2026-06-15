@@ -87,6 +87,9 @@ class _SignInScreenState extends State<SignInScreen> {
         await Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
         return;
       }
+      if (e.code == AuthFailureCode.accountSuspended) {
+        AppToast.showError(context, e);
+      }
       setState(() => _authError = e);
     } catch (e) {
       if (!mounted) return;

@@ -28,15 +28,21 @@ class WorkerTrackingMap extends StatefulWidget {
   State<WorkerTrackingMap> createState() => _WorkerTrackingMapState();
 }
 
-class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
+class _WorkerTrackingMapState extends State<WorkerTrackingMap>
+    with SingleTickerProviderStateMixin {
   RealtimeChannel? _channel;
   LatLng? _workerPosition;
   DateTime? _workerLocationAt;
   GoogleMapController? _mapController;
+  late final AnimationController _pulseController;
 
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
     _loadInitialWorker();
     _subscribeWorker();
   }
@@ -110,6 +116,7 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
     if (_channel != null) {
       Supabase.instance.client.removeChannel(_channel!);
     }
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -128,18 +135,30 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
     }
 
     final job = LatLng(widget.jobLat, widget.jobLng);
+    final estimate = _workerPosition == null
+        ? null
+        : MapRouteEstimate.between(
+            origin: _workerPosition!,
+            destination: job,
+          );
+    final hasFreshLocation =
+        MapFeatureHelpers.isFreshLocation(_workerLocationAt);
     final markers = <Marker>{
       Marker(
         markerId: const MarkerId('job'),
         position: job,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        icon: MapFeatureHelpers.markerIconFor(MapMarkerKind.client),
         infoWindow: const InfoWindow(title: 'Job site'),
       ),
       if (_workerPosition != null)
         Marker(
           markerId: const MarkerId('worker'),
           position: _workerPosition!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+          icon: MapFeatureHelpers.markerIconFor(
+            hasFreshLocation
+                ? MapMarkerKind.selectedWorker
+                : MapMarkerKind.staleWorker,
+          ),
           infoWindow: const InfoWindow(title: 'Worker location'),
         ),
     };
@@ -181,25 +200,98 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap> {
               left: 12,
               right: 12,
               top: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.94),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.outlineVariant),
-                ),
-                child: Text(
-                  _workerPosition == null
-                      ? 'Waiting for the worker location...'
-                      : MapFeatureHelpers.isFreshLocation(_workerLocationAt)
-                          ? 'Estimated route from worker to job site'
-                          : 'Worker location may be stale',
-                  style: AppTypography.bodySmall,
-                ),
+              child: _TrackingStatusCard(
+                animation: _pulseController,
+                waiting: _workerPosition == null,
+                fresh: hasFreshLocation,
+                estimate: estimate,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TrackingStatusCard extends StatelessWidget {
+  const _TrackingStatusCard({
+    required this.animation,
+    required this.waiting,
+    required this.fresh,
+    required this.estimate,
+  });
+
+  final Animation<double> animation;
+  final bool waiting;
+  final bool fresh;
+  final MapRouteEstimate? estimate;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color statusColor = waiting
+        ? AppColors.textSecondary
+        : fresh
+            ? AppColors.success
+            : AppColors.error;
+    final String title = waiting
+        ? 'Waiting for worker location'
+        : fresh
+            ? 'Worker en route'
+            : 'Worker location may be stale';
+    final String subtitle = estimate == null
+        ? 'Live tracking starts when the worker shares location.'
+        : '${estimate!.distanceLabel} estimated distance - ${estimate!.etaLabel} away';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.94),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          AnimatedBuilder(
+            animation: animation,
+            builder: (context, child) {
+              return Container(
+                width: 12 + animation.value * 5,
+                height: 12 + animation.value * 5,
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(title, style: AppTypography.labelMedium),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

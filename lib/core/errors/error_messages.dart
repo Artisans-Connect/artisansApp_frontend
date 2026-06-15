@@ -71,6 +71,8 @@ String _apiMessage(ApiException e) {
     return _networkMessage();
   }
   switch (e.code) {
+    case 'ACCOUNT_SUSPENDED':
+      return 'Your account has been suspended. Please contact admin/support if you think this is a mistake.';
     case 'UNAUTHORIZED':
       return e.message.isNotEmpty
           ? e.message

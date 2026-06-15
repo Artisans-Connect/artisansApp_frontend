@@ -105,14 +105,29 @@ class _SplashScreenState extends State<SplashScreen> {
         await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       } on ApiException catch (e) {
         if (!mounted) return;
+        if (e.code == 'ACCOUNT_SUSPENDED') {
+          await AuthService.instance.signOut();
+          if (!mounted) return;
+          await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+          return;
+        }
         if (e.isUnauthorized) {
-          await AuthService.instance.tryRefreshSession();
-          try {
-            final user = await AuthService.instance.getCurrentUser();
-            if (!mounted) return;
-            await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
-            return;
-          } catch (_) {
+          final bool refreshed = await AuthService.instance.tryRefreshSession();
+          if (refreshed) {
+            try {
+              final user = await AuthService.instance.getCurrentUser(
+                forceRefresh: true,
+              );
+              if (!mounted) return;
+              await Navigator.pushReplacementNamed(
+                context,
+                shellRouteForUser(user),
+              );
+              return;
+            } catch (_) {
+              await AuthService.instance.signOut();
+            }
+          } else {
             await AuthService.instance.signOut();
           }
         }

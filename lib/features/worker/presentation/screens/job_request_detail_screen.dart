@@ -7,7 +7,6 @@ import '../../../../core/services/workers_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/job_site_map.dart';
 import '../models/worker_job.dart';
-import '../utils/worker_job_mapper.dart';
 import '../utils/worker_formatters.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/map_placeholder.dart';
@@ -31,38 +30,33 @@ class JobRequestDetailScreen extends StatefulWidget {
 }
 class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
   final WorkersService _workersService = WorkersService();
-  bool _acceptLocked = false;
-  bool _isAccepting = false;
-  void _onAccept() async {
-    if (_isAccepting || _acceptLocked) return;
+  bool _applyLocked = false;
+  bool _isApplying = false;
+  void _onApply() async {
+    if (_isApplying || _applyLocked) return;
     await HapticFeedback.mediumImpact();
     setState(() {
-      _acceptLocked = true;
-      _isAccepting = true;
+      _applyLocked = true;
+      _isApplying = true;
     });
     try {
-      final dynamic accepted = await _workersService.acceptJob(widget.job.id);
+      final dynamic application = await _workersService.applyToJob(widget.job.id);
       if (!mounted) return;
-      if (accepted is Map<String, dynamic>) {
-        widget.onAcceptResponse?.call(accepted);
-        if (widget.onAcceptResponse == null) {
-          widget.onAcceptRequest(workerJobFromApi(accepted));
-        }
-      } else {
-        widget.onAcceptRequest(widget.job);
+      if (application is Map<String, dynamic>) {
+        widget.onAcceptResponse?.call(application);
       }
-      AppToast.showSuccess(context, 'Job accepted. Opening booking details.');
+      AppToast.showSuccess(context, 'Application sent. The client will choose an artisan.');
       await Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;
-      AppToast.showError(context, e, fallback: 'Unable to accept this request.');
+      AppToast.showError(context, e, fallback: 'Unable to apply for this request.');
       setState(() {
-        _acceptLocked = false;
+        _applyLocked = false;
       });
     } finally {
       if (mounted) {
         setState(() {
-          _isAccepting = false;
+          _isApplying = false;
         });
       }
     }
@@ -276,10 +270,10 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                   Expanded(
                     flex: 2,
                     child: GradientButton(
-                      label: 'Accept Job',
-                      isLoading: _isAccepting,
-                      enabled: !_acceptLocked && !_isAccepting,
-                      onPressed: _acceptLocked ? null : _onAccept,
+                      label: 'Apply for Job',
+                      isLoading: _isApplying,
+                      enabled: !_applyLocked && !_isApplying,
+                      onPressed: _applyLocked ? null : _onApply,
                     ),
                   ),
                 ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/location/device_location_service.dart';
@@ -81,9 +82,13 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
           markerId: MarkerId('job_request_${job.id}'),
           position: LatLng(job.latitude, job.longitude),
           icon: BitmapDescriptor.defaultMarkerWithHue(
-            i == _selectedIndex
-                ? BitmapDescriptor.hueGreen
-                : BitmapDescriptor.hueOrange,
+            MapFeatureHelpers.markerHueFor(
+              i == _selectedIndex
+                  ? MapMarkerKind.selectedJob
+                  : job.urgency == JobUrgency.asap || job.isUrgent
+                      ? MapMarkerKind.urgentJob
+                      : MapMarkerKind.job,
+            ),
           ),
           infoWindow: InfoWindow(title: job.title, snippet: job.addressLabel),
           onTap: () => setState(() => _selectedIndex = i),
@@ -231,9 +236,13 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
           markerId: MarkerId('job_request_${jobs[i].id}'),
           position: LatLng(jobs[i].latitude, jobs[i].longitude),
           icon: BitmapDescriptor.defaultMarkerWithHue(
-            i == _selectedIndex
-                ? BitmapDescriptor.hueGreen
-                : BitmapDescriptor.hueOrange,
+            MapFeatureHelpers.markerHueFor(
+              i == _selectedIndex
+                  ? MapMarkerKind.selectedJob
+                  : jobs[i].urgency == JobUrgency.asap || jobs[i].isUrgent
+                      ? MapMarkerKind.urgentJob
+                      : MapMarkerKind.job,
+            ),
           ),
           infoWindow: InfoWindow(
             title: jobs[i].title,
@@ -353,12 +362,16 @@ class _JobRequestMapCard extends StatelessWidget {
             origin: workerPosition!,
             destination: LatLng(job.latitude, job.longitude),
           );
+    final bool urgent = job.urgency == JobUrgency.asap || job.isUrgent;
 
     return DecoratedBox(
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(
+          color: urgent ? AppColors.error : AppColors.borderSubtle,
+          width: urgent ? 1.4 : 1,
+        ),
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.12),
@@ -396,6 +409,12 @@ class _JobRequestMapCard extends StatelessWidget {
                     spacing: 6,
                     runSpacing: 6,
                     children: <Widget>[
+                      if (urgent)
+                        const _MiniChip(
+                          label: 'Urgent',
+                          emphasized: true,
+                          danger: true,
+                        ),
                       _MiniChip(label: job.category),
                       if (estimate != null)
                         _MiniChip(
@@ -409,9 +428,26 @@ class _JobRequestMapCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppSpacing.sm),
-            FilledButton(
-              onPressed: onOpen,
-              child: const Text('Details'),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                FilledButton(
+                  onPressed: onOpen,
+                  child: const Text('Details'),
+                ),
+                TextButton(
+                  onPressed: job.hasServiceLocation
+                      ? () => launchUrl(
+                            MapFeatureHelpers.googleMapsDirectionsUri(
+                              destination: LatLng(job.latitude, job.longitude),
+                              origin: workerPosition,
+                            ),
+                            mode: LaunchMode.externalApplication,
+                          )
+                      : null,
+                  child: const Text('Navigate'),
+                ),
+              ],
             ),
           ],
         ),
@@ -421,17 +457,24 @@ class _JobRequestMapCard extends StatelessWidget {
 }
 
 class _MiniChip extends StatelessWidget {
-  const _MiniChip({required this.label, this.emphasized = false});
+  const _MiniChip({
+    required this.label,
+    this.emphasized = false,
+    this.danger = false,
+  });
 
   final String label;
   final bool emphasized;
+  final bool danger;
 
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
         color: emphasized
-            ? AppColors.primaryFixed.withValues(alpha: 0.7)
+            ? (danger
+                ? AppColors.errorContainer
+                : AppColors.primaryFixed.withValues(alpha: 0.7))
             : AppColors.surfaceContainer,
         borderRadius: BorderRadius.circular(999),
       ),
@@ -440,7 +483,11 @@ class _MiniChip extends StatelessWidget {
         child: Text(
           label,
           style: AppTypography.labelSmall.copyWith(
-            color: emphasized ? AppColors.primary : AppColors.textSecondary,
+            color: danger
+                ? AppColors.error
+                : emphasized
+                    ? AppColors.primary
+                    : AppColors.textSecondary,
           ),
         ),
       ),

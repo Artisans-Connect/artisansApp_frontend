@@ -267,18 +267,7 @@ class ClientNavigation {
           );
         }
       case ClientBookingStatus.requested:
-        startFindingArtisan(
-          context,
-          jobData: <String, dynamic>{
-            if (booking.jobUuid != null) 'id': booking.jobUuid,
-            'title': booking.title,
-          },
-          artisan: <String, dynamic>{
-            'name': booking.artisan,
-            'profession': booking.profession,
-            'imageUrl': booking.imageUrl,
-          },
-        );
+        pushFlow(context, AppRoutes.jobApplicants, arguments: booking.toMap());
       case ClientBookingStatus.accepted:
         pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.cancelled:

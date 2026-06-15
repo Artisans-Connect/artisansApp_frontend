@@ -2,107 +2,80 @@
 
 ## Current Direction
 
-The app should keep recommendation and pricing logic backend-owned. Google Maps should display locations, support selection, and hand off navigation. This keeps distance, estimated cost, worker rating, verification status, availability, and location freshness available for matching and payment estimation without making the map provider responsible for business rules.
+The app should feel like a modern dispatch platform without depending on paid Google routing APIs in the first version. Google Maps displays locations, markers, and navigation handoff. Supabase and the backend remain responsible for recommendation, dispatch, pricing, and privacy rules.
 
-The current implementation is intentionally low-cost:
+The target visual level is **Route Rich+**:
 
-- Embedded Google Maps for visual context.
-- Worker/client/job markers.
-- Coordinate-based distance and ETA estimates.
-- Supabase-backed nearby workers and dispatched job requests.
-- External Google Maps links for turn-by-turn navigation.
+- Uber-inspired map interactions.
+- Custom role/status marker states.
+- Expanded maps and bottom-sheet previews.
+- Distance, ETA, rating, verification, availability, and freshness shown as trust signals.
+- External Google Maps navigation for turn-by-turn directions.
+- No required Google Routes, Directions, Distance Matrix, or Navigation SDK calls in v1.
 
-## Route Upgrade Path
+## Already Implemented
 
-Initial route previews use haversine distance, which is good enough for ranking, demo estimates, and “nearby” UX. A later version can add Google Directions API or Routes API behind the existing route-estimate abstraction.
+- Backend Haversine worker matching and scoring in `matchingService.ts`.
+- Ranking signals include distance, rating, verification, location freshness, and completed-job experience.
+- Dispatch RLS is enabled for `job_dispatches` with workers restricted to their own dispatches.
+- Worker dispatch realtime subscriptions are filtered by `worker_id`.
+- Client live tracking reads assigned worker coordinates with freshness awareness.
+- Basic map helper models exist for map points, route estimates, marker states, actions, and a default Haversine route provider.
+- Worker map scope is dispatched jobs first, not all nearby open jobs.
 
-When upgrading, keep these rules:
+## Current Cost-Control Strategy
 
-- Cache route results by origin/destination bucket where possible.
-- Rate-limit route calls during map movement and live tracking.
-- Use paid route distance for display and travel-cost refinement, not for basic matching availability.
-- Keep fallback haversine estimates when Google route calls fail or quota is exhausted.
+Use Google Maps for:
 
-## Recommendation Signals To Preserve
+- Embedded map display.
+- Markers and camera movement.
+- Places/geocoding only where needed for location search.
+- External Google Maps links for navigation.
 
-The map UI must not discard or override these backend signals:
+Avoid in v1:
+
+- In-app road route drawing from Google Routes/Directions.
+- Automatic traffic-aware ETA refresh.
+- High-frequency route recalculation during live tracking.
+- Any feature that repeatedly calls paid route APIs as the worker moves.
+
+## Next Build Priorities
+
+- Improve client map discovery with richer worker preview sheets, service filters, radius context, and trust badges.
+- Improve worker dispatched-job maps with selected/urgent marker states, job preview cards, budget/distance context, details/accept path, and external navigation.
+- Improve live tracking with animated status, stale-location messaging, and a clean route-estimate provider boundary.
+- Keep frontend map screens display-only for recommendation signals. They may show rank factors but must not replace backend scoring.
+
+## Recommendation And Pricing Signals To Preserve
+
+The map UI must preserve these backend-owned signals:
 
 - Distance from client/job location.
-- Worker rating and completed-job history.
-- Verification status.
-- Availability status.
+- Worker rating.
+- Worker verification status.
+- Worker availability status.
 - Location freshness.
-- Category/skill match.
-- Pricing inputs, including location-based travel estimate.
+- Category or skill match.
+- Worker experience/completed-job history.
+- Pricing inputs, including travel or distance allowance.
 
-The map can show these signals, but the backend should continue to decide ranking, matching, and payment estimates.
+The current payment estimate uses coordinate distance from the job location to a Kumasi CBD proxy. That is acceptable for the current controlled version, but it is not yet true worker-to-job distance or road-distance pricing.
 
-## Future Enhancements
+## Later Roadmap
 
-- Add custom marker icons per trade category.
-- Add worker clustering for dense map results.
-- Add a visible service-radius circle around the client/job location.
-- Add a richer worker preview bottom sheet with request/chat/profile actions.
-- Add a richer worker request map with accept/decline directly from the expanded map.
-- Add PostGIS/geography columns or a database distance function if worker/job volume grows.
-- Add privacy controls: approximate worker location before booking, exact tracking only after acceptance.
-- Add stale-location messaging everywhere a worker marker appears.
-- Add route-aware travel cost once paid route APIs are approved.
+- Add database-side proximity filtering through PostGIS, `earthdistance`, or a Supabase RPC once worker volume grows.
+- Add route-aware travel pricing after a route provider is approved.
+- Add Google Routes API or OSRM behind the route-provider interface for road-distance polyline and ETA.
+- Add marker clustering when dense worker data makes the map crowded.
+- Add native background/foreground GPS service only if product requirements demand tracking while the app is locked or backgrounded.
+- Add privacy controls for approximate worker location before booking and exact tracking only after acceptance.
+- Add quota, budget alerts, and per-feature API call limits before enabling paid route APIs.
 
-## Architectural & Security Recommendations
+## Google Cloud Configuration Checklist
 
-### 1. Realtime Security & Row Level Security (RLS) for Dispatches
-> [!IMPORTANT]
-> When using `Supabase.instance.client.channel(...)` to listen to job dispatches in real-time on the client application, **strict Row Level Security (RLS)** is required.
-* **Security Risk:** If RLS is misconfigured or disabled on `job_dispatches`, any worker could potentially listen to channels or fetch records meant for other workers.
-* **Mitigation:** Ensure the `job_dispatches` table has RLS enabled with a select policy that restricts access only to the authenticated worker:
-  ```sql
-  ALTER TABLE job_dispatches ENABLE ROW LEVEL SECURITY;
-  
-  CREATE POLICY "Workers view own dispatches" ON job_dispatches
-    FOR SELECT USING (auth.uid() = worker_id);
-  ```
-* **Client-side Subscription:** The client should use a filtered subscription channel to avoid receiving other workers' events:
-  ```dart
-  Supabase.instance.client
-      .channel('my-dispatches')
-      .onPostgresChanges(
-        event: PostgresChangeEvent.insert,
-        schema: 'public',
-        table: 'job_dispatches',
-        filter: PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: 'worker_id',
-          value: myUserId,
-        ),
-        callback: (payload) => _onNewDispatch(payload.newRecord),
-      )
-      .subscribe();
-  ```
-
-### 2. Database-Side Proximity Calculation (Supabase RPC)
-Instead of retrieving all available workers in Node.js Express memory and doing Haversine math, compute the proximity directly in the PostgreSQL database.
-* **Scalability:** Doing JavaScript-based filtering in-memory on every matching round or search request will cause high memory and CPU utilization as the worker base grows.
-* **Solution:** Create a Postgres function (RPC) using the standard `earthdistance` extension (which calculates distances based on lat/lng coordinates) to return only the pre-filtered, ordered list of nearby workers within the search radius.
-
-### 3. Background/Foreground Native GPS Tracking
-* **App Suspension:** In Flutter, normal Dart streams (e.g., `Geolocator.getPositionStream()`) get suspended by iOS/Android when the screen locks or the application enters the background.
-* **Solution:** Implement a native wrapper package such as `flutter_background_geolocation` or `flutter_foreground_task` to run a persistent OS service that continues updating the worker's coordinates on a periodic interval.
-
-### 4. Road-Based Routing and Traffic-Aware ETA
-* **Directions API:** Replace the current visual straight-line `Polyline` and flat 25 km/h ETA estimation with real street pathing.
-* **Solution:** Call OSRM (Open Source Routing Machine) or Google Routes API to fetch actual street geometries and traffic-adjusted travel times.
-
-## Configuration Checklist
-
-- Android: `GOOGLE_MAPS_API_KEY` in `local.properties`, Maps SDK for Android enabled, key restricted to Android app.
-- iOS: `Secrets.plist` with `GOOGLE_MAPS_API_KEY`, Maps SDK for iOS enabled, key restricted to iOS bundle.
-- Web: `.env` `GOOGLE_MAPS_API_KEY`, Maps JavaScript API enabled if web demo is required.
-- Places: Places API enabled for search/autocomplete and reverse geocoding.
-- Billing: alerts and quotas configured before enabling route APIs.
-
-## Implemented Haversine Matching Integration
-*(Added June 2026)*
-
-The multi-factor matching algorithm based on Haversine distance, worker ratings, verification status, location freshness, and experience band has been successfully implemented on the backend (`matchingService.ts`). The frontend now integrates with this smart dispatch engine, relying on the backend to handle the complex scoring and multi-round dispatch rules while the frontend focuses on rendering the results and managing worker acceptance/rejection flows. The suggestions regarding database-side proximity calculations and road-based routing remain valid roadmap items for future optimization.
-
+- Android: Maps SDK for Android, restricted API key in `local.properties`.
+- iOS: Maps SDK for iOS, restricted API key in `Secrets.plist`.
+- Web: Maps JavaScript API only if web demo is required.
+- Optional: Places API and Geocoding API for search/reverse geocoding.
+- Avoid initially: Routes API, Directions API, Distance Matrix-style routing, Navigation SDK.
+- Always configure billing alerts and quotas before exposing a map build to real users.

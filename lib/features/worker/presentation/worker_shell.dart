@@ -124,8 +124,8 @@ class _WorkerShellState extends State<WorkerShell> {
         builder: (_) => WorkerJobAlertSheet(
           job: workerJobFromApi(data),
           initialSeconds: secondsLeft,
-          onAccepted: (Map<String, dynamic> accepted) {
-            _session.acceptJobFromApi(accepted);
+          onAccepted: (Map<String, dynamic> application) {
+            _shownRequestIds.remove(application['job_id']?.toString() ?? jobId);
           },
           onDeclined: () {
             _shownRequestIds.remove(jobId);

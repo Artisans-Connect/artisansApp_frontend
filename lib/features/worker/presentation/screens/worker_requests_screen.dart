@@ -637,6 +637,95 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
+
+class _PendingApplicationCard extends StatelessWidget {
+  const _PendingApplicationCard({required this.application});
+
+  final Map<String, dynamic> application;
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, dynamic> job =
+        Map<String, dynamic>.from(application['job'] as Map? ?? const {});
+    final dynamic category = job['categories'];
+    final String categoryName = category is Map
+        ? (category['name'] ?? 'Service').toString()
+        : 'Service';
+    final String status = (application['status'] ?? 'pending').toString();
+    final bool accepted = status == 'accepted';
+    final Object? budget = job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
+
+    return Container(
+      padding: const EdgeInsets.all(DesignTokens.md),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        border: Border.all(color: DesignTokens.borderSubtle),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: accepted
+                  ? DesignTokens.successGreen.withValues(alpha: 0.12)
+                  : DesignTokens.primaryTint08,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              accepted ? Icons.check_circle_outline : Icons.hourglass_top,
+              color: accepted ? DesignTokens.successGreen : DesignTokens.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  (job['title'] ?? 'Job application').toString(),
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: DesignTokens.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$categoryName · ${job['address_label'] ?? 'Location pending'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 12,
+                    color: DesignTokens.textSecondary,
+                  ),
+                ),
+                if (budget != null) ...<Widget>[
+                  const SizedBox(height: 6),
+                  Text(
+                    'Budget: GHS $budget',
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: DesignTokens.primary,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          _JobTag(label: accepted ? 'Accepted' : 'Pending'),
+        ],
+      ),
+    );
+  }
+}
  
 // ─────────────────────────────────────────────────────────────────────────────
 // View state
@@ -660,6 +749,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
  
   RequestsViewState _viewState = RequestsViewState.loading;
   List<WorkerJob> _jobs = <WorkerJob>[];
+  List<Map<String, dynamic>> _applications = <Map<String, dynamic>>[];
   String? _errorMessage;
   Timer? _refreshTimer;
   bool _isLoadingRequests = false;
@@ -708,15 +798,23 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     }
  
     try {
-      final List<dynamic> data =
-          await _workersService.getJobRequests();
+      final List<dynamic> results = await Future.wait<dynamic>([
+        _workersService.getJobRequests(),
+        _workersService.getApplications(),
+      ]);
+      final List<dynamic> data = results[0] as List<dynamic>;
+      final List<dynamic> applications = results[1] as List<dynamic>;
       if (!mounted) return;
       setState(() {
         _jobs = data
             .map((dynamic item) =>
                 workerJobFromApi(item as Map<String, dynamic>))
             .toList();
-        _viewState = _jobs.isEmpty
+        _applications = applications
+            .whereType<Map<dynamic, dynamic>>()
+            .map((Map<dynamic, dynamic> item) => Map<String, dynamic>.from(item))
+            .toList();
+        _viewState = _jobs.isEmpty && _applications.isEmpty
             ? RequestsViewState.empty
             : RequestsViewState.loaded;
         _lastCheckedAt = DateTime.now();
@@ -741,17 +839,14 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
   // ── Navigation ─────────────────────────────────────────────────────────────
  
   void _openDetail(WorkerJob job) {
-    final WorkerSessionState session = WorkerScope.of(context);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => JobRequestDetailScreen(
           job: job,
           onAcceptRequest: (accepted) {
-            session.acceptJob(accepted);
             _load();
           },
           onAcceptResponse: (accepted) {
-            session.acceptJobFromApi(accepted);
             _load();
           },
         ),
@@ -888,6 +983,21 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
  
         // ── Section header ─────────────────────────────────────
         if (_viewState == RequestsViewState.loaded) ...<Widget>[
+          if (_applications.isNotEmpty) ...<Widget>[
+            _SectionHeader(
+              label: 'Pending applications',
+              count: _applications.length,
+            ),
+            const SizedBox(height: DesignTokens.md),
+            ..._applications.map(
+              (Map<String, dynamic> application) => Padding(
+                padding: const EdgeInsets.only(bottom: DesignTokens.md),
+                child: _PendingApplicationCard(application: application),
+              ),
+            ),
+            const SizedBox(height: DesignTokens.sm),
+          ],
+          if (_jobs.isNotEmpty) ...<Widget>[
           _SectionHeader(
             label: 'Open requests',
             count: _jobs.length,
@@ -910,6 +1020,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
               ),
             ),
           ),
+          ],
         ],
       ],
     );
