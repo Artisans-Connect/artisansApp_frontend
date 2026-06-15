@@ -1,9 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
+import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -11,6 +14,7 @@ import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import '../../../../shared/widgets/legal_agreement_text.dart';
+import '../../../../shared/widgets/secondary_button.dart';
 import '../../models/onboarding_session.dart';
 import '../../widgets/auth_error_banner.dart';
 import 'role_selection_screen.dart';
@@ -31,9 +35,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _agreed = false;
   bool _isSubmitting = false;
+  bool _isGoogleSubmitting = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   String? _errorMessage;
@@ -83,9 +89,55 @@ class _SignUpScreenState extends State<SignUpScreen> {
       setState(() => _errorMessage = e.message);
     } catch (e) {
       if (!mounted) return;
-      AppToast.showError(context, e, fallback: 'Sign up failed. Please try again.');
+      AppToast.showError(context, e,
+          fallback: 'Sign up failed. Please try again.');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _submitWithGoogle() async {
+    setState(() {
+      _isGoogleSubmitting = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = await AuthService.instance.signInWithGoogle(
+        flow: GoogleAuthFlow.signUp,
+      );
+      if (!mounted) return;
+      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      if (e.code == AuthFailureCode.profileNotFound) {
+        // Prefill onboarding data from Supabase auth user metadata when available.
+        final supUser = Supabase.instance.client.auth.currentUser;
+        if (supUser != null) {
+          final dynamic metaRaw = supUser.userMetadata;
+          String? name;
+          String? phone;
+          if (metaRaw is Map<String, dynamic>) {
+            name = (metaRaw['full_name'] ?? metaRaw['name'])?.toString();
+            phone = metaRaw['phone']?.toString();
+          }
+          final onboarding = OnboardingSession.instance;
+          onboarding.fullName = name ?? supUser.email;
+          onboarding.phone = phone ?? '';
+        }
+
+        await Navigator.pushReplacementNamed(
+            context, RoleSelectionScreen.routeName);
+        return;
+      }
+
+      setState(() => _errorMessage = e.message);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e,
+          fallback: 'Google sign up failed. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isGoogleSubmitting = false);
     }
   }
 
@@ -135,16 +187,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       const SizedBox(height: 16),
                       Center(
                         child: Center(
-                          child: Text(
+                            child: Text(
                           'Join CraftMatch',
                           style: AppTypography.displayMedium.copyWith(
                             fontSize: 36,
                             fontWeight: FontWeight.bold,
-                            
                           ),
                           textAlign: TextAlign.center,
-                        )
-                        ),
+                        )),
                       ),
                       const SizedBox(height: 8),
                       Center(
@@ -214,7 +264,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         obscureText: _obscurePassword,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? PhosphorIcons.eyeClosed : PhosphorIcons.eye,
+                            _obscurePassword
+                                ? PhosphorIcons.eyeClosed
+                                : PhosphorIcons.eye,
                             color: AppColors.textSecondary,
                           ),
                           onPressed: () {
@@ -239,12 +291,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         obscureText: _obscureConfirmPassword,
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscureConfirmPassword ? PhosphorIcons.eyeClosed : PhosphorIcons.eye,
+                            _obscureConfirmPassword
+                                ? PhosphorIcons.eyeClosed
+                                : PhosphorIcons.eye,
                             color: AppColors.textSecondary,
                           ),
                           onPressed: () {
                             setState(() {
-                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                              _obscureConfirmPassword =
+                                  !_obscureConfirmPassword;
                             });
                           },
                         ),
@@ -284,6 +339,14 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         label: 'Create Account',
                         isLoading: _isSubmitting,
                         onPressed: _submit,
+                      ),
+                      const SizedBox(height: 12),
+                      SecondaryButton(
+                        label: 'Continue with Google',
+                        isLoading: _isGoogleSubmitting,
+                        onPressed: _submitWithGoogle,
+                        leading: SvgPicture.asset('assets/google_logo.svg',
+                            width: 20, height: 20),
                       ),
                       const SizedBox(height: 16),
                       Center(

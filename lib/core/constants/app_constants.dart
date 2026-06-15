@@ -13,6 +13,16 @@ class AppConstants {
   static String get supabasePublishableKey =>
       _env('SUPABASE_PUBLISHABLE_KEY') ?? '';
 
+    /// Redirect used after Supabase OAuth sign-ins.
+    /// Configure `SUPABASE_OAUTH_REDIRECT_URL` for the target platform.
+    static String get supabaseOAuthRedirectUrl =>
+      _env('SUPABASE_OAUTH_REDIRECT_URL') ?? supabaseRedirectUrl;
+
+      /// Redirect used after password recovery emails.
+      /// Configure `SUPABASE_PASSWORD_RESET_REDIRECT_URL` when a separate callback is needed.
+      static String get supabasePasswordResetRedirectUrl =>
+        _env('SUPABASE_PASSWORD_RESET_REDIRECT_URL') ?? supabaseRedirectUrl;
+
   /// Deep link redirect for email confirmation. Falls back to verification portal if app is not installed.
   static String get supabaseRedirectUrl {
     final String portalUrl = verificationPortalUrl.endsWith('/')

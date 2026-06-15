@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../cache/cache_keys.dart';
@@ -11,6 +12,11 @@ import '../session/app_user_session.dart';
 import '../utils/cache_logger.dart';
 import 'notification_service.dart';
 
+enum GoogleAuthFlow {
+  signIn,
+  signUp,
+}
+
 class AuthService {
   static final AuthService instance = AuthService._();
   AuthService._();
@@ -18,6 +24,8 @@ class AuthService {
   final _supabaseAuth = Supabase.instance.client.auth;
   final _apiClient = ApiClient.instance;
   final _session = AppUserSession.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
+  Future<void>? _googleSignInInit;
 
   Future<SignUpOutcome> signUp({
     required String email,
@@ -82,6 +90,77 @@ class AuthService {
         );
       }
       rethrow;
+    }
+  }
+
+  Future<AppUser> signInWithGoogle({
+    GoogleAuthFlow flow = GoogleAuthFlow.signIn,
+  }) async {
+    try {
+      await _ensureGoogleSignInInitialized();
+      await _googleSignIn.signOut();
+
+      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+      final String? idToken = googleUser.authentication.idToken;
+
+      if (idToken == null) {
+        throw const AuthFailure(
+          AuthFailureCode.unknown,
+          'Google sign in failed. No ID token received.',
+        );
+      }
+
+      await _supabaseAuth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+      );
+
+      return await getCurrentUser(forceRefresh: true);
+    } on GoogleSignInException catch (e) {
+      if (e.code == GoogleSignInExceptionCode.canceled) {
+        throw const AuthFailure(
+          AuthFailureCode.unknown,
+          'Google sign in was cancelled.',
+        );
+      }
+      throw AuthFailure(
+        AuthFailureCode.unknown,
+        e.description ?? 'Google sign in failed.',
+      );
+    } on AuthException catch (e) {
+      throw _mapAuthException(e);
+    } on ApiException catch (e) {
+      if (e.code == 'PROFILE_NOT_FOUND') {
+        final String message = flow == GoogleAuthFlow.signUp
+            ? 'Your Google account is validated, but your profile needs to be set up.'
+            : 'Your Google account is connected, but your profile is not set up yet.';
+        throw AuthFailure(
+          AuthFailureCode.profileNotFound,
+          message,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _supabaseAuth.resetPasswordForEmail(
+        email,
+        redirectTo: AppConstants.supabasePasswordResetRedirectUrl,
+      );
+    } on AuthException catch (e) {
+      throw _mapAuthException(e);
+    }
+  }
+
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _supabaseAuth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+    } on AuthException catch (e) {
+      throw _mapAuthException(e);
     }
   }
 
@@ -168,11 +247,10 @@ class AuthService {
   void _refreshProfileInBackground() {
     getCurrentUser(forceRefresh: true).then((_) {
       CacheLogger.debug('Background profile refresh completed');
-    }).catchError((Object error, StackTrace stackTrace) {
+    }).catchError((Object _, StackTrace __) {
       CacheLogger.warning(
         'Background profile refresh failed (cache will be reused)',
       );
-      // Don't crash the app; just log and continue with cached data
     });
   }
 
@@ -182,7 +260,8 @@ class AuthService {
 
   Future<AppUser> createProfile(Map<String, dynamic> body) async {
     try {
-      final dynamic profileData = await _apiClient.post('/profiles', body: body);
+      final dynamic profileData =
+          await _apiClient.post('/profiles', body: body);
       final map = Map<String, dynamic>.from(profileData as Map);
       await _persistProfile(map);
       final appUser = _appUserFromProfile(map);
@@ -212,7 +291,9 @@ class AuthService {
     } on ApiException catch (e) {
       throw AuthFailure(
         AuthFailureCode.profileCreateFailed,
-        e.message.isNotEmpty ? e.message : 'Could not set up your worker profile.',
+        e.message.isNotEmpty
+            ? e.message
+            : 'Could not set up your worker profile.',
       );
     }
   }
@@ -224,10 +305,10 @@ class AuthService {
     );
     final map = Map<String, dynamic>.from(profileData as Map);
     await _persistProfile(map);
-      final appUser = _appUserFromProfile(map);
-      _session.updateUser(appUser);
-      unawaited(NotificationService.instance.registerCurrentDevice());
-      return appUser;
+    final appUser = _appUserFromProfile(map);
+    _session.updateUser(appUser);
+    unawaited(NotificationService.instance.registerCurrentDevice());
+    return appUser;
   }
 
   Future<void> resendVerificationEmail(String email) async {
@@ -256,12 +337,22 @@ class AuthService {
 
     try {
       await _supabaseAuth.signOut();
+      await _googleSignIn.signOut();
     } catch (_) {
       // Ignore remote auth errors to ensure local session always clears.
     } finally {
       _session.clear();
       await CacheStore.instance.clearOnSignOut();
     }
+  }
+
+  Future<void> _ensureGoogleSignInInitialized() {
+    return _googleSignInInit ??= _googleSignIn.initialize(
+      clientId:
+          '942421497964-dvb49q2gkbbkjtnfq61hv34fnsaaraob.apps.googleusercontent.com',
+      serverClientId:
+          '942421497964-cibga39lhuvuup88akgqpnqtfmjl1lhc.apps.googleusercontent.com',
+    );
   }
 
   AppUser _appUserFromProfile(Map<String, dynamic> json) {
@@ -283,8 +374,7 @@ class AuthService {
       );
     }
 
-    if (msg.contains('email not confirmed') ||
-        code == 'email_not_confirmed') {
+    if (msg.contains('email not confirmed') || code == 'email_not_confirmed') {
       return const AuthFailure(
         AuthFailureCode.emailNotConfirmed,
         'Please confirm your email using the link we sent before signing in.',

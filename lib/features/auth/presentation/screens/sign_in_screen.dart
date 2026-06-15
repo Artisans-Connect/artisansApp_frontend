@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
@@ -10,7 +11,9 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../../../shared/widgets/secondary_button.dart';
 import '../../widgets/auth_error_banner.dart';
+import 'forgot_password_screen.dart';
 import 'role_selection_screen.dart';
 
 class SignInScreen extends StatefulWidget {
@@ -29,6 +32,7 @@ class _SignInScreenState extends State<SignInScreen> {
   late final TextEditingController _emailController;
   final TextEditingController _passwordController = TextEditingController();
   bool _isSubmitting = false;
+  bool _isGoogleSubmitting = false;
   AuthFailure? _authError;
 
   @override
@@ -84,7 +88,8 @@ class _SignInScreenState extends State<SignInScreen> {
     } on AuthFailure catch (e) {
       if (!mounted) return;
       if (e.code == AuthFailureCode.profileNotFound) {
-        await Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
+        await Navigator.pushReplacementNamed(
+            context, RoleSelectionScreen.routeName);
         return;
       }
       if (e.code == AuthFailureCode.accountSuspended) {
@@ -93,9 +98,40 @@ class _SignInScreenState extends State<SignInScreen> {
       setState(() => _authError = e);
     } catch (e) {
       if (!mounted) return;
-      AppToast.showError(context, e, fallback: 'Sign in failed. Please try again.');
+      AppToast.showError(context, e,
+          fallback: 'Sign in failed. Please try again.');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _submitWithGoogle() async {
+    setState(() {
+      _isGoogleSubmitting = true;
+      _authError = null;
+    });
+
+    try {
+      final user = await AuthService.instance.signInWithGoogle();
+      if (!mounted) return;
+      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      if (e.code == AuthFailureCode.profileNotFound) {
+        await Navigator.pushReplacementNamed(
+            context, RoleSelectionScreen.routeName);
+        return;
+      }
+      setState(() => _authError = e);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Google sign in failed. Please try again.',
+      );
+    } finally {
+      if (mounted) setState(() => _isGoogleSubmitting = false);
     }
   }
 
@@ -203,7 +239,16 @@ class _SignInScreenState extends State<SignInScreen> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                            onPressed: () {},
+                            onPressed: () => unawaited(
+                                  Navigator.pushNamed(
+                                    context,
+                                    ForgotPasswordScreen.routeName,
+                                    arguments:
+                                        _emailController.text.trim().isEmpty
+                                            ? null
+                                            : _emailController.text.trim(),
+                                  ),
+                                ),
                             child: const Text('Forgot Password?')),
                       ),
                       const SizedBox(height: 4),
@@ -211,6 +256,14 @@ class _SignInScreenState extends State<SignInScreen> {
                           label: 'Sign In',
                           isLoading: _isSubmitting,
                           onPressed: _submit),
+                      const SizedBox(height: 12),
+                      SecondaryButton(
+                        label: 'Continue with Google',
+                        isLoading: _isGoogleSubmitting,
+                        onPressed: _submitWithGoogle,
+                        leading: SvgPicture.asset('assets/google_logo.svg',
+                            width: 20, height: 20),
+                      ),
                       const SizedBox(height: 16),
                       Center(
                         child: TextButton(

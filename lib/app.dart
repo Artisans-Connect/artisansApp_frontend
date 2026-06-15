@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'core/navigation/app_router.dart';
 import 'features/auth/presentation/screens/onboarding_screen.dart';
+import 'features/auth/presentation/screens/forgot_password_screen.dart';
 import 'features/auth/presentation/screens/role_selection_screen.dart';
 import 'features/auth/presentation/screens/sign_in_screen.dart';
 import 'features/auth/presentation/screens/sign_up_screen.dart';
@@ -46,6 +47,10 @@ class _MyAppState extends State<MyApp> {
         '/': (_) => const SplashScreen(),
         '/auth/splash': (_) => const SplashScreen(),
         OnboardingScreen.routeName: (_) => const OnboardingScreen(),
+        ForgotPasswordScreen.routeName: (BuildContext context) {
+          final Object? args = ModalRoute.of(context)?.settings.arguments;
+          return ForgotPasswordScreen(initialEmail: args is String ? args : null);
+        },
         RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
         SignInScreen.routeName: (_) => const SignInScreen(),
         SignUpScreen.routeName: (_) => const SignUpScreen(),

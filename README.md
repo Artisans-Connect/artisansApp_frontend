@@ -49,6 +49,11 @@ flutter pub get
 flutter run
 ```
 
+### Auth Setup
+
+For Supabase auth, make sure your `.env` includes `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_OAUTH_REDIRECT_URL`.
+Enable the Google provider in the Supabase dashboard and point the OAuth redirect URL to the callback you configured for the app.
+
 ### 2. Backend (Express)
 ```bash
 cd artisansApp_backend

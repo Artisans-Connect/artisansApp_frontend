@@ -10,6 +10,7 @@ class SecondaryButton extends StatelessWidget {
   final bool isEnabled;
   final double? width;
   final IconData? icon;
+  final Widget? leading;
 
   const SecondaryButton({
     Key? key,
@@ -19,6 +20,7 @@ class SecondaryButton extends StatelessWidget {
     this.isEnabled = true,
     this.width,
     this.icon,
+    this.leading,
   }) : super(key: key);
 
   @override
@@ -52,7 +54,10 @@ class SecondaryButton extends StatelessWidget {
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  if (icon != null) ...[
+                  if (leading != null) ...[
+                    leading!,
+                    const SizedBox(width: AppSpacing.sm),
+                  ] else if (icon != null) ...[
                     Icon(icon, size: AppSpacing.iconMedium),
                     const SizedBox(width: AppSpacing.sm),
                   ],

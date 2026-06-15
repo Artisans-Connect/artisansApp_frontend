@@ -49,5 +49,17 @@
 	<string>CraftMatch uses your location to find nearby workers and show job sites on the map.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>CraftMatch uses your location for live job tracking while you are on an active job.</string>
+	<key>CFBundleURLTypes</key>
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleTypeRole</key>
+    <string>Editor</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>com.googleusercontent.apps.942421497964-dvb49q2gkbbkjtnfq61hv34fnsaaraob</string>
+    </array>
+  </dict>
+</array>
 </dict>
 </plist>

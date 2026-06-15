@@ -1,6 +1,7 @@
 class AppRoutes {
   // Main flows
   static const splash = '/';
+  static const authForgotPassword = '/auth/forgot-password';
   static const clientHome = '/client-home';
   static const exploreArtisans = '/explore-artisans';
   static const artisanProfile = '/artisan-profile';
