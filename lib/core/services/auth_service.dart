@@ -349,9 +349,9 @@ class AuthService {
   Future<void> _ensureGoogleSignInInitialized() {
     return _googleSignInInit ??= _googleSignIn.initialize(
       clientId:
-          '942421497964-dvb49q2gkbbkjtnfq61hv34fnsaaraob.apps.googleusercontent.com',
+          '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com',
       serverClientId:
-          '942421497964-cibga39lhuvuup88akgqpnqtfmjl1lhc.apps.googleusercontent.com',
+          '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com',
     );
   }
 
