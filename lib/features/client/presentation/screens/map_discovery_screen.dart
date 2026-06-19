@@ -27,6 +27,8 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
   List<Map<String, dynamic>> _categories = <Map<String, dynamic>>[];
   bool _isLoading = true;
   bool _loadingCategories = true;
+  bool _locationUnavailable = false;
+  String? _loadError;
   LatLng _userPosition = LatLng(
     DeviceLocation.accraDefault.latitude,
     DeviceLocation.accraDefault.longitude,
@@ -53,14 +55,17 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
   }
 
   void _rebuildMarkers() {
-    final markers = <Marker>{
-      Marker(
+    final markers = <Marker>{};
+    if (!_locationUnavailable) {
+      markers.add(
+        Marker(
         markerId: const MarkerId('you'),
         position: _userPosition,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
         infoWindow: const InfoWindow(title: 'You'),
       ),
-    };
+      );
+    }
     for (var i = 0; i < nearbyWorkers.length; i++) {
       final w = nearbyWorkers[i];
       final bool isSelected = _selectedWorkerIndex == i;
@@ -142,6 +147,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     setState(() {
       _selectedCategoryId = categoryId;
       _selectedWorkerIndex = null;
+      _loadError = null;
       _isLoading = true;
     });
     await _fetchNearbyWorkers();
@@ -151,6 +157,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     setState(() {
       _radiusKm = radiusKm;
       _selectedWorkerIndex = null;
+      _loadError = null;
       _isLoading = true;
     });
     await _fetchNearbyWorkers();
@@ -160,6 +167,22 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     try {
       final loc = await DeviceLocationService.getCurrentOrDefault();
       _userPosition = LatLng(loc.latitude, loc.longitude);
+      if (loc.isFallback) {
+        if (mounted) {
+          setState(() {
+            nearbyWorkers = <Map<String, dynamic>>[];
+            _selectedWorkerIndex = null;
+            _locationUnavailable = true;
+            _loadError = null;
+            _isLoading = false;
+            _rebuildMarkers();
+          });
+          await _mapController?.animateCamera(
+            CameraUpdate.newLatLngZoom(_userPosition, 11),
+          );
+        }
+        return;
+      }
 
       final rawArtisans = await ExploreService.instance.getArtisans(
         categoryId: _selectedCategoryId,
@@ -167,6 +190,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
         lng: loc.longitude,
         radiusKm: _radiusKm,
         limit: 15,
+        forceRefresh: true,
       );
       
       final mappedWorkers = rawArtisans.map((raw) {
@@ -197,6 +221,8 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
       if (mounted) {
         setState(() {
           nearbyWorkers = mappedWorkers;
+          _locationUnavailable = false;
+          _loadError = null;
           _isLoading = false;
           _rebuildMarkers();
         });
@@ -210,6 +236,9 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
+          _loadError = 'Could not load nearby workers. Check your connection and try again.';
+          nearbyWorkers = <Map<String, dynamic>>[];
+          _selectedWorkerIndex = null;
           _isLoading = false;
         });
       }
@@ -242,7 +271,9 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              '$categoryLabel within ${_radiusKm.toStringAsFixed(0)} km',
+              _locationUnavailable
+                  ? 'Enable location to find nearby artisans'
+                  : '$categoryLabel within ${_radiusKm.toStringAsFixed(0)} km',
               style: AppTypography.bodySmall,
             ),
           ),
@@ -413,6 +444,93 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     );
   }
 
+  Widget _buildLocationUnavailableState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            PhosphorIcons.crosshair,
+            size: 36,
+            color: AppColors.primary,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'Turn on location to see nearby artisans.',
+            style: AppTypography.labelLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'We only show nearby workers after getting your current location, so Accra, Kumasi, or any other city will use the user\'s real position.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          FilledButton.icon(
+            onPressed: () {
+              setState(() {
+                _loadError = null;
+                _isLoading = true;
+              });
+              _fetchNearbyWorkers();
+            },
+            icon: Icon(PhosphorIcons.arrowClockwise),
+            label: const Text('Try again'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLoadErrorState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.errorContainer,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            PhosphorIcons.warningCircle,
+            size: 34,
+            color: AppColors.error,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            _loadError ?? 'Could not load nearby workers.',
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.error,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: () {
+              setState(() {
+                _loadError = null;
+                _isLoading = true;
+              });
+              _fetchNearbyWorkers();
+            },
+            icon: Icon(PhosphorIcons.arrowClockwise),
+            label: const Text('Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -502,15 +620,21 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                         const SizedBox(height: AppSpacing.lg),
 
                         Text(
-                          _selectedWorkerIndex == null
+                          _locationUnavailable
+                              ? 'Location Needed'
+                              : _loadError != null
+                              ? 'Nearby Workers'
+                              : _selectedWorkerIndex == null
                               ? 'Recommended Near You'
                               : 'Selected Artisan',
                           style: AppTypography.displaySmall,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        _buildFilterControls(),
-                        const SizedBox(height: AppSpacing.md),
-                        _buildSelectedWorkerPreview(),
+                        if (!_locationUnavailable) ...[
+                          _buildFilterControls(),
+                          const SizedBox(height: AppSpacing.md),
+                          _buildSelectedWorkerPreview(),
+                        ],
 
                         // Workers List
                         if (_isLoading)
@@ -520,7 +644,14 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                               child: CircularProgressIndicator(color: AppColors.primary),
                             ),
                           ),
-                        if (!_isLoading && nearbyWorkers.isEmpty)
+                        if (!_isLoading && _locationUnavailable)
+                          _buildLocationUnavailableState(),
+                        if (!_isLoading && _loadError != null)
+                          _buildLoadErrorState(),
+                        if (!_isLoading &&
+                            _loadError == null &&
+                            !_locationUnavailable &&
+                            nearbyWorkers.isEmpty)
                           const Center(
                             child: Padding(
                               padding: EdgeInsets.all(AppSpacing.xl),

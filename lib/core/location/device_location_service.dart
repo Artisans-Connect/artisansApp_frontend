@@ -1,6 +1,7 @@
 import 'package:geolocator/geolocator.dart';
 
-/// Accra fallback when GPS is unavailable (demo / permission denied).
+/// Neutral fallback when GPS is unavailable. Callers must not treat this as
+/// the user's live location without checking [isFallback].
 class DeviceLocation {
   const DeviceLocation({
     required this.latitude,

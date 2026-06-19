@@ -11,6 +11,8 @@ import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../../../worker/presentation/worker_shell.dart';
 import '../client_shell.dart';
 import '../models/client_booking.dart';
+import '../models/client_job_draft.dart';
+import '../models/job_post_wizard_step.dart';
 import 'client_shell_scope.dart';
 
 /// Client-side navigation helpers (shell-safe).
@@ -251,6 +253,10 @@ class ClientNavigation {
   }
 
   static void handleBookingTap(BuildContext context, ClientBooking booking) {
+    if (booking.isLocalDraft) {
+      openJobDraft(context, booking);
+      return;
+    }
     switch (booking.status) {
       case ClientBookingStatus.inProgress:
         pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
@@ -274,6 +280,37 @@ class ClientNavigation {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${booking.title} was cancelled.')),
         );
+      case ClientBookingStatus.draft:
+        openJobDraft(context, booking);
     }
+  }
+
+  static void openJobDraft(BuildContext context, ClientBooking booking) {
+    final Map<String, dynamic> draftData =
+        Map<String, dynamic>.from(booking.draftData ?? <String, dynamic>{});
+    if (draftData.isEmpty) {
+      pushFlow(context, AppRoutes.jobPostCategory);
+      return;
+    }
+
+    final ClientJobDraft draft = ClientJobDraft.fromMap(draftData);
+    final String routeName = _routeForDraft(draft);
+    pushFlow(context, routeName, arguments: draft.toMap());
+  }
+
+  static String _routeForDraft(ClientJobDraft draft) {
+    if (!draft.isValidForStep(JobPostWizardStep.category)) {
+      return AppRoutes.jobPostCategory;
+    }
+    if (!draft.isValidForStep(JobPostWizardStep.subcategory)) {
+      return AppRoutes.jobPostSubcategory;
+    }
+    if (!draft.isValidForStep(JobPostWizardStep.details)) {
+      return AppRoutes.jobPostDetails;
+    }
+    if (!draft.isValidForStep(JobPostWizardStep.locationSchedule)) {
+      return AppRoutes.jobPostLocationSchedule;
+    }
+    return AppRoutes.jobPostSummary;
   }
 }

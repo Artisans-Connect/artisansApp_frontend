@@ -10,6 +10,7 @@ import 'core/constants/app_constants.dart';
 import 'core/maps/google_maps_loader.dart';
 import 'core/offline/job_post_queue.dart';
 import 'core/services/notification_service.dart';
+import 'features/client/data/job_draft_store.dart';
 import 'features/worker/presentation/worker_dev_router.dart';
 
 /// Set `--dart-define=WORKER_DEV=true` to preview worker UI.
@@ -21,6 +22,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   await CacheStore.instance.init();
   await JobPostQueue.instance.init();
+  await JobDraftStore.instance.init();
 
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,

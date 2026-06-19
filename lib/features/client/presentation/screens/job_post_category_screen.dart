@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -25,6 +26,7 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
   late ClientJobDraft _draft;
   List<dynamic> _categories = [];
   bool _isLoading = true;
+  bool _showAllCategories = false;
   final CategoriesService _categoriesService = CategoriesService();
 
   @override
@@ -79,8 +81,59 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
     );
   }
 
+  Widget _buildCategoryTile(Map<String, dynamic> category) {
+    final String id = (category['id'] ?? '').toString();
+    final bool isSelected = _selectedCategoryId == id;
+    final String name = (category['name'] ?? 'Unknown').toString();
+    final Color color = ColorMapper.fromHex(category['color_hex']?.toString());
+    final IconData icon = PhosphorIconMapper.fromString(
+      category['icon_name']?.toString(),
+    );
+
+    return GestureDetector(
+      onTap: id.isEmpty ? null : () => setState(() => _selectedCategoryId = id),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLowest,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+          border: Border.all(
+            color: isSelected ? color : AppColors.borderSubtle,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 32),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              name,
+              style: AppTypography.labelLarge,
+              textAlign: TextAlign.center,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+              child: Text(
+                category['description'] ?? '',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final List<dynamic> visibleCategories =
+        _showAllCategories ? _categories : _categories.take(8).toList();
+
     return JobPostWizardScaffold(
       step: JobPostWizardStep.category,
       headline: 'What service do you need?',
@@ -102,70 +155,43 @@ class _JobPostCategoryScreenState extends State<JobPostCategoryScreen> {
           if (_isLoading)
             const Center(child: CircularProgressIndicator())
           else
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: AppSpacing.md,
-                mainAxisSpacing: AppSpacing.md,
-                childAspectRatio: 0.9,
-              ),
-              itemCount: _categories.length,
-              itemBuilder: (BuildContext context, int index) {
-                final Map<String, dynamic> category =
-                    Map<String, dynamic>.from(_categories[index] as Map);
-                final String id = (category['id'] ?? '').toString();
-                final bool isSelected = _selectedCategoryId == id;
-                final String name = (category['name'] ?? 'Unknown').toString();
-                final Color color =
-                    ColorMapper.fromHex(category['color_hex']?.toString());
-                final IconData icon = PhosphorIconMapper.fromString(
-                  category['icon_name']?.toString(),
-                );
-
-                return GestureDetector(
-                  onTap: id.isEmpty
-                      ? null
-                      : () => setState(() => _selectedCategoryId = id),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-                      border: Border.all(
-                        color: isSelected ? color : AppColors.borderSubtle,
-                        width: isSelected ? 2 : 1,
-                      ),
+            Column(
+              children: <Widget>[
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                    childAspectRatio: 0.9,
+                  ),
+                  itemCount: visibleCategories.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final Map<String, dynamic> category =
+                        Map<String, dynamic>.from(visibleCategories[index] as Map);
+                    return _buildCategoryTile(category);
+                  },
+                ),
+                if (_categories.length > 8) ...<Widget>[
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: () => setState(
+                      () => _showAllCategories = !_showAllCategories,
                     ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(icon, color: color, size: 32),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          name,
-                          style: AppTypography.labelLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.sm,
-                          ),
-                          child: Text(
-                            category['description'] ?? '',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+                    icon: Icon(
+                      _showAllCategories
+                          ? PhosphorIcons.caretUp
+                          : PhosphorIcons.caretDown,
+                    ),
+                    label: Text(
+                      _showAllCategories
+                          ? 'See fewer categories'
+                          : 'See more categories',
                     ),
                   ),
-                );
-              },
+                ],
+              ],
             ),
         ],
       ),

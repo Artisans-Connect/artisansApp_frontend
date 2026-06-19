@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:uuid/uuid.dart';
@@ -11,6 +13,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/legal_agreement_text.dart';
+import '../../data/job_draft_store.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../navigation/client_navigation.dart';
@@ -94,8 +97,19 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
   }
 
   void _saveDraft() {
-    AppToast.showInfo(context, 'Draft saved locally');
-    ClientNavigation.popToShell(context);
+    unawaited(_saveDraftLocally());
+  }
+
+  Future<void> _saveDraftLocally() async {
+    try {
+      await JobDraftStore.instance.save(_draft);
+      if (!mounted) return;
+      AppToast.showInfo(context, 'Draft saved locally');
+      ClientNavigation.goToBookingsTab(context);
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not save draft.');
+    }
   }
 
   Future<void> _postJob() async {
@@ -115,6 +129,10 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
         payload,
         idempotencyKey: idempotencyKey,
       );
+      final String? draftId = _draft.data['draftId'] as String?;
+      if (draftId != null) {
+        await JobDraftStore.instance.delete(draftId);
+      }
       final Map<String, dynamic> jobData = _draft.toMap();
       if (created is Map<String, dynamic>) {
         jobData['id'] = created['id'];
@@ -384,12 +402,10 @@ class _PriceBreakdownRow extends StatelessWidget {
   const _PriceBreakdownRow({
     required this.label,
     required this.amount,
-    this.isBold = false,
   });
 
   final String label;
   final double amount;
-  final bool isBold;
 
   @override
   Widget build(BuildContext context) {
@@ -400,19 +416,13 @@ class _PriceBreakdownRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: isBold
-                ? AppTypography.labelMedium
-                : AppTypography.bodySmall.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ),
           Text(
             ClientJobDraft.formatGhs(amount),
-            style: isBold
-                ? AppTypography.labelLarge.copyWith(
-                    color: AppColors.primary,
-                  )
-                : AppTypography.bodyMedium,
+            style: AppTypography.bodyMedium,
           ),
         ],
       ),

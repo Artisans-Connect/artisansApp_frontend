@@ -101,6 +101,15 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       ),
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "If you don't see it, check your spam or junk folder.",
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 24),
                     GradientButton(
                       label: "I've confirmed — Sign in",

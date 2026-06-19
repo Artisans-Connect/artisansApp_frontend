@@ -27,4 +27,25 @@ void main() {
 
     expect(active, isNull);
   });
+
+  test('maps local job draft as a draft booking', () {
+    final booking = ClientBooking.fromLocalDraft(
+      draftId: 'draft-1',
+      draftData: <String, dynamic>{
+        'title': 'Repair kitchen sink',
+        'categoryName': 'Plumbing',
+        'address': 'Adum, Kumasi',
+        'recommendedFee': 80.0,
+        'clientPremium': 20.0,
+        'savedAt': '2026-06-19T09:00:00.000Z',
+      },
+    );
+
+    expect(booking.status, ClientBookingStatus.draft);
+    expect(booking.isLocalDraft, isTrue);
+    expect(booking.title, 'Repair kitchen sink');
+    expect(booking.profession, 'Plumbing');
+    expect(booking.amount, 'GHS 100');
+    expect(booking.draftData?['address'], 'Adum, Kumasi');
+  });
 }

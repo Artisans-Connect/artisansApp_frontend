@@ -15,6 +15,34 @@ import '../../../../core/session/app_user_session.dart';
 import '../../../../core/utils/icon_mapper.dart';
 import '../../services/explore_service.dart';
 
+const Map<String, List<String>> _categoryAliases = <String, List<String>>{
+  'plumbing': <String>['plumber', 'pipe', 'drainage', 'septic'],
+  'electrical': <String>['electrician', 'wiring', 'lighting', 'generator'],
+  'carpentry': <String>['carpenter', 'woodwork', 'furniture', 'cabinet'],
+  'masonry': <String>['mason', 'blockwork', 'plastering', 'concrete'],
+  'welding': <String>['welder', 'fabrication', 'metalwork', 'blacksmith'],
+  'construction': <String>['builder', 'building', 'renovation'],
+  'automotive': <String>['mechanic', 'car', 'motorbike', 'auto body'],
+  'painting': <String>['painter', 'paint'],
+  'tiling': <String>['tiler', 'tiles', 'flooring', 'terrazzo'],
+  'roofing': <String>['roofer', 'roof', 'ceiling'],
+  'hvac': <String>['ac', 'air conditioning', 'refrigeration', 'fridge'],
+  'appliance_repair': <String>[
+    'appliance',
+    'electronics',
+    'tv',
+    'washing machine',
+  ],
+  'cleaning': <String>['cleaner', 'deep clean', 'fumigation'],
+  'landscaping': <String>['lawn', 'garden', 'weeding'],
+  'fashion': <String>['tailor', 'dressmaker', 'sewing', 'seamstress'],
+  'beauty': <String>['hairdresser', 'barber', 'makeup', 'nails'],
+  'catering': <String>['caterer', 'cook', 'baking', 'baker'],
+  'upholstery': <String>['sofa', 'cushion', 'curtains', 'blinds'],
+  'security': <String>['locksmith', 'cctv', 'access control'],
+  'ict_support': <String>['computer', 'phone repair', 'network', 'wifi'],
+};
+
 
 BoxDecoration _card({
   Color color = DesignTokens.surfaceCard,
@@ -56,7 +84,7 @@ class _HomeHero extends StatelessWidget {
         borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
         boxShadow: <BoxShadow>[
           BoxShadow(
-            color: DesignTokens.primary.withOpacity(0.28),
+            color: DesignTokens.primary.withValues(alpha: 0.28),
             blurRadius: 24,
             offset: const Offset(0, 8),
           ),
@@ -96,7 +124,7 @@ class _HomeHero extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.14),
+                    color: Colors.white.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
                   ),
                   child: const Text(
@@ -116,7 +144,7 @@ class _HomeHero extends StatelessWidget {
             width: 52,
             height: 52,
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.12),
+              color: Colors.white.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -162,7 +190,7 @@ class _CategoryChip extends StatelessWidget {
           boxShadow: <BoxShadow>[
             BoxShadow(
               color: isSelected
-                  ? DesignTokens.primary.withOpacity(0.22)
+                  ? DesignTokens.primary.withValues(alpha: 0.22)
                   : DesignTokens.shadow,
               blurRadius: isSelected ? 10 : 6,
               offset: const Offset(0, 3),
@@ -342,7 +370,7 @@ class _ActiveJobBannerState extends State<_ActiveJobBanner> with SingleTickerPro
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: _card(color: DesignTokens.primary.withOpacity(0.05)),
+      decoration: _card(color: DesignTokens.primary.withValues(alpha: 0.05)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -354,7 +382,9 @@ class _ActiveJobBannerState extends State<_ActiveJobBanner> with SingleTickerPro
                   width: 8,
                   height: 8,
                   decoration: BoxDecoration(
-                    color: DesignTokens.successGreen.withOpacity(0.5 + _pulse.value * 0.5),
+                    color: DesignTokens.successGreen.withValues(
+                      alpha: 0.5 + _pulse.value * 0.5,
+                    ),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -539,14 +569,14 @@ class _EmptyArtisans extends StatelessWidget {
         children: <Widget>[
           Icon(Icons.people_outline_rounded,
               size: 34,
-              color: DesignTokens.textSecondary.withOpacity(0.35)),
+              color: DesignTokens.textSecondary.withValues(alpha: 0.35)),
           const SizedBox(height: 10),
           Text(
             'No artisans match your search',
             style: TextStyle(
               fontFamily: 'Satoshi',
               fontSize: 13,
-              color: DesignTokens.textSecondary.withOpacity(0.65),
+              color: DesignTokens.textSecondary.withValues(alpha: 0.65),
             ),
           ),
         ],
@@ -572,6 +602,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
  
   List<Map<String, dynamic>> _featuredArtisans = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _categories       = <Map<String, dynamic>>[];
+  Map<String, int> _categoryWorkerCounts       = <String, int>{};
   bool _isLoadingFeatured    = true;
   bool _isLoadingCategories  = true;
   ClientBooking? _activeJob;
@@ -609,12 +640,35 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
             .toList();
         _isLoadingCategories = false;
       });
+      _loadCategoryWorkerCounts();
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _categories        = _fallbackCategories;
+        _categories        = <Map<String, dynamic>>[];
         _isLoadingCategories = false;
       });
+    }
+  }
+
+  Future<void> _loadCategoryWorkerCounts() async {
+    try {
+      final List<Map<String, dynamic>> workers =
+          await ExploreService.instance.getArtisans(
+        limit: 50,
+        forceRefresh: true,
+      );
+      if (!mounted) return;
+      setState(() {
+        _categoryWorkerCounts = <String, int>{
+          for (final Map<String, dynamic> category in _categories)
+            _categoryKey(category): workers
+                .where((Map<String, dynamic> worker) =>
+                    _workerMatchesCategory(worker, category))
+                .length,
+        };
+      });
+    } catch (_) {
+      if (mounted) setState(() => _categoryWorkerCounts = <String, int>{});
     }
   }
  
@@ -660,23 +714,75 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   }
  
   // ── Static fallbacks ───────────────────────────────────────────────────────
-  static final List<Map<String, dynamic>> _fallbackCategories =
-      <Map<String, dynamic>>[
-    <String, dynamic>{'id': 'plumbing', 'name': 'Plumbing', 'icon_name': 'drop'},
-    <String, dynamic>{
-      'id': 'electrical',
-      'name': 'Electrical',
-      'icon_name': 'lightning',
-    },
-    <String, dynamic>{'id': 'carpentry', 'name': 'Carpentry', 'icon_name': 'wrench'},
-    <String, dynamic>{'id': 'cleaning', 'name': 'Cleaning', 'icon_name': 'broom'},
-    <String, dynamic>{'id': 'painting', 'name': 'Painting', 'icon_name': 'palette'},
-  ];
- 
   IconData _categoryIcon(Map<String, dynamic> category) {
     final Object? icon = category['icon'];
     if (icon is IconData) return icon;
     return PhosphorIconMapper.fromString(category['icon_name']?.toString());
+  }
+
+  String _categoryKey(Map<String, dynamic> category) {
+    return (category['slug'] ?? category['id'] ?? category['name'] ?? '')
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[\s-]+'), '_');
+  }
+
+  int _categorySortOrder(Map<String, dynamic> category) {
+    return (category['sort_order'] as num?)?.toInt() ?? 999;
+  }
+
+  List<Map<String, dynamic>> get _categoriesByWorkerCount {
+    final List<Map<String, dynamic>> sorted =
+        List<Map<String, dynamic>>.from(_categories);
+    sorted.sort((Map<String, dynamic> a, Map<String, dynamic> b) {
+      final int countDelta = (_categoryWorkerCounts[_categoryKey(b)] ?? 0)
+          .compareTo(_categoryWorkerCounts[_categoryKey(a)] ?? 0);
+      if (countDelta != 0) return countDelta;
+
+      final int orderDelta =
+          _categorySortOrder(a).compareTo(_categorySortOrder(b));
+      if (orderDelta != 0) return orderDelta;
+
+      return (a['name'] ?? '')
+          .toString()
+          .compareTo((b['name'] ?? '').toString());
+    });
+    return sorted;
+  }
+
+  bool _workerMatchesCategory(
+    Map<String, dynamic> worker,
+    Map<String, dynamic> category,
+  ) {
+    final List<String> skills =
+        (worker['skills'] as List<dynamic>? ?? <dynamic>[])
+            .map((dynamic skill) => skill.toString().toLowerCase().trim())
+            .where((String skill) => skill.isNotEmpty)
+            .toList();
+    if (skills.isEmpty) return false;
+
+    final List<String> categoryTerms = _categoryWorkerTerms(category);
+
+    return skills.any(
+      (String skill) => categoryTerms.any(
+        (String term) => skill.contains(term) || term.contains(skill),
+      ),
+    );
+  }
+
+  List<String> _categoryWorkerTerms(Map<String, dynamic> category) {
+    final String key = _categoryKey(category);
+    final Set<String> terms = <String>{
+      category['slug']?.toString() ?? '',
+      category['name']?.toString() ?? '',
+      category['id']?.toString() ?? '',
+      ...?_categoryAliases[key],
+    };
+    return terms
+        .map((String term) => term.toLowerCase().replaceAll('_', ' ').trim())
+        .where((String term) => term.isNotEmpty)
+        .toList();
   }
  
   // ── Filtered artisans ──────────────────────────────────────────────────────
@@ -916,13 +1022,31 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   // ── Categories ─────────────────────────────────────────────────────────────
   Widget _buildCategories() {
     final List<Map<String, dynamic>> cats =
-        _isLoadingCategories ? _fallbackCategories : _categories;
- 
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: cats.map((Map<String, dynamic> cat) {
+        _isLoadingCategories ? <Map<String, dynamic>>[] : _categoriesByWorkerCount;
+
+    if (_isLoadingCategories) {
+      return const SizedBox(
+        height: 44,
+        child: Center(
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (cats.isEmpty) {
+      return const Text(
+        'Categories are unavailable right now.',
+        style: TextStyle(color: DesignTokens.textSecondary),
+      );
+    }
+
+    return SizedBox(
+      height: 46,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        children: <Widget>[
+          ...cats.take(10).map((Map<String, dynamic> cat) {
           final String catId  = (cat['id'] ?? '').toString();
           final String label  =
               (cat['name'] ?? cat['label'] ?? 'Service').toString();
@@ -945,7 +1069,25 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
               },
             ),
           );
-        }).toList(),
+        }),
+        if (cats.length > 10)
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: _CategoryChip(
+              label: 'See more',
+              icon: Icons.arrow_forward_rounded,
+              isSelected: false,
+              onTap: () => Navigator.pushNamed(
+                context,
+                AppRoutes.exploreArtisans,
+                arguments: <String, dynamic>{
+                  if (_searchQuery.trim().isNotEmpty)
+                    'query': _searchQuery.trim(),
+                },
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

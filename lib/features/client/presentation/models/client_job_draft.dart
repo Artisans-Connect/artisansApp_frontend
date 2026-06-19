@@ -60,6 +60,7 @@ class ClientJobDraft {
   DateTime? get preferredDate {
     final Object? raw = data['preferredDate'];
     if (raw is DateTime) return raw;
+    if (raw is String) return DateTime.tryParse(raw);
     return null;
   }
 

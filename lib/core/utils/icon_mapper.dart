@@ -55,10 +55,44 @@ class PhosphorIconMapper {
       case 'construction':
         return PhosphorIcons.barricade;
 
+      // Masonry
+      case 'bricks':
+      case 'masonry':
+      case 'blockwork':
+        return PhosphorIcons.wall;
+
+      // Welding
+      case 'fire':
+      case 'welding':
+        return PhosphorIcons.fire;
+
+      // Automotive
+      case 'car':
+      case 'automotive':
+        return PhosphorIcons.car;
+
+      // Tiling
+      case 'squares_four':
+      case 'squaresfour':
+      case 'tiling':
+        return PhosphorIcons.squaresFour;
+
+      // Roofing
+      case 'house_line':
+      case 'houseline':
+      case 'roofing':
+        return PhosphorIcons.houseLine;
+
       // HVAC
       case 'hvac':
       case 'snowflake':
         return PhosphorIcons.snowflake;
+
+      // Appliance and electronics repair
+      case 'plug':
+      case 'appliance_repair':
+      case 'appliance repair':
+        return PhosphorIcons.plug;
 
       // Landscaping
       case 'grass':
@@ -77,6 +111,25 @@ class PhosphorIconMapper {
         return PhosphorIcons.leaf;
       case 'plant':
         return PhosphorIcons.plant;
+      case 'scissors':
+      case 'fashion':
+      case 'beauty':
+        return PhosphorIcons.scissors;
+      case 'fork_knife':
+      case 'forkknife':
+      case 'catering':
+        return PhosphorIcons.forkKnife;
+      case 'armchair':
+      case 'upholstery':
+        return PhosphorIcons.armchair;
+      case 'lock_key':
+      case 'lockkey':
+      case 'security':
+        return PhosphorIcons.lockKey;
+      case 'desktop_tower':
+      case 'desktoptower':
+      case 'ict_support':
+        return PhosphorIcons.desktopTower;
 
       // Default fallback
       default:
@@ -100,8 +153,23 @@ class PhosphorIconMapper {
     'palette',
     'barricade',
     'construction',
+    'bricks',
+    'masonry',
+    'blockwork',
+    'fire',
+    'welding',
+    'car',
+    'automotive',
+    'squares_four',
+    'squaresfour',
+    'tiling',
+    'house_line',
+    'houseline',
+    'roofing',
     'hvac',
     'snowflake',
+    'plug',
+    'appliance_repair',
     'grass',
     'landscaping',
     'mountains',
@@ -110,6 +178,20 @@ class PhosphorIconMapper {
     'wrench-screwdriver',
     'leaf',
     'plant',
+    'scissors',
+    'fashion',
+    'beauty',
+    'fork_knife',
+    'forkknife',
+    'catering',
+    'armchair',
+    'upholstery',
+    'lock_key',
+    'lockkey',
+    'security',
+    'desktop_tower',
+    'desktoptower',
+    'ict_support',
   };
 
   /// Checks if an icon name is supported.

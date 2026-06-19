@@ -2,6 +2,7 @@ import 'client_job_draft.dart';
 
 /// Booking lifecycle statuses aligned with backend_integration.md.
 enum ClientBookingStatus {
+  draft,
   requested,
   accepted,
   inProgress,
@@ -13,6 +14,8 @@ enum ClientBookingStatus {
 extension ClientBookingStatusX on ClientBookingStatus {
   String get displayLabel {
     switch (this) {
+      case ClientBookingStatus.draft:
+        return 'Draft';
       case ClientBookingStatus.requested:
         return 'Requested';
       case ClientBookingStatus.accepted:
@@ -61,6 +64,9 @@ class ClientBooking {
     this.cancellationStage,
     this.cancellationFee,
     this.cancellationFeeCurrency,
+    this.isLocalDraft = false,
+    this.draftData,
+    this.draftSavedAt,
   });
 
   final String id;
@@ -86,6 +92,9 @@ class ClientBooking {
   final String? cancellationStage;
   final double? cancellationFee;
   final String? cancellationFeeCurrency;
+  final bool isLocalDraft;
+  final Map<String, dynamic>? draftData;
+  final String? draftSavedAt;
 
   bool get canRate =>
       (status == ClientBookingStatus.pendingApproval ||
@@ -115,6 +124,7 @@ class ClientBooking {
   bool get isNavigable =>
       status == ClientBookingStatus.inProgress ||
       status == ClientBookingStatus.pendingApproval ||
+      status == ClientBookingStatus.draft ||
       status == ClientBookingStatus.requested ||
       status == ClientBookingStatus.accepted ||
       canRate;
@@ -145,6 +155,9 @@ class ClientBooking {
         'cancellation_stage': cancellationStage,
         'cancellation_fee': cancellationFee,
         'cancellation_fee_currency': cancellationFeeCurrency,
+        'isLocalDraft': isLocalDraft,
+        'draftData': draftData,
+        'draftSavedAt': draftSavedAt,
         'eta': 'Calculating ETA…',
       };
 
@@ -174,6 +187,35 @@ class ClientBooking {
       cancelledBy: map['cancelled_by'] as String?,
       cancelledReason: map['cancelled_reason'] as String?,
       cancelledAt: map['cancelled_at'] as String?,
+      isLocalDraft: map['isLocalDraft'] == true,
+      draftData: map['draftData'] is Map
+          ? Map<String, dynamic>.from(map['draftData'] as Map)
+          : null,
+      draftSavedAt: map['draftSavedAt'] as String?,
+    );
+  }
+
+  static ClientBooking fromLocalDraft({
+    required String draftId,
+    required Map<String, dynamic> draftData,
+  }) {
+    final draft = ClientJobDraft.fromMap(draftData);
+    final String? savedAt = draftData['savedAt'] as String?;
+    final String date = savedAt?.split('T').first ?? 'Saved locally';
+    return ClientBooking(
+      id: draftId,
+      title: draft.displayTitle,
+      artisan: 'Not posted yet',
+      profession: draft.displayCategory,
+      status: ClientBookingStatus.draft,
+      date: date,
+      amount: 'GHS ${draft.totalFee.toStringAsFixed(0)}',
+      backendStatus: 'draft',
+      isLocalDraft: true,
+      draftData: Map<String, dynamic>.from(draftData),
+      draftSavedAt: savedAt,
+      locationLat: draft.locationLat,
+      locationLng: draft.locationLng,
     );
   }
 

@@ -62,38 +62,27 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   Future<void> _fetchArtisans() async {
     try {
       final loc = await DeviceLocationService.getCurrentOrDefault();
-      final rawArtisans = await ExploreService.instance.getArtisans(
+      List<Map<String, dynamic>> rawArtisans = await ExploreService.instance.getArtisans(
         limit: 50,
+        radiusKm: 30,
         lat: loc.latitude,
         lng: loc.longitude,
         categoryId: _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
+        forceRefresh: true,
+        onRefreshed: (List<Map<String, dynamic>> freshArtisans) {
+          if (!mounted) return;
+          setState(() => allArtisans = _mapArtisans(freshArtisans));
+        },
       );
-      
-      final mappedArtisans = rawArtisans.map((raw) {
-        final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
-        final name = profile['full_name'] as String? ?? 'Artisan';
-        final imageUrl = profile['avatar_url'] as String? ?? '';
-        final skills = raw['skills'] as List<dynamic>? ?? [];
-        final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
-        final rating = (raw['rating'] as num?)?.toDouble() ?? 0.0;
-        final userId = raw['id'] as String;
-        
-        return {
-          'name': name,
-          'profession': profession,
-          'rating': rating,
-          'reviewCount': 0,
-          'imageUrl': imageUrl,
-          'location': (profile['location_label'] ?? 'Location not set').toString(),
-          'distance': raw['distance_km'] != null ? '${(raw['distance_km'] as num).toStringAsFixed(1)} km' : '',
-          'distanceKm': (raw['distance_km'] as num?)?.toDouble(),
-          'userId': userId,
-          'id': userId,
-          'phone': profile['phone'],
-          'skills': skills.map((dynamic item) => item.toString()).toList(),
-          'profiles': profile,
-        };
-      }).toList();
+      if (rawArtisans.isEmpty) {
+        rawArtisans = await ExploreService.instance.getArtisans(
+          limit: 50,
+          categoryId:
+              _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
+          forceRefresh: true,
+        );
+      }
+      final mappedArtisans = _mapArtisans(rawArtisans);
 
       if (mounted) {
         setState(() {
@@ -108,6 +97,60 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
         });
       }
     }
+  }
+
+  List<Map<String, dynamic>> _mapArtisans(List<Map<String, dynamic>> rawArtisans) {
+    return rawArtisans.map((raw) {
+      final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
+      final name = profile['full_name'] as String? ?? 'Artisan';
+      final imageUrl = profile['avatar_url'] as String? ?? '';
+      final skills = raw['skills'] as List<dynamic>? ?? [];
+      final profession = skills.isNotEmpty ? skills.first.toString() : 'Professional';
+      final rating = (raw['rating'] as num?)?.toDouble() ?? 0.0;
+      final userId = raw['id'] as String;
+      final distanceKm = (raw['distance_km'] as num?)?.toDouble();
+
+      return {
+        'name': name,
+        'profession': profession,
+        'rating': rating,
+        'reviewCount': 0,
+        'imageUrl': imageUrl,
+        'location': (profile['location_label'] ?? 'Location not set').toString(),
+        'distance': distanceKm != null ? '${distanceKm.toStringAsFixed(1)} km' : '',
+        'distanceKm': distanceKm,
+        'isAvailable': raw['is_available'] == true,
+        'isVerified': raw['is_verified'] == true,
+        'bio': profile['bio'],
+        'userId': userId,
+        'id': userId,
+        'phone': profile['phone'],
+        'skills': skills.map((dynamic item) => item.toString()).toList(),
+        'profiles': profile,
+      };
+    }).toList();
+  }
+
+  void _clearFilters() {
+    setState(() {
+      _searchQuery = '';
+      _selectedDistance = '';
+      _selectedRating = '';
+      _searchController.clear();
+    });
+  }
+
+  Future<void> _showAllArtisans() async {
+    setState(() {
+      _selectedCategory = '';
+      _selectedCategoryId = '';
+      _selectedDistance = '';
+      _selectedRating = '';
+      _searchQuery = '';
+      _searchController.clear();
+      _isLoading = true;
+    });
+    await _fetchArtisans();
   }
 
   List<Map<String, dynamic>> get _filteredArtisans {
@@ -216,12 +259,32 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
           const SizedBox(width: 4),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Padding(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          setState(() => _isLoading = true);
+          await _fetchArtisans();
+        },
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
           padding: const EdgeInsets.all(AppSpacing.gutter),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
+              Text(
+                _selectedCategory.isEmpty
+                    ? 'Browse skilled artisans'
+                    : 'Browse $_selectedCategory artisans',
+                style: AppTypography.titleLarge,
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                'Verified and available artisans appear first, with nearby matches prioritized when location is available.',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
               CustomSearchBar(
                 hintText: 'Search by name or skill...',
                 controller: _searchController,
@@ -230,99 +293,62 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                 },
               ),
               const SizedBox(height: AppSpacing.md),
-              if (_selectedCategory.isNotEmpty) ...<Widget>[
-                AppFilterChip(
-                  label: _selectedCategory,
-                  isSelected: true,
-                  icon: PhosphorIcons.funnel,
-                  onTap: () {
-                    setState(() {
-                      _selectedCategory = '';
-                      _selectedCategoryId = '';
-                      _isLoading = true;
-                    });
-                    _fetchArtisans();
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-              ],
-              Text('Filters', style: AppTypography.labelLarge),
-              const SizedBox(height: AppSpacing.md),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('Distance', style: AppTypography.bodyMedium),
-                  const SizedBox(height: AppSpacing.sm),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: <String>[
-                        'Nearby',
-                        '< 5 km',
-                        '< 10 km',
-                        '< 20 km',
-                      ].map((String distance) {
-                        final bool isSelected = _selectedDistance == distance;
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(right: AppSpacing.sm),
-                          child: AppFilterChip(
-                            label: distance,
-                            isSelected: isSelected,
-                            onTap: () {
-                              setState(() {
-                                _selectedDistance =
-                                    isSelected ? '' : distance;
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  const Text('Rating', style: AppTypography.bodyMedium),
-                  const SizedBox(height: AppSpacing.sm),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: <String>['4.5+', '4.7+', '4.9+']
-                          .map((String rating) {
-                        final bool isSelected = _selectedRating == rating;
-                        return Padding(
-                          padding:
-                              const EdgeInsets.only(right: AppSpacing.sm),
-                          child: AppFilterChip(
-                            label: rating,
-                            isSelected: isSelected,
-                            icon: PhosphorIcons.star,
-                            onTap: () {
-                              setState(() {
-                                _selectedRating = isSelected ? '' : rating;
-                              });
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                ],
+              _ExploreFilterBar(
+                selectedCategory: _selectedCategory,
+                selectedDistance: _selectedDistance,
+                selectedRating: _selectedRating,
+                onClearCategory: () {
+                  setState(() {
+                    _selectedCategory = '';
+                    _selectedCategoryId = '';
+                    _isLoading = true;
+                  });
+                  _fetchArtisans();
+                },
+                onDistanceSelected: (String value) {
+                  setState(() {
+                    _selectedDistance =
+                        _selectedDistance == value ? '' : value;
+                  });
+                },
+                onRatingSelected: (String value) {
+                  setState(() {
+                    _selectedRating = _selectedRating == value ? '' : value;
+                  });
+                },
+                onClearFilters: _showAllArtisans,
+                onShowAll: _showAllArtisans,
               ),
               const SizedBox(height: AppSpacing.lg),
               if (_isLoading)
                 const Center(child: CircularProgressIndicator(color: AppColors.primary)),
               if (!_isLoading)
-                Text(
-                  '${artisans.length} Artisans Found',
-                  style: AppTypography.labelLarge,
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        '${artisans.length} ${artisans.length == 1 ? 'Artisan' : 'Artisans'} Found',
+                        style: AppTypography.labelLarge,
+                      ),
+                    ),
+                    if (_searchQuery.isNotEmpty ||
+                        _selectedDistance.isNotEmpty ||
+                        _selectedRating.isNotEmpty)
+                      TextButton.icon(
+                        onPressed: _clearFilters,
+                        icon: Icon(PhosphorIcons.x, size: 16),
+                        label: const Text('Clear'),
+                      ),
+                  ],
                 ),
               if (!_isLoading)
                 const SizedBox(height: AppSpacing.md),
+              if (!_isLoading && artisans.isEmpty)
+                _ExploreEmptyState(
+                  hasCategory: _selectedCategory.isNotEmpty,
+                  onClearFilters: _clearFilters,
+                  onShowAll: _showAllArtisans,
+                ),
               if (!_isLoading)
                 ...artisans.map((Map<String, dynamic> artisan) {
                   final String name = artisan['name'] as String;
@@ -384,6 +410,26 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                   const SizedBox(height: AppSpacing.xs),
+                                  Wrap(
+                                    spacing: AppSpacing.xs,
+                                    runSpacing: AppSpacing.xs,
+                                    children: <Widget>[
+                                      if (artisan['isVerified'] == true)
+                                        _MiniBadge(
+                                          icon: PhosphorIcons.sealCheck,
+                                          label: 'Verified',
+                                        ),
+                                      _MiniBadge(
+                                        icon: artisan['isAvailable'] == true
+                                            ? PhosphorIcons.circle
+                                            : PhosphorIcons.clock,
+                                        label: artisan['isAvailable'] == true
+                                            ? 'Available'
+                                            : 'Offline',
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
                                   Row(
                                     children: <Widget>[
                                       Icon(
@@ -439,6 +485,193 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
             ],
           ),
         ),
+      ),
+      ),
+    );
+  }
+}
+
+class _ExploreFilterBar extends StatelessWidget {
+  const _ExploreFilterBar({
+    required this.selectedCategory,
+    required this.selectedDistance,
+    required this.selectedRating,
+    required this.onClearCategory,
+    required this.onDistanceSelected,
+    required this.onRatingSelected,
+    required this.onClearFilters,
+    required this.onShowAll,
+  });
+
+  final String selectedCategory;
+  final String selectedDistance;
+  final String selectedRating;
+  final VoidCallback onClearCategory;
+  final ValueChanged<String> onDistanceSelected;
+  final ValueChanged<String> onRatingSelected;
+  final VoidCallback onClearFilters;
+  final VoidCallback onShowAll;
+
+  bool get _hasFilters =>
+      selectedCategory.isNotEmpty ||
+      selectedDistance.isNotEmpty ||
+      selectedRating.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                'Refine results',
+                style: AppTypography.labelLarge,
+              ),
+            ),
+            if (_hasFilters)
+              TextButton.icon(
+                onPressed: onClearFilters,
+                icon: Icon(PhosphorIcons.x, size: 16),
+                label: const Text('Clear'),
+              ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: <Widget>[
+            if (selectedCategory.isNotEmpty)
+              AppFilterChip(
+                label: selectedCategory,
+                isSelected: true,
+                icon: PhosphorIcons.funnel,
+                onTap: onClearCategory,
+              )
+            else
+              AppFilterChip(
+                label: 'All services',
+                isSelected: true,
+                icon: PhosphorIcons.squaresFour,
+                onTap: onShowAll,
+              ),
+            ...<String>['Nearby', '< 5 km', '< 10 km', '< 30 km', '< 50 km']
+                .map(
+              (String distance) => AppFilterChip(
+                label: distance,
+                isSelected: selectedDistance == distance,
+                icon: PhosphorIcons.mapPin,
+                onTap: () => onDistanceSelected(distance),
+              ),
+            ),
+            ...<String>['4.5+', '4.7+', '4.9+'].map(
+              (String rating) => AppFilterChip(
+                label: rating,
+                isSelected: selectedRating == rating,
+                icon: PhosphorIcons.star,
+                onTap: () => onRatingSelected(rating),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _ExploreEmptyState extends StatelessWidget {
+  const _ExploreEmptyState({
+    required this.hasCategory,
+    required this.onClearFilters,
+    required this.onShowAll,
+  });
+
+  final bool hasCategory;
+  final VoidCallback onClearFilters;
+  final VoidCallback onShowAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        border: Border.all(color: AppColors.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(PhosphorIcons.magnifyingGlass, color: AppColors.textSecondary),
+          const SizedBox(height: AppSpacing.sm),
+          Text('No matching artisans yet', style: AppTypography.labelLarge),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            hasCategory
+                ? 'Try clearing filters or browsing all artisans while more workers add this service.'
+                : 'Try clearing filters or refreshing the list.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: <Widget>[
+              OutlinedButton.icon(
+                onPressed: onClearFilters,
+                icon: Icon(PhosphorIcons.x, size: 16),
+                label: const Text('Clear filters'),
+              ),
+              FilledButton.icon(
+                onPressed: onShowAll,
+                icon: Icon(PhosphorIcons.users, size: 16),
+                label: const Text('Show all'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MiniBadge extends StatelessWidget {
+  const _MiniBadge({
+    required this.icon,
+    required this.label,
+  });
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: 3,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 12, color: AppColors.textSecondary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

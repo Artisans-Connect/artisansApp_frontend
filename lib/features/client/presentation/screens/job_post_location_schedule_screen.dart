@@ -65,8 +65,8 @@ class _JobPostLocationScheduleScreenState
     );
     _locationSearchController = TextEditingController();
     _urgency = _draft.urgency ?? 'asap';
-    final Object? date = _draft.data['preferredDate'];
-    if (date is DateTime) _selectedDate = date;
+    final DateTime? date = _draft.preferredDate;
+    if (date != null) _selectedDate = date;
     _selectedTimeWindow = _draft.timeWindow ?? 'Morning (8am - 12pm)';
     _initLocation();
   }

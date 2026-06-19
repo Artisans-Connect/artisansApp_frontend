@@ -8,6 +8,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/error_state_view.dart';
+import '../../data/job_draft_store.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
 
@@ -34,6 +35,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
 
   static const List<String> _filters = <String>[
     'All',
+    'Draft',
     'In Progress',
     'Pending Approval',
     'Completed',
@@ -61,18 +63,26 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
       _errorMessage = null;
     });
     try {
+      final List<ClientBooking> draftBookings =
+          await JobDraftStore.instance.listBookings();
       final List<dynamic> data = await _jobsService.getMyJobs();
       if (!mounted) return;
       setState(() {
-        _bookings = data
-            .map((dynamic item) =>
-                ClientBooking.fromApiJob(item as Map<String, dynamic>))
-            .toList();
+        _bookings = <ClientBooking>[
+          ...draftBookings,
+          ...data.map(
+            (dynamic item) =>
+                ClientBooking.fromApiJob(item as Map<String, dynamic>),
+          ),
+        ];
         _isLoading = false;
       });
     } catch (e) {
+      final List<ClientBooking> draftBookings =
+          await JobDraftStore.instance.listBookings();
       if (!mounted) return;
       setState(() {
+        _bookings = draftBookings;
         _errorMessage =
             userMessageFor(e, fallback: 'Failed to load bookings.');
         _isLoading = false;
@@ -187,7 +197,9 @@ class _BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String subtitle = booking.status == ClientBookingStatus.requested
+    final String subtitle = booking.isLocalDraft
+        ? 'Draft saved on this device'
+        : booking.status == ClientBookingStatus.requested
         ? 'View interested artisans'
         : '${booking.artisan} · ${booking.status.displayLabel}';
     return Card(

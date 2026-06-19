@@ -33,6 +33,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
   final List<String> _uploadedUrls = <String>[];
   bool _isUploadingPhoto = false;
   static const int _maxPhotos = 5;
+  static const int _minDescriptionLength = 20;
   final int _maxTitleLength = 80;
   final int _maxDescriptionLength = 2000;
 
@@ -68,7 +69,9 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
 
   bool get _canContinue =>
       _titleController.text.trim().length >= 3 &&
-      _descriptionController.text.trim().length >= 20;
+      _descriptionController.text.trim().length >= _minDescriptionLength;
+
+  int get _descriptionLength => _descriptionController.text.trim().length;
 
   Future<void> _pickPhoto(ImageSource source) async {
     if (_localPhotos.length + _uploadedUrls.length >= _maxPhotos) {
@@ -253,6 +256,29 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
               ),
             ),
             onChanged: (_) => setState(() {}),
+          ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  _descriptionLength < _minDescriptionLength
+                      ? 'Add at least 20 characters so artisans understand the work.'
+                      : 'Description length looks good.',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: _descriptionLength < _minDescriptionLength
+                        ? AppColors.error
+                        : AppColors.success,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Text(
+                '$_descriptionLength/$_minDescriptionLength characters minimum',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
           ),
 
           // ── Photos ────────────────────────────────────────────

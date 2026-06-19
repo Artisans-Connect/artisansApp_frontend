@@ -13,8 +13,8 @@ class ExploreService {
     String? categoryId,
     double? lat,
     double? lng,
-    double radiusKm = 5,
-    int limit = 20,
+    double radiusKm = 30,
+    int limit = 50,
     bool forceRefresh = false,
     void Function(List<Map<String, dynamic>> fresh)? onRefreshed,
   }) async {
