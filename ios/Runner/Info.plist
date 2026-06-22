@@ -51,14 +51,22 @@
 	<string>CraftMatch uses your location for live job tracking while you are on an active job.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
-  <dict>
-    <key>CFBundleTypeRole</key>
-    <string>Editor</string>
-    <key>CFBundleURLSchemes</key>
-    <array>
-      <string>com.googleusercontent.apps.35491862087-4vd5cp2p72p7udrs044lnt78io8n9fte</string>
-    </array>
-  </dict>
-</array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.35491862087-4vd5cp2p72p7udrs044lnt78io8n9fte</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>craftmatch</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
