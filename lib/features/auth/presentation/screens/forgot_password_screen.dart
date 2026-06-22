@@ -34,6 +34,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   bool _emailSent = false;
   late final bool _hasRecoverySession;
 
+  Timer? _cooldownTimer;
+  int _cooldownSeconds = 0;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+
   @override
   void initState() {
     super.initState();
@@ -46,7 +51,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     _emailController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
+    _cooldownTimer?.cancel();
     super.dispose();
+  }
+
+  void _startCooldown() {
+    setState(() {
+      _cooldownSeconds = 60;
+    });
+    _cooldownTimer?.cancel();
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) return;
+      if (_cooldownSeconds == 0) {
+        timer.cancel();
+      } else {
+        setState(() {
+          _cooldownSeconds--;
+        });
+      }
+    });
   }
 
   Future<void> _sendResetEmail() async {
@@ -60,6 +83,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       if (!mounted) return;
       setState(() => _emailSent = true);
       AppToast.showSuccess(context, 'Password reset email sent. Check your inbox.');
+      _startCooldown();
     } on AuthFailure catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not send reset email.');
@@ -191,9 +215,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         const SizedBox(height: 20),
                         GradientButton(
-                          label: _emailSent ? 'Resend Reset Email' : 'Send Reset Email',
+                          label: _cooldownSeconds > 0
+                              ? 'Resend in ${_cooldownSeconds}s'
+                              : _emailSent
+                                  ? 'Resend Reset Email'
+                                  : 'Send Reset Email',
                           isLoading: _isSending,
-                          onPressed: _sendResetEmail,
+                          onPressed: _cooldownSeconds > 0 || _isSending
+                              ? null
+                              : _sendResetEmail,
                         ),
                         const SizedBox(height: 12),
                         TextButton(
@@ -216,7 +246,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         AppInput(
                           controller: _newPasswordController,
                           hint: '••••••••',
-                          obscureText: true,
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? PhosphorIcons.eyeClosed
+                                  : PhosphorIcons.eye,
+                              color: AppColors.textSecondary,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
+                          ),
                           validator: (String? v) =>
                               (v == null || v.length < 6)
                                   ? 'Enter at least 6 characters.'
@@ -234,7 +277,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         AppInput(
                           controller: _confirmPasswordController,
                           hint: '••••••••',
-                          obscureText: true,
+                          obscureText: _obscureConfirmPassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscureConfirmPassword
+                                  ? PhosphorIcons.eyeClosed
+                                  : PhosphorIcons.eye,
+                              color: AppColors.textSecondary,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscureConfirmPassword =
+                                    !_obscureConfirmPassword;
+                              });
+                            },
+                          ),
                           validator: (String? v) {
                             if (v == null || v.length < 6) {
                               return 'Confirm your new password.';

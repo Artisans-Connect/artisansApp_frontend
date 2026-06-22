@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
@@ -34,6 +35,7 @@ class _SignInScreenState extends State<SignInScreen> {
   bool _isSubmitting = false;
   bool _isGoogleSubmitting = false;
   AuthFailure? _authError;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -230,7 +232,20 @@ class _SignInScreenState extends State<SignInScreen> {
                       AppInput(
                         controller: _passwordController,
                         hint: '••••••••',
-                        obscureText: true,
+                        obscureText: _obscurePassword,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? PhosphorIcons.eyeClosed
+                                : PhosphorIcons.eye,
+                            color: AppColors.textSecondary,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          },
+                        ),
                         validator: (String? v) => (v == null || v.length < 6)
                             ? 'Enter at least 6 characters.'
                             : null,
