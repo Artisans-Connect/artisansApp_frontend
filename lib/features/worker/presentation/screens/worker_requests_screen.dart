@@ -78,7 +78,7 @@ class _PulseDotState extends State<_PulseDot>
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: DesignTokens.successGreen.withOpacity(0.25),
+                  color: DesignTokens.successGreen.withAlpha((0.25 * 255).round()),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -174,7 +174,7 @@ class _AvailabilityCard extends StatelessWidget {
               Switch(
                 value: isAvailable,
                 onChanged: onChanged,
-                activeColor: Colors.white,
+                activeThumbColor: Colors.white,
                 activeTrackColor: DesignTokens.successGreen,
                 inactiveThumbColor: Colors.white,
                 inactiveTrackColor: DesignTokens.offlineSurface,
@@ -333,7 +333,7 @@ class _RequestJobCard extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
-    final String initials = _initials(job.clientName ?? 'U');
+    final String initials = _initials(job.clientName);
  
     return Container(
       decoration: BoxDecoration(
@@ -375,7 +375,7 @@ class _RequestJobCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        job.clientName ?? 'Client',
+                        job.clientName,
                         style: const TextStyle(
                           fontFamily: 'Satoshi',
                           fontSize: 14,
@@ -385,7 +385,7 @@ class _RequestJobCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        job.description ?? 'No description',
+                        job.description,
                         style: const TextStyle(
                           fontFamily: 'Satoshi',
                           fontSize: 12,
@@ -841,7 +841,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
                 ? LinearProgressIndicator(
                     minHeight: 2,
                     backgroundColor: DesignTokens.surfaceBase,
-                    color: DesignTokens.primary.withOpacity(0.45),
+                    color: DesignTokens.primary.withAlpha((0.45 * 255).round()),
                   )
                 : const SizedBox.shrink(),
           ),

@@ -436,7 +436,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                         fontWeight: FontWeight.w600,
                         color: DesignTokens.primary,
                         decoration: TextDecoration.underline,
-                        decorationColor: DesignTokens.primary.withOpacity(0.4),
+                        decorationColor: DesignTokens.primary.withAlpha((0.4 * 255).round()),
                       ),
                     ),
                   ),
@@ -525,7 +525,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                             fontWeight: FontWeight.w600,
                             color: DesignTokens.primary,
                             decoration: TextDecoration.underline,
-                            decorationColor: DesignTokens.primary.withOpacity(0.4),
+                            decorationColor: DesignTokens.primary.withAlpha((0.4 * 255).round()),
                           ),
                         ),
                       ),
@@ -594,10 +594,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: DesignTokens.successGreen.withOpacity(0.12),
+                    color: DesignTokens.successGreen.withAlpha((0.12 * 255).round()),
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(
-                        color: DesignTokens.successGreen.withOpacity(0.3), width: 1),
+                        color: DesignTokens.successGreen.withAlpha((0.3 * 255).round()), width: 1),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -665,9 +665,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: DesignTokens.error.withOpacity(0.08),
+        color: DesignTokens.error.withAlpha((0.08 * 255).round()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DesignTokens.error.withOpacity(0.2)),
+        border: Border.all(color: DesignTokens.error.withAlpha((0.2 * 255).round())),
       ),
       child: Row(
         children: [
@@ -730,7 +730,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-              color: DesignTokens.primary.withOpacity(0.16),
+              color: DesignTokens.primary.withAlpha((0.16 * 255).round()),
               blurRadius: 10,
               offset: const Offset(0, 4)),
         ],
@@ -744,7 +744,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               width: 92,
               height: 92,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.06),
+                color: Colors.white.withAlpha((0.06 * 255).round()),
                 shape: BoxShape.circle,
               ),
             ),
@@ -847,11 +847,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
  
   Color _statusPillColor(String? statusRaw) {
     return switch ((statusRaw ?? '').toLowerCase()) {
-      'completed' => DesignTokens.accentGold.withOpacity(0.2),
-      'pending_client_approval' => DesignTokens.accentGold.withOpacity(0.2),
-      'termination_requested' => DesignTokens.error.withOpacity(0.2),
-      'in_progress' => Colors.white.withOpacity(0.18),
-      _ => Colors.white.withOpacity(0.14),
+      'completed' => DesignTokens.accentGold.withAlpha((0.2 * 255).round()),
+      'pending_client_approval' => DesignTokens.accentGold.withAlpha((0.2 * 255).round()),
+      'termination_requested' => DesignTokens.error.withAlpha((0.2 * 255).round()),
+      'in_progress' => Colors.white.withAlpha((0.18 * 255).round()),
+      _ => Colors.white.withAlpha((0.14 * 255).round()),
     };
   }
  
@@ -872,10 +872,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       decoration: BoxDecoration(
         color: DesignTokens.surfaceCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: DesignTokens.error.withOpacity(0.18)),
+        border: Border.all(color: DesignTokens.error.withAlpha((0.18 * 255).round())),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha((0.05 * 255).round()),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -887,7 +887,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           Row(
             children: <Widget>[
               CircleAvatar(
-                backgroundColor: DesignTokens.error.withOpacity(0.12),
+                backgroundColor: DesignTokens.error.withAlpha((0.12 * 255).round()),
                 child: Icon(Icons.error_outline_rounded, color: DesignTokens.error),
               ),
               const SizedBox(width: 12),

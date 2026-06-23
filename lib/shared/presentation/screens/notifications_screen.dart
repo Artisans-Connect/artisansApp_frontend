@@ -194,7 +194,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           thickness: 0.5,
           indent: 72,
           endIndent: 16,
-          color: AppColors.outlineVariant.withOpacity(0.5),
+          color: AppColors.outlineVariant.withAlpha((0.5 * 255).round()),
         ),
         itemBuilder: (BuildContext context, int index) {
           return _NotificationTile(
@@ -214,7 +214,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
             Icon(PhosphorIcons.bellSlash,
-                size: 64, color: AppColors.outline.withOpacity(0.4)),
+                size: 64, color: AppColors.outline.withAlpha((0.4 * 255).round())),
             const SizedBox(height: 16),
             Text(
               'No notifications yet',
@@ -329,7 +329,7 @@ class _NotificationTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         color: unread
-            ? AppColors.primaryFixed.withOpacity(0.25)
+            ? AppColors.primaryFixed.withAlpha((0.25 * 255).round())
             : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
@@ -340,7 +340,7 @@ class _NotificationTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: iconColor.withOpacity(0.12),
+                color: iconColor.withAlpha((0.12 * 255).round()),
                 shape: BoxShape.circle,
               ),
               child: Icon(

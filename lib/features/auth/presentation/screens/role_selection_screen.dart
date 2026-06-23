@@ -94,7 +94,7 @@ class _StepDots extends StatelessWidget {
           width: active ? 20 : 7,
           height: 7,
           decoration: BoxDecoration(
-            color: active ? DesignTokens.primary : DesignTokens.primary.withOpacity(0.22),
+            color: active ? DesignTokens.primary : DesignTokens.primary.withAlpha((0.22 * 255).round()),
             borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
           ),
         );

@@ -1049,7 +1049,7 @@ class _TabBarDelegate extends SliverPersistentHeaderDelegate {
         boxShadow: overlapsContent
             ? <BoxShadow>[
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
+                  color: Colors.black.withAlpha((0.06 * 255).round()),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
