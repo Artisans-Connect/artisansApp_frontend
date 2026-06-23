@@ -1,6 +1,5 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../models/worker_job.dart';
 import '../widgets/job_detail_card.dart';

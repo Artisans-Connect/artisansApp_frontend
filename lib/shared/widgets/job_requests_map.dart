@@ -1,14 +1,53 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as google;
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/location/device_location_service.dart';
 import '../../core/maps/map_feature_helpers.dart';
+import '../../core/maps/mapbox_helpers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../features/worker/presentation/models/worker_job.dart';
+
+bool get _useMapbox => !kIsWeb && AppConstants.mapboxAccessToken.isNotEmpty;
+bool get _mapsConfigured =>
+    _useMapbox || AppConstants.googleMapsApiKey.isNotEmpty;
+
+mapbox.CircleAnnotationOptions _jobMarkerOption(
+  WorkerJob job, {
+  required bool selected,
+}) {
+  final kind = selected
+      ? MapMarkerKind.selectedJob
+      : job.urgency == JobUrgency.asap || job.isUrgent
+          ? MapMarkerKind.urgentJob
+          : MapMarkerKind.job;
+  return mapbox.CircleAnnotationOptions(
+    geometry: mapboxPoint(google.LatLng(job.latitude, job.longitude)),
+    circleColor: mapboxArgb(mapboxColorFor(kind, selected: selected)),
+    circleRadius: selected ? 13 : 10,
+    circleStrokeColor: mapboxArgb(Colors.white),
+    circleStrokeWidth: selected ? 4 : 3,
+    circleSortKey: selected ? 30 : 20,
+    customData: <String, Object>{'jobId': job.id},
+  );
+}
+
+mapbox.CircleAnnotationOptions _selfMarkerOption(google.LatLng position) {
+  return mapbox.CircleAnnotationOptions(
+    geometry: mapboxPoint(position),
+    circleColor: mapboxArgb(mapboxColorFor(MapMarkerKind.currentUser)),
+    circleRadius: 9,
+    circleStrokeColor: mapboxArgb(Colors.white),
+    circleStrokeWidth: 3,
+    circleSortKey: 10,
+  );
+}
 
 class JobRequestsMapPreview extends StatefulWidget {
   const JobRequestsMapPreview({
@@ -27,9 +66,16 @@ class JobRequestsMapPreview extends StatefulWidget {
 }
 
 class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
-  LatLng? _workerPosition;
-  GoogleMapController? _controller;
+  google.LatLng? _workerPosition;
   int _selectedIndex = 0;
+
+  // Mapbox state.
+  mapbox.MapboxMap? _map;
+  mapbox.CircleAnnotationManager? _markerManager;
+  bool _styleReady = false;
+
+  // Google fallback controller.
+  google.GoogleMapController? _controller;
 
   List<WorkerJob> get _jobsWithLocation =>
       widget.jobs.where((job) => job.hasServiceLocation).toList();
@@ -40,37 +86,105 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
     _loadWorkerPosition();
   }
 
+  @override
+  void didUpdateWidget(JobRequestsMapPreview oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.jobs != widget.jobs && _styleReady) {
+      _syncMapboxMarkers();
+      _fitVisiblePoints();
+    }
+  }
+
   Future<void> _loadWorkerPosition() async {
     final location = await DeviceLocationService.getCurrentOrDefault();
     if (!mounted || location.isFallback) return;
     setState(() {
-      _workerPosition = LatLng(location.latitude, location.longitude);
+      _workerPosition = google.LatLng(location.latitude, location.longitude);
     });
     _fitVisiblePoints();
+    if (_styleReady) _syncMapboxMarkers();
   }
 
-  void _fitVisiblePoints() {
-    final controller = _controller;
-    final jobs = _jobsWithLocation;
-    if (controller == null || jobs.isEmpty) return;
+  List<google.LatLng> get _fitPoints => <google.LatLng>[
+        if (_workerPosition != null) _workerPosition!,
+        ..._jobsWithLocation
+            .map((job) => google.LatLng(job.latitude, job.longitude)),
+      ];
 
-    final points = <LatLng>[
-      if (_workerPosition != null) _workerPosition!,
-      ...jobs.map((job) => LatLng(job.latitude, job.longitude)),
-    ];
-    controller.animateCamera(
-      CameraUpdate.newLatLngBounds(MapFeatureHelpers.boundsFor(points), 48),
+  void _fitVisiblePoints() {
+    final jobs = _jobsWithLocation;
+    if (jobs.isEmpty) return;
+    if (_useMapbox) {
+      final map = _map;
+      if (map == null || !_styleReady) return;
+      mapboxFitToPoints(
+        map,
+        _fitPoints,
+        padding: mapbox.MbxEdgeInsets(top: 60, left: 50, bottom: 60, right: 50),
+        singlePointZoom: 13,
+      );
+    } else {
+      _controller?.animateCamera(
+        google.CameraUpdate.newLatLngBounds(
+          MapFeatureHelpers.boundsFor(_fitPoints),
+          48,
+        ),
+      );
+    }
+  }
+
+  void _selectJobById(String jobId) {
+    final jobs = _jobsWithLocation;
+    final index = jobs.indexWhere((job) => job.id == jobId);
+    if (index >= 0) {
+      setState(() => _selectedIndex = index);
+      _syncMapboxMarkers();
+    }
+  }
+
+  // ── Mapbox rendering ────────────────────────────────────────────────────
+  Future<void> _onMapboxCreated(mapbox.MapboxMap map) async {
+    _map = map;
+    await map.location.updateSettings(
+      mapbox.LocationComponentSettings(enabled: true),
     );
   }
 
-  Set<Marker> _markers() {
-    final markers = <Marker>{
+  Future<void> _onStyleLoaded(mapbox.StyleLoadedEventData _) async {
+    final map = _map;
+    if (map == null) return;
+    _styleReady = true;
+    _markerManager ??= await map.annotations.createCircleAnnotationManager();
+    _markerManager?.tapEvents(onTap: (annotation) {
+      final id = annotation.customData?['jobId']?.toString();
+      if (id != null && id.isNotEmpty) _selectJobById(id);
+    });
+    await _syncMapboxMarkers();
+    _fitVisiblePoints();
+  }
+
+  Future<void> _syncMapboxMarkers() async {
+    final manager = _markerManager;
+    if (manager == null) return;
+    await manager.deleteAll();
+    final jobs = _jobsWithLocation;
+    await manager.createMulti(<mapbox.CircleAnnotationOptions>[
+      if (_workerPosition != null) _selfMarkerOption(_workerPosition!),
+      for (var i = 0; i < jobs.length; i++)
+        _jobMarkerOption(jobs[i], selected: i == _selectedIndex),
+    ]);
+  }
+
+  Set<google.Marker> _markers() {
+    final markers = <google.Marker>{
       if (_workerPosition != null)
-        Marker(
-          markerId: const MarkerId('worker_current_location'),
+        google.Marker(
+          markerId: const google.MarkerId('worker_current_location'),
           position: _workerPosition!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: 'You'),
+          icon: google.BitmapDescriptor.defaultMarkerWithHue(
+            google.BitmapDescriptor.hueAzure,
+          ),
+          infoWindow: const google.InfoWindow(title: 'You'),
         ),
     };
 
@@ -78,10 +192,10 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
     for (var i = 0; i < jobs.length; i++) {
       final job = jobs[i];
       markers.add(
-        Marker(
-          markerId: MarkerId('job_request_${job.id}'),
-          position: LatLng(job.latitude, job.longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
+        google.Marker(
+          markerId: google.MarkerId('job_request_${job.id}'),
+          position: google.LatLng(job.latitude, job.longitude),
+          icon: google.BitmapDescriptor.defaultMarkerWithHue(
             MapFeatureHelpers.markerHueFor(
               i == _selectedIndex
                   ? MapMarkerKind.selectedJob
@@ -90,7 +204,8 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
                       : MapMarkerKind.job,
             ),
           ),
-          infoWindow: InfoWindow(title: job.title, snippet: job.addressLabel),
+          infoWindow:
+              google.InfoWindow(title: job.title, snippet: job.addressLabel),
           onTap: () => setState(() => _selectedIndex = i),
         ),
       );
@@ -116,7 +231,7 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
     if (jobs.isEmpty) return const SizedBox.shrink();
     final selected = jobs[_selectedIndex.clamp(0, jobs.length - 1)];
 
-    if (AppConstants.googleMapsApiKey.isEmpty) {
+    if (!_mapsConfigured) {
       return _MapUnavailableCard(height: widget.height);
     }
 
@@ -126,21 +241,9 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
         child: Stack(
           children: <Widget>[
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: LatLng(selected.latitude, selected.longitude),
-                zoom: 13,
-              ),
-              markers: _markers(),
-              onMapCreated: (controller) {
-                _controller = controller;
-                _fitVisiblePoints();
-              },
-              myLocationEnabled: _workerPosition != null,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-            ),
+            _useMapbox
+                ? _buildMapbox(selected)
+                : _buildGoogle(selected),
             Positioned(
               left: 12,
               right: 12,
@@ -166,6 +269,42 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
       ),
     );
   }
+
+  Widget _buildMapbox(WorkerJob selected) {
+    return mapbox.MapWidget(
+      key: const ValueKey<String>('job-requests-preview-mapbox-map'),
+      styleUri: kMapboxStyle,
+      viewport: mapbox.CameraViewportState(
+        center: mapboxPoint(
+          google.LatLng(selected.latitude, selected.longitude),
+        ),
+        zoom: 13,
+      ),
+      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+        Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+      },
+      onMapCreated: _onMapboxCreated,
+      onStyleLoadedListener: _onStyleLoaded,
+    );
+  }
+
+  Widget _buildGoogle(WorkerJob selected) {
+    return google.GoogleMap(
+      initialCameraPosition: google.CameraPosition(
+        target: google.LatLng(selected.latitude, selected.longitude),
+        zoom: 13,
+      ),
+      markers: _markers(),
+      onMapCreated: (controller) {
+        _controller = controller;
+        _fitVisiblePoints();
+      },
+      myLocationEnabled: _workerPosition != null,
+      myLocationButtonEnabled: false,
+      zoomControlsEnabled: false,
+      mapToolbarEnabled: false,
+    );
+  }
 }
 
 class JobRequestsMapScreen extends StatefulWidget {
@@ -178,16 +317,23 @@ class JobRequestsMapScreen extends StatefulWidget {
 
   final List<WorkerJob> jobs;
   final ValueChanged<WorkerJob> onOpenJob;
-  final LatLng? initialWorkerPosition;
+  final google.LatLng? initialWorkerPosition;
 
   @override
   State<JobRequestsMapScreen> createState() => _JobRequestsMapScreenState();
 }
 
 class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
-  LatLng? _workerPosition;
-  GoogleMapController? _controller;
+  google.LatLng? _workerPosition;
   int _selectedIndex = 0;
+
+  // Mapbox state.
+  mapbox.MapboxMap? _map;
+  mapbox.CircleAnnotationManager? _markerManager;
+  bool _styleReady = false;
+
+  // Google fallback controller.
+  google.GoogleMapController? _controller;
 
   List<WorkerJob> get _jobsWithLocation =>
       widget.jobs.where((job) => job.hasServiceLocation).toList();
@@ -203,39 +349,99 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
     final location = await DeviceLocationService.getCurrentOrDefault();
     if (!mounted || location.isFallback) return;
     setState(() {
-      _workerPosition = LatLng(location.latitude, location.longitude);
+      _workerPosition = google.LatLng(location.latitude, location.longitude);
     });
     _fitVisiblePoints();
+    if (_styleReady) _syncMapboxMarkers();
   }
 
+  List<google.LatLng> get _fitPoints => <google.LatLng>[
+        if (_workerPosition != null) _workerPosition!,
+        ..._jobsWithLocation
+            .map((job) => google.LatLng(job.latitude, job.longitude)),
+      ];
+
   void _fitVisiblePoints() {
-    final controller = _controller;
     final jobs = _jobsWithLocation;
-    if (controller == null || jobs.isEmpty) return;
-    final points = <LatLng>[
-      if (_workerPosition != null) _workerPosition!,
-      ...jobs.map((job) => LatLng(job.latitude, job.longitude)),
-    ];
-    controller.animateCamera(
-      CameraUpdate.newLatLngBounds(MapFeatureHelpers.boundsFor(points), 64),
+    if (jobs.isEmpty) return;
+    if (_useMapbox) {
+      final map = _map;
+      if (map == null || !_styleReady) return;
+      mapboxFitToPoints(
+        map,
+        _fitPoints,
+        padding: mapbox.MbxEdgeInsets(top: 80, left: 64, bottom: 160, right: 64),
+        singlePointZoom: 13,
+      );
+    } else {
+      _controller?.animateCamera(
+        google.CameraUpdate.newLatLngBounds(
+          MapFeatureHelpers.boundsFor(_fitPoints),
+          64,
+        ),
+      );
+    }
+  }
+
+  void _selectJobById(String jobId) {
+    final jobs = _jobsWithLocation;
+    final index = jobs.indexWhere((job) => job.id == jobId);
+    if (index >= 0) {
+      setState(() => _selectedIndex = index);
+      _syncMapboxMarkers();
+    }
+  }
+
+  // ── Mapbox rendering ────────────────────────────────────────────────────
+  Future<void> _onMapboxCreated(mapbox.MapboxMap map) async {
+    _map = map;
+    await map.location.updateSettings(
+      mapbox.LocationComponentSettings(enabled: true),
     );
   }
 
-  Set<Marker> _markers() {
+  Future<void> _onStyleLoaded(mapbox.StyleLoadedEventData _) async {
+    final map = _map;
+    if (map == null) return;
+    _styleReady = true;
+    _markerManager ??= await map.annotations.createCircleAnnotationManager();
+    _markerManager?.tapEvents(onTap: (annotation) {
+      final id = annotation.customData?['jobId']?.toString();
+      if (id != null && id.isNotEmpty) _selectJobById(id);
+    });
+    await _syncMapboxMarkers();
+    _fitVisiblePoints();
+  }
+
+  Future<void> _syncMapboxMarkers() async {
+    final manager = _markerManager;
+    if (manager == null) return;
+    await manager.deleteAll();
     final jobs = _jobsWithLocation;
-    return <Marker>{
+    await manager.createMulti(<mapbox.CircleAnnotationOptions>[
+      if (_workerPosition != null) _selfMarkerOption(_workerPosition!),
+      for (var i = 0; i < jobs.length; i++)
+        _jobMarkerOption(jobs[i], selected: i == _selectedIndex),
+    ]);
+  }
+
+  Set<google.Marker> _markers() {
+    final jobs = _jobsWithLocation;
+    return <google.Marker>{
       if (_workerPosition != null)
-        Marker(
-          markerId: const MarkerId('worker_current_location'),
+        google.Marker(
+          markerId: const google.MarkerId('worker_current_location'),
           position: _workerPosition!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-          infoWindow: const InfoWindow(title: 'You'),
+          icon: google.BitmapDescriptor.defaultMarkerWithHue(
+            google.BitmapDescriptor.hueAzure,
+          ),
+          infoWindow: const google.InfoWindow(title: 'You'),
         ),
       for (var i = 0; i < jobs.length; i++)
-        Marker(
-          markerId: MarkerId('job_request_${jobs[i].id}'),
-          position: LatLng(jobs[i].latitude, jobs[i].longitude),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
+        google.Marker(
+          markerId: google.MarkerId('job_request_${jobs[i].id}'),
+          position: google.LatLng(jobs[i].latitude, jobs[i].longitude),
+          icon: google.BitmapDescriptor.defaultMarkerWithHue(
             MapFeatureHelpers.markerHueFor(
               i == _selectedIndex
                   ? MapMarkerKind.selectedJob
@@ -244,7 +450,7 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
                       : MapMarkerKind.job,
             ),
           ),
-          infoWindow: InfoWindow(
+          infoWindow: google.InfoWindow(
             title: jobs[i].title,
             snippet: jobs[i].addressLabel,
           ),
@@ -268,27 +474,13 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
         foregroundColor: AppColors.primary,
         elevation: 0,
       ),
-      body: AppConstants.googleMapsApiKey.isEmpty
+      body: !_mapsConfigured
           ? const _MapUnavailableCard(height: double.infinity)
           : Stack(
               children: <Widget>[
-                GoogleMap(
-                  initialCameraPosition: CameraPosition(
-                    target: selected == null
-                        ? MapFeatureHelpers.accraDefault
-                        : LatLng(selected.latitude, selected.longitude),
-                    zoom: selected == null ? 12 : 13,
-                  ),
-                  markers: _markers(),
-                  onMapCreated: (controller) {
-                    _controller = controller;
-                    _fitVisiblePoints();
-                  },
-                  myLocationEnabled: _workerPosition != null,
-                  myLocationButtonEnabled: true,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
-                ),
+                _useMapbox
+                    ? _buildMapbox(selected)
+                    : _buildGoogle(selected),
                 if (selected != null)
                   Positioned(
                     left: AppSpacing.gutter,
@@ -302,6 +494,45 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
                   ),
               ],
             ),
+    );
+  }
+
+  Widget _buildMapbox(WorkerJob? selected) {
+    final center = selected == null
+        ? MapFeatureHelpers.accraDefault
+        : google.LatLng(selected.latitude, selected.longitude);
+    return mapbox.MapWidget(
+      key: const ValueKey<String>('job-requests-fullscreen-mapbox-map'),
+      styleUri: kMapboxStyle,
+      viewport: mapbox.CameraViewportState(
+        center: mapboxPoint(center),
+        zoom: selected == null ? 12 : 13,
+      ),
+      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+        Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+      },
+      onMapCreated: _onMapboxCreated,
+      onStyleLoadedListener: _onStyleLoaded,
+    );
+  }
+
+  Widget _buildGoogle(WorkerJob? selected) {
+    return google.GoogleMap(
+      initialCameraPosition: google.CameraPosition(
+        target: selected == null
+            ? MapFeatureHelpers.accraDefault
+            : google.LatLng(selected.latitude, selected.longitude),
+        zoom: selected == null ? 12 : 13,
+      ),
+      markers: _markers(),
+      onMapCreated: (controller) {
+        _controller = controller;
+        _fitVisiblePoints();
+      },
+      myLocationEnabled: _workerPosition != null,
+      myLocationButtonEnabled: true,
+      zoomControlsEnabled: false,
+      mapToolbarEnabled: false,
     );
   }
 }
@@ -351,7 +582,7 @@ class _JobRequestMapCard extends StatelessWidget {
   });
 
   final WorkerJob job;
-  final LatLng? workerPosition;
+  final google.LatLng? workerPosition;
   final VoidCallback onOpen;
 
   @override
@@ -360,7 +591,7 @@ class _JobRequestMapCard extends StatelessWidget {
         ? null
         : MapRouteEstimate.between(
             origin: workerPosition!,
-            destination: LatLng(job.latitude, job.longitude),
+            destination: google.LatLng(job.latitude, job.longitude),
           );
     final bool urgent = job.urgency == JobUrgency.asap || job.isUrgent;
 
@@ -439,7 +670,7 @@ class _JobRequestMapCard extends StatelessWidget {
                   onPressed: job.hasServiceLocation
                       ? () => launchUrl(
                             MapFeatureHelpers.googleMapsDirectionsUri(
-                              destination: LatLng(job.latitude, job.longitude),
+                              destination: google.LatLng(job.latitude, job.longitude),
                               origin: workerPosition,
                             ),
                             mode: LaunchMode.externalApplication,

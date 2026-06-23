@@ -4,6 +4,19 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../utils/haversine.dart' as distance_utils;
 
+class AppMapCoordinate {
+  const AppMapCoordinate(this.latitude, this.longitude);
+
+  factory AppMapCoordinate.fromGoogleLatLng(LatLng value) {
+    return AppMapCoordinate(value.latitude, value.longitude);
+  }
+
+  final double latitude;
+  final double longitude;
+
+  LatLng toGoogleLatLng() => LatLng(latitude, longitude);
+}
+
 enum MapRouteEstimateSource { haversine, googleRoutes }
 
 enum MapMarkerKind {

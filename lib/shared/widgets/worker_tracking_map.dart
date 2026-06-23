@@ -1,13 +1,20 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as google;
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/constants/app_constants.dart';
 import '../../core/maps/map_feature_helpers.dart';
+import '../../core/maps/mapbox_helpers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 
 /// Client view: job site + live worker marker via Supabase Realtime on [workers].
+///
+/// Rendered with Mapbox on mobile; falls back to Google Maps on web or when
+/// `MAPBOX_ACCESS_TOKEN` is not configured.
 class WorkerTrackingMap extends StatefulWidget {
   const WorkerTrackingMap({
     super.key,
@@ -31,10 +38,23 @@ class WorkerTrackingMap extends StatefulWidget {
 class _WorkerTrackingMapState extends State<WorkerTrackingMap>
     with SingleTickerProviderStateMixin {
   RealtimeChannel? _channel;
-  LatLng? _workerPosition;
+  google.LatLng? _workerPosition;
   DateTime? _workerLocationAt;
-  GoogleMapController? _mapController;
   late final AnimationController _pulseController;
+
+  // Mapbox state.
+  mapbox.MapboxMap? _map;
+  mapbox.CircleAnnotationManager? _markerManager;
+  mapbox.PolylineAnnotationManager? _routeManager;
+  bool _styleReady = false;
+
+  // Google fallback controller.
+  google.GoogleMapController? _googleController;
+
+  google.LatLng get _job => google.LatLng(widget.jobLat, widget.jobLng);
+
+  bool get _useMapbox =>
+      !kIsWeb && AppConstants.mapboxAccessToken.isNotEmpty;
 
   @override
   void initState() {
@@ -95,20 +115,105 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap>
   }
 
   void _applyWorker(double lat, double lng, {DateTime? locationAt}) {
-    final worker = LatLng(lat, lng);
-    final job = LatLng(widget.jobLat, widget.jobLng);
-    final estimate = MapRouteEstimate.between(origin: worker, destination: job);
+    final worker = google.LatLng(lat, lng);
+    final estimate = MapRouteEstimate.between(origin: worker, destination: _job);
     setState(() {
       _workerPosition = worker;
       _workerLocationAt = locationAt ?? DateTime.now().toUtc();
     });
     widget.onEtaChanged?.call('${estimate.etaLabel} away');
-    _mapController?.animateCamera(
-      CameraUpdate.newLatLngBounds(
-        MapFeatureHelpers.boundsFor(<LatLng>[job, worker]),
-        48,
+    _fitMap();
+    if (_styleReady) _syncMapboxAnnotations();
+  }
+
+  void _fitMap() {
+    final worker = _workerPosition;
+    if (worker == null) return;
+    if (_useMapbox) {
+      final map = _map;
+      if (map == null || !_styleReady) return;
+      mapboxFitToPoints(
+        map,
+        <google.LatLng>[_job, worker],
+        padding: mapbox.MbxEdgeInsets(top: 70, left: 50, bottom: 70, right: 50),
+      );
+    } else {
+      _googleController?.animateCamera(
+        google.CameraUpdate.newLatLngBounds(
+          MapFeatureHelpers.boundsFor(<google.LatLng>[_job, worker]),
+          48,
+        ),
+      );
+    }
+  }
+
+  // ── Mapbox rendering ──────────────────────────────────────────────────────
+
+  Future<void> _onMapboxCreated(mapbox.MapboxMap map) async {
+    _map = map;
+  }
+
+  Future<void> _onStyleLoaded(mapbox.StyleLoadedEventData _) async {
+    final map = _map;
+    if (map == null) return;
+    _styleReady = true;
+    _routeManager ??= await map.annotations.createPolylineAnnotationManager();
+    _markerManager ??= await map.annotations.createCircleAnnotationManager();
+    await _syncMapboxAnnotations();
+    _fitMap();
+  }
+
+  Future<void> _syncMapboxAnnotations() async {
+    final markerManager = _markerManager;
+    final routeManager = _routeManager;
+    if (markerManager == null || routeManager == null) return;
+
+    final hasFreshLocation =
+        MapFeatureHelpers.isFreshLocation(_workerLocationAt);
+
+    await markerManager.deleteAll();
+    await routeManager.deleteAll();
+
+    await markerManager.createMulti(<mapbox.CircleAnnotationOptions>[
+      mapbox.CircleAnnotationOptions(
+        geometry: mapboxPoint(_job),
+        circleColor: mapboxArgb(mapboxColorFor(MapMarkerKind.client)),
+        circleRadius: 11,
+        circleStrokeColor: mapboxArgb(Colors.white),
+        circleStrokeWidth: 3,
+        circleSortKey: 20,
       ),
-    );
+      if (_workerPosition != null)
+        mapbox.CircleAnnotationOptions(
+          geometry: mapboxPoint(_workerPosition!),
+          circleColor: mapboxArgb(
+            mapboxColorFor(
+              hasFreshLocation
+                  ? MapMarkerKind.selectedWorker
+                  : MapMarkerKind.staleWorker,
+            ),
+          ),
+          circleRadius: 12,
+          circleStrokeColor: mapboxArgb(Colors.white),
+          circleStrokeWidth: 3,
+          circleSortKey: 30,
+        ),
+    ]);
+
+    if (_workerPosition != null) {
+      await routeManager.create(
+        mapbox.PolylineAnnotationOptions(
+          geometry: mapbox.LineString.fromPoints(
+            points: <mapbox.Point>[
+              mapboxPoint(_workerPosition!),
+              mapboxPoint(_job),
+            ],
+          ),
+          lineColor: mapboxArgb(AppColors.primary),
+          lineWidth: 4,
+        ),
+      );
+    }
   }
 
   @override
@@ -122,55 +227,27 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap>
 
   @override
   Widget build(BuildContext context) {
-    if (AppConstants.googleMapsApiKey.isEmpty) {
+    if (!_useMapbox && AppConstants.googleMapsApiKey.isEmpty) {
       return SizedBox(
         height: widget.height,
         child: Center(
           child: Text(
-            'Configure GOOGLE_MAPS_API_KEY for live tracking.',
+            'Configure MAPBOX_ACCESS_TOKEN or GOOGLE_MAPS_API_KEY for live tracking.',
             style: AppTypography.bodySmall,
+            textAlign: TextAlign.center,
           ),
         ),
       );
     }
 
-    final job = LatLng(widget.jobLat, widget.jobLng);
     final estimate = _workerPosition == null
         ? null
         : MapRouteEstimate.between(
             origin: _workerPosition!,
-            destination: job,
+            destination: _job,
           );
     final hasFreshLocation =
         MapFeatureHelpers.isFreshLocation(_workerLocationAt);
-    final markers = <Marker>{
-      Marker(
-        markerId: const MarkerId('job'),
-        position: job,
-        icon: MapFeatureHelpers.markerIconFor(MapMarkerKind.client),
-        infoWindow: const InfoWindow(title: 'Job site'),
-      ),
-      if (_workerPosition != null)
-        Marker(
-          markerId: const MarkerId('worker'),
-          position: _workerPosition!,
-          icon: MapFeatureHelpers.markerIconFor(
-            hasFreshLocation
-                ? MapMarkerKind.selectedWorker
-                : MapMarkerKind.staleWorker,
-          ),
-          infoWindow: const InfoWindow(title: 'Worker location'),
-        ),
-    };
-    final polylines = <Polyline>{
-      if (_workerPosition != null)
-        Polyline(
-          polylineId: const PolylineId('worker_to_job'),
-          points: <LatLng>[_workerPosition!, job],
-          color: AppColors.primary,
-          width: 4,
-        ),
-    };
 
     return SizedBox(
       height: widget.height,
@@ -178,24 +255,7 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap>
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: <Widget>[
-            GoogleMap(
-              initialCameraPosition: CameraPosition(target: job, zoom: 14),
-              markers: markers,
-              polylines: polylines,
-              onMapCreated: (c) {
-                _mapController = c;
-                if (_workerPosition != null) {
-                  _applyWorker(
-                    _workerPosition!.latitude,
-                    _workerPosition!.longitude,
-                    locationAt: _workerLocationAt,
-                  );
-                }
-              },
-              myLocationEnabled: false,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-            ),
+            _useMapbox ? _buildMapbox() : _buildGoogle(hasFreshLocation),
             Positioned(
               left: 12,
               right: 12,
@@ -210,6 +270,66 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap>
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMapbox() {
+    return mapbox.MapWidget(
+      key: const ValueKey<String>('worker-tracking-mapbox-map'),
+      styleUri: kMapboxStyle,
+      viewport: mapbox.CameraViewportState(
+        center: mapboxPoint(_workerPosition ?? _job),
+        zoom: 14,
+      ),
+      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+        Factory<OneSequenceGestureRecognizer>(() => EagerGestureRecognizer()),
+      },
+      onMapCreated: _onMapboxCreated,
+      onStyleLoadedListener: _onStyleLoaded,
+    );
+  }
+
+  Widget _buildGoogle(bool hasFreshLocation) {
+    final markers = <google.Marker>{
+      google.Marker(
+        markerId: const google.MarkerId('job'),
+        position: _job,
+        icon: MapFeatureHelpers.markerIconFor(MapMarkerKind.client),
+        infoWindow: const google.InfoWindow(title: 'Job site'),
+      ),
+      if (_workerPosition != null)
+        google.Marker(
+          markerId: const google.MarkerId('worker'),
+          position: _workerPosition!,
+          icon: MapFeatureHelpers.markerIconFor(
+            hasFreshLocation
+                ? MapMarkerKind.selectedWorker
+                : MapMarkerKind.staleWorker,
+          ),
+          infoWindow: const google.InfoWindow(title: 'Worker location'),
+        ),
+    };
+    final polylines = <google.Polyline>{
+      if (_workerPosition != null)
+        google.Polyline(
+          polylineId: const google.PolylineId('worker_to_job'),
+          points: <google.LatLng>[_workerPosition!, _job],
+          color: AppColors.primary,
+          width: 4,
+        ),
+    };
+
+    return google.GoogleMap(
+      initialCameraPosition: google.CameraPosition(target: _job, zoom: 14),
+      markers: markers,
+      polylines: polylines,
+      onMapCreated: (c) {
+        _googleController = c;
+        _fitMap();
+      },
+      myLocationEnabled: false,
+      zoomControlsEnabled: false,
+      mapToolbarEnabled: false,
     );
   }
 }

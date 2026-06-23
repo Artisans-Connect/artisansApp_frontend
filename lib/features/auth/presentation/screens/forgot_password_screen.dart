@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/services/auth_service.dart';
@@ -13,12 +12,27 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
 import 'sign_in_screen.dart';
 
+class ForgotPasswordScreenArgs {
+  const ForgotPasswordScreenArgs({
+    this.initialEmail,
+    this.isRecoveryFlow = false,
+  });
+
+  final String? initialEmail;
+  final bool isRecoveryFlow;
+}
+
 class ForgotPasswordScreen extends StatefulWidget {
-  const ForgotPasswordScreen({super.key, this.initialEmail});
+  const ForgotPasswordScreen({
+    super.key,
+    this.initialEmail,
+    this.isRecoveryFlow = false,
+  });
 
   static const String routeName = '/auth/forgot-password';
 
   final String? initialEmail;
+  final bool isRecoveryFlow;
 
   @override
   State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -28,11 +42,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   late final TextEditingController _emailController;
   final TextEditingController _newPasswordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
   bool _isSending = false;
   bool _isUpdating = false;
   bool _emailSent = false;
-  late final bool _hasRecoverySession;
+  late final bool _isRecoveryFlow;
 
   Timer? _cooldownTimer;
   int _cooldownSeconds = 0;
@@ -43,7 +58,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   void initState() {
     super.initState();
     _emailController = TextEditingController(text: widget.initialEmail);
-    _hasRecoverySession = Supabase.instance.client.auth.currentSession != null;
+    _isRecoveryFlow = widget.isRecoveryFlow;
   }
 
   @override
@@ -82,7 +97,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       await AuthService.instance.sendPasswordResetEmail(_emailController.text.trim());
       if (!mounted) return;
       setState(() => _emailSent = true);
-      AppToast.showSuccess(context, 'Password reset email sent. Check your inbox.');
+      AppToast.showSuccess(
+        context,
+        'If an account exists, a password reset link will be sent shortly.',
+      );
       _startCooldown();
     } on AuthFailure catch (e) {
       if (!mounted) return;
@@ -125,7 +143,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final bool showRecoveryForm = _hasRecoverySession;
+    final bool showRecoveryForm = _isRecoveryFlow;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -188,7 +206,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           showRecoveryForm
                               ? 'Choose a new password for your account.'
                               : _emailSent
-                                  ? 'We sent a reset link to your inbox. Open it to finish resetting your password.'
+                                  ? 'If the email matches an account, a reset link will arrive shortly. Check spam or promotions too.'
                                   : 'Enter your email and we will send you a password reset link.',
                           textAlign: TextAlign.center,
                           style: AppTypography.bodyLarge,

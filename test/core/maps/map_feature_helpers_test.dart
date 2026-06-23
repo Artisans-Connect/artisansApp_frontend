@@ -4,6 +4,24 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 void main() {
   group('RouteEstimate', () {
+    test('neutral coordinates convert to Google map coordinates', () {
+      const coordinate = AppMapCoordinate(6.673, -1.565);
+
+      final google = coordinate.toGoogleLatLng();
+
+      expect(google.latitude, 6.673);
+      expect(google.longitude, -1.565);
+    });
+
+    test('neutral coordinates can be created from Google map coordinates', () {
+      final coordinate = AppMapCoordinate.fromGoogleLatLng(
+        const LatLng(6.685, -1.56),
+      );
+
+      expect(coordinate.latitude, 6.685);
+      expect(coordinate.longitude, -1.56);
+    });
+
     test('creates a haversine estimate with a readable ETA label', () {
       final estimate = MapRouteEstimate.between(
         origin: const LatLng(5.6037, -0.1870),

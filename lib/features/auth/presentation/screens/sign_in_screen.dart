@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/navigation/auth_navigation.dart';
@@ -41,6 +42,9 @@ class _SignInScreenState extends State<SignInScreen> {
   void initState() {
     super.initState();
     _emailController = TextEditingController(text: widget.initialEmail);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      unawaited(_redirectIfAlreadySignedIn());
+    });
   }
 
   @override
@@ -69,6 +73,26 @@ class _SignInScreenState extends State<SignInScreen> {
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not resend email.');
+    }
+  }
+
+  Future<void> _redirectIfAlreadySignedIn() async {
+    if (Supabase.instance.client.auth.currentSession == null) return;
+
+    try {
+      final user = await AuthService.instance.getCurrentUser();
+      if (!mounted) return;
+      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    } on AuthFailure catch (e) {
+      if (!mounted) return;
+      if (e.code == AuthFailureCode.profileNotFound) {
+        await Navigator.pushReplacementNamed(
+          context,
+          RoleSelectionScreen.routeName,
+        );
+      }
+    } catch (_) {
+      // Stay on sign in when an existing session cannot be restored.
     }
   }
 

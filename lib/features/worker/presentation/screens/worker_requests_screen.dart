@@ -12,38 +12,6 @@ import '../../../../shared/widgets/job_requests_map.dart';
 import 'job_request_detail_screen.dart';
 import '../../../../core/theme/design_tokens.dart';
  
-// // ─────────────────────────────────────────────────────────────────────────────
-// // Design tokens (from DESIGN.md)
-// // ─────────────────────────────────────────────────────────────────────────────
-// class _T {
-//   static const Color surfaceBase  = Color(0xFFFFF8F0);
-//   static const Color surfaceCard  = Color(0xFFFFFFFF);
-//   static const Color primary      = Color(0xFFC15A3D);
-//   static const Color primaryDark  = Color(0xFF8B3A2A);
-//   static const Color textPrimary  = Color(0xFF2C2418);
-//   static const Color textSecondary= Color(0xFF5C5243);
-//   static const Color textMuted    = Color(0xFF9B8F83);
-//   static const Color borderSubtle = Color(0x0F000000);
-//   static const Color successGreen = Color(0xFF1D9E75);
-//   static const Color error        = Color(0xFFBA1A1A);
- 
-//   // Derived
-//   static const Color primaryTint08 = Color(0x14C15A3D);
-//   static const Color primaryTint16 = Color(0x29C15A3D);
-//   static const Color warmTint      = Color(0xFFF4EDE6);
-//   static const Color warmBorder    = Color(0xFFE8D5CB);
-//   static const Color offlineSurface= Color(0xFFE8DDD4);
- 
-//   static const double radiusMd   = 12;
-//   static const double radiusLg   = 16;
-//   static const double radiusXl   = 20;
-//   static const double radiusFull = 999;
- 
-//   static const double gutter = 20;
-//   static const double sm     = 8;
-//   static const double md     = 16;
-//   static const double lg     = 24;
-// }
  
 // ─────────────────────────────────────────────────────────────────────────────
 // Local reusable widgets

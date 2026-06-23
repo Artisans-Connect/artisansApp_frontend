@@ -33,11 +33,13 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushEnabled = true;
   bool _emailUpdates = false;
+  bool _isLoggingOut = false;
 
 
   bool get _isWorker => SharedUserContext.isWorker;
 
   Future<void> _logout() async {
+    if (_isLoggingOut) return;
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
@@ -57,15 +59,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
 
     if (confirmed != true) return;
-    await AuthService.instance.signOut();
-    SharedUserContext.session.reset();
-    if (!mounted) return;
-    AppToast.showSuccess(context, 'Signed out.');
-    await Navigator.pushNamedAndRemoveUntil(
-      context,
-      SignInScreen.routeName,
-      (_) => false,
-    );
+    setState(() => _isLoggingOut = true);
+    try {
+      await AuthService.instance.signOut();
+      SharedUserContext.session.reset();
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Signed out.');
+      await Navigator.pushNamedAndRemoveUntil(
+        context,
+        SignInScreen.routeName,
+        (_) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not sign out.');
+    } finally {
+      if (mounted) setState(() => _isLoggingOut = false);
+    }
   }
 
   Future<void> _switchView(String targetMode) async {
@@ -244,6 +254,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           switchViewLabel: _switchViewLabel,
           switchViewSubtitle: _switchViewSubtitle,
           onLogout: _logout,
+          isLoggingOut: _isLoggingOut,
         ),
         const SizedBox(height: 20),
         const _CommunityPromoCard(),
@@ -297,6 +308,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           switchViewLabel: _switchViewLabel,
           switchViewSubtitle: _switchViewSubtitle,
           onLogout: _logout,
+          isLoggingOut: _isLoggingOut,
         ),
         const SizedBox(height: 28),
         const _SettingsFooter(),
@@ -311,6 +323,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
     required this.onTerms,
     required this.onHelp,
     required this.onLogout,
+    required this.isLoggingOut,
     this.onSwitchView,
     this.switchViewLabel,
     this.switchViewSubtitle,
@@ -320,6 +333,7 @@ class _LegalAndSupportGroup extends StatelessWidget {
   final VoidCallback onTerms;
   final VoidCallback onHelp;
   final VoidCallback onLogout;
+  final bool isLoggingOut;
   final VoidCallback? onSwitchView;
   final String? switchViewLabel;
   final String? switchViewSubtitle;
@@ -383,12 +397,22 @@ class _LegalAndSupportGroup extends StatelessWidget {
             border: Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
           ),
           child: SettingsTile(
-            icon: PhosphorIcons.signOut,
-            title: 'Logout',
-            subtitle: 'Sign out of your account',
+            icon: isLoggingOut ? PhosphorIcons.spinnerGap : PhosphorIcons.signOut,
+            title: isLoggingOut ? 'Logging out...' : 'Logout',
+            subtitle:
+                isLoggingOut ? 'Please wait while we sign you out' : 'Sign out of your account',
             titleColor: AppColors.error,
-            onTap: onLogout,
-            trailing: const SizedBox.shrink(),
+            onTap: isLoggingOut ? null : onLogout,
+            trailing: isLoggingOut
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.error,
+                    ),
+                  )
+                : const SizedBox.shrink(),
             showDivider: false,
           ),
         ),

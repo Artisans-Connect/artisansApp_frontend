@@ -51,7 +51,8 @@ flutter run
 
 ### Auth Setup
 
-For Supabase auth, make sure your `.env` includes `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and `SUPABASE_OAUTH_REDIRECT_URL`.
+For Supabase auth, make sure your `.env` includes `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_OAUTH_REDIRECT_URL`, and `SUPABASE_PASSWORD_RESET_REDIRECT_URL`.
+Set `SUPABASE_PASSWORD_RESET_REDIRECT_URL` to the verification portal reset page, for example `https://craft-match-verification-portal.vercel.app/update-password`, and add that URL to the Supabase Auth redirect allow-list.
 Enable the Google provider in the Supabase dashboard and point the OAuth redirect URL to the callback you configured for the app.
 
 ### 2. Backend (Express)

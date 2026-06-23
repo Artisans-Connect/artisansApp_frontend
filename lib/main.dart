@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
@@ -40,6 +41,9 @@ Future<void> main() async {
   }
 
   await ensureGoogleMapsLoaded(AppConstants.googleMapsApiKey);
+  if (AppConstants.mapboxAccessToken.isNotEmpty) {
+    MapboxOptions.setAccessToken(AppConstants.mapboxAccessToken);
+  }
 
   const workerDev = bool.fromEnvironment('WORKER_DEV', defaultValue: false);
   runApp(workerDev ? const WorkerDevRouter() : const MyApp());

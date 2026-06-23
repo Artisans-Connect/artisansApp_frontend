@@ -39,11 +39,14 @@ class _MyAppState extends State<MyApp> {
       NotificationService.instance.drainPendingNavigation();
     });
 
-    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((AuthState data) {
+    _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
+      AuthState data,
+    ) {
       final AuthChangeEvent event = data.event;
       if (event == AuthChangeEvent.passwordRecovery) {
         NotificationService.instance.navigatorKey.currentState?.pushNamed(
           ForgotPasswordScreen.routeName,
+          arguments: const ForgotPasswordScreenArgs(isRecoveryFlow: true),
         );
       }
     });
@@ -69,7 +72,15 @@ class _MyAppState extends State<MyApp> {
         OnboardingScreen.routeName: (_) => const OnboardingScreen(),
         ForgotPasswordScreen.routeName: (BuildContext context) {
           final Object? args = ModalRoute.of(context)?.settings.arguments;
-          return ForgotPasswordScreen(initialEmail: args is String ? args : null);
+          if (args is ForgotPasswordScreenArgs) {
+            return ForgotPasswordScreen(
+              initialEmail: args.initialEmail,
+              isRecoveryFlow: args.isRecoveryFlow,
+            );
+          }
+          return ForgotPasswordScreen(
+            initialEmail: args is String ? args : null,
+          );
         },
         RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
         SignInScreen.routeName: (_) => const SignInScreen(),

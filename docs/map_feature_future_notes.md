@@ -2,7 +2,7 @@
 
 ## Current Direction
 
-The app should feel like a modern dispatch platform without depending on paid Google routing APIs in the first version. Google Maps displays locations, markers, and navigation handoff. Supabase and the backend remain responsible for recommendation, dispatch, pricing, and privacy rules.
+The app should feel like a modern dispatch platform without depending on paid route APIs in the first version. The map strategy is now hybrid: Mapbox carries client-facing embedded map visuals on mobile, while Google remains the source for Places search, geocoding, address accuracy, and external navigation handoff. Supabase and the backend remain responsible for recommendation, dispatch, pricing, and privacy rules.
 
 The target visual level is **Route Rich+**:
 
@@ -22,13 +22,19 @@ The target visual level is **Route Rich+**:
 - Client live tracking reads assigned worker coordinates with freshness awareness.
 - Basic map helper models exist for map points, route estimates, marker states, actions, and a default Haversine route provider.
 - Worker map scope is dispatched jobs first, not all nearby open jobs.
+- Client map discovery and job location picking use Mapbox as the embedded mobile map renderer.
+- Google Places/geocoding remains isolated in `PlaceLookupService`.
 
 ## Current Cost-Control Strategy
 
-Use Google Maps for:
+Use Mapbox for:
 
-- Embedded map display.
-- Markers and camera movement.
+- Client-facing embedded map display on Android/iOS.
+- Nearby worker map styling, camera movement, and marker interaction.
+- Job/direct-request location picking with a center-pin interaction.
+
+Use Google for:
+
 - Places/geocoding only where needed for location search.
 - External Google Maps links for navigation.
 
@@ -45,6 +51,7 @@ Avoid in v1:
 - Improve worker dispatched-job maps with selected/urgent marker states, job preview cards, budget/distance context, details/accept path, and external navigation.
 - Improve live tracking with animated status, stale-location messaging, and a clean route-estimate provider boundary.
 - Keep frontend map screens display-only for recommendation signals. They may show rank factors but must not replace backend scoring.
+- Later migrate worker-side and live tracking embedded maps only after the client Mapbox surfaces are stable.
 
 ## Recommendation And Pricing Signals To Preserve
 
@@ -79,3 +86,10 @@ The current payment estimate uses coordinate distance from the job location to a
 - Optional: Places API and Geocoding API for search/reverse geocoding.
 - Avoid initially: Routes API, Directions API, Distance Matrix-style routing, Navigation SDK.
 - Always configure billing alerts and quotas before exposing a map build to real users.
+
+## Mapbox Configuration Checklist
+
+- Add `MAPBOX_ACCESS_TOKEN` to the Flutter `.env`.
+- Use Mapbox for mobile embedded maps only in the first hybrid phase.
+- Keep web/desktop fallback behavior clear because the official Mapbox Flutter SDK targets Android and iOS.
+- Avoid Mapbox Directions in v1; keep Haversine estimates until route-aware pricing is approved.

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/location/device_location_service.dart';
 import '../../../../core/maps/map_feature_helpers.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -12,6 +11,7 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
+import '../../../../shared/widgets/mapbox_client_map.dart';
 import '../../services/explore_service.dart';
 
 class MapDiscoveryScreen extends StatefulWidget {
@@ -33,8 +33,6 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     DeviceLocation.accraDefault.latitude,
     DeviceLocation.accraDefault.longitude,
   );
-  Set<Marker> _markers = {};
-  GoogleMapController? _mapController;
   int? _selectedWorkerIndex;
   String? _selectedCategoryId;
   double _radiusKm = 5;
@@ -54,55 +52,34 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     return nearbyWorkers[index];
   }
 
-  void _rebuildMarkers() {
-    final markers = <Marker>{};
-    if (!_locationUnavailable) {
-      markers.add(
-        Marker(
-        markerId: const MarkerId('you'),
-        position: _userPosition,
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-        infoWindow: const InfoWindow(title: 'You'),
-      ),
-      );
-    }
-    for (var i = 0; i < nearbyWorkers.length; i++) {
-      final w = nearbyWorkers[i];
-      final bool isSelected = _selectedWorkerIndex == i;
-      markers.add(
-        Marker(
-          markerId: MarkerId('worker_${w['id'] ?? i}'),
-          position: LatLng(w['lat'] as double, w['lng'] as double),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            MapFeatureHelpers.markerHueFor(
-              isSelected
-                  ? MapMarkerKind.selectedWorker
-                  : w['hasFreshLocation'] == true
-                      ? MapMarkerKind.worker
-                      : MapMarkerKind.staleWorker,
+  List<MapboxWorkerMarker> get _workerMarkers {
+    return <MapboxWorkerMarker>[
+      for (var i = 0; i < nearbyWorkers.length; i++)
+        if (nearbyWorkers[i]['hasMapLocation'] == true)
+          MapboxWorkerMarker(
+            id: (nearbyWorkers[i]['id'] ?? i).toString(),
+            position: LatLng(
+              nearbyWorkers[i]['lat'] as double,
+              nearbyWorkers[i]['lng'] as double,
             ),
+            kind: _selectedWorkerIndex == i
+                ? MapMarkerKind.selectedWorker
+                : nearbyWorkers[i]['hasFreshLocation'] == true
+                    ? MapMarkerKind.worker
+                    : MapMarkerKind.staleWorker,
           ),
-          infoWindow: InfoWindow(
-            title: w['name'] as String? ?? 'Artisan',
-            snippet: '${w['profession']} • ${w['distance']}',
-          ),
-          onTap: () => _selectWorker(i, moveCamera: false),
-        ),
-      );
-    }
-    _markers = markers;
+    ];
   }
 
-  void _selectWorker(int index, {bool moveCamera = true}) {
-    final worker = nearbyWorkers[index];
-    final position = LatLng(worker['lat'] as double, worker['lng'] as double);
-    setState(() {
-      _selectedWorkerIndex = index;
-      _rebuildMarkers();
-    });
-    if (moveCamera) {
-      _mapController?.animateCamera(CameraUpdate.newLatLngZoom(position, 15));
-    }
+  void _selectWorker(int index) {
+    setState(() => _selectedWorkerIndex = index);
+  }
+
+  void _selectWorkerById(String workerId) {
+    final index = nearbyWorkers.indexWhere(
+      (worker) => (worker['id'] ?? '').toString() == workerId,
+    );
+    if (index >= 0) _selectWorker(index);
   }
 
   void _openWorkerProfile(Map<String, dynamic> worker) {
@@ -175,11 +152,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
             _locationUnavailable = true;
             _loadError = null;
             _isLoading = false;
-            _rebuildMarkers();
           });
-          await _mapController?.animateCamera(
-            CameraUpdate.newLatLngZoom(_userPosition, 11),
-          );
         }
         return;
       }
@@ -197,13 +170,32 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
         final point = MapPoint.workerFromApi(raw);
         final profile = raw['profiles'] as Map<String, dynamic>? ?? {};
         final skills = raw['skills'] as List<dynamic>? ?? [];
-        
+
+        final double lat = point.position.latitude;
+        final double lng = point.position.longitude;
+        // A worker only gets a map pin when they have a real, live coordinate.
+        // Workers without a shared GPS location ((0,0) sentinel) still appear in
+        // the list so they remain discoverable by their stated area.
+        final bool hasMapLocation = lat >= -90 &&
+            lat <= 90 &&
+            lng >= -180 &&
+            lng <= 180 &&
+            !(lat == 0 && lng == 0);
+        final String? locationLabel = profile['location_label']?.toString();
+
         return {
           'name': point.title,
           'profession': point.subtitle,
-          'lat': point.position.latitude,
-          'lng': point.position.longitude,
-          'distance': point.distanceLabel,
+          'tradeType': TradeTypeX.fromString(point.subtitle),
+          'lat': lat,
+          'lng': lng,
+          'hasMapLocation': hasMapLocation,
+          'locationLabel': locationLabel,
+          'distance': hasMapLocation
+              ? point.distanceLabel
+              : (locationLabel != null && locationLabel.isNotEmpty
+                  ? 'Near $locationLabel'
+                  : 'Location not shared'),
           'distanceKm': point.distanceKm,
           'rating': point.rating,
           'verified': point.isVerified,
@@ -224,14 +216,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
           _locationUnavailable = false;
           _loadError = null;
           _isLoading = false;
-          _rebuildMarkers();
         });
-        final GoogleMapController? controller = _mapController;
-        if (controller != null) {
-          await controller.animateCamera(
-            CameraUpdate.newLatLngZoom(_userPosition, 14),
-          );
-        }
       }
     } catch (e) {
       if (mounted) {
@@ -249,7 +234,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     String categoryLabel = 'All services';
     if (_selectedCategoryId != null) {
       for (final category in _categories) {
-        if (category['id'] == _selectedCategoryId) {
+        if (category['id'].toString() == _selectedCategoryId) {
           categoryLabel = category['name'].toString();
           break;
         }
@@ -261,9 +246,16 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
         vertical: AppSpacing.sm,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface.withValues(alpha: 0.94),
+        color: AppColors.surfaceContainerLowest.withValues(alpha: 0.94),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        border: Border.all(color: AppColors.borderSubtle),
+        border: Border.all(color: AppColors.warmBorder),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.warmShadow,
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -274,7 +266,9 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
               _locationUnavailable
                   ? 'Enable location to find nearby artisans'
                   : '$categoryLabel within ${_radiusKm.toStringAsFixed(0)} km',
-              style: AppTypography.bodySmall,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ],
@@ -282,51 +276,155 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     );
   }
 
-  Widget _buildFilterControls() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: 38,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
+  Widget _buildMapOverlayControls() {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest.withValues(alpha: 0.96),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
+        border: Border.all(color: AppColors.warmBorder),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.warmShadow,
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              _FilterPill(
-                label: 'All',
-                selected: _selectedCategoryId == null,
-                onTap: () => _applyCategory(null),
-              ),
-              ..._categories.map(
-                (category) {
-                  final id = category['id'].toString();
-                  return _FilterPill(
-                    label: category['name'].toString(),
-                    selected: _selectedCategoryId == id,
-                    onTap: () => _applyCategory(id),
-                  );
-                },
-              ),
-              if (_loadingCategories)
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                  child: Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))),
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryTint08,
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: Icon(
+                  PhosphorIcons.magnifyingGlass,
+                  size: 17,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  _selectedCategoryId == null
+                      ? 'Search services nearby'
+                      : _selectedCategoryName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
             ],
           ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: AppSpacing.sm,
-          children: <double>[5, 10, 15].map((radius) {
-            return _FilterPill(
-              label: '${radius.toStringAsFixed(0)} km',
-              selected: _radiusKm == radius,
-              dense: true,
-              onTap: () => _applyRadius(radius),
-            );
-          }).toList(),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.sm),
+          SizedBox(
+            height: 34,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                _MapControlChip(
+                  label: 'All',
+                  icon: Icons.more_horiz_rounded,
+                  selected: _selectedCategoryId == null,
+                  onTap: () => _applyCategory(null),
+                ),
+                ..._categories.map(
+                  (category) {
+                    final id = category['id'].toString();
+                    return _MapControlChip(
+                      label: category['name'].toString(),
+                      icon: TradeTypeX.fromString(
+                        category['name'].toString(),
+                      ).icon,
+                      selected: _selectedCategoryId == id,
+                      onTap: () => _applyCategory(id),
+                    );
+                  },
+                ),
+                if (_loadingCategories)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                    child: Center(
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.xs,
+            children: <double>[5, 10, 15].map((radius) {
+              return _MapControlChip(
+                label: '${radius.toStringAsFixed(0)} km',
+                icon: PhosphorIcons.crosshair,
+                selected: _radiusKm == radius,
+                dense: true,
+                onTap: () => _applyRadius(radius),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String get _selectedCategoryName {
+    if (_selectedCategoryId == null) return 'All services';
+    for (final category in _categories) {
+      if (category['id'].toString() == _selectedCategoryId) {
+        return category['name'].toString();
+      }
+    }
+    return 'Selected service';
+  }
+
+  /// Presence status for a worker. A worker without a live shared location is
+  /// treated as "Offline" — still listed and contactable via their profile,
+  /// but not pinned on the map.
+  ({String label, Color color, IconData icon}) _statusFor(
+    Map<String, dynamic> worker,
+  ) {
+    final bool hasMapLocation = worker['hasMapLocation'] == true;
+    final bool isAvailable = worker['available'] == true;
+    final bool isFresh = worker['hasFreshLocation'] == true;
+    if (!hasMapLocation) {
+      return (
+        label: 'Offline',
+        color: AppColors.textSecondary,
+        icon: PhosphorIcons.wifiSlash,
+      );
+    }
+    if (isAvailable && isFresh) {
+      return (
+        label: 'Available',
+        color: AppColors.success,
+        icon: PhosphorIcons.crosshair,
+      );
+    }
+    if (isAvailable) {
+      return (
+        label: 'Away',
+        color: AppColors.accentGold,
+        icon: PhosphorIcons.clock,
+      );
+    }
+    return (
+      label: 'Busy',
+      color: AppColors.textSecondary,
+      icon: PhosphorIcons.warningCircle,
     );
   }
 
@@ -335,8 +433,11 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     if (worker == null) return const SizedBox.shrink();
     final double? rating = worker['rating'] as double?;
     final bool isVerified = worker['verified'] == true;
-    final bool isAvailable = worker['available'] == true;
     final bool isFresh = worker['hasFreshLocation'] == true;
+    final bool hasMapLocation = worker['hasMapLocation'] == true;
+    final TradeType tradeType =
+        worker['tradeType'] as TradeType? ?? TradeType.other;
+    final status = _statusFor(worker);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -368,25 +469,37 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(worker['name'].toString(), style: AppTypography.labelLarge),
-                    const SizedBox(height: 3),
                     Text(
-                      worker['profession'].toString(),
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
+                      worker['name'].toString(),
+                      style: AppTypography.labelLarge,
+                    ),
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        Icon(
+                          tradeType.icon,
+                          size: 14,
+                          color: AppColors.primary,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            worker['profession'].toString(),
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
               _TrustBadge(
-                label: isAvailable && isFresh ? 'Live' : 'Check',
-                icon: isAvailable && isFresh
-                    ? PhosphorIcons.crosshair
-                    : PhosphorIcons.warningCircle,
-                color: isAvailable && isFresh
-                    ? AppColors.success
-                    : AppColors.textSecondary,
+                label: status.label,
+                icon: status.icon,
+                color: status.color,
               ),
             ],
           ),
@@ -413,30 +526,74 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                   color: AppColors.success,
                 ),
               _TrustBadge(
-                label: isFresh ? 'Fresh location' : 'Stale location',
-                icon: PhosphorIcons.clock,
-                color: isFresh ? AppColors.success : AppColors.textSecondary,
+                label: !hasMapLocation
+                    ? 'Location not shared'
+                    : isFresh
+                        ? 'Fresh location'
+                        : 'Stale location',
+                icon: PhosphorIcons.mapPin,
+                color: hasMapLocation && isFresh
+                    ? AppColors.success
+                    : AppColors.textSecondary,
               ),
             ],
           ),
+          if (!hasMapLocation) ...[
+            const SizedBox(height: AppSpacing.md),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: AppColors.outlineVariant.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    PhosphorIcons.wifiSlash,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'This artisan is offline and not sharing live location. '
+                      'Open their profile to view details and reach out.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.md),
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _openWorkerProfile(worker),
-                  icon: Icon(PhosphorIcons.user),
-                  label: const Text('Profile'),
+              if (hasMapLocation) ...[
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openWorkerProfile(worker),
+                    icon: Icon(PhosphorIcons.user),
+                    label: const Text('Profile'),
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => _requestWorker(worker),
-                  icon: Icon(PhosphorIcons.paperPlaneTilt),
-                  label: const Text('Request'),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _requestWorker(worker),
+                    icon: Icon(PhosphorIcons.paperPlaneTilt),
+                    label: const Text('Request'),
+                  ),
                 ),
-              ),
+              ] else
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _openWorkerProfile(worker),
+                    icon: Icon(PhosphorIcons.user),
+                    label: const Text('View profile & contact'),
+                  ),
+                ),
             ],
           ),
         ],
@@ -531,6 +688,75 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     );
   }
 
+  Widget _buildNoWorkersState() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        border: Border.all(color: AppColors.warmBorder),
+      ),
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: AppColors.primaryTint08,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+            ),
+            child: Icon(
+              PhosphorIcons.mapPinArea,
+              color: AppColors.primary,
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            'No artisans available here yet.',
+            style: AppTypography.labelLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'We checked your current area for ${_selectedCategoryName.toLowerCase()} within ${_radiusKm.toStringAsFixed(0)} km.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _radiusKm >= 15 ? null : () => _applyRadius(15),
+                  icon: Icon(PhosphorIcons.arrowsOutSimple),
+                  label: const Text('Widen'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _loadError = null;
+                      _isLoading = true;
+                    });
+                    _fetchNearbyWorkers();
+                  },
+                  icon: Icon(PhosphorIcons.arrowClockwise),
+                  label: const Text('Refresh'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -541,41 +767,30 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
       ),
       body: Stack(
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: MediaQuery.of(context).size.height * 0.5,
-            child: AppConstants.googleMapsApiKey.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Text(
-                        'Add GOOGLE_MAPS_API_KEY to .env (Maps JavaScript API enabled for web).',
-                        style: AppTypography.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  )
-                : GoogleMap(
-                    initialCameraPosition: CameraPosition(
-                      target: _userPosition,
-                      zoom: 13,
-                    ),
-                    markers: _markers,
-                    onMapCreated: (GoogleMapController controller) {
-                      _mapController = controller;
-                    },
-                    myLocationEnabled: true,
-                    myLocationButtonEnabled: true,
-                    zoomControlsEnabled: false,
-                    mapToolbarEnabled: false,
-                  ),
+          MapboxWorkerDiscoveryMap(
+            userPosition: _userPosition,
+            workers: _workerMarkers,
+            selectedWorkerId: _selectedWorker == null
+                ? null
+                : (_selectedWorker!['id'] ?? '').toString(),
+            onWorkerSelected: _selectWorkerById,
+            radiusKm: _radiusKm,
+            heightFactor: 0.72,
           ),
           Positioned(
             left: AppSpacing.gutter,
             right: AppSpacing.gutter,
             top: AppSpacing.md,
             child: SafeArea(
-              child: _buildMapContextPill(),
+              child: Column(
+                children: [
+                  _buildMapContextPill(),
+                  if (!_locationUnavailable) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    _buildMapOverlayControls(),
+                  ],
+                ],
+              ),
             ),
           ),
 
@@ -630,11 +845,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                           style: AppTypography.displaySmall,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        if (!_locationUnavailable) ...[
-                          _buildFilterControls(),
-                          const SizedBox(height: AppSpacing.md),
-                          _buildSelectedWorkerPreview(),
-                        ],
+                        if (!_locationUnavailable) _buildSelectedWorkerPreview(),
 
                         // Workers List
                         if (_isLoading)
@@ -652,12 +863,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                             _loadError == null &&
                             !_locationUnavailable &&
                             nearbyWorkers.isEmpty)
-                          const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(AppSpacing.xl),
-                              child: Text('No workers found nearby.'),
-                            ),
-                          ),
+                          _buildNoWorkersState(),
                         if (!_isLoading && nearbyWorkers.isNotEmpty)
                           Column(
                             children: [
@@ -665,12 +871,12 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                 nearbyWorkers.length,
                                 (index) {
                                   final worker = nearbyWorkers[index];
-                                  final bool isAvailable =
-                                      worker['available'] == true;
-                                  final bool isFresh =
-                                      worker['hasFreshLocation'] == true;
+                                  final status = _statusFor(worker);
                                   final double? rating =
                                       worker['rating'] as double?;
+                                  final TradeType tradeType =
+                                      worker['tradeType'] as TradeType? ??
+                                          TradeType.other;
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: AppSpacing.md),
                                   child: GestureDetector(
@@ -715,22 +921,25 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                         vertical: AppSpacing.xs,
                                                       ),
                                                       decoration: BoxDecoration(
-                                                        color: isAvailable && isFresh
-                                                            ? AppColors.success.withValues(alpha: 0.1)
-                                                            : AppColors.outlineVariant.withValues(alpha: 0.1),
+                                                        color: status.color.withValues(alpha: 0.1),
                                                         borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
                                                       ),
-                                                      child: Text(
-                                                        isAvailable
-                                                            ? isFresh
-                                                                ? 'Available'
-                                                                : 'Stale'
-                                                            : 'Busy',
-                                                        style: AppTypography.labelSmall.copyWith(
-                                                          color: isAvailable && isFresh
-                                                              ? AppColors.success
-                                                              : AppColors.textSecondary,
-                                                        ),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Icon(
+                                                            status.icon,
+                                                            size: 12,
+                                                            color: status.color,
+                                                          ),
+                                                          const SizedBox(width: 4),
+                                                          Text(
+                                                            status.label,
+                                                            style: AppTypography.labelSmall.copyWith(
+                                                              color: status.color,
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                   ],
@@ -739,6 +948,12 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                 Row(
                                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                   children: [
+                                                    Icon(
+                                                      tradeType.icon,
+                                                      size: 15,
+                                                      color: AppColors.primary,
+                                                    ),
+                                                    const SizedBox(width: 5),
                                                     Text(
                                                       worker['profession'],
                                                       style: AppTypography.bodySmall,
@@ -834,15 +1049,17 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
   }
 }
 
-class _FilterPill extends StatelessWidget {
-  const _FilterPill({
+class _MapControlChip extends StatelessWidget {
+  const _MapControlChip({
     required this.label,
+    required this.icon,
     required this.selected,
     required this.onTap,
     this.dense = false,
   });
 
   final String label;
+  final IconData icon;
   final bool selected;
   final VoidCallback onTap;
   final bool dense;
@@ -852,6 +1069,11 @@ class _FilterPill extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.only(right: dense ? AppSpacing.xs : AppSpacing.sm),
       child: ChoiceChip(
+        avatar: Icon(
+          icon,
+          size: 15,
+          color: selected ? AppColors.onPrimary : AppColors.textSecondary,
+        ),
         label: Text(label),
         selected: selected,
         onSelected: (_) => onTap(),
@@ -861,11 +1083,67 @@ class _FilterPill extends StatelessWidget {
         selectedColor: AppColors.primary,
         backgroundColor: AppColors.surfaceContainerLowest,
         side: BorderSide(
-          color: selected ? AppColors.primary : AppColors.outlineVariant,
+          color: selected
+              ? AppColors.primary
+              : AppColors.borderSubtle,
         ),
         visualDensity: dense ? VisualDensity.compact : VisualDensity.standard,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+}
+
+enum TradeType { electrician, plumber, carpenter, mason, painter, welder, other }
+
+extension TradeTypeX on TradeType {
+  String get label {
+    switch (this) {
+      case TradeType.electrician:
+        return 'Electrician';
+      case TradeType.plumber:
+        return 'Plumber';
+      case TradeType.carpenter:
+        return 'Carpenter';
+      case TradeType.mason:
+        return 'Mason';
+      case TradeType.painter:
+        return 'Painter';
+      case TradeType.welder:
+        return 'Welder';
+      case TradeType.other:
+        return 'Other';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case TradeType.electrician:
+        return Icons.bolt_rounded;
+      case TradeType.plumber:
+        return Icons.water_drop_rounded;
+      case TradeType.carpenter:
+        return Icons.handyman_rounded;
+      case TradeType.mason:
+        return Icons.foundation_rounded;
+      case TradeType.painter:
+        return Icons.format_paint_rounded;
+      case TradeType.welder:
+        return Icons.local_fire_department_rounded;
+      case TradeType.other:
+        return Icons.more_horiz_rounded;
+    }
+  }
+
+  static TradeType fromString(String raw) {
+    final String value = raw.toLowerCase();
+    if (value.contains('electric')) return TradeType.electrician;
+    if (value.contains('plumb')) return TradeType.plumber;
+    if (value.contains('carpent')) return TradeType.carpenter;
+    if (value.contains('mason')) return TradeType.mason;
+    if (value.contains('paint')) return TradeType.painter;
+    if (value.contains('weld')) return TradeType.welder;
+    return TradeType.other;
   }
 }
 

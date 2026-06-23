@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import '../../core/constants/app_constants.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
+import 'mapbox_client_map.dart';
 
 /// Map centered on [initial]; calls [onPositionChanged] when the user drags the map.
-class JobLocationMap extends StatefulWidget {
+///
+/// The visual renderer is Mapbox for the client-facing location picker. Google
+/// Places remains responsible for address search and reverse geocoding.
+class JobLocationMap extends StatelessWidget {
   const JobLocationMap({
     super.key,
     required this.initial,
@@ -19,87 +20,11 @@ class JobLocationMap extends StatefulWidget {
   final double height;
 
   @override
-  State<JobLocationMap> createState() => _JobLocationMapState();
-}
-
-class _JobLocationMapState extends State<JobLocationMap> {
-  GoogleMapController? _controller;
-  late LatLng _center;
-
-  @override
-  void initState() {
-    super.initState();
-    _center = widget.initial;
-  }
-
-  @override
-  void didUpdateWidget(JobLocationMap oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.initial != widget.initial) {
-      _center = widget.initial;
-      _controller?.animateCamera(CameraUpdate.newLatLng(widget.initial));
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    if (AppConstants.googleMapsApiKey.isEmpty) {
-      return SizedBox(
-        height: widget.height,
-        child: Center(
-          child: Text(
-            'Add GOOGLE_MAPS_API_KEY to .env and native config to show the map.',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: widget.height,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: _center,
-                zoom: 15,
-              ),
-              onMapCreated: (c) => _controller = c,
-              onCameraMove: (pos) => _center = pos.target,
-              onCameraIdle: () => widget.onPositionChanged?.call(_center),
-              myLocationEnabled: true,
-              myLocationButtonEnabled: true,
-              zoomControlsEnabled: false,
-              mapToolbarEnabled: false,
-            ),
-            Positioned(
-              top: 12,
-              left: 12,
-              right: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.94),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.outlineVariant),
-                ),
-                child: Text(
-                  'Move the map to set the exact service point.',
-                  style: AppTypography.bodySmall,
-                  textAlign: TextAlign.center,
-                ),
-              ),
-            ),
-            IgnorePointer(
-              child: Icon(Icons.location_on, color: AppColors.primary, size: 40),
-            ),
-          ],
-        ),
-      ),
+    return MapboxJobLocationMap(
+      initial: initial,
+      height: height,
+      onPositionChanged: onPositionChanged,
     );
   }
 }
