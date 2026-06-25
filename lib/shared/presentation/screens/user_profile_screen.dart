@@ -31,6 +31,8 @@ class UserProfileScreen extends StatefulWidget {
     this.onOpenWorkerEarnings,
     this.onOpenWorkerStats,
     this.onOpenWorkerHistory,
+    this.onOpenWorkerReviews,
+    this.onOpenWorkerGallery,
   });
 
   static const String routeName = '/shared/profile';
@@ -40,6 +42,8 @@ class UserProfileScreen extends StatefulWidget {
   final VoidCallback? onOpenWorkerEarnings;
   final VoidCallback? onOpenWorkerStats;
   final VoidCallback? onOpenWorkerHistory;
+  final VoidCallback? onOpenWorkerReviews;
+  final VoidCallback? onOpenWorkerGallery;
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -243,7 +247,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 if (isOwnProfile &&
                     (widget.onOpenWorkerEarnings != null ||
                         widget.onOpenWorkerStats != null ||
-                        widget.onOpenWorkerHistory != null)) ...<Widget>[
+                        widget.onOpenWorkerHistory != null ||
+                        widget.onOpenWorkerReviews != null ||
+                        widget.onOpenWorkerGallery != null)) ...<Widget>[
                   const SizedBox(height: 14),
                   ProfileSectionCard(
                     title: 'Worker dashboard',
@@ -268,6 +274,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             onPressed: widget.onOpenWorkerHistory,
                             icon: Icon(PhosphorIcons.clockCounterClockwise),
                             label: const Text('History'),
+                          ),
+                        if (widget.onOpenWorkerReviews != null)
+                          OutlinedButton.icon(
+                            onPressed: widget.onOpenWorkerReviews,
+                            icon: Icon(PhosphorIcons.star),
+                            label: const Text('Reviews'),
+                          ),
+                        if (widget.onOpenWorkerGallery != null)
+                          OutlinedButton.icon(
+                            onPressed: widget.onOpenWorkerGallery,
+                            icon: Icon(PhosphorIcons.images),
+                            label: const Text('Gallery'),
                           ),
                       ],
                     ),

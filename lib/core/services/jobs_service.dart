@@ -93,6 +93,18 @@ class JobsService {
     return await _apiClient.get('/jobs/$id/matching-progress');
   }
 
+  Future<dynamic> getJobApplications(dynamic id) async {
+    return await _apiClient.get('/jobs/$id/applications');
+  }
+
+  Future<dynamic> acceptApplication(dynamic id, dynamic applicationId) async {
+    final dynamic result = await _apiClient.post(
+      '/jobs/$id/applications/$applicationId/accept',
+    );
+    await _invalidateJobsCache();
+    return result;
+  }
+
   /// Preview what happens if the client cancels this job
   Future<dynamic> getCancellationPreview(dynamic id) async {
     return await _apiClient.get('/jobs/$id/cancellation-preview');

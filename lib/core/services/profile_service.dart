@@ -46,4 +46,14 @@ class ProfileService {
     final profileData = await _apiClient.get('/profiles/$userId');
     return Map<String, dynamic>.from(profileData as Map);
   }
+
+  Future<Map<String, dynamic>> addGalleryPhoto(String url) async {
+    final response = await _apiClient.post('/profiles/me/gallery', body: {'url': url});
+    return Map<String, dynamic>.from(response as Map);
+  }
+
+  Future<Map<String, dynamic>> deleteGalleryPhoto(String url) async {
+    final response = await _apiClient.post('/profiles/me/gallery/delete', body: {'url': url});
+    return Map<String, dynamic>.from(response as Map);
+  }
 }

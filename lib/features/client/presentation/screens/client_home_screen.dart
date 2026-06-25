@@ -2,13 +2,17 @@ import '../../../../core/theme/design_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
 import '../navigation/client_shell_scope.dart';
 import '../client_shell.dart';
 import '../widgets/artisan_card.dart';
+import '../widgets/client_home/home_hero.dart';
+import '../widgets/client_home/home_atoms.dart';
+import '../widgets/client_home/active_job_banner.dart';
+import '../widgets/client_home/artisan_list_states.dart';
+import '../widgets/client_home/marquee_categories.dart';
 import '../../../../shared/widgets/search_bar.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/jobs_service.dart';
@@ -46,546 +50,7 @@ const Map<String, List<String>> _categoryAliases = <String, List<String>>{
 };
 
 
-BoxDecoration _card({
-  Color color = DesignTokens.surfaceCard,
-  double radius = DesignTokens.radiusXl,
-  bool shadow = true,
-}) =>
-    BoxDecoration(
-      color: color,
-      borderRadius: BorderRadius.circular(radius),
-      border: Border.all(color: DesignTokens.borderSubtle),
-      boxShadow: shadow
-          ? const <BoxShadow>[
-              BoxShadow(
-                  color: DesignTokens.shadowDeep, blurRadius: 20, offset: Offset(0, 6)),
-              BoxShadow(
-                  color: DesignTokens.shadow, blurRadius: 4, offset: Offset(0, 2)),
-            ]
-          : null,
-    );
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// _HomeHero — greeting banner, single floating icon, clean gradient
-// ─────────────────────────────────────────────────────────────────────────────
-class _HomeHero extends StatelessWidget {
-  const _HomeHero({required this.greeting, required this.name});
-  final String greeting;
-  final String name;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: <Color>[DesignTokens.primary, DesignTokens.primaryDark],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: DesignTokens.primary.withValues(alpha: 0.28),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  greeting.toUpperCase(),
-                  style: const TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white60,
-                    letterSpacing: 0.9,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    height: 1.15,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
-                  ),
-                  child: const Text(
-                    'What do you need fixed today?',
-                    style: TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.handyman_rounded,
-              color: Colors.white,
-              size: 26,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// _CategoryChip — solid fill on select (no gradient)
-// ─────────────────────────────────────────────────────────────────────────────
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.icon,
-    required this.isSelected,
-    required this.onTap,
-  });
-  final String label;
-  final IconData icon;
-  final bool isSelected;
-  final VoidCallback onTap;
- 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? DesignTokens.primary : DesignTokens.surfaceCard,
-          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-          border: Border.all(
-            color: isSelected ? DesignTokens.primary : DesignTokens.borderSubtle,
-          ),
-          boxShadow: <BoxShadow>[
-            BoxShadow(
-              color: isSelected
-                  ? DesignTokens.primary.withValues(alpha: 0.22)
-                  : DesignTokens.shadow,
-              blurRadius: isSelected ? 10 : 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            Icon(
-              icon,
-              size: 15,
-              color: isSelected ? Colors.white : DesignTokens.primary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? Colors.white : DesignTokens.textPrimary,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// _QuickActionCard — gradient card, no decorative circles
-// ─────────────────────────────────────────────────────────────────────────────
-class _QuickActionCard extends StatelessWidget {
-  const _QuickActionCard({
-    required this.icon,
-    required this.label,
-    required this.subtitle,
-    required this.gradientColors,
-    required this.onTap,
-  });
-  final IconData icon;
-  final String label;
-  final String subtitle;
-  final List<Color> gradientColors;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: _card(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(colors: gradientColors),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: Colors.white, size: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: DesignTokens.textSecondary)),
-          ],
-        ),
-      ),
-    );
-  }
-}
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// _SectionHeader — left accent bar + title + optional action pill
-// ─────────────────────────────────────────────────────────────────────────────
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.title,
-    this.actionLabel,
-    this.onAction,
-  });
-  final String title;
-  final String? actionLabel;
-  final VoidCallback? onAction;
- 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            Container(
-              width: 3,
-              height: 16,
-              margin: const EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: DesignTokens.primary,
-                borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
-              ),
-            ),
-            Text(
-              title,
-              style: const TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: DesignTokens.textPrimary,
-              ),
-            ),
-          ],
-        ),
-        if (actionLabel != null)
-          GestureDetector(
-            onTap: onAction,
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 5),
-              decoration: BoxDecoration(
-                color: DesignTokens.primaryTint08,
-                borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
-              ),
-              child: Text(
-                actionLabel!,
-                style: const TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: DesignTokens.primary,
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// _ActiveJobBanner — job in progress card, left accent strip via Row
-// ─────────────────────────────────────────────────────────────────────────────
-class _ActiveJobBanner extends StatefulWidget {
-  const _ActiveJobBanner({
-    required this.booking,
-    required this.onViewJob,
-    required this.onTrack,
-  });
-
-  final ClientBooking booking;
-  final VoidCallback onViewJob;
-  final VoidCallback onTrack;
-
-  @override
-  State<_ActiveJobBanner> createState() => _ActiveJobBannerState();
-}
-
-class _ActiveJobBannerState extends State<_ActiveJobBanner> with SingleTickerProviderStateMixin {
-  late AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _card(color: DesignTokens.primary.withValues(alpha: 0.05)),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              AnimatedBuilder(
-                animation: _pulse,
-                builder: (_, __) => Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: DesignTokens.successGreen.withValues(
-                      alpha: 0.5 + _pulse.value * 0.5,
-                    ),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 7),
-              const Text(
-                'JOB IN PROGRESS',
-                style: TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: DesignTokens.primary,
-                  letterSpacing: 0.7,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            widget.booking.title,
-            style: const TextStyle(
-              fontFamily: 'Satoshi',
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: DesignTokens.textPrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 3),
-          Row(
-            children: <Widget>[
-              const Icon(Icons.person_rounded,
-                  size: 12, color: DesignTokens.textSecondary),
-              const SizedBox(width: 4),
-              Text(
-                'With ${widget.booking.artisan}',
-                style: const TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 12,
-                  color: DesignTokens.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: widget.onViewJob,
-                  child: const Text('All bookings'),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: widget.onTrack,
-                  child: const Text('Track live'),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}  
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// _ArtisanSkeleton — single opacity pulse, no per-card AnimationController
-// ─────────────────────────────────────────────────────────────────────────────
-class _ArtisanSkeleton extends StatelessWidget {
-  const _ArtisanSkeleton({required this.opacity});
-  final double opacity;
- 
-  @override
-  Widget build(BuildContext context) {
-    final Color base =
-        Color.lerp(const Color(0xFFF0EBE5), const Color(0xFFFFF0E6), opacity)!;
-    return Container(
-      width: 190,
-      decoration: _card(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: base,
-              borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(DesignTokens.radiusXl)),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                _bar(110, 12, base),
-                const SizedBox(height: 7),
-                _bar(75, 10, base),
-                const SizedBox(height: 10),
-                _bar(90, 10, base),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
- 
-  Widget _bar(double width, double height, Color color) => Container(
-        width: width,
-        height: height,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(6),
-        ),
-      );
-}
- 
-class _SkeletonRow extends StatefulWidget {
-  @override
-  State<_SkeletonRow> createState() => _SkeletonRowState();
-}
- 
-class _SkeletonRowState extends State<_SkeletonRow>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
- 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl =
-        AnimationController(vsync: this, duration: const Duration(seconds: 1))
-          ..repeat(reverse: true);
-    _anim = Tween<double>(begin: 0.3, end: 1.0)
-        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
-  }
- 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
- 
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _anim,
-      builder: (_, __) => SizedBox(
-        height: 300,
-        child: ListView.builder(
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: 3,
-          itemBuilder: (_, __) => Padding(
-            padding: const EdgeInsets.only(right: 14),
-            child: _ArtisanSkeleton(opacity: _anim.value),
-          ),
-        ),
-      ),
-    );
-  }
-}
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// _EmptyArtisans
-// ─────────────────────────────────────────────────────────────────────────────
-class _EmptyArtisans extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 120,
-      width: double.infinity,
-      decoration: _card(
-          color: const Color(0xFFFAF5F0), shadow: false),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Icon(Icons.people_outline_rounded,
-              size: 34,
-              color: DesignTokens.textSecondary.withValues(alpha: 0.35)),
-          const SizedBox(height: 10),
-          Text(
-            'No artisans match your search',
-            style: TextStyle(
-              fontFamily: 'Satoshi',
-              fontSize: 13,
-              color: DesignTokens.textSecondary.withValues(alpha: 0.65),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
  
 // ─────────────────────────────────────────────────────────────────────────────
 // Main screen
@@ -833,14 +298,14 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                       final String name = firstName.isNotEmpty
                           ? 'Welcome, $firstName 🙃'
                           : 'Welcome back 🙃';
-                      return _HomeHero(greeting: _greeting, name: name);
+                      return HomeHero(greeting: _greeting, name: name);
                     },
                   ),
                   const SizedBox(height: 18),
  
                   // Active job banner
                   if (!_loadingActiveJob && _activeJob != null) ...<Widget>[
-                    _ActiveJobBanner(
+                    ActiveJobBanner(
                       booking: _activeJob!,
                       onViewJob: () => ClientShellScope.of(context)
                           .selectTab(ClientNavTab.bookings),
@@ -898,12 +363,12 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   const SizedBox(height: 24),
  
                   // Quick actions
-                  const _SectionHeader(title: 'Quick Actions'),
+                  const SectionHeader(title: 'Quick Actions'),
                   const SizedBox(height: 14),
                   Row(
                     children: <Widget>[
                       Expanded(
-                        child: _QuickActionCard(
+                        child: QuickActionCard(
                           icon: Icons.add_circle_outline_rounded,
                           label: 'Post a Job',
                           subtitle: 'Get matched instantly',
@@ -917,7 +382,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: _QuickActionCard(
+                        child: QuickActionCard(
                           icon: Icons.map_rounded,
                           label: 'Map View',
                           subtitle: 'Artisans near you',
@@ -934,13 +399,13 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   const SizedBox(height: 26),
  
                   // Categories
-                  const _SectionHeader(title: 'Categories'),
+                  const SectionHeader(title: 'Categories'),
                   const SizedBox(height: 14),
                   _buildCategories(),
                   const SizedBox(height: 26),
  
                   // Featured artisans
-                  _SectionHeader(
+                  SectionHeader(
                     title: 'Featured Artisans',
                     actionLabel: 'View All',
                     onAction: () => Navigator.pushNamed(
@@ -1073,7 +538,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
       );
     }
 
-    return _MarqueeCategoriesList(
+    return MarqueeCategoriesList(
       categories: cats,
       selectedCategoryId: _selectedCategoryId,
       selectedCategory: _selectedCategory,
@@ -1101,9 +566,9 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
  
   // ── Artisan list ───────────────────────────────────────────────────────────
   Widget _buildArtisanList() {
-    if (_isLoadingFeatured) return _SkeletonRow();
+    if (_isLoadingFeatured) return const SkeletonRow();
  
-    if (_visibleArtisans.isEmpty) return _EmptyArtisans();
+    if (_visibleArtisans.isEmpty) return const EmptyArtisans();
  
     return SizedBox(
       height: 300,
@@ -1169,153 +634,5 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
       AppRoutes.liveTracking,
       arguments: b.toTrackingMap(),
     ));
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// _MarqueeCategoriesList — horizontal marquee scrolling category bar
-// ─────────────────────────────────────────────────────────────────────────────
-class _MarqueeCategoriesList extends StatefulWidget {
-  const _MarqueeCategoriesList({
-    required this.categories,
-    required this.selectedCategoryId,
-    required this.selectedCategory,
-    required this.categoryIcon,
-    required this.onCategorySelected,
-    required this.onSeeMore,
-  });
-
-  final List<Map<String, dynamic>> categories;
-  final String selectedCategoryId;
-  final String selectedCategory;
-  final IconData Function(Map<String, dynamic>) categoryIcon;
-  final Function(String id, String label) onCategorySelected;
-  final VoidCallback onSeeMore;
-
-  @override
-  State<_MarqueeCategoriesList> createState() => _MarqueeCategoriesListState();
-}
-
-class _MarqueeCategoriesListState extends State<_MarqueeCategoriesList>
-    with SingleTickerProviderStateMixin {
-  late final ScrollController _scrollController;
-  late final Ticker _ticker;
-  bool _isManualScrolling = false;
-  Timer? _manualScrollResumeTimer;
-  Duration _lastElapsed = Duration.zero;
-
-  @override
-  void initState() {
-    super.initState();
-    // Start with a large offset so scrolling both ways is infinite
-    _scrollController = ScrollController(initialScrollOffset: 2000.0);
-    _ticker = createTicker(_onTick);
-    _ticker.start();
-  }
-
-  @override
-  void dispose() {
-    _ticker.dispose();
-    _manualScrollResumeTimer?.cancel();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  bool get _shouldAnimate {
-    final bool hasSelection =
-        widget.selectedCategoryId.isNotEmpty || widget.selectedCategory.isNotEmpty;
-    return !hasSelection && !_isManualScrolling;
-  }
-
-  void _onTick(Duration elapsed) {
-    if (!mounted) return;
-    final double deltaSeconds = (elapsed - _lastElapsed).inMicroseconds / 1000000.0;
-    _lastElapsed = elapsed;
-
-    if (_shouldAnimate && _scrollController.hasClients) {
-      // Smooth movement at 50 logical pixels per second
-      final double scrollSpeed = 50.0 * deltaSeconds;
-      final double newOffset = _scrollController.offset + scrollSpeed;
-      _scrollController.jumpTo(newOffset);
-    }
-  }
-
-  void _onUserScrollStart() {
-    if (!_isManualScrolling) {
-      setState(() {
-        _isManualScrolling = true;
-      });
-    }
-    _manualScrollResumeTimer?.cancel();
-  }
-
-  void _onUserScrollEnd() {
-    _manualScrollResumeTimer?.cancel();
-    _manualScrollResumeTimer = Timer(const Duration(seconds: 4), () {
-      if (mounted) {
-        setState(() {
-          _isManualScrolling = false;
-        });
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> cats = widget.categories;
-    final int totalItems = cats.length + 1; // +1 for "See more"
-
-    return SizedBox(
-      height: 46,
-      child: NotificationListener<ScrollNotification>(
-        onNotification: (ScrollNotification notification) {
-          if (notification is ScrollStartNotification) {
-            _onUserScrollStart();
-          } else if (notification is ScrollEndNotification) {
-            _onUserScrollEnd();
-          }
-          return false;
-        },
-        child: ListView.builder(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          itemBuilder: (BuildContext context, int index) {
-            final int actualIndex = (index % totalItems + totalItems) % totalItems;
-
-            if (actualIndex == cats.length) {
-              // Build "See more" chip
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: _CategoryChip(
-                  label: 'See more',
-                  icon: Icons.arrow_forward_rounded,
-                  isSelected: false,
-                  onTap: widget.onSeeMore,
-                ),
-              );
-            }
-
-            final Map<String, dynamic> cat = cats[actualIndex];
-            final String catId = (cat['id'] ?? '').toString();
-            final String label =
-                (cat['name'] ?? cat['label'] ?? 'Service').toString();
-            final bool selected = catId.isNotEmpty
-                ? widget.selectedCategoryId == catId
-                : widget.selectedCategory == label;
-
-            return Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: _CategoryChip(
-                label: label,
-                icon: widget.categoryIcon(cat),
-                isSelected: selected,
-                onTap: () => widget.onCategorySelected(catId, label),
-              ),
-            );
-          },
-        ),
-      ),
-    );
   }
 }

@@ -44,6 +44,8 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
   Timer? _progressTimer;
   String _progressHeadline = 'Checking nearby artisans';
   String _progressDetail = 'Preparing your request...';
+  List<Map<String, dynamic>> _applications = <Map<String, dynamic>>[];
+  bool _isAcceptingApp = false;
 
   @override
   void initState() {
@@ -103,6 +105,15 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                 : 'Looking for available workers now';
       });
     } catch (_) {}
+
+    try {
+      final dynamic appsResponse = await _jobsService.getJobApplications(_jobId!);
+      if (mounted && appsResponse is List) {
+        setState(() {
+          _applications = appsResponse.cast<Map<String, dynamic>>();
+        });
+      }
+    } catch (_) {}
   }
 
   void _handleJobUpdate(Map<String, dynamic> job) {
@@ -141,6 +152,21 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
       artisan: widget.artisan,
     );
     ClientNavigation.openLiveTrackingFromMatch(context, booking: booking);
+  }
+
+  Future<void> _acceptApplication(String applicationId) async {
+    if (_isAcceptingApp || _jobId == null) return;
+    setState(() => _isAcceptingApp = true);
+    try {
+      final dynamic jobData = await _jobsService.acceptApplication(_jobId!, applicationId);
+      if (mounted && jobData is Map<String, dynamic>) {
+        _handleJobUpdate(jobData);
+      }
+    } catch (e) {
+      if (mounted) AppToast.showError(context, e, fallback: 'Could not accept application.');
+    } finally {
+      if (mounted) setState(() => _isAcceptingApp = false);
+    }
   }
 
   void _continueBrowsing() {
@@ -284,6 +310,68 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                       isEnabled: !_isCancelling,
                       onPressed: _cancelSearch,
                     ),
+                    if (_applications.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: AppSpacing.xl),
+                      const Divider(),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text('Applications', style: AppTypography.titleLarge),
+                      const SizedBox(height: AppSpacing.sm),
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _applications.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (BuildContext context, int index) {
+                          final app = _applications[index];
+                          final worker = app['worker'] as Map<String, dynamic>? ?? <String, dynamic>{};
+                          final num? proposedRate = app['proposed_rate'] as num?;
+                          
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.surfaceContainerLow,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: AppColors.borderSubtle),
+                            ),
+                            child: Row(
+                              children: <Widget>[
+                                CircleAvatar(
+                                  radius: 24,
+                                  backgroundImage: worker['avatar_url'] != null
+                                      ? NetworkImage(worker['avatar_url'] as String)
+                                      : null,
+                                  child: worker['avatar_url'] == null
+                                      ? const Icon(PhosphorIcons.user)
+                                      : null,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      Text(
+                                        worker['full_name'] as String? ?? 'Artisan',
+                                        style: AppTypography.bodyLarge.copyWith(fontWeight: FontWeight.bold),
+                                      ),
+                                      if (proposedRate != null)
+                                        Text(
+                                          'Proposed: GHS ${proposedRate.toStringAsFixed(2)}',
+                                          style: AppTypography.bodyMedium.copyWith(color: AppColors.primary),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                                PrimaryButton(
+                                  label: 'Accept',
+                                  isLoading: _isAcceptingApp,
+                                  onPressed: () => _acceptApplication(app['id'] as String),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ],
                 ),
               ),

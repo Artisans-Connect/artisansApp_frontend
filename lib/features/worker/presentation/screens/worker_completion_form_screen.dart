@@ -28,7 +28,7 @@ class WorkerCompletionFormScreen extends StatefulWidget {
 }
 class _WorkerCompletionFormScreenState
     extends State<WorkerCompletionFormScreen> {
-  final _hoursController = TextEditingController();
+  final _proposedAmountController = TextEditingController();
   final _materialsController = TextEditingController();
   final _notesController = TextEditingController();
   final JobsService _jobsService = JobsService();
@@ -37,16 +37,16 @@ class _WorkerCompletionFormScreenState
   bool _isSubmitting = false;
   @override
   void dispose() {
-    _hoursController.dispose();
+    _proposedAmountController.dispose();
     _materialsController.dispose();
     _notesController.dispose();
     super.dispose();
   }
   Future<void> _submit() async {
     if (_isSubmitting) return;
-    final double? hours = double.tryParse(_hoursController.text.trim());
-    if (hours == null || hours <= 0) {
-      AppToast.showError(context, 'Enter a valid time spent.');
+    final double? proposedAmount = double.tryParse(_proposedAmountController.text.trim());
+    if (proposedAmount == null || proposedAmount <= 0) {
+      AppToast.showError(context, 'Enter a valid proposed amount.');
       return;
     }
     await HapticFeedback.mediumImpact();
@@ -61,7 +61,7 @@ class _WorkerCompletionFormScreenState
       await _jobsService.completeJob(
         widget.job.id,
         body: <String, dynamic>{
-          'hours_spent': hours,
+          'proposed_amount': proposedAmount,
           if (_materialsController.text.trim().isNotEmpty)
             'materials_used': _materialsController.text.trim(),
           if (_notesController.text.trim().isNotEmpty)
@@ -123,12 +123,17 @@ class _WorkerCompletionFormScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('TIME SPENT (HOURS)', style: AppTypography.labelCaps),
+            Text('PROPOSED AMOUNT TO CHARGE', style: AppTypography.labelCaps),
             const SizedBox(height: AppSpacing.sm),
             TextField(
-              controller: _hoursController,
+              controller: _proposedAmountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: _inputDecoration('e.g., 3.5'),
+              decoration: _inputDecoration('e.g., 150.00'),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              'Time spent will be automatically calculated based on when the job was started.',
+              style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.lg),
             Text('MATERIALS USED (OPTIONAL)', style: AppTypography.labelCaps),

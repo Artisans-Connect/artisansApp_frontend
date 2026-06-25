@@ -13,6 +13,8 @@ import 'screens/worker_booking_history_screen.dart';
 import 'screens/worker_earnings_screen.dart';
 import 'screens/worker_requests_screen.dart';
 import 'screens/worker_stats_screen.dart';
+import 'screens/worker_reviews_screen.dart';
+import 'screens/worker_gallery_screen.dart';
 import 'state/worker_session_state.dart';
 import 'utils/worker_job_mapper.dart';
 import 'widgets/worker_bottom_nav.dart';
@@ -188,6 +190,20 @@ class _WorkerShellState extends State<WorkerShell> {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
                     builder: (_) => const WorkerBookingHistoryScreen(),
+                  ),
+                );
+              },
+              onOpenWorkerReviews: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WorkerReviewsScreen(),
+                  ),
+                );
+              },
+              onOpenWorkerGallery: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const WorkerGalleryScreen(),
                   ),
                 );
               },
