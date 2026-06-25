@@ -18,6 +18,13 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
           .map((dynamic url) => url.toString())
           .toList();
 
+  final Map<String, dynamic> completion =
+      _firstRelated(json['completion_details']);
+  final List<String> completionPhotoUrls =
+      (completion['photo_urls'] as List<dynamic>? ?? <dynamic>[])
+          .map((dynamic url) => url.toString())
+          .toList();
+
   return WorkerJob(
     id: json['id'] as String,
     title: json['title'] as String? ?? 'Job request',
@@ -39,6 +46,17 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
     createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
     trade: categoryName,
     area: json['address_label'] as String?,
+    startedAt: json['started_at'] != null ? DateTime.tryParse(json['started_at'].toString()) : null,
+    completionHours: (completion['hours_spent'] as num?)?.toDouble(),
+    completionMaterials: completion['materials_used'] as String?,
+    completionNotes: completion['notes'] as String?,
+    completionPhotoUrls: completionPhotoUrls,
+    baseRate: (completion['base_rate'] as num?)?.toDouble(),
+    distanceCost: (completion['distance_cost'] as num?)?.toDouble(),
+    urgencyPremium: (completion['urgency_premium'] as num?)?.toDouble(),
+    grossAmount: (completion['gross_amount'] as num?)?.toDouble(),
+    platformFee: (completion['platform_fee'] as num?)?.toDouble(),
+    artisanPayout: (completion['artisan_payout'] as num?)?.toDouble(),
   );
 }
 
@@ -90,6 +108,13 @@ WorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
     trade: categoryName,
     area: json['address_label'] as String?,
+    startedAt: json['started_at'] != null ? DateTime.tryParse(json['started_at'].toString()) : null,
+    baseRate: (completion['base_rate'] as num?)?.toDouble(),
+    distanceCost: (completion['distance_cost'] as num?)?.toDouble(),
+    urgencyPremium: (completion['urgency_premium'] as num?)?.toDouble(),
+    grossAmount: (completion['gross_amount'] as num?)?.toDouble(),
+    platformFee: (completion['platform_fee'] as num?)?.toDouble(),
+    artisanPayout: (completion['artisan_payout'] as num?)?.toDouble(),
   );
 }
 

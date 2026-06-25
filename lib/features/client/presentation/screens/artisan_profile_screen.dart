@@ -916,9 +916,14 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
  
   // ── Bottom bar ─────────────────────────────────────────────────────────────
   Widget _buildBottomBar() {
+    final double bottomPadding = MediaQuery.paddingOf(context).bottom;
     return Container(
-      padding: const EdgeInsets.fromLTRB(
-          DesignTokens.gutter, DesignTokens.md, DesignTokens.gutter, DesignTokens.lg),
+      padding: EdgeInsets.fromLTRB(
+        DesignTokens.gutter,
+        DesignTokens.md,
+        DesignTokens.gutter,
+        bottomPadding > 0 ? bottomPadding + 8 : DesignTokens.lg,
+      ),
       decoration: const BoxDecoration(
         color: DesignTokens.surfaceBase,
         border: Border(

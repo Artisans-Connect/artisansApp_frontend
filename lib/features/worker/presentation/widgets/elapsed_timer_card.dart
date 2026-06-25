@@ -2,18 +2,27 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 class ElapsedTimerCard extends StatefulWidget {
-  const ElapsedTimerCard({super.key});
+  const ElapsedTimerCard({super.key, this.startedAt});
+  final DateTime? startedAt;
+
   @override
   State<ElapsedTimerCard> createState() => _ElapsedTimerCardState();
 }
 class _ElapsedTimerCardState extends State<ElapsedTimerCard> {
-  Duration _elapsed = const Duration(hours: 0, minutes: 23, seconds: 47);
+  late Duration _elapsed;
   Timer? _timer;
   @override
   void initState() {
     super.initState();
+    final start = widget.startedAt ?? DateTime.now();
+    _elapsed = DateTime.now().difference(start);
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() => _elapsed += const Duration(seconds: 1));
+      if (mounted) {
+        setState(() {
+          final start = widget.startedAt ?? DateTime.now();
+          _elapsed = DateTime.now().difference(start);
+        });
+      }
     });
   }
   @override

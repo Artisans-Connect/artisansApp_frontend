@@ -9,6 +9,7 @@ class CustomSearchBar extends StatefulWidget {
   final ValueChanged<String>? onChanged;
   final VoidCallback? onSearch;
   final TextEditingController? controller;
+  final bool isLoading;
 
   const CustomSearchBar({
     Key? key,
@@ -16,6 +17,7 @@ class CustomSearchBar extends StatefulWidget {
     this.onChanged,
     this.onSearch,
     this.controller,
+    this.isLoading = false,
   }) : super(key: key);
 
   @override
@@ -64,19 +66,31 @@ class _SearchBarState extends State<CustomSearchBar> {
             color: AppColors.outlineVariant,
             size: AppSpacing.iconMedium,
           ),
-          suffixIcon: _controller.text.isNotEmpty
-              ? GestureDetector(
-                  onTap: () {
-                    _controller.clear();
-                    widget.onChanged?.call('');
-                  },
-                  child: Icon(
-                    PhosphorIcons.x,
-                    color: AppColors.outlineVariant,
-                    size: AppSpacing.iconSmall,
+          suffixIcon: widget.isLoading
+              ? const Padding(
+                  padding: EdgeInsets.all(12.0),
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
                   ),
                 )
-              : null,
+              : _controller.text.isNotEmpty
+                  ? GestureDetector(
+                      onTap: () {
+                        _controller.clear();
+                        widget.onChanged?.call('');
+                      },
+                      child: Icon(
+                        PhosphorIcons.x,
+                        color: AppColors.outlineVariant,
+                        size: AppSpacing.iconSmall,
+                      ),
+                    )
+                  : null,
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),

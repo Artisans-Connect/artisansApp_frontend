@@ -67,6 +67,12 @@ class ClientBooking {
     this.isLocalDraft = false,
     this.draftData,
     this.draftSavedAt,
+    this.baseRate,
+    this.distanceCost,
+    this.urgencyPremium,
+    this.grossAmount,
+    this.platformFee,
+    this.artisanPayout,
   });
 
   final String id;
@@ -95,6 +101,14 @@ class ClientBooking {
   final bool isLocalDraft;
   final Map<String, dynamic>? draftData;
   final String? draftSavedAt;
+
+  // Settlement details
+  final double? baseRate;
+  final double? distanceCost;
+  final double? urgencyPremium;
+  final double? grossAmount;
+  final double? platformFee;
+  final double? artisanPayout;
 
   bool get canRate =>
       (status == ClientBookingStatus.pendingApproval ||
@@ -159,6 +173,12 @@ class ClientBooking {
         'draftData': draftData,
         'draftSavedAt': draftSavedAt,
         'eta': 'Calculating ETA…',
+        'base_rate': baseRate,
+        'distance_cost': distanceCost,
+        'urgency_premium': urgencyPremium,
+        'gross_amount': grossAmount,
+        'platform_fee': platformFee,
+        'artisan_payout': artisanPayout,
       };
 
   static ClientBooking fromMap(Map<String, dynamic> map) {
@@ -192,6 +212,12 @@ class ClientBooking {
           ? Map<String, dynamic>.from(map['draftData'] as Map)
           : null,
       draftSavedAt: map['draftSavedAt'] as String?,
+      baseRate: (map['base_rate'] as num?)?.toDouble(),
+      distanceCost: (map['distance_cost'] as num?)?.toDouble(),
+      urgencyPremium: (map['urgency_premium'] as num?)?.toDouble(),
+      grossAmount: (map['gross_amount'] as num?)?.toDouble(),
+      platformFee: (map['platform_fee'] as num?)?.toDouble(),
+      artisanPayout: (map['artisan_payout'] as num?)?.toDouble(),
     );
   }
 
@@ -247,6 +273,15 @@ class ClientBooking {
         ? worker['phone'] as String?
         : null;
     final String? jobId = json['id'] as String?;
+
+    final dynamic completionRaw = json['completion_details'];
+    Map<String, dynamic> completion = <String, dynamic>{};
+    if (completionRaw is List && completionRaw.isNotEmpty && completionRaw.first is Map) {
+      completion = Map<String, dynamic>.from(completionRaw.first as Map);
+    } else if (completionRaw is Map) {
+      completion = Map<String, dynamic>.from(completionRaw);
+    }
+
     return ClientBooking(
       id: jobId ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: json['title'] as String? ?? 'Job',
@@ -262,7 +297,7 @@ class ClientBooking {
       jobUuid: jobId,
       conversationId: jobId,
       backendStatus: statusRaw,
-      workerId: json['worker_id'] as String? ?? json['requested_worker_id'] as String?,
+      workerId: json['worker_id'] as String?,
       locationLat: (json['location_lat'] as num?)?.toDouble(),
       locationLng: (json['location_lng'] as num?)?.toDouble(),
       phone: phone,
@@ -272,6 +307,12 @@ class ClientBooking {
       cancellationStage: json['cancellation_stage'] as String?,
       cancellationFee: (json['cancellation_fee'] as num?)?.toDouble(),
       cancellationFeeCurrency: json['cancellation_fee_currency'] as String?,
+      baseRate: (completion['base_rate'] as num?)?.toDouble(),
+      distanceCost: (completion['distance_cost'] as num?)?.toDouble(),
+      urgencyPremium: (completion['urgency_premium'] as num?)?.toDouble(),
+      grossAmount: (completion['gross_amount'] as num?)?.toDouble(),
+      platformFee: (completion['platform_fee'] as num?)?.toDouble(),
+      artisanPayout: (completion['artisan_payout'] as num?)?.toDouble(),
     );
   }
 

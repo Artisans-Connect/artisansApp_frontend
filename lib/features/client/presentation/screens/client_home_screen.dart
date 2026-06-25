@@ -2,6 +2,7 @@ import '../../../../core/theme/design_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
@@ -14,6 +15,7 @@ import '../../../../core/services/jobs_service.dart';
 import '../../../../core/session/app_user_session.dart';
 import '../../../../core/utils/icon_mapper.dart';
 import '../../services/explore_service.dart';
+import '../../../../core/services/smart_search_service.dart';
 
 const Map<String, List<String>> _categoryAliases = <String, List<String>>{
   'plumbing': <String>['plumber', 'pipe', 'drainage', 'septic'],
@@ -599,6 +601,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   String _selectedCategory   = '';
   String _selectedCategoryId = '';
   String _searchQuery        = '';
+  bool _isParsingIntent      = false;
  
   List<Map<String, dynamic>> _featuredArtisans = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _categories       = <Map<String, dynamic>>[];
@@ -849,18 +852,48 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   // Search
                   CustomSearchBar(
                     hintText: 'Search artisans or services...',
+                    isLoading: _isParsingIntent,
                     onChanged: (String v) => setState(() => _searchQuery = v),
-                    onSearch: () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.exploreArtisans,
-                      arguments: <String, dynamic>{
-                        'query': _searchQuery.trim(),
-                        if (_selectedCategory.isNotEmpty)
-                          'category': _selectedCategory,
-                        if (_selectedCategoryId.isNotEmpty)
-                          'categoryId': _selectedCategoryId,
-                      },
-                    ),
+                    onSearch: () async {
+                      final String query = _searchQuery.trim();
+                      if (query.isEmpty) return;
+
+                      setState(() => _isParsingIntent = true);
+                      try {
+                        final SmartSearchIntent intent =
+                            await SmartSearchService.instance.parseIntent(query);
+                        if (mounted) {
+                          setState(() => _isParsingIntent = false);
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.exploreArtisans,
+                            arguments: <String, dynamic>{
+                              'query': intent.refinedQuery,
+                              'categoryIds': intent.categoryIds,
+                              'categories': intent.categoryNames,
+                              'intentSummary': intent.intentSummary.isNotEmpty
+                                  ? intent.intentSummary
+                                  : null,
+                            },
+                          );
+                        }
+                      } catch (_) {
+                        if (mounted) {
+                          setState(() => _isParsingIntent = false);
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.exploreArtisans,
+                            arguments: <String, dynamic>{
+                              'query': query,
+                              if (_selectedCategory.isNotEmpty)
+                                'category': _selectedCategory,
+                              if (_selectedCategoryId.isNotEmpty)
+                                'categoryId': _selectedCategoryId,
+                            },
+                          );
+                        }
+                      }
+                    },
                   ),
                   const SizedBox(height: 24),
  
@@ -1040,54 +1073,28 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
       );
     }
 
-    return SizedBox(
-      height: 46,
-      child: ListView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        children: <Widget>[
-          ...cats.take(10).map((Map<String, dynamic> cat) {
-          final String catId  = (cat['id'] ?? '').toString();
-          final String label  =
-              (cat['name'] ?? cat['label'] ?? 'Service').toString();
+    return _MarqueeCategoriesList(
+      categories: cats,
+      selectedCategoryId: _selectedCategoryId,
+      selectedCategory: _selectedCategory,
+      categoryIcon: _categoryIcon,
+      onCategorySelected: (String catId, String label) {
+        setState(() {
           final bool selected = catId.isNotEmpty
               ? _selectedCategoryId == catId
               : _selectedCategory == label;
- 
-          return Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: _CategoryChip(
-              label: label,
-              icon: _categoryIcon(cat),
-              isSelected: selected,
-              onTap: () {
-                setState(() {
-                  _selectedCategory   = selected ? '' : label;
-                  _selectedCategoryId = selected ? '' : catId;
-                });
-                _fetchFeaturedArtisans();
-              },
-            ),
-          );
-        }),
-        if (cats.length > 10)
-          Padding(
-            padding: const EdgeInsets.only(right: 10),
-            child: _CategoryChip(
-              label: 'See more',
-              icon: Icons.arrow_forward_rounded,
-              isSelected: false,
-              onTap: () => Navigator.pushNamed(
-                context,
-                AppRoutes.exploreArtisans,
-                arguments: <String, dynamic>{
-                  if (_searchQuery.trim().isNotEmpty)
-                    'query': _searchQuery.trim(),
-                },
-              ),
-            ),
-          ),
-        ],
+          _selectedCategory   = selected ? '' : label;
+          _selectedCategoryId = selected ? '' : catId;
+        });
+        _fetchFeaturedArtisans();
+      },
+      onSeeMore: () => Navigator.pushNamed(
+        context,
+        AppRoutes.exploreArtisans,
+        arguments: <String, dynamic>{
+          if (_searchQuery.trim().isNotEmpty)
+            'query': _searchQuery.trim(),
+        },
       ),
     );
   }
@@ -1162,5 +1169,153 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
       AppRoutes.liveTracking,
       arguments: b.toTrackingMap(),
     ));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _MarqueeCategoriesList — horizontal marquee scrolling category bar
+// ─────────────────────────────────────────────────────────────────────────────
+class _MarqueeCategoriesList extends StatefulWidget {
+  const _MarqueeCategoriesList({
+    required this.categories,
+    required this.selectedCategoryId,
+    required this.selectedCategory,
+    required this.categoryIcon,
+    required this.onCategorySelected,
+    required this.onSeeMore,
+  });
+
+  final List<Map<String, dynamic>> categories;
+  final String selectedCategoryId;
+  final String selectedCategory;
+  final IconData Function(Map<String, dynamic>) categoryIcon;
+  final Function(String id, String label) onCategorySelected;
+  final VoidCallback onSeeMore;
+
+  @override
+  State<_MarqueeCategoriesList> createState() => _MarqueeCategoriesListState();
+}
+
+class _MarqueeCategoriesListState extends State<_MarqueeCategoriesList>
+    with SingleTickerProviderStateMixin {
+  late final ScrollController _scrollController;
+  late final Ticker _ticker;
+  bool _isManualScrolling = false;
+  Timer? _manualScrollResumeTimer;
+  Duration _lastElapsed = Duration.zero;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start with a large offset so scrolling both ways is infinite
+    _scrollController = ScrollController(initialScrollOffset: 2000.0);
+    _ticker = createTicker(_onTick);
+    _ticker.start();
+  }
+
+  @override
+  void dispose() {
+    _ticker.dispose();
+    _manualScrollResumeTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  bool get _shouldAnimate {
+    final bool hasSelection =
+        widget.selectedCategoryId.isNotEmpty || widget.selectedCategory.isNotEmpty;
+    return !hasSelection && !_isManualScrolling;
+  }
+
+  void _onTick(Duration elapsed) {
+    if (!mounted) return;
+    final double deltaSeconds = (elapsed - _lastElapsed).inMicroseconds / 1000000.0;
+    _lastElapsed = elapsed;
+
+    if (_shouldAnimate && _scrollController.hasClients) {
+      // Smooth movement at 50 logical pixels per second
+      final double scrollSpeed = 50.0 * deltaSeconds;
+      final double newOffset = _scrollController.offset + scrollSpeed;
+      _scrollController.jumpTo(newOffset);
+    }
+  }
+
+  void _onUserScrollStart() {
+    if (!_isManualScrolling) {
+      setState(() {
+        _isManualScrolling = true;
+      });
+    }
+    _manualScrollResumeTimer?.cancel();
+  }
+
+  void _onUserScrollEnd() {
+    _manualScrollResumeTimer?.cancel();
+    _manualScrollResumeTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() {
+          _isManualScrolling = false;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> cats = widget.categories;
+    final int totalItems = cats.length + 1; // +1 for "See more"
+
+    return SizedBox(
+      height: 46,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification notification) {
+          if (notification is ScrollStartNotification) {
+            _onUserScrollStart();
+          } else if (notification is ScrollEndNotification) {
+            _onUserScrollEnd();
+          }
+          return false;
+        },
+        child: ListView.builder(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          itemBuilder: (BuildContext context, int index) {
+            final int actualIndex = (index % totalItems + totalItems) % totalItems;
+
+            if (actualIndex == cats.length) {
+              // Build "See more" chip
+              return Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: _CategoryChip(
+                  label: 'See more',
+                  icon: Icons.arrow_forward_rounded,
+                  isSelected: false,
+                  onTap: widget.onSeeMore,
+                ),
+              );
+            }
+
+            final Map<String, dynamic> cat = cats[actualIndex];
+            final String catId = (cat['id'] ?? '').toString();
+            final String label =
+                (cat['name'] ?? cat['label'] ?? 'Service').toString();
+            final bool selected = catId.isNotEmpty
+                ? widget.selectedCategoryId == catId
+                : widget.selectedCategory == label;
+
+            return Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: _CategoryChip(
+                label: label,
+                icon: widget.categoryIcon(cat),
+                isSelected: selected,
+                onTap: () => widget.onCategorySelected(catId, label),
+              ),
+            );
+          },
+        ),
+      ),
+    );
   }
 }

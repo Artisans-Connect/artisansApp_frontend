@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../../../core/location/device_location_service.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -11,7 +12,6 @@ import '../../../../shared/widgets/search_bar.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../navigation/client_navigation.dart';
 import '../../services/explore_service.dart';
-import '../../../../core/location/device_location_service.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
   const ExploreArtisansScreen({
@@ -19,11 +19,17 @@ class ExploreArtisansScreen extends StatefulWidget {
     this.initialQuery = '',
     this.initialCategory = '',
     this.initialCategoryId = '',
+    this.initialCategoryIds = const <String>[],
+    this.initialCategories = const <String>[],
+    this.intentSummary,
   });
 
   final String initialQuery;
   final String initialCategory;
   final String initialCategoryId;
+  final List<String> initialCategoryIds;
+  final List<String> initialCategories;
+  final String? intentSummary;
 
   @override
   State<ExploreArtisansScreen> createState() => _ExploreArtisansScreenState();
@@ -37,6 +43,10 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   String _selectedRating = '';
   late final TextEditingController _searchController;
 
+  List<String> _categoryIds = [];
+  List<String> _categoryNames = [];
+  String? _intentSummary;
+
   List<Map<String, dynamic>> allArtisans = [];
   bool _isLoading = true;
   bool _openingMap = false;
@@ -49,6 +59,9 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
     _searchQuery = widget.initialQuery;
     _selectedCategory = widget.initialCategory;
     _selectedCategoryId = widget.initialCategoryId;
+    _categoryIds = List<String>.from(widget.initialCategoryIds);
+    _categoryNames = List<String>.from(widget.initialCategories);
+    _intentSummary = widget.intentSummary;
     _searchController = TextEditingController(text: _searchQuery);
     _fetchArtisans();
   }
@@ -62,26 +75,78 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   Future<void> _fetchArtisans() async {
     try {
       final loc = await DeviceLocationService.getCurrentOrDefault();
-      List<Map<String, dynamic>> rawArtisans = await ExploreService.instance.getArtisans(
-        limit: 50,
-        radiusKm: 30,
-        lat: loc.latitude,
-        lng: loc.longitude,
-        categoryId: _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
-        forceRefresh: true,
-        onRefreshed: (List<Map<String, dynamic>> freshArtisans) {
-          if (!mounted) return;
-          setState(() => allArtisans = _mapArtisans(freshArtisans));
-        },
-      );
-      if (rawArtisans.isEmpty) {
+      List<Map<String, dynamic>> rawArtisans = [];
+
+      if (_categoryIds.isNotEmpty) {
+        // Query artisans for each category ID concurrently
+        final List<List<Map<String, dynamic>>> results = await Future.wait(
+          _categoryIds.map((String id) => ExploreService.instance.getArtisans(
+            limit: 50,
+            radiusKm: 30,
+            lat: loc.latitude,
+            lng: loc.longitude,
+            categoryId: id,
+            forceRefresh: true,
+          )),
+        );
+
+        // Merge results and remove duplicates, prioritizing nearby/available matches
+        final Map<String, Map<String, dynamic>> workerMap = {};
+        for (final List<Map<String, dynamic>> list in results) {
+          for (final Map<String, dynamic> worker in list) {
+            final String workerId = (worker['id'] ?? worker['worker_id'] ?? '').toString();
+            if (workerId.isNotEmpty) {
+              workerMap[workerId] = worker;
+            }
+          }
+        }
+        rawArtisans = workerMap.values.toList();
+
+        // If no nearby artisans found with location, fetch without location bounds
+        if (rawArtisans.isEmpty) {
+          final List<List<Map<String, dynamic>>> fallbackResults = await Future.wait(
+            _categoryIds.map((String id) => ExploreService.instance.getArtisans(
+              limit: 50,
+              categoryId: id,
+              forceRefresh: true,
+            )),
+          );
+          for (final List<Map<String, dynamic>> list in fallbackResults) {
+            for (final Map<String, dynamic> worker in list) {
+              final String workerId = (worker['id'] ?? worker['worker_id'] ?? '').toString();
+              if (workerId.isNotEmpty) {
+                workerMap[workerId] = worker;
+              }
+            }
+          }
+          rawArtisans = workerMap.values.toList();
+        }
+      } else {
+        // Normal single category/general nearby search
         rawArtisans = await ExploreService.instance.getArtisans(
           limit: 50,
-          categoryId:
-              _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
+          radiusKm: 30,
+          lat: loc.latitude,
+          lng: loc.longitude,
+          categoryId: _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
           forceRefresh: true,
+          onRefreshed: (List<Map<String, dynamic>> freshArtisans) {
+            if (!mounted) return;
+            // Only update on cache refresh if we are not in multi-intent search
+            if (_categoryIds.isEmpty) {
+              setState(() => allArtisans = _mapArtisans(freshArtisans));
+            }
+          },
         );
+        if (rawArtisans.isEmpty) {
+          rawArtisans = await ExploreService.instance.getArtisans(
+            limit: 50,
+            categoryId: _selectedCategoryId.isNotEmpty ? _selectedCategoryId : null,
+            forceRefresh: true,
+          );
+        }
       }
+
       final mappedArtisans = _mapArtisans(rawArtisans);
 
       if (mounted) {
@@ -136,6 +201,9 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
       _searchQuery = '';
       _selectedDistance = '';
       _selectedRating = '';
+      _intentSummary = null;
+      _categoryIds = const <String>[];
+      _categoryNames = const <String>[];
       _searchController.clear();
     });
   }
@@ -147,6 +215,9 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
       _selectedDistance = '';
       _selectedRating = '';
       _searchQuery = '';
+      _intentSummary = null;
+      _categoryIds = const <String>[];
+      _categoryNames = const <String>[];
       _searchController.clear();
       _isLoading = true;
     });
@@ -164,7 +235,9 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
               .toList();
       final String skillText = skills.join(' ');
       final String trimmedQuery = _searchQuery.trim();
-      if (trimmedQuery.isNotEmpty) {
+      
+      // Bypass simple text match if this was parsed by AI into categories
+      if (trimmedQuery.isNotEmpty && _intentSummary == null) {
         final List<String> queryParts = trimmedQuery.toLowerCase().split(RegExp(r'\s+'));
         for (final String part in queryParts) {
           if (!name.contains(part) && !profession.contains(part) && !skillText.contains(part)) {
@@ -289,7 +362,12 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                 hintText: 'Search by name or skill...',
                 controller: _searchController,
                 onChanged: (String value) {
-                  setState(() => _searchQuery = value);
+                  setState(() {
+                    _searchQuery = value;
+                    _intentSummary = null;
+                    _categoryIds = const <String>[];
+                    _categoryNames = const <String>[];
+                  });
                 },
               ),
               const SizedBox(height: AppSpacing.md),
@@ -320,6 +398,76 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                 onShowAll: _showAllArtisans,
               ),
               const SizedBox(height: AppSpacing.lg),
+              if (_intentSummary != null && _intentSummary!.isNotEmpty) ...[
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        PhosphorIcons.sparkle,
+                        color: AppColors.primary,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Showing results for: "$_intentSummary"',
+                              style: AppTypography.labelLarge.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            if (_categoryNames.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Wrap(
+                                spacing: AppSpacing.xs,
+                                children: _categoryNames.map((catName) => Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
+                                  ),
+                                  child: Text(
+                                    catName,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                )).toList(),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(PhosphorIcons.x, color: AppColors.primary, size: 18),
+                        onPressed: () {
+                          setState(() {
+                            _intentSummary = null;
+                            _categoryIds = const <String>[];
+                            _categoryNames = const <String>[];
+                            _searchQuery = '';
+                            _searchController.clear();
+                            _isLoading = true;
+                          });
+                          _fetchArtisans();
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               if (_isLoading)
                 const Center(child: CircularProgressIndicator(color: AppColors.primary)),
               if (!_isLoading)

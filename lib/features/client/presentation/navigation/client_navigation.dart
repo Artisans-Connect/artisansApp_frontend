@@ -9,6 +9,7 @@ import '../../../../shared/presentation/screens/chat_detail_screen.dart';
 import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../../../worker/presentation/worker_shell.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../client_shell.dart';
 import '../models/client_booking.dart';
 import '../models/client_job_draft.dart';
@@ -71,13 +72,7 @@ class ClientNavigation {
   }) {
     final String effectiveJobId = jobId ?? conversationId;
     if (!isValidJobChatId(effectiveJobId)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'This conversation is not ready yet.',
-          ),
-        ),
-      );
+      AppToast.showInfo(context, 'This conversation is not ready yet.');
       return;
     }
     Navigator.pushNamed(
@@ -98,15 +93,15 @@ class ClientNavigation {
   static Future<void> callPhone(BuildContext context, String phone) async {
     final String cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
     if (cleaned.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('This worker has no phone number yet.')),
-      );
+      AppToast.showInfo(context, 'This worker has no phone number yet.');
       return;
     }
     final bool launched = await launchUrl(Uri(scheme: 'tel', path: cleaned));
     if (!launched && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not start a call to $phone.')),
+      AppToast.showError(
+        context,
+        Exception('Could not start a call to $phone.'),
+        fallback: 'Could not start a call to $phone.',
       );
     }
   }
@@ -178,9 +173,7 @@ class ClientNavigation {
       final String name = (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
       final String? phone = (artisan['phone'] ?? profile['phone']) as String?;
       if (workerId.isEmpty || workerId == CurrentUser.id) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You cannot message this profile.')),
-        );
+        AppToast.showInfo(context, 'You cannot message this profile.');
         return;
       }
       try {
@@ -201,8 +194,10 @@ class ClientNavigation {
         );
       } catch (_) {
         if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Could not start this enquiry.')),
+        AppToast.showError(
+          context,
+          Exception('Could not start this enquiry.'),
+          fallback: 'Could not start this enquiry.',
         );
       }
       return;
@@ -266,10 +261,9 @@ class ClientNavigation {
         if (booking.canRate) {
           pushFlow(context, AppRoutes.rateService, arguments: booking.toMap());
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('${booking.title} — rated ${booking.rating}★'),
-            ),
+          AppToast.showInfo(
+            context,
+            '${booking.title} — rated ${booking.rating}★',
           );
         }
       case ClientBookingStatus.requested:
@@ -277,9 +271,7 @@ class ClientNavigation {
       case ClientBookingStatus.accepted:
         pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.cancelled:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${booking.title} was cancelled.')),
-        );
+        AppToast.showInfo(context, '${booking.title} was cancelled.');
       case ClientBookingStatus.draft:
         openJobDraft(context, booking);
     }

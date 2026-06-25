@@ -86,4 +86,9 @@ class WorkersService {
   Future<dynamic> declineJob(String jobId) async {
     return await _api.post('/workers/decline/$jobId');
   }
+
+  Future<Map<String, dynamic>> getEarnings() async {
+    final dynamic response = await _api.get('/workers/me/earnings');
+    return Map<String, dynamic>.from(response as Map);
+  }
 }

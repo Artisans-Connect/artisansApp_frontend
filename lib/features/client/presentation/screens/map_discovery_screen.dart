@@ -954,11 +954,17 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                                       color: AppColors.primary,
                                                     ),
                                                     const SizedBox(width: 5),
-                                                    Text(
-                                                      worker['profession'],
-                                                      style: AppTypography.bodySmall,
+                                                    Expanded(
+                                                      child: Text(
+                                                        worker['profession'],
+                                                        style: AppTypography.bodySmall,
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow.ellipsis,
+                                                      ),
                                                     ),
+                                                    const SizedBox(width: 8),
                                                     Row(
+                                                      mainAxisSize: MainAxisSize.min,
                                                       children: [
                                                         if (worker['verified'] == true) ...[
                                                           Icon(

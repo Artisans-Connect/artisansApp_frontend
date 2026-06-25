@@ -52,7 +52,7 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const ElapsedTimerCard(),
+            ElapsedTimerCard(startedAt: job.startedAt),
             const SizedBox(height: AppSpacing.md),
             JobDetailCard(
               child: Row(

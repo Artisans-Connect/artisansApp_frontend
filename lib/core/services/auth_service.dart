@@ -45,6 +45,13 @@ class AuthService {
         );
       }
 
+      if (response.user!.identities != null && response.user!.identities!.isEmpty) {
+        throw const AuthFailure(
+          AuthFailureCode.accountAlreadyExists,
+          'An account with this email already exists. Try signing in instead.',
+        );
+      }
+
       if (response.session == null) {
         return SignUpOutcome.needsVerification(email);
       }

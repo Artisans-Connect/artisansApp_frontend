@@ -12,6 +12,7 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/secondary_button.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
 import '../client_shell.dart';
@@ -187,6 +188,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
     }
 
     if (mounted) {
+      AppToast.showInfo(context, 'Search cancelled.');
       ClientNavigation.popToShellAndSelectTab(context, ClientNavTab.bookings);
     }
   }

@@ -44,16 +44,31 @@ class AppRouter {
         String initialQuery = '';
         String initialCategory = '';
         String initialCategoryId = '';
+        List<String> initialCategoryIds = const <String>[];
+        List<String> initialCategories = const <String>[];
+        String? intentSummary;
         if (exploreArgs is Map<String, dynamic>) {
           initialQuery = (exploreArgs['query'] ?? '').toString();
           initialCategory = (exploreArgs['category'] ?? '').toString();
           initialCategoryId = (exploreArgs['categoryId'] ?? '').toString();
+          if (exploreArgs['categoryIds'] is List) {
+            initialCategoryIds = List<String>.from(exploreArgs['categoryIds'] as List);
+          }
+          if (exploreArgs['categories'] is List) {
+            initialCategories = List<String>.from(exploreArgs['categories'] as List);
+          }
+          if (exploreArgs['intentSummary'] != null) {
+            intentSummary = exploreArgs['intentSummary'].toString();
+          }
         }
         return MaterialPageRoute(
           builder: (_) => ExploreArtisansScreen(
             initialQuery: initialQuery,
             initialCategory: initialCategory,
             initialCategoryId: initialCategoryId,
+            initialCategoryIds: initialCategoryIds,
+            initialCategories: initialCategories,
+            intentSummary: intentSummary,
           ),
         );
 

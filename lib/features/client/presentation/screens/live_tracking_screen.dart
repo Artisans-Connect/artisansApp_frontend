@@ -8,6 +8,7 @@ import '../../../../core/services/job_realtime_service.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../shared/widgets/worker_tracking_map.dart';
 import '../models/client_booking.dart';
@@ -308,6 +309,18 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       if (!mounted) return;
       if (raw is Map<String, dynamic>) {
         final ClientBooking booking = ClientBooking.fromApiJob(raw);
+        final String status = (booking.backendStatus ?? '').toLowerCase();
+        if (status == 'matching' || status == 'searching') {
+          _realtime.unsubscribe();
+          unawaited(Navigator.pushReplacementNamed(
+            context,
+            AppRoutes.findingArtisan,
+            arguments: <String, dynamic>{
+              'jobData': raw,
+            },
+          ));
+          return;
+        }
         setState(() {
           _job = booking.toTrackingMap();
           _loading = false;
@@ -345,6 +358,18 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     }
     final ClientBooking booking = ClientBooking.fromApiJob(fullJob);
     if (!mounted) return;
+    final String status = (booking.backendStatus ?? '').toLowerCase();
+    if (status == 'matching' || status == 'searching') {
+      _realtime.unsubscribe();
+      unawaited(Navigator.pushReplacementNamed(
+        context,
+        AppRoutes.findingArtisan,
+        arguments: <String, dynamic>{
+          'jobData': fullJob,
+        },
+      ));
+      return;
+    }
     setState(() {
       _job = booking.toTrackingMap();
       _loading = false;
@@ -504,6 +529,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     // ── Cancel / Termination
                     _buildCancelSection(status),
                     const SizedBox(height: 16),
+
+                    // ── Settlement Summary Card
+                    if (pendingApproval)
+                      _buildSettlementDetailsCard(job),
 
                     // ── Rate button
                     _buildCompletionActions(
@@ -927,6 +956,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     try {
       final dynamic reopened = await _jobsService.requestAnotherWorker(jobUuid);
       if (!mounted) return;
+      AppToast.showSuccess(context, 'Searching for a new worker...');
       unawaited(Navigator.pushReplacementNamed(
         context,
         AppRoutes.findingArtisan,
@@ -936,8 +966,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       ));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(userMessageFor(e, fallback: 'Could not request another worker.'))),
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not request another worker.',
       );
     } finally {
       if (mounted) setState(() => _requestingAnotherWorker = false);
@@ -1015,17 +1047,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         await _loadJobDetails();
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Job reopened for the artisan.')),
-      );
+      AppToast.showSuccess(context, 'Job reopened for the artisan.');
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            userMessageFor(e, fallback: 'Could not reopen this job.'),
-          ),
-        ),
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not reopen this job.',
       );
     } finally {
       if (mounted) setState(() => _isReopeningCompletion = false);
@@ -1266,14 +1294,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         snackMessage = 'Job cancelled. Please pay GH\u20B5 ${fee.toStringAsFixed(2)} to the artisan.';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(snackMessage)),
-      );
+      AppToast.showInfo(context, snackMessage);
       ClientNavigation.goToBookingsTab(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(userMessageFor(e, fallback: 'Could not cancel this job.'))),
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not cancel this job.',
       );
     } finally {
       if (mounted) setState(() => _isCancelling = false);
@@ -1381,15 +1409,15 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         reason: reasonText.isNotEmpty ? reasonText : null,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Termination request sent to the artisan.')),
-      );
+      AppToast.showSuccess(context, 'Termination request sent to the artisan.');
       // Refresh job data
       await _loadJobDetails();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(userMessageFor(e, fallback: 'Could not send termination request.'))),
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not send termination request.',
       );
     } finally {
       if (mounted) setState(() => _isRequestingTermination = false);
@@ -1809,10 +1837,130 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     );
   }
  
+  Widget _buildSettlementDetailsCard(Map<String, dynamic> job) {
+    final double? baseRate = (job['base_rate'] as num?)?.toDouble();
+    final double? distanceCost = (job['distance_cost'] as num?)?.toDouble();
+    final double? urgencyPremium = (job['urgency_premium'] as num?)?.toDouble();
+    final double? grossAmount = (job['gross_amount'] as num?)?.toDouble();
+
+    if (grossAmount == null || grossAmount == 0) {
+      return const SizedBox.shrink();
+    }
+
+    Widget rowItem(String label, double amount, {bool isTotal = false}) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: isTotal ? 16 : 14,
+                fontWeight: isTotal ? FontWeight.w800 : FontWeight.w500,
+                color: isTotal ? DesignTokens.textPrimary : DesignTokens.textSecondary,
+              ),
+            ),
+            Text(
+              'GHS ${amount.toStringAsFixed(2)}',
+              style: TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: isTotal ? 16 : 14,
+                fontWeight: isTotal ? FontWeight.w800 : FontWeight.w700,
+                color: isTotal ? DesignTokens.primary : DesignTokens.textPrimary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: DesignTokens.borderSubtle),
+        boxShadow: const [
+          BoxShadow(
+            color: DesignTokens.shadowMid,
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.receipt_long_rounded, color: DesignTokens.primary, size: 20),
+              const SizedBox(width: 8),
+              const Text(
+                'Settlement Summary',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: DesignTokens.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(color: DesignTokens.borderSubtle, height: 1),
+          const SizedBox(height: 8),
+          if (baseRate != null && baseRate > 0)
+            rowItem('Base Service Fee', baseRate),
+          if (distanceCost != null && distanceCost > 0)
+            rowItem('Travel Cost', distanceCost),
+          if (urgencyPremium != null && urgencyPremium > 0)
+            rowItem('Urgency Premium', urgencyPremium),
+          const SizedBox(height: 8),
+          const Divider(color: DesignTokens.borderSubtle, height: 1),
+          const SizedBox(height: 8),
+          rowItem('Total Estimate', grossAmount, isTotal: true),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: DesignTokens.primary.withAlpha((0.05 * 255).round()),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.info_outline_rounded,
+                  color: DesignTokens.primary,
+                  size: 16,
+                ),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    '*Estimate only. Final price settled directly.',
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: DesignTokens.primary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ---------------------------------------------------------------------------
   // Rate button
   // ---------------------------------------------------------------------------
- 
+
   Widget _buildCompletionActions({
     required bool canRate,
     required bool pendingApproval,

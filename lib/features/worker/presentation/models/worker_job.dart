@@ -46,6 +46,13 @@ class WorkerJob {
     this.createdAt,
     this.trade,
     this.area,
+    this.startedAt,
+    this.baseRate,
+    this.distanceCost,
+    this.urgencyPremium,
+    this.grossAmount,
+    this.platformFee,
+    this.artisanPayout,
   });
 
   final String id;
@@ -88,6 +95,15 @@ class WorkerJob {
   final DateTime? createdAt;
   final String? trade;
   final String? area;
+  final DateTime? startedAt;
+
+  // Settlement details
+  final double? baseRate;
+  final double? distanceCost;
+  final double? urgencyPremium;
+  final double? grossAmount;
+  final double? platformFee;
+  final double? artisanPayout;
 
   String get urgencyLabel => urgencyBadge ??
       (urgency == JobUrgency.asap ? 'ASAP' : (scheduledLabel ?? 'Scheduled'));
@@ -152,6 +168,13 @@ class WorkerJob {
       createdAt: createdAt,
       trade: trade,
       area: area,
+      startedAt: startedAt,
+      baseRate: baseRate,
+      distanceCost: distanceCost,
+      urgencyPremium: urgencyPremium,
+      grossAmount: grossAmount,
+      platformFee: platformFee,
+      artisanPayout: artisanPayout,
     );
   }
 }

@@ -8,6 +8,7 @@ import '../../../core/theme/app_typography.dart';
 import '../../models/notification_item.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/error_state_view.dart';
+import '../../widgets/app_toast.dart';
 import '../navigation/shared_route_args.dart';
 import 'chat_detail_screen.dart';
 
@@ -79,12 +80,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(userMessageFor(e,
-              fallback: 'Could not mark notifications as read.')),
-          backgroundColor: AppColors.error,
-        ),
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not mark notifications as read.',
       );
     }
   }

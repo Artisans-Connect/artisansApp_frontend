@@ -337,6 +337,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
       } else {
         session.markJobStarted();
       }
+      AppToast.showSuccess(context, 'Work started!');
     } catch (e) {
       if (mounted) {
         AppToast.showError(context, e, fallback: 'Failed to start job.');

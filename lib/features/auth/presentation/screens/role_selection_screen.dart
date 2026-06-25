@@ -23,6 +23,7 @@ import '../../../../shared/widgets/gradient_button.dart';
 import '../../models/onboarding_session.dart';
 import '../../widgets/role_option_card.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../core/services/smart_search_service.dart';
  
 // // ─────────────────────────────────────────────────────────────────────────────
 // // Design tokens (mirrored from DESIGN.md)
@@ -477,12 +478,17 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   final TextEditingController _locationController = TextEditingController();
   final TextEditingController _bioController = TextEditingController();
   final GlobalKey<FormState> _bioFormKey = GlobalKey<FormState>();
+  final TextEditingController _customTradeController = TextEditingController();
  
   File? _imageFile;
   final ImagePicker _picker = ImagePicker();
   bool _isSubmitting = false;
   bool _isLoadingLocation = false;
   bool _isLoadingTrades = true;
+  bool _isResolvingTrade = false;
+  String? _resolveMessage;
+  bool _resolveSuccess = false;
+  String _lastQuery = '';
 
   int _currentIndex = 0;
   bool _isBecomingWorker = false;
@@ -558,6 +564,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     _pageController.dispose();
     _locationController.dispose();
     _bioController.dispose();
+    _customTradeController.dispose();
     super.dispose();
   }
  
@@ -588,6 +595,77 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     return true;
   }
  
+  Future<void> _resolveCustomTrade() async {
+    final String query = _customTradeController.text.trim();
+    if (query.isEmpty) return;
+
+    setState(() {
+      _lastQuery = query;
+      _isResolvingTrade = true;
+      _resolveMessage = null;
+      _resolveSuccess = false;
+    });
+
+    try {
+      final SmartSearchIntent intent =
+          await SmartSearchService.instance.parseIntent(query);
+
+      if (!mounted) return;
+
+      if (intent.categoryNames.isEmpty) {
+        setState(() {
+          _isResolvingTrade = false;
+          _resolveMessage =
+              "We couldn't match this to any available trade category. Please select from the listed options or try describing it differently.";
+          _resolveSuccess = false;
+        });
+        return;
+      }
+
+      // We have matched some categories! Let's find matches in our trades list.
+      final List<String> matchedLabels = <String>[];
+      for (final String matchedName in intent.categoryNames) {
+        final String normalizedMatched = matchedName.trim().toLowerCase();
+        
+        for (final _TradeEntry entry in _trades) {
+          final String entryLabel = entry.label.trim().toLowerCase();
+          if (entryLabel == normalizedMatched ||
+              entryLabel.contains(normalizedMatched) ||
+              normalizedMatched.contains(entryLabel)) {
+            
+            if (!_session.selectedTrades.contains(entry.label)) {
+              _session.selectedTrades.add(entry.label);
+            }
+            if (!matchedLabels.contains(entry.label)) {
+              matchedLabels.add(entry.label);
+            }
+          }
+        }
+      }
+
+      setState(() {
+        _isResolvingTrade = false;
+        if (matchedLabels.isNotEmpty) {
+          _resolveSuccess = true;
+          _resolveMessage = "Matched and selected: ${matchedLabels.join(', ')}";
+          _customTradeController.clear();
+        } else {
+          _resolveSuccess = false;
+          _resolveMessage =
+              "Matched to '${intent.categoryNames.join(', ')}', but we couldn't map it to the listed options. Please select a trade from the grid.";
+        }
+      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isResolvingTrade = false;
+          _resolveSuccess = false;
+          _resolveMessage = "An error occurred while matching your trade. Please try again.";
+        });
+      }
+    }
+  }
+
   // ── Navigation ─────────────────────────────────────────────────────────────
  
   void _onNext() {
@@ -1079,6 +1157,182 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                           ),
                         )
                       : const SizedBox.shrink(),
+                ),
+
+                const SizedBox(height: 24),
+                const Divider(height: 1, color: DesignTokens.borderSubtle),
+                const SizedBox(height: 20),
+                const _SectionLabel("Can't find your trade?"),
+                const Text(
+                  "Describe what you do, and our smart assistant will match and select it in the grid above.",
+                  style: TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 12,
+                    color: DesignTokens.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                AppInput(
+                  controller: _customTradeController,
+                  hint: "e.g., I install PVC ceilings / repair generator wiring",
+                  prefixIcon: PhosphorIcons.magicWand,
+                  suffixIcon: _isResolvingTrade
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                DesignTokens.primary,
+                              ),
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: Icon(
+                            PhosphorIcons.arrowRight,
+                            color: DesignTokens.primary,
+                          ),
+                          onPressed: _resolveCustomTrade,
+                        ),
+                ),
+                if (_resolveMessage != null) ...[
+                  const SizedBox(height: 10),
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: _resolveSuccess
+                          ? const Color(0xFFE8F5E9)
+                          : const Color(0xFFFFEBEE),
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      border: Border.all(
+                        color: _resolveSuccess
+                            ? const Color(0xFF81C784)
+                            : const Color(0xFFE57373),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              _resolveSuccess ? PhosphorIcons.checkCircle : PhosphorIcons.warningCircle,
+                              color: _resolveSuccess ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _resolveMessage!,
+                                style: TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 12,
+                                  color: _resolveSuccess ? const Color(0xFF1B5E20) : const Color(0xFFB71C1C),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (_lastQuery.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                final String formattedQuery = _lastQuery
+                                    .split(' ')
+                                    .map((word) => word.isNotEmpty
+                                        ? '${word[0].toUpperCase()}${word.substring(1)}'
+                                        : '')
+                                    .join(' ');
+                                if (!_session.selectedTrades.contains(formattedQuery)) {
+                                  _session.selectedTrades.add(formattedQuery);
+                                }
+                                _resolveMessage = null;
+                                _customTradeController.clear();
+                              });
+                            },
+                            child: Row(
+                              children: [
+                                Icon(
+                                  PhosphorIcons.plusCircle,
+                                  size: 14,
+                                  color: _resolveSuccess ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    "Add '$_lastQuery' as custom trade",
+                                    style: TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
+                                      color: _resolveSuccess ? const Color(0xFF2E7D32) : const Color(0xFFC62828),
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+                Builder(
+                  builder: (BuildContext context) {
+                    final List<String> predefinedLabels = _trades.map((_TradeEntry t) => t.label).toList();
+                    final List<String> customTrades = _session.selectedTrades
+                        .where((String trade) => !predefinedLabels.contains(trade))
+                        .toList();
+
+                    if (customTrades.isEmpty) return const SizedBox.shrink();
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        const SizedBox(height: 20),
+                        const _SectionLabel("Custom added trades"),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: customTrades.map((String trade) {
+                            return Chip(
+                              label: Text(
+                                trade,
+                                style: const TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: DesignTokens.primaryDark,
+                                ),
+                              ),
+                              backgroundColor: DesignTokens.primaryTint08,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                                side: const BorderSide(color: DesignTokens.primaryTint12),
+                              ),
+                              deleteIcon: const Icon(
+                                PhosphorIcons.x,
+                                size: 14,
+                                color: DesignTokens.primary,
+                              ),
+                              onDeleted: () {
+                                setState(() {
+                                  _session.selectedTrades.remove(trade);
+                                });
+                              },
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),

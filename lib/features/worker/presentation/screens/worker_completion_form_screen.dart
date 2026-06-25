@@ -46,9 +46,7 @@ class _WorkerCompletionFormScreenState
     if (_isSubmitting) return;
     final double? hours = double.tryParse(_hoursController.text.trim());
     if (hours == null || hours <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a valid time spent')),
-      );
+      AppToast.showError(context, 'Enter a valid time spent.');
       return;
     }
     await HapticFeedback.mediumImpact();
