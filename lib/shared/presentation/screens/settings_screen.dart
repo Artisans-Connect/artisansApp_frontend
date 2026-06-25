@@ -519,15 +519,6 @@ class _CommunityPromoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          OutlinedButton(
-            onPressed: () {
-              AppToast.showInfo(
-                context,
-                'Worker onboarding opens from sign-up.',
-              );
-            },
-            child: const Text('CONNECT NOW'),
-          ),
         ],
       ),
     );
