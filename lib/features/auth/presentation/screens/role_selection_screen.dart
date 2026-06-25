@@ -261,100 +261,144 @@ class _TradeChip extends StatelessWidget {
   }
 }
  
-/// Area pill toggle for service areas.
-class _AreaPill extends StatelessWidget {
-  const _AreaPill({
-    required this.label,
-    required this.selected,
+class _ExperienceDetail {
+  const _ExperienceDetail({
+    required this.band,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
+  final String band;
+  final String title;
+  final String subtitle;
+  final IconData icon;
+}
+
+const List<_ExperienceDetail> _experienceDetails = <_ExperienceDetail>[
+  _ExperienceDetail(
+    band: '0–1 years',
+    title: 'Entry Level (0–1 years)',
+    subtitle: 'Starting out, building experience and portfolio.',
+    icon: PhosphorIcons.user,
+  ),
+  _ExperienceDetail(
+    band: '1–3 years',
+    title: 'Junior (1–3 years)',
+    subtitle: 'Completed training, working independently on standard jobs.',
+    icon: PhosphorIcons.wrench,
+  ),
+  _ExperienceDetail(
+    band: '3–5 years',
+    title: 'Intermediate (3–5 years)',
+    subtitle: 'Experienced professional with a solid track record.',
+    icon: PhosphorIcons.briefcase,
+  ),
+  _ExperienceDetail(
+    band: '5+ years',
+    title: 'Expert / Master (5+ years)',
+    subtitle: 'Seasoned craftsman with deep expertise and master status.',
+    icon: PhosphorIcons.star,
+  ),
+];
+
+class _ExperienceOptionCard extends StatelessWidget {
+  const _ExperienceOptionCard({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.isSelected,
     required this.onTap,
   });
- 
-  final String label;
-  final bool selected;
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool isSelected;
   final VoidCallback onTap;
- 
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: selected ? DesignTokens.primary : DesignTokens.surfaceCard,
-          borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+          color: isSelected ? DesignTokens.primaryTint08 : DesignTokens.surfaceCard,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusLg),
           border: Border.all(
-            color: selected ? DesignTokens.primary : DesignTokens.borderSubtle,
-            width: 1.2,
+            color: isSelected ? DesignTokens.primary : DesignTokens.borderSubtle,
+            width: isSelected ? 1.8 : 1.0,
           ),
-        ),
-        child: Text(
-          label,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontFamily: 'Satoshi',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? Colors.white : DesignTokens.textSecondary,
-          ),
-        ),
-      ),
-    );
-  }
-}
- 
-/// Experience year card — compact tap target.
-class _ExpCard extends StatelessWidget {
-  const _ExpCard({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
- 
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
- 
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: selected ? DesignTokens.primaryTint08 : DesignTokens.surfaceCard,
-            borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-            border: Border.all(
-              color: selected ? DesignTokens.primary : DesignTokens.borderSubtle,
-              width: selected ? 1.8 : 1,
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: isSelected
+                  ? DesignTokens.primary.withAlpha((0.08 * 255).round())
+                  : Colors.black.withAlpha((0.02 * 255).round()),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-          ),
-          child: Column(
-            children: <Widget>[
-              Text(
-                label.replaceAll(' years', '').replaceAll(' yrs', ''),
-                style: TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: selected ? DesignTokens.primary : DesignTokens.textPrimary,
-                ),
+          ],
+        ),
+        child: Row(
+          children: <Widget>[
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isSelected ? DesignTokens.primaryTint12 : DesignTokens.surfaceBase,
+                borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
               ),
-              const SizedBox(height: 2),
-              Text(
-                'yrs',
-                style: TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.05,
-                  color: selected ? DesignTokens.primary : DesignTokens.textSecondary,
-                ),
+              child: Icon(
+                icon,
+                color: isSelected ? DesignTokens.primary : DesignTokens.textSecondary,
+                size: 22,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: isSelected ? DesignTokens.primary : DesignTokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: DesignTokens.textSecondary,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 14),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? DesignTokens.primary : DesignTokens.borderSubtle,
+                  width: isSelected ? 6.0 : 1.5,
+                ),
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -493,21 +537,16 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   int _currentIndex = 0;
   bool _isBecomingWorker = false;
   bool _parsedRouteArgs = false;
+
+  // Dynamic service areas autocomplete
+  final TextEditingController _areaSearchController = TextEditingController();
+  List<PlaceSuggestion> _areaSuggestions = <PlaceSuggestion>[];
+  bool _isSearchingAreas = false;
+  Timer? _areaDebounce;
   
   // Dynamic trades loaded from database
   List<_TradeEntry> _trades = <_TradeEntry>[];
   final CategoriesService _categoriesService = CategoriesService();
- 
-  // ── Static data ────────────────────────────────────────────────────────────
- 
-  static const List<String> _areas = <String>[
-    'Adum', 'Asokwa', 'Bantama', 'Suame',
-    'Tafo', 'Ahodwo', 'Santasi', 'KNUST',
-  ];
- 
-  static const List<String> _experienceBands = <String>[
-    '0–1 years', '1–3 years', '3–5 years', '5+ years',
-  ];
  
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   
@@ -515,6 +554,57 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   void initState() {
     super.initState();
     _loadTrades();
+    _areaSearchController.addListener(_onAreaSearchChanged);
+  }
+  
+  void _onAreaSearchChanged() {
+    if (mounted) setState(() {});
+
+    if (_areaDebounce?.isActive ?? false) _areaDebounce!.cancel();
+    _areaDebounce = Timer(const Duration(milliseconds: 300), () async {
+      final String query = _areaSearchController.text.trim();
+      if (query.length < 2) {
+        if (mounted) {
+          setState(() {
+            _areaSuggestions = <PlaceSuggestion>[];
+          });
+        }
+        return;
+      }
+      if (mounted) {
+        setState(() {
+          _isSearchingAreas = true;
+        });
+      }
+      try {
+        final List<PlaceSuggestion> suggestions =
+            await PlaceLookupService.instance.search(query);
+        if (mounted) {
+          setState(() {
+            _areaSuggestions = suggestions;
+            _isSearchingAreas = false;
+          });
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _areaSuggestions = <PlaceSuggestion>[];
+            _isSearchingAreas = false;
+          });
+        }
+      }
+    });
+  }
+
+  void _addAreaFromInput([String? text]) {
+    final String query = text ?? _areaSearchController.text.trim();
+    if (query.isNotEmpty) {
+      setState(() {
+        _session.serviceAreas.add(query);
+        _areaSearchController.clear();
+        _areaSuggestions = <PlaceSuggestion>[];
+      });
+    }
   }
   
   Future<void> _loadTrades() async {
@@ -565,6 +655,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     _locationController.dispose();
     _bioController.dispose();
     _customTradeController.dispose();
+    _areaSearchController.removeListener(_onAreaSearchChanged);
+    _areaSearchController.dispose();
+    _areaDebounce?.cancel();
     super.dispose();
   }
  
@@ -1065,117 +1158,35 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       );
     }
  
-    return Column(
-      children: <Widget>[
-        // Hero header
-        _HeroHeader(
-          icon: const Icon(
-            PhosphorIcons.toolbox,
-            color: DesignTokens.primary,
-            size: 34,
+    return SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          // Hero header
+          _HeroHeader(
+            icon: const Icon(
+              PhosphorIcons.toolbox,
+              color: DesignTokens.primary,
+              size: 34,
+            ),
+            bgColor: DesignTokens.primaryTint12,
+            title: 'What work\ndo you do?',
+            subtitle:
+                'Pick all your trades — clients match\nyou based on these.',
+            totalDots: _totalDots,
+            currentDot: _isBecomingWorker ? 0 : 1,
           ),
-          bgColor: DesignTokens.primaryTint12,
-          title: 'What work\ndo you do?',
-          subtitle:
-              'Pick all your trades — clients match\nyou based on these.',
-          totalDots: _totalDots,
-          currentDot: _isBecomingWorker ? 0 : 1,
-        ),
  
-        // Scrollable content
-        Expanded(
-          child: SingleChildScrollView(
+          // Content
+          Padding(
             padding: const EdgeInsets.all(DesignTokens.gutter),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const _SectionLabel('Your trades'),
- 
-                // 2-column icon card grid
-                GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 1.35,
-                  ),
-                  itemCount: _trades.length,
-                  itemBuilder: (BuildContext context, int i) {
-                    final _TradeEntry entry = _trades[i];
-                    final bool selected =
-                        _session.selectedTrades.contains(entry.label);
-                    return _TradeChip(
-                      label: entry.label,
-                      icon: entry.icon,
-                      selected: selected,
-                      onTap: () => setState(() {
-                        if (selected) {
-                          _session.selectedTrades.remove(entry.label);
-                        } else {
-                          _session.selectedTrades.add(entry.label);
-                        }
-                      }),
-                    );
-                  },
-                ),
- 
-                const SizedBox(height: 16),
- 
-                // Selected count strip
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  child: selectedCount > 0
-                      ? Container(
-                          key: ValueKey<int>(selectedCount),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: DesignTokens.goldTint12,
-                            borderRadius:
-                                BorderRadius.circular(DesignTokens.radiusMd),
-                            border:
-                                Border.all(color: DesignTokens.accentGold, width: 1),
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Icon(PhosphorIcons.checkCircle,
-                                  color: DesignTokens.accentWarm, size: 16),
-                              const SizedBox(width: 8),
-                              Text(
-                                '$selectedCount trade${selectedCount > 1 ? 's' : ''} selected — add more any time from settings.',
-                                style: const TextStyle(
-                                  fontFamily: 'Satoshi',
-                                  fontSize: 12,
-                                  color: DesignTokens.accentWarm,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : const SizedBox.shrink(),
-                ),
-
-                const SizedBox(height: 24),
-                const Divider(height: 1, color: DesignTokens.borderSubtle),
-                const SizedBox(height: 20),
-                const _SectionLabel("Can't find your trade?"),
-                const Text(
-                  "Describe what you do, and our smart assistant will match and select it in the grid above.",
-                  style: TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 12,
-                    color: DesignTokens.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 12),
+                // Smart search bar at the top
                 AppInput(
                   controller: _customTradeController,
-                  hint: "e.g., I install PVC ceilings / repair generator wiring",
-                  prefixIcon: PhosphorIcons.magicWand,
+                  hint: "Search or describe what you do (e.g. I fix shoes)",
+                  prefixIcon: PhosphorIcons.magnifyingGlass,
                   suffixIcon: _isResolvingTrade
                       ? const Padding(
                           padding: EdgeInsets.all(12),
@@ -1296,7 +1307,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
                         const _SectionLabel("Custom added trades"),
                         Wrap(
                           spacing: 8,
@@ -1334,11 +1345,84 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     );
                   },
                 ),
+
+                const SizedBox(height: 24),
+                const _SectionLabel('All trades'),
+ 
+                // 2-column icon card grid
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1.35,
+                  ),
+                  itemCount: _trades.length,
+                  itemBuilder: (BuildContext context, int i) {
+                    final _TradeEntry entry = _trades[i];
+                    final bool selected =
+                        _session.selectedTrades.contains(entry.label);
+                    return _TradeChip(
+                      label: entry.label,
+                      icon: entry.icon,
+                      selected: selected,
+                      onTap: () => setState(() {
+                        if (selected) {
+                          _session.selectedTrades.remove(entry.label);
+                        } else {
+                          _session.selectedTrades.add(entry.label);
+                        }
+                      }),
+                    );
+                  },
+                ),
+ 
+                const SizedBox(height: 16),
+ 
+                // Selected count strip
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 220),
+                  child: selectedCount > 0
+                      ? Container(
+                          key: ValueKey<int>(selectedCount),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: DesignTokens.goldTint12,
+                            borderRadius:
+                                BorderRadius.circular(DesignTokens.radiusMd),
+                            border:
+                                Border.all(color: DesignTokens.accentGold, width: 1),
+                          ),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(PhosphorIcons.checkCircle,
+                                  color: DesignTokens.accentWarm, size: 16),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  "$selectedCount trade${selectedCount > 1 ? 's' : ''} selected — add more any time from settings.",
+                                  style: const TextStyle(
+                                    fontFamily: 'Satoshi',
+                                    fontSize: 12,
+                                    color: DesignTokens.accentWarm,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
  
@@ -1347,69 +1431,171 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   // ─────────────────────────────────────────────────────────────────────────
  
   Widget _buildServiceAreasPage() {
-    return Column(
-      children: <Widget>[
-        // Hero header
-        _HeroHeader(
-          icon: const Icon(
-            PhosphorIcons.mapPin,
-            color: Color(0xFF1D9E75),
-            size: 34,
+    return SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          // Hero header
+          _HeroHeader(
+            icon: const Icon(
+              PhosphorIcons.mapPin,
+              color: Color(0xFF1D9E75),
+              size: 34,
+            ),
+            bgColor: const Color(0xFFE1F5EE),
+            title: 'Where do\nyou work?',
+            subtitle:
+                'Choose the areas you cover and how\nlong you\'ve been in the trade.',
+            totalDots: _totalDots,
+            currentDot: _isBecomingWorker ? 1 : 2,
           ),
-          bgColor: const Color(0xFFE1F5EE),
-          title: 'Where do\nyou work?',
-          subtitle:
-              'Choose the areas you cover and how\nlong you\'ve been in the trade.',
-          totalDots: _totalDots,
-          currentDot: _isBecomingWorker ? 1 : 2,
-        ),
  
-        // Scrollable body
-        Expanded(
-          child: SingleChildScrollView(
+          // Body
+          Padding(
             padding: const EdgeInsets.all(DesignTokens.gutter),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
                 // ── Areas ──
                 const _SectionLabel('Service areas'),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: _areas.map((String area) {
-                    final bool selected =
-                        _session.serviceAreas.contains(area);
-                    return _AreaPill(
-                      label: area,
-                      selected: selected,
-                      onTap: () => setState(() {
-                        if (selected) {
-                          _session.serviceAreas.remove(area);
-                        } else {
-                          _session.serviceAreas.add(area);
-                        }
-                      }),
-                    );
-                  }).toList(),
+                AppInput(
+                  controller: _areaSearchController,
+                  hint: "Search area (e.g. East Legon, Accra)",
+                  prefixIcon: PhosphorIcons.mapPin,
+                  textInputAction: TextInputAction.done,
+                  onFieldSubmitted: (String val) => _addAreaFromInput(val),
+                  suffixIcon: _isSearchingAreas
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                DesignTokens.primary,
+                              ),
+                            ),
+                          ),
+                        )
+                      : IconButton(
+                          icon: const Icon(
+                            PhosphorIcons.plusCircle,
+                            color: DesignTokens.primary,
+                          ),
+                          onPressed: () => _addAreaFromInput(),
+                        ),
                 ),
+                if (_areaSuggestions.isNotEmpty || _areaSearchController.text.trim().isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    constraints: const BoxConstraints(maxHeight: 200),
+                    decoration: BoxDecoration(
+                      color: DesignTokens.surfaceCard,
+                      borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                      border: Border.all(color: DesignTokens.borderSubtle),
+                      boxShadow: <BoxShadow>[
+                        BoxShadow(
+                          color: Colors.black.withAlpha((0.04 * 255).round()),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          ..._areaSuggestions.map((PlaceSuggestion suggestion) {
+                            return ListTile(
+                              dense: true,
+                              leading: const Icon(PhosphorIcons.mapPin, size: 16, color: DesignTokens.textSecondary),
+                              title: Text(
+                                suggestion.description,
+                                style: const TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: DesignTokens.textPrimary,
+                                ),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  _session.serviceAreas.add(suggestion.description);
+                                  _areaSearchController.clear();
+                                  _areaSuggestions = <PlaceSuggestion>[];
+                                });
+                              },
+                            );
+                          }),
+                          if (_areaSearchController.text.trim().isNotEmpty)
+                            ListTile(
+                              dense: true,
+                              leading: const Icon(PhosphorIcons.plusCircle, size: 16, color: DesignTokens.primary),
+                              title: Text(
+                                "Add '${_areaSearchController.text.trim()}' as custom area",
+                                style: const TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: DesignTokens.primary,
+                                ),
+                              ),
+                              onTap: () => _addAreaFromInput(),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                if (_session.serviceAreas.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: _session.serviceAreas.map((String area) {
+                      return Chip(
+                        label: Text(
+                          area,
+                          style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: DesignTokens.primaryDark,
+                          ),
+                        ),
+                        backgroundColor: DesignTokens.primaryTint08,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                          side: const BorderSide(color: DesignTokens.primaryTint12),
+                        ),
+                        deleteIcon: const Icon(
+                          PhosphorIcons.x,
+                          size: 14,
+                          color: DesignTokens.primary,
+                        ),
+                        onDeleted: () {
+                          setState(() {
+                            _session.serviceAreas.remove(area);
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
  
                 const SizedBox(height: DesignTokens.lg),
  
                 // ── Experience ──
                 const _SectionLabel('Experience level'),
-                Row(
-                  children: _experienceBands.map((String band) {
-                    return Padding(
-                      padding: EdgeInsets.only(
-                        right: band == _experienceBands.last ? 0 : 8,
-                      ),
-                      child: _ExpCard(
-                        // Strip trailing text — the card shows just the number range
-                        label: band,
-                        selected: _session.experienceBand == band,
-                        onTap: () => setState(
-                            () => _session.experienceBand = band),
-                      ),
+                Column(
+                  children: _experienceDetails.map((_ExperienceDetail detail) {
+                    final bool isSelected = _session.experienceBand == detail.band;
+                    return _ExperienceOptionCard(
+                      title: detail.title,
+                      subtitle: detail.subtitle,
+                      icon: detail.icon,
+                      isSelected: isSelected,
+                      onTap: () => setState(() => _session.experienceBand = detail.band),
                     );
                   }).toList(),
                 ),
@@ -1423,8 +1609,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
               ],
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
  
@@ -1618,44 +1804,43 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   // ─────────────────────────────────────────────────────────────────────────
  
   Widget _buildBioPage() {
-    return Column(
-      children: <Widget>[
-        // Hero header
-        _HeroHeader(
-          icon: const Icon(
-            PhosphorIcons.userCircle,
-            color: DesignTokens.primary,
-            size: 34,
+    return SingleChildScrollView(
+      child: Column(
+        children: <Widget>[
+          // Hero header
+          _HeroHeader(
+            icon: const Icon(
+              PhosphorIcons.userCircle,
+              color: DesignTokens.primary,
+              size: 34,
+            ),
+            bgColor: DesignTokens.primaryTint12,
+            title: _session.isClient
+                ? 'Tell us about\nyourself'
+                : 'Write your\nprofessional bio',
+            subtitle: _session.isClient
+                ? 'A quick intro helps artisans know\nwho they\'re working with.'
+                : 'A great bio gets you hired faster.\nKeep it honest and specific.',
+            totalDots: _totalDots,
+            currentDot: _isBecomingWorker ? 3 : 4,
           ),
-          bgColor: DesignTokens.primaryTint12,
-          title: _session.isClient
-              ? 'Tell us about\nyourself'
-              : 'Write your\nprofessional bio',
-          subtitle: _session.isClient
-              ? 'A quick intro helps artisans know\nwho they\'re working with.'
-              : 'A great bio gets you hired faster.\nKeep it honest and specific.',
-          totalDots: _totalDots,
-          currentDot: _isBecomingWorker ? 3 : 4,
-        ),
  
-        // Body
-        Expanded(
-          child: SingleChildScrollView(
-            child: Form(
-              key: _bioFormKey,
-              child: Padding(
+          // Body
+          Form(
+            key: _bioFormKey,
+            child: Padding(
+              padding: const EdgeInsets.all(DesignTokens.gutter),
+              child: Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(DesignTokens.gutter),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(DesignTokens.gutter),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.surfaceCard,
-                    borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-                    border: Border.all(color: DesignTokens.borderSubtle),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
+                decoration: BoxDecoration(
+                  color: DesignTokens.surfaceCard,
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                  border: Border.all(color: DesignTokens.borderSubtle),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
                       // Label + character ring row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1775,10 +1960,9 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 ),
               ),
             ),
-          ),
+          ],
         ),
-      ],
-    );
+      );
   }
 }
  

@@ -44,6 +44,11 @@ class PlaceLookupService {
     );
     final http.Response response = await http.get(uri);
     final dynamic decoded = jsonDecode(response.body);
+    if (decoded is Map<String, dynamic> &&
+        decoded['status'] != 'OK' &&
+        decoded['status'] != 'ZERO_RESULTS') {
+      print('PlaceLookupService API Error: ${decoded['status']} - ${decoded['error_message']}');
+    }
     if (decoded is! Map<String, dynamic>) return <PlaceSuggestion>[];
     final dynamic predictions = decoded['predictions'];
     if (predictions is! List) return <PlaceSuggestion>[];

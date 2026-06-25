@@ -12,6 +12,8 @@ class AppInput extends StatelessWidget {
     this.suffixIcon,
     this.maxLines = 1,
     this.maxLength,
+    this.textInputAction,
+    this.onFieldSubmitted,
   });
 
   final TextEditingController controller;
@@ -23,6 +25,8 @@ class AppInput extends StatelessWidget {
   final Widget? suffixIcon;
   final int maxLines;
   final int? maxLength;
+  final TextInputAction? textInputAction;
+  final ValueChanged<String>? onFieldSubmitted;
 
   @override
   Widget build(BuildContext context) {
@@ -33,6 +37,8 @@ class AppInput extends StatelessWidget {
       validator: validator,
       maxLines: maxLines,
       maxLength: maxLength,
+      textInputAction: textInputAction,
+      onFieldSubmitted: onFieldSubmitted,
       decoration: InputDecoration(
         hintText: hint,
         counterText: '',
