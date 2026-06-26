@@ -22,31 +22,15 @@ import '../../services/explore_service.dart';
 import '../../../../core/services/smart_search_service.dart';
 
 const Map<String, List<String>> _categoryAliases = <String, List<String>>{
-  'plumbing': <String>['plumber', 'pipe', 'drainage', 'septic'],
-  'electrical': <String>['electrician', 'wiring', 'lighting', 'generator'],
-  'carpentry': <String>['carpenter', 'woodwork', 'furniture', 'cabinet'],
-  'masonry': <String>['mason', 'blockwork', 'plastering', 'concrete'],
-  'welding': <String>['welder', 'fabrication', 'metalwork', 'blacksmith'],
-  'construction': <String>['builder', 'building', 'renovation'],
-  'automotive': <String>['mechanic', 'car', 'motorbike', 'auto body'],
-  'painting': <String>['painter', 'paint'],
-  'tiling': <String>['tiler', 'tiles', 'flooring', 'terrazzo'],
-  'roofing': <String>['roofer', 'roof', 'ceiling'],
-  'hvac': <String>['ac', 'air conditioning', 'refrigeration', 'fridge'],
-  'appliance_repair': <String>[
-    'appliance',
-    'electronics',
-    'tv',
-    'washing machine',
-  ],
-  'cleaning': <String>['cleaner', 'deep clean', 'fumigation'],
-  'landscaping': <String>['lawn', 'garden', 'weeding'],
-  'fashion': <String>['tailor', 'dressmaker', 'sewing', 'seamstress'],
-  'beauty': <String>['hairdresser', 'barber', 'makeup', 'nails'],
-  'catering': <String>['caterer', 'cook', 'baking', 'baker'],
-  'upholstery': <String>['sofa', 'cushion', 'curtains', 'blinds'],
-  'security': <String>['locksmith', 'cctv', 'access control'],
-  'ict_support': <String>['computer', 'phone repair', 'network', 'wifi'],
+  'construction_building': <String>['builder', 'building', 'mason', 'carpenter', 'tiler', 'painter', 'steel bender', 'welder', 'fabricator', 'ceiling', 'glass', 'roofer', 'paver', 'construction'],
+  'electrical_power': <String>['electrician', 'wiring', 'lighting', 'generator', 'inverter', 'solar', 'cctv', 'security', 'appliance', 'fan', 'iron'],
+  'plumbing_water': <String>['plumber', 'pipe', 'leak', 'borehole', 'pump', 'drainage', 'sanitary', 'sink', 'toilet', 'shower', 'water'],
+  'auto_mechanical': <String>['mechanic', 'car', 'vehicle', 'vulcanizer', 'sprayer', 'body', 'motorcycle', 'heavy equipment', 'engine', 'tyre'],
+  'home_repairs': <String>['handyman', 'furniture', 'door', 'window', 'pest', 'cleaner', 'gardener', 'cleaning', 'repairs', 'maintenance'],
+  'beauty_fashion': <String>['hairdresser', 'barber', 'makeup', 'tailor', 'dressmaker', 'shoemaker', 'cobbler', 'bead', 'milliner', 'braids', 'styling', 'sewing'],
+  'electronics_it': <String>['phone', 'laptop', 'tv', 'sound', 'printer', 'computer', 'screen', 'electronics', 'it', 'network', 'wifi'],
+  'hospitality_events': <String>['caterer', 'baker', 'decorator', 'photographer', 'videographer', 'dj', 'canopy', 'chair', 'catering', 'event', 'cake'],
+  'arts_crafts': <String>['potter', 'weaver', 'wood carver', 'drum', 'goldsmith', 'jeweller', 'brass smith', 'signwriter', 'kente', 'pottery', 'craft'],
 };
 
 

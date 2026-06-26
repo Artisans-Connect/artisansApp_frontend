@@ -147,18 +147,29 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       if (mounted) {
         setState(() {
           _trades = <TradeEntry>[
-            const TradeEntry('Plumber', PhosphorIcons.drop),
-            const TradeEntry('Electrician', PhosphorIcons.lightning),
-            const TradeEntry('Carpenter', PhosphorIcons.hammer),
             const TradeEntry('Mason', PhosphorIcons.wall),
+            const TradeEntry('Carpenter', PhosphorIcons.hammer),
+            const TradeEntry('Tiler', PhosphorIcons.squaresFour),
             const TradeEntry('Painter', PhosphorIcons.paintRoller),
-            const TradeEntry('Mechanic', PhosphorIcons.wrench),
-            const TradeEntry('Welder', PhosphorIcons.fire),
-            const TradeEntry('Tailor', PhosphorIcons.scissors),
+            const TradeEntry('Welder / Metal Fabricator', PhosphorIcons.fire),
+            const TradeEntry('Electrician', PhosphorIcons.lightning),
+            const TradeEntry('Solar Technician', PhosphorIcons.lightning),
+            const TradeEntry('Plumber', PhosphorIcons.drop),
+            const TradeEntry('Borehole / Pump Technician', PhosphorIcons.drop),
+            const TradeEntry('Auto Mechanic', PhosphorIcons.wrench),
+            const TradeEntry('Vulcanizer', PhosphorIcons.gear),
+            const TradeEntry('General Handyman', PhosphorIcons.wrench),
             const TradeEntry('Cleaner', PhosphorIcons.broom),
-            const TradeEntry('AC Technician', PhosphorIcons.snowflake),
-            const TradeEntry('Appliance Repair', PhosphorIcons.plug),
+            const TradeEntry('Gardener', PhosphorIcons.leaf),
             const TradeEntry('Hairdresser', PhosphorIcons.scissors),
+            const TradeEntry('Barber', PhosphorIcons.scissors),
+            const TradeEntry('Tailor / Dressmaker', PhosphorIcons.scissors),
+            const TradeEntry('Shoemaker / Cobbler', PhosphorIcons.scissors),
+            const TradeEntry('Phone Repairer', PhosphorIcons.plug),
+            const TradeEntry('Laptop Technician', PhosphorIcons.desktopTower),
+            const TradeEntry('Caterer', PhosphorIcons.forkKnife),
+            const TradeEntry('Baker', PhosphorIcons.forkKnife),
+            const TradeEntry('Photographer', PhosphorIcons.camera),
           ];
         });
       }
