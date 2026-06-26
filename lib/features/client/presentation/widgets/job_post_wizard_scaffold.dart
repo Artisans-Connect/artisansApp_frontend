@@ -69,7 +69,7 @@ class JobPostWizardScaffold extends StatelessWidget {
     if (discard == true) {
       onDiscard!();
     }
-    return discard ?? false;
+    return false;
   }
 
   @override
