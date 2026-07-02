@@ -9,6 +9,8 @@ class WorkerJob {
     required this.id,
     required this.title,
     required this.category,
+    this.categoryIconName,
+    this.categoryColorHex,
     required this.description,
     required this.addressLabel,
     required this.latitude,
@@ -58,6 +60,8 @@ class WorkerJob {
   final String id;
   final String title;
   final String category;
+  final String? categoryIconName;
+  final String? categoryColorHex;
   final String description;
   final String addressLabel;
   final double latitude;
@@ -131,6 +135,8 @@ class WorkerJob {
       id: id,
       title: title,
       category: category,
+      categoryIconName: categoryIconName,
+      categoryColorHex: categoryColorHex,
       description: description,
       addressLabel: addressLabel,
       latitude: latitude,

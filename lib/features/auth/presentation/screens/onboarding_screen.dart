@@ -61,39 +61,48 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              child: Row(
-                children: <Widget>[
-                  if (_currentPage > 0)
-                    GestureDetector(
-                      onTap: () {
-                        _pageController.previousPage(
-                           duration: const Duration(milliseconds: 400),
-                          curve: Curves.easeInOut,
-                        );
-                      },
-                      child: Icon(PhosphorIcons.caretLeft,
-                          color: AppColors.primary, size: 20),
-                    ),
-                  if (_currentPage > 0) const SizedBox(width: 8),
-                  Text(
-                    'CraftMatch',
-                    style: AppTypography.displayMedium.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: _goToSignIn,
-                    child: Text(
-                      'Skip',
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
+              child: SizedBox(
+                height: 48,
+                child: Row(
+                  children: <Widget>[
+                    if (_currentPage > 0 && _currentPage < _totalPages - 1)
+                      GestureDetector(
+                        onTap: () {
+                          _pageController.previousPage(
+                             duration: const Duration(milliseconds: 400),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                        child: Icon(PhosphorIcons.caretLeft,
+                            color: AppColors.primary, size: 20),
+                      ),
+                    if (_currentPage > 0 && _currentPage < _totalPages - 1) const SizedBox(width: 8),
+                    Text(
+                      'CraftMatch',
+                      style: AppTypography.displayMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
-                  ),
-                ],
+                    const Spacer(),
+                    Visibility(
+                      visible: _currentPage < _totalPages - 1,
+                      maintainSize: true,
+                      maintainAnimation: true,
+                      maintainState: true,
+                      child: TextButton(
+                        onPressed: _goToSignIn,
+                        child: Text(
+                          'Skip',
+                          style: AppTypography.bodyLarge.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 

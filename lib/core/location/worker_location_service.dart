@@ -22,10 +22,12 @@ class WorkerLocationService {
     if (_running) return;
 
     final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
+    if (userId == null) throw Exception('User not authenticated');
 
     final permission = await _ensurePermission();
-    if (!permission) return;
+    if (!permission) {
+      throw Exception('Location permissions are required to go online.');
+    }
 
     _running = true;
     _subscription = Geolocator.getPositionStream(
@@ -38,8 +40,12 @@ class WorkerLocationService {
       onError: (_) {},
     );
 
-    final initial = await Geolocator.getCurrentPosition();
-    await _maybePing(initial);
+    try {
+      final initial = await Geolocator.getCurrentPosition();
+      await _maybePing(initial);
+    } catch (_) {
+      // Ignore initial location fetch error to prevent service startup failure.
+    }
   }
 
   Future<void> stop() async {

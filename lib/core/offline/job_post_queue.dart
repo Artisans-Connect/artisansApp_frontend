@@ -47,6 +47,7 @@ class JobPostQueue {
       _box = Hive.box<String>(_boxName);
     }
     Connectivity().onConnectivityChanged.listen((_) => flush());
+    await flush();
   }
 
   Future<String> enqueue(

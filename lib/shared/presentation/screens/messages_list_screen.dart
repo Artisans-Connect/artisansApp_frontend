@@ -77,7 +77,8 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
-        _loadError = userMessageFor(e, fallback: 'Failed to load conversations.');
+        _loadError =
+            userMessageFor(e, fallback: 'Failed to load conversations.');
       });
     }
   }
@@ -111,6 +112,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
               ) ??
               DateTime.now(),
           jobTitle: json['title'] as String?,
+          isOnline: json['counterpart_is_online'] == true,
           isDirect: isDirect,
         );
       }).toList();
@@ -189,11 +191,13 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
           IconButton(
             tooltip: 'Refresh',
             onPressed: () => _loadConversations(forceRefresh: true),
-            icon: Icon(PhosphorIcons.arrowClockwise, color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.arrowClockwise,
+                color: AppColors.textPrimary),
           ),
         ] else ...[
           PopupMenuButton<String>(
-            icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.dotsThreeVertical,
+                color: AppColors.textPrimary),
             onSelected: (String value) {
               if (value == 'settings') {
                 Navigator.pushNamed(context, SettingsScreen.routeName);
@@ -272,8 +276,7 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(PhosphorIcons.chatCircle,
-                size: 64, color: AppColors.outline),
+            Icon(PhosphorIcons.chatCircle, size: 64, color: AppColors.outline),
             const SizedBox(height: 16),
             Text(
               'No conversations yet',

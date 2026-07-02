@@ -4,6 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/services/applications_service.dart';
+import '../../../../core/services/jobs_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -25,8 +26,10 @@ class JobApplicantsScreen extends StatefulWidget {
 
 class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
   final ApplicationsService _applicationsService = ApplicationsService();
+  final JobsService _jobsService = JobsService();
   bool _isLoading = true;
   bool _isAccepting = false;
+  bool _isCancelling = false;
   String? _errorMessage;
   List<Map<String, dynamic>> _applications = <Map<String, dynamic>>[];
 
@@ -35,6 +38,18 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
           .toString();
 
   String get _title => (widget.job?['title'] ?? 'Job applicants').toString();
+
+  bool get _canCancelSearch {
+    final String status =
+        (widget.job?['backendStatus'] ?? widget.job?['status'] ?? '')
+            .toString()
+            .toLowerCase();
+    return _jobId.isNotEmpty &&
+        (status.isEmpty ||
+            status == 'requested' ||
+            status == 'searching' ||
+            status == 'matching');
+  }
 
   @override
   void initState() {
@@ -62,7 +77,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
       setState(() {
         _applications = data
             .whereType<Map<dynamic, dynamic>>()
-            .map((Map<dynamic, dynamic> item) => Map<String, dynamic>.from(item))
+            .map(
+                (Map<dynamic, dynamic> item) => Map<String, dynamic>.from(item))
             .toList();
         _isLoading = false;
       });
@@ -104,6 +120,70 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
     }
   }
 
+  Future<void> _cancelSearch() async {
+    if (_isCancelling || !_canCancelSearch) return;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext dialogContext) => AlertDialog(
+        title: const Text('Cancel job search?'),
+        content: const Text(
+          'This will stop artisans from applying to this job.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Keep searching'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('Cancel search'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isCancelling = true);
+    try {
+      await _jobsService.cancelJob(_jobId);
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Job search cancelled.');
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e,
+            fallback: 'Could not cancel job search.');
+      }
+    } finally {
+      if (mounted) setState(() => _isCancelling = false);
+    }
+  }
+
+  void _openApplicantProfile(Map<String, dynamic> application) {
+    final Map<String, dynamic> worker =
+        Map<String, dynamic>.from(application['worker'] as Map? ?? const {});
+    final Map<String, dynamic> stats = Map<String, dynamic>.from(
+        application['worker_stats'] as Map? ?? const {});
+    final String workerId =
+        (application['worker_id'] ?? worker['id'] ?? '').toString();
+    Navigator.pushNamed(
+      context,
+      AppRoutes.artisanProfile,
+      arguments: <String, dynamic>{
+        'id': workerId,
+        'worker_id': workerId,
+        'profiles': <String, dynamic>{
+          ...worker,
+          if (worker['id'] == null) 'id': workerId,
+        },
+        'worker': stats,
+        if (stats['skills'] != null) 'skills': stats['skills'],
+        if (stats['rating'] != null) 'rating': stats['rating'],
+        if (stats['total_jobs'] != null) 'totalJobs': stats['total_jobs'],
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,6 +191,21 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
       appBar: CustomAppBar(
         title: 'Interested Artisans',
         onBackPressed: () => Navigator.pop(context),
+        actions: <Widget>[
+          if (_canCancelSearch)
+            TextButton.icon(
+              onPressed: _isCancelling ? null : _cancelSearch,
+              icon: _isCancelling
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Icon(PhosphorIcons.xCircle),
+              label: const Text('Cancel'),
+            ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: RefreshIndicator(
         onRefresh: _loadApplications,
@@ -155,6 +250,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                             application: application,
                             isAccepting: _isAccepting,
                             onAccept: () => _accept(application),
+                            onViewProfile: () =>
+                                _openApplicantProfile(application),
                           ),
                         ),
                     ],
@@ -169,91 +266,114 @@ class _ApplicantCard extends StatelessWidget {
     required this.application,
     required this.isAccepting,
     required this.onAccept,
+    required this.onViewProfile,
   });
 
   final Map<String, dynamic> application;
   final bool isAccepting;
   final VoidCallback onAccept;
+  final VoidCallback onViewProfile;
 
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> worker =
         Map<String, dynamic>.from(application['worker'] as Map? ?? const {});
-    final Map<String, dynamic> stats =
-        Map<String, dynamic>.from(application['worker_stats'] as Map? ?? const {});
+    final Map<String, dynamic> stats = Map<String, dynamic>.from(
+        application['worker_stats'] as Map? ?? const {});
     final String name = (worker['full_name'] ?? 'Artisan').toString();
     final String avatarUrl = (worker['avatar_url'] ?? '').toString();
     final String status = (application['status'] ?? 'pending').toString();
     final double rating = (stats['rating'] as num?)?.toDouble() ?? 0;
     final int totalJobs = (stats['total_jobs'] as num?)?.toInt() ?? 0;
-    final List<dynamic> skills = stats['skills'] as List<dynamic>? ?? <dynamic>[];
+    final List<dynamic> skills =
+        stats['skills'] as List<dynamic>? ?? <dynamic>[];
     final Object? rate = application['proposed_rate'];
     final String message = (application['message'] ?? '').toString();
     final bool canAccept = status == 'pending' && !isAccepting;
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Row(
-              children: <Widget>[
-                ArtisanLogoAvatar(imageUrl: avatarUrl, size: 52),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(name, style: AppTypography.labelLarge),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: <Widget>[
-                          Icon(PhosphorIcons.star,
-                              size: 15, color: AppColors.accentGold),
-                          const SizedBox(width: 4),
-                          Text(
-                            '${rating.toStringAsFixed(1)} · $totalJobs jobs',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
+      child: InkWell(
+        onTap: onViewProfile,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  ArtisanLogoAvatar(imageUrl: avatarUrl, size: 52),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(name, style: AppTypography.labelLarge),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: <Widget>[
+                            Icon(PhosphorIcons.star,
+                                size: 15, color: AppColors.accentGold),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${rating.toStringAsFixed(1)} · $totalJobs jobs',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ],
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
+                  _StatusPill(status: status),
+                ],
+              ),
+              if (skills.isNotEmpty) ...<Widget>[
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: skills
+                      .take(3)
+                      .map((dynamic skill) =>
+                          Chip(label: Text(skill.toString())))
+                      .toList(),
                 ),
-                _StatusPill(status: status),
               ],
-            ),
-            if (skills.isNotEmpty) ...<Widget>[
+              if (rate != null) ...<Widget>[
+                const SizedBox(height: AppSpacing.sm),
+                Text('Proposed rate: GHS $rate',
+                    style: AppTypography.bodyMedium),
+              ],
+              if (message.isNotEmpty) ...<Widget>[
+                const SizedBox(height: AppSpacing.sm),
+                Text(message, style: AppTypography.bodyMedium),
+              ],
               const SizedBox(height: AppSpacing.md),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: skills
-                    .take(3)
-                    .map((dynamic skill) => Chip(label: Text(skill.toString())))
-                    .toList(),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onViewProfile,
+                      icon: Icon(PhosphorIcons.userCircle),
+                      label: const Text('View profile'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: PrimaryButton(
+                      label: status == 'accepted' ? 'Accepted' : 'Accept',
+                      isLoading: isAccepting && status == 'pending',
+                      isEnabled: canAccept,
+                      onPressed: onAccept,
+                    ),
+                  ),
+                ],
               ),
             ],
-            if (rate != null) ...<Widget>[
-              const SizedBox(height: AppSpacing.sm),
-              Text('Proposed rate: GHS $rate', style: AppTypography.bodyMedium),
-            ],
-            if (message.isNotEmpty) ...<Widget>[
-              const SizedBox(height: AppSpacing.sm),
-              Text(message, style: AppTypography.bodyMedium),
-            ],
-            const SizedBox(height: AppSpacing.md),
-            PrimaryButton(
-              label: status == 'accepted' ? 'Accepted' : 'Accept Artisan',
-              isLoading: isAccepting && status == 'pending',
-              isEnabled: canAccept,
-              onPressed: onAccept,
-            ),
-          ],
+          ),
         ),
       ),
     );

@@ -12,6 +12,7 @@ import 'screens/worker_active_pre_start_screen.dart';
 import 'screens/worker_booking_history_screen.dart';
 import 'screens/worker_earnings_screen.dart';
 import 'screens/worker_requests_screen.dart';
+import 'screens/worker_termination_request_screen.dart';
 import 'screens/worker_stats_screen.dart';
 import 'screens/worker_reviews_screen.dart';
 import 'screens/worker_gallery_screen.dart';
@@ -50,7 +51,7 @@ class _WorkerShellState extends State<WorkerShell> {
     _session = WorkerSessionState();
     _session.currentTab = widget.initialTab;
     _session.addListener(_onSessionChanged);
-    _session.syncLocationTracking();
+    _session.loadAvailability();
     _session.loadActiveJob();
     _subscribeToDispatches();
     if (widget.initialJobRequestId != null) {
@@ -117,8 +118,8 @@ class _WorkerShellState extends State<WorkerShell> {
       await showModalBottomSheet<void>(
         context: context,
         isScrollControlled: true,
-        isDismissible: false,
-        enableDrag: false,
+        isDismissible: true,
+        enableDrag: true,
         backgroundColor: Colors.white,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -134,6 +135,7 @@ class _WorkerShellState extends State<WorkerShell> {
           },
         ),
       );
+      _shownRequestIds.remove(jobId);
     } catch (_) {
       _shownRequestIds.remove(jobId);
     }
@@ -151,6 +153,8 @@ class _WorkerShellState extends State<WorkerShell> {
         return WorkerActivePreStartScreen(job: job, phase: _session.jobPhase);
       case WorkerJobPhase.inProgress:
         return WorkerActiveInProgressScreen(job: job);
+      case WorkerJobPhase.terminationRequested:
+        return WorkerTerminationRequestScreen(job: job);
       case WorkerJobPhase.none:
         return const WorkerActiveEmptyScreen();
     }

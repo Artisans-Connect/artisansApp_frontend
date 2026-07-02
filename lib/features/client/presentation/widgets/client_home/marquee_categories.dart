@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
 import '../category_chip.dart';
 
 class MarqueeCategoriesList extends StatefulWidget {
@@ -54,26 +53,40 @@ class _MarqueeCategoriesListState extends State<MarqueeCategoriesList> {
     super.dispose();
   }
 
+  @override
+  void didUpdateWidget(covariant MarqueeCategoriesList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.categories.length != widget.categories.length ||
+        oldWidget.selectedCategoryId != widget.selectedCategoryId ||
+        oldWidget.selectedCategory != widget.selectedCategory) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
+    }
+  }
+
   // Determines if the marquee should actively scroll
   bool get _shouldAnimate {
-    final bool hasSelection =
-        widget.selectedCategoryId.isNotEmpty || widget.selectedCategory.isNotEmpty;
+    final bool hasSelection = widget.selectedCategoryId.isNotEmpty ||
+        widget.selectedCategory.isNotEmpty;
     return !hasSelection && !_isUserInteracting;
   }
 
-void _startAutoScroll() {
-  if (!mounted || !_shouldAnimate || !_scrollController.hasClients) return;
+  void _startAutoScroll() {
+    if (!mounted || !_shouldAnimate || !_scrollController.hasClients) return;
 
-  final double maxScroll = _scrollController.position.maxScrollExtent;
-  final double currentScroll = _scrollController.offset;
-  final double remainingDistance = maxScroll - currentScroll;
+    final ScrollPosition position = _scrollController.position;
+    final double maxScroll = position.maxScrollExtent;
+    if (maxScroll <= 0) return;
 
-  // Speed in pixels per second — 80 is a comfortable marquee pace.
-  // Increase to 120–150 for faster scrolling.
-  const double pixelsPerSecond = 80.0;
-  final int durationMs = (remainingDistance / pixelsPerSecond * 1000).round();
+    final double remainingDistance = maxScroll - _scrollController.offset;
+    if (remainingDistance <= 1) {
+      _scrollController.jumpTo(0);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _startAutoScroll());
+      return;
+    }
 
-  if (durationMs > 0) {
+    const double pixelsPerSecond = 80.0;
+    final int durationMs = (remainingDistance / pixelsPerSecond * 1000).round();
+
     _scrollController
         .animateTo(
       maxScroll,
@@ -81,23 +94,26 @@ void _startAutoScroll() {
       curve: Curves.linear,
     )
         .then((_) {
-      if (mounted && _shouldAnimate) {
-        _scrollController.jumpTo(0);
-        _startAutoScroll();
-      }
+      if (!mounted || !_shouldAnimate || !_isAtEnd) return;
+      _scrollController.jumpTo(0);
+      _startAutoScroll();
     });
   }
-}
+
+  bool get _isAtEnd {
+    if (!_scrollController.hasClients) return false;
+    final ScrollPosition position = _scrollController.position;
+    return (position.maxScrollExtent - position.pixels).abs() <= 1;
+  }
 
   void _handleScrollNotification(ScrollNotification notification) {
-    if (notification is ScrollStartNotification) {
+    if (notification is ScrollStartNotification &&
+        notification.dragDetails != null) {
       setState(() {
         _isUserInteracting = true;
       });
       _resumeTimer?.cancel();
-      // Gracefully halts the active programmatic animation so it doesn't fight user drag
-      _scrollController.position.hold(() {}); 
-    } else if (notification is ScrollEndNotification) {
+    } else if (notification is ScrollEndNotification && _isUserInteracting) {
       _resumeTimer?.cancel();
       _resumeTimer = Timer(const Duration(seconds: 4), () {
         if (mounted) {
@@ -147,8 +163,9 @@ void _startAutoScroll() {
 
             final Map<String, dynamic> cat = cats[actualIndex];
             final String catId = (cat['id'] ?? '').toString();
-            final String label = (cat['name'] ?? cat['label'] ?? 'Service').toString();
-            
+            final String label =
+                (cat['name'] ?? cat['label'] ?? 'Service').toString();
+
             final bool selected = catId.isNotEmpty
                 ? widget.selectedCategoryId == catId
                 : widget.selectedCategory == label;

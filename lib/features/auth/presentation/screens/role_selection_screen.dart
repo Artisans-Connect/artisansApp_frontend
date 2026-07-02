@@ -13,6 +13,7 @@ import '../../../../../core/network/api_client.dart';
 import '../../../../../core/services/auth_service.dart';
 import '../../../../../core/services/storage_service.dart';
 import '../../../../../core/theme/design_tokens.dart';
+import '../../../../../core/utils/icon_mapper.dart';
 import '../../../../../shared/models/user_profile_view.dart';
 import '../../../../../shared/widgets/app_toast.dart';
 import '../../../../../shared/widgets/gradient_button.dart';
@@ -133,44 +134,20 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     setState(() => _isLoadingTrades = true);
     try {
       final List<dynamic> res = await ApiClient.instance.get('/trades');
-      final List<String> apiTrades =
-          res.map((dynamic e) => e['name'] as String).toList();
+      final List<TradeEntry> apiTrades = res
+          .map(_tradeEntryFromApi)
+          .whereType<TradeEntry>()
+          .toList(growable: false);
       if (!mounted) return;
 
       setState(() {
-        _trades = apiTrades
-            .map((String t) => TradeEntry(t, PhosphorIcons.wrench))
-            .toList();
+        _trades = apiTrades;
       });
     } catch (e) {
       debugPrint('Error loading trades: $e');
       if (mounted) {
         setState(() {
-          _trades = <TradeEntry>[
-            const TradeEntry('Mason', PhosphorIcons.wall),
-            const TradeEntry('Carpenter', PhosphorIcons.hammer),
-            const TradeEntry('Tiler', PhosphorIcons.squaresFour),
-            const TradeEntry('Painter', PhosphorIcons.paintRoller),
-            const TradeEntry('Welder / Metal Fabricator', PhosphorIcons.fire),
-            const TradeEntry('Electrician', PhosphorIcons.lightning),
-            const TradeEntry('Solar Technician', PhosphorIcons.lightning),
-            const TradeEntry('Plumber', PhosphorIcons.drop),
-            const TradeEntry('Borehole / Pump Technician', PhosphorIcons.drop),
-            const TradeEntry('Auto Mechanic', PhosphorIcons.wrench),
-            const TradeEntry('Vulcanizer', PhosphorIcons.gear),
-            const TradeEntry('General Handyman', PhosphorIcons.wrench),
-            const TradeEntry('Cleaner', PhosphorIcons.broom),
-            const TradeEntry('Gardener', PhosphorIcons.leaf),
-            const TradeEntry('Hairdresser', PhosphorIcons.scissors),
-            const TradeEntry('Barber', PhosphorIcons.scissors),
-            const TradeEntry('Tailor / Dressmaker', PhosphorIcons.scissors),
-            const TradeEntry('Shoemaker / Cobbler', PhosphorIcons.scissors),
-            const TradeEntry('Phone Repairer', PhosphorIcons.plug),
-            const TradeEntry('Laptop Technician', PhosphorIcons.desktopTower),
-            const TradeEntry('Caterer', PhosphorIcons.forkKnife),
-            const TradeEntry('Baker', PhosphorIcons.forkKnife),
-            const TradeEntry('Photographer', PhosphorIcons.camera),
-          ];
+          _trades = _fallbackTrades;
         });
       }
     } finally {
@@ -178,6 +155,95 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         setState(() => _isLoadingTrades = false);
       }
     }
+  }
+
+  TradeEntry? _tradeEntryFromApi(dynamic entry) {
+    if (entry is String) {
+      final String label = entry.trim();
+      if (label.isEmpty) return null;
+      return TradeEntry(label, PhosphorIcons.wrench);
+    }
+
+    if (entry is! Map<String, dynamic>) return null;
+    final String label = (entry['name'] as String? ?? '').trim();
+    if (label.isEmpty) return null;
+
+    return TradeEntry(
+      label,
+      PhosphorIconMapper.fromString(entry['icon_name'] as String?),
+    );
+  }
+
+  List<TradeEntry> get _fallbackTrades {
+    const IconData constructionIcon = PhosphorIcons.barricade;
+    const IconData electricalIcon = PhosphorIcons.lightning;
+    const IconData plumbingIcon = PhosphorIcons.drop;
+    const IconData autoIcon = PhosphorIcons.car;
+    const IconData homeRepairIcon = PhosphorIcons.hammer;
+    const IconData beautyIcon = PhosphorIcons.scissors;
+    const IconData electronicsIcon = PhosphorIcons.desktopTower;
+    const IconData hospitalityIcon = PhosphorIcons.forkKnife;
+    const IconData artsIcon = PhosphorIcons.palette;
+
+    return const <TradeEntry>[
+      TradeEntry('Mason', constructionIcon),
+      TradeEntry('Carpenter', constructionIcon),
+      TradeEntry('Tiler', constructionIcon),
+      TradeEntry('Painter', constructionIcon),
+      TradeEntry('Steel Bender', constructionIcon),
+      TradeEntry('Welder / Metal Fabricator', constructionIcon),
+      TradeEntry('Ceiling Installer', constructionIcon),
+      TradeEntry('Glass Worker', constructionIcon),
+      TradeEntry('Roofer', constructionIcon),
+      TradeEntry('Paver / Landscaper', constructionIcon),
+      TradeEntry('Electrician', electricalIcon),
+      TradeEntry('Solar Technician', electricalIcon),
+      TradeEntry('Appliance Electrician', electricalIcon),
+      TradeEntry('Generator Technician', electricalIcon),
+      TradeEntry('CCTV / Security Installer', electricalIcon),
+      TradeEntry('Plumber', plumbingIcon),
+      TradeEntry('Borehole / Pump Technician', plumbingIcon),
+      TradeEntry('Drainage Worker', plumbingIcon),
+      TradeEntry('Sanitary Installer', plumbingIcon),
+      TradeEntry('Auto Mechanic', autoIcon),
+      TradeEntry('Auto Electrician', autoIcon),
+      TradeEntry('Vulcanizer', autoIcon),
+      TradeEntry('Sprayer / Auto Body Worker', autoIcon),
+      TradeEntry('Motorcycle Mechanic', autoIcon),
+      TradeEntry('Heavy Equipment Mechanic', autoIcon),
+      TradeEntry('General Handyman', homeRepairIcon),
+      TradeEntry('Furniture Repairer', homeRepairIcon),
+      TradeEntry('Door/Window Repairer', homeRepairIcon),
+      TradeEntry('Pest Control Worker', homeRepairIcon),
+      TradeEntry('Cleaner', homeRepairIcon),
+      TradeEntry('Gardener', homeRepairIcon),
+      TradeEntry('Hairdresser', beautyIcon),
+      TradeEntry('Barber', beautyIcon),
+      TradeEntry('Makeup Artist', beautyIcon),
+      TradeEntry('Tailor / Dressmaker', beautyIcon),
+      TradeEntry('Shoemaker / Cobbler', beautyIcon),
+      TradeEntry('Bead Maker', beautyIcon),
+      TradeEntry('Milliner', beautyIcon),
+      TradeEntry('Phone Repairer', electronicsIcon),
+      TradeEntry('Laptop Technician', electronicsIcon),
+      TradeEntry('TV Technician', electronicsIcon),
+      TradeEntry('Sound System Technician', electronicsIcon),
+      TradeEntry('Printer/Photocopier Technician', electronicsIcon),
+      TradeEntry('Caterer', hospitalityIcon),
+      TradeEntry('Baker', hospitalityIcon),
+      TradeEntry('Decorator', hospitalityIcon),
+      TradeEntry('Photographer', hospitalityIcon),
+      TradeEntry('Videographer', hospitalityIcon),
+      TradeEntry('DJ / Sound Provider', hospitalityIcon),
+      TradeEntry('Canopy/Chair Rental', hospitalityIcon),
+      TradeEntry('Potter', artsIcon),
+      TradeEntry('Weaver', artsIcon),
+      TradeEntry('Wood Carver', artsIcon),
+      TradeEntry('Drum Maker', artsIcon),
+      TradeEntry('Goldsmith / Jeweller', artsIcon),
+      TradeEntry('Brass Smith', artsIcon),
+      TradeEntry('Signwriter / Printer', artsIcon),
+    ];
   }
 
   void _onAreaSearchChanged() {
@@ -369,12 +435,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       }
 
       final Map<String, dynamic> body = <String, dynamic>{
-        'full_name': _session.fullName?.isNotEmpty == true
-            ? _session.fullName
-            : 'User',
-        'phone': _session.phone?.isNotEmpty == true
-            ? _session.phone
-            : '0000000000',
+        'full_name':
+            _session.fullName?.isNotEmpty == true ? _session.fullName : 'User',
+        'phone':
+            _session.phone?.isNotEmpty == true ? _session.phone : '0000000000',
         'signup_type': role,
         if (_session.avatarUrl != null &&
             _session.avatarUrl!.startsWith('http'))
@@ -415,8 +479,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     unawaited(showModalBottomSheet<void>(
       context: context,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-            top: Radius.circular(DesignTokens.radiusXl)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(DesignTokens.radiusXl)),
       ),
       builder: (BuildContext ctx) {
         return SafeArea(
@@ -431,7 +495,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   decoration: BoxDecoration(
                     color: DesignTokens.borderSubtle,
-                    borderRadius: BorderRadius.circular(DesignTokens.radiusFull),
+                    borderRadius:
+                        BorderRadius.circular(DesignTokens.radiusFull),
                   ),
                 ),
                 ListTile(
@@ -469,7 +534,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                 if (_imageFile != null) ...<Widget>[
                   const Divider(),
                   ListTile(
-                    leading: Icon(PhosphorIcons.trash, color: DesignTokens.error),
+                    leading:
+                        Icon(PhosphorIcons.trash, color: DesignTokens.error),
                     title: Text('Remove Photo',
                         style: TextStyle(color: DesignTokens.error)),
                     onTap: () {
@@ -522,7 +588,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       }
     } catch (e) {
       if (mounted) {
-        AppToast.showError(context, e, fallback: 'Could not auto detect location.');
+        AppToast.showError(context, e,
+            fallback: 'Could not auto detect location.');
       }
     } finally {
       if (mounted) {

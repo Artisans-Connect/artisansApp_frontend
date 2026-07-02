@@ -54,7 +54,10 @@ class _SearchBarState extends State<CustomSearchBar> {
       child: TextField(
         controller: _controller,
         onChanged: widget.onChanged,
-        onSubmitted: (_) => widget.onSearch?.call(),
+        onSubmitted: (_) {
+          if (!widget.isLoading) widget.onSearch?.call();
+        },
+        textInputAction: TextInputAction.search,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
           hintText: widget.hintText,
@@ -74,7 +77,8 @@ class _SearchBarState extends State<CustomSearchBar> {
                     height: 20,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor:
+                          AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
                   ),
                 )
@@ -100,7 +104,8 @@ class _SearchBarState extends State<CustomSearchBar> {
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-            borderSide: BorderSide(color: AppColors.outline.withValues(alpha: 0.3)),
+            borderSide:
+                BorderSide(color: AppColors.outline.withValues(alpha: 0.3)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),

@@ -22,7 +22,7 @@ class FeeEstimate {
     final Map<String, dynamic> breakdown =
         json['breakdown'] as Map<String, dynamic>? ?? <String, dynamic>{};
     return FeeEstimate(
-      minimumFee: (json['minimum_fee'] as num?)?.toDouble() ?? 50,
+      minimumFee: (json['minimum_fee'] as num?)?.toDouble() ?? 40,
       baseServiceFee:
           (breakdown['base_service_fee'] as num?)?.toDouble() ?? 0,
       distanceCost: (breakdown['distance_cost'] as num?)?.toDouble() ?? 0,
@@ -65,8 +65,8 @@ class PricingService {
     }
     // Fallback if response shape is unexpected
     return const FeeEstimate(
-      minimumFee: 50,
-      baseServiceFee: 50,
+      minimumFee: 40,
+      baseServiceFee: 60,
       distanceCost: 0,
       urgencyPremium: 0,
       verificationPremium: 0,

@@ -48,4 +48,20 @@ void main() {
     expect(booking.amount, 'GHS 100');
     expect(booking.draftData?['address'], 'Adum, Kumasi');
   });
+
+  test('maps backend scheduled drafts as requested scheduled bookings', () {
+    final booking = ClientBooking.fromApiJob(<String, dynamic>{
+      'id': 'scheduled-job',
+      'title': 'Install ceiling fan',
+      'status': 'draft',
+      'job_mode': 'scheduled',
+      'scheduled_for': '2026-07-01T09:00:00Z',
+    });
+
+    expect(booking.status, ClientBookingStatus.requested);
+    expect(booking.backendStatus, 'draft');
+    expect(booking.jobMode, 'scheduled');
+    expect(booking.scheduledFor, '2026-07-01T09:00:00Z');
+    expect(booking.isLocalDraft, isFalse);
+  });
 }

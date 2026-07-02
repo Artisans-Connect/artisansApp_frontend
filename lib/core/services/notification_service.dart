@@ -23,6 +23,8 @@ class NotificationService {
   StreamSubscription<String>? _tokenRefreshSub;
   String? _lastTokenHash;
   String? _pendingJobRequestId;
+  String? _pendingClientJobId;
+  bool _pendingChatNavigate = false;
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -84,10 +86,22 @@ class NotificationService {
   }
 
   void drainPendingNavigation() {
-    final jobId = _pendingJobRequestId;
-    if (jobId == null) return;
-    _pendingJobRequestId = null;
-    _openWorkerRequest(jobId);
+    final workerJobId = _pendingJobRequestId;
+    if (workerJobId != null) {
+      _pendingJobRequestId = null;
+      _openWorkerRequest(workerJobId);
+      return;
+    }
+    final clientJobId = _pendingClientJobId;
+    if (clientJobId != null) {
+      _pendingClientJobId = null;
+      _openClientJob(clientJobId);
+      return;
+    }
+    if (_pendingChatNavigate) {
+      _pendingChatNavigate = false;
+      _openChat();
+    }
   }
 
   Future<void> _registerToken(String token) async {
@@ -121,9 +135,22 @@ class NotificationService {
       }
       _openWorkerRequest(jobId);
     } else if (type == 'chat_message') {
-      final navigator = navigatorKey.currentState;
-      if (navigator != null) {
-        navigator.pushNamed('/shared/messages');
+      _openChat();
+    } else {
+      // Client job updates
+      final clientJobTypes = <String>[
+        'worker_on_the_way',
+        'worker_arrived',
+        'job_started',
+        'job_completion_submitted',
+        'job_completed',
+      ];
+      if (clientJobTypes.contains(type) && jobId is String && jobId.isNotEmpty) {
+        if (navigatorKey.currentState == null) {
+          _pendingClientJobId = jobId;
+          return;
+        }
+        _openClientJob(jobId);
       }
     }
   }
@@ -147,6 +174,43 @@ class NotificationService {
       (_) => false,
       arguments: <String, dynamic>{'openJobRequestId': jobId},
     );
+  }
+
+  void _openClientJob(String jobId) {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingClientJobId = jobId;
+      return;
+    }
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
+      _pendingClientJobId = jobId;
+      return;
+    }
+
+    navigator.pushNamed(
+      '/client/live-tracking',
+      arguments: <String, dynamic>{'id': jobId},
+    );
+  }
+
+  void _openChat() {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingChatNavigate = true;
+      return;
+    }
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
+      _pendingChatNavigate = true;
+      return;
+    }
+
+    navigator.pushNamed('/shared/messages');
   }
 
   // ── Notification API methods ──────────────────────────────────────

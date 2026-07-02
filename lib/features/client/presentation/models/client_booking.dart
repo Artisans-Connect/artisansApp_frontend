@@ -64,6 +64,8 @@ class ClientBooking {
     this.cancellationStage,
     this.cancellationFee,
     this.cancellationFeeCurrency,
+    this.jobMode,
+    this.scheduledFor,
     this.isLocalDraft = false,
     this.draftData,
     this.draftSavedAt,
@@ -98,6 +100,8 @@ class ClientBooking {
   final String? cancellationStage;
   final double? cancellationFee;
   final String? cancellationFeeCurrency;
+  final String? jobMode;
+  final String? scheduledFor;
   final bool isLocalDraft;
   final Map<String, dynamic>? draftData;
   final String? draftSavedAt;
@@ -112,8 +116,8 @@ class ClientBooking {
 
   bool get canRate =>
       (status == ClientBookingStatus.pendingApproval ||
-              status == ClientBookingStatus.completed) &&
-          rating == null;
+          status == ClientBookingStatus.completed) &&
+      rating == null;
 
   /// Whether this job can be cancelled by the client from the tracking screen
   bool get isClientCancellable =>
@@ -122,8 +126,7 @@ class ClientBooking {
       backendStatus == 'arrived';
 
   /// Whether this job allows termination requests
-  bool get isTerminationRequestable =>
-      backendStatus == 'in_progress';
+  bool get isTerminationRequestable => backendStatus == 'in_progress';
 
   bool get isTrackable {
     final String raw = (backendStatus ?? '').toLowerCase();
@@ -169,6 +172,8 @@ class ClientBooking {
         'cancellation_stage': cancellationStage,
         'cancellation_fee': cancellationFee,
         'cancellation_fee_currency': cancellationFeeCurrency,
+        'job_mode': jobMode,
+        'scheduled_for': scheduledFor,
         'isLocalDraft': isLocalDraft,
         'draftData': draftData,
         'draftSavedAt': draftSavedAt,
@@ -207,6 +212,11 @@ class ClientBooking {
       cancelledBy: map['cancelled_by'] as String?,
       cancelledReason: map['cancelled_reason'] as String?,
       cancelledAt: map['cancelled_at'] as String?,
+      cancellationStage: map['cancellation_stage'] as String?,
+      cancellationFee: (map['cancellation_fee'] as num?)?.toDouble(),
+      cancellationFeeCurrency: map['cancellation_fee_currency'] as String?,
+      jobMode: map['job_mode'] as String?,
+      scheduledFor: map['scheduled_for'] as String?,
       isLocalDraft: map['isLocalDraft'] == true,
       draftData: map['draftData'] is Map
           ? Map<String, dynamic>.from(map['draftData'] as Map)
@@ -237,6 +247,8 @@ class ClientBooking {
       date: date,
       amount: 'GHS ${draft.totalFee.toStringAsFixed(0)}',
       backendStatus: 'draft',
+      jobMode: draft.urgency,
+      scheduledFor: draft.preferredDate?.toUtc().toIso8601String(),
       isLocalDraft: true,
       draftData: Map<String, dynamic>.from(draftData),
       draftSavedAt: savedAt,
@@ -247,6 +259,7 @@ class ClientBooking {
 
   static ClientBooking fromApiJob(Map<String, dynamic> json) {
     final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
+    final String jobMode = (json['job_mode'] as String? ?? '').toLowerCase();
     final ClientBookingStatus status = switch (statusRaw) {
       'matched' => ClientBookingStatus.accepted,
       'on_the_way' => ClientBookingStatus.accepted,
@@ -256,9 +269,11 @@ class ClientBooking {
       'pending_client_approval' => ClientBookingStatus.pendingApproval,
       'completed' => ClientBookingStatus.completed,
       'cancelled' || 'expired' => ClientBookingStatus.cancelled,
+      'draft' when jobMode == 'scheduled' => ClientBookingStatus.requested,
       _ => ClientBookingStatus.requested,
     };
-    final dynamic worker = json['worker'] ?? json['requested_worker'] ?? json['profiles'];
+    final dynamic worker =
+        json['worker'] ?? json['requested_worker'] ?? json['profiles'];
     final String artisanName = worker is Map<String, dynamic>
         ? worker['full_name'] as String? ?? 'Artisan'
         : 'Artisan';
@@ -269,14 +284,15 @@ class ClientBooking {
     final String profession = worker is Map<String, dynamic>
         ? (worker['profession'] as String? ?? categoryName)
         : categoryName;
-    final String? phone = worker is Map<String, dynamic>
-        ? worker['phone'] as String?
-        : null;
+    final String? phone =
+        worker is Map<String, dynamic> ? worker['phone'] as String? : null;
     final String? jobId = json['id'] as String?;
 
     final dynamic completionRaw = json['completion_details'];
     Map<String, dynamic> completion = <String, dynamic>{};
-    if (completionRaw is List && completionRaw.isNotEmpty && completionRaw.first is Map) {
+    if (completionRaw is List &&
+        completionRaw.isNotEmpty &&
+        completionRaw.first is Map) {
       completion = Map<String, dynamic>.from(completionRaw.first as Map);
     } else if (completionRaw is Map) {
       completion = Map<String, dynamic>.from(completionRaw);
@@ -293,7 +309,8 @@ class ClientBooking {
       imageUrl: worker is Map<String, dynamic>
           ? worker['avatar_url'] as String?
           : null,
-      counterpartUserId: json['worker_id'] as String? ?? json['requested_worker_id'] as String?,
+      counterpartUserId: json['worker_id'] as String? ??
+          json['requested_worker_id'] as String?,
       jobUuid: jobId,
       conversationId: jobId,
       backendStatus: statusRaw,
@@ -307,6 +324,8 @@ class ClientBooking {
       cancellationStage: json['cancellation_stage'] as String?,
       cancellationFee: (json['cancellation_fee'] as num?)?.toDouble(),
       cancellationFeeCurrency: json['cancellation_fee_currency'] as String?,
+      jobMode: json['job_mode'] as String?,
+      scheduledFor: json['scheduled_for'] as String?,
       baseRate: (completion['base_rate'] as num?)?.toDouble(),
       distanceCost: (completion['distance_cost'] as num?)?.toDouble(),
       urgencyPremium: (completion['urgency_premium'] as num?)?.toDouble(),
@@ -317,7 +336,8 @@ class ClientBooking {
   }
 
   /// First matched or in-progress job from API list.
-  static ClientBooking? pickActiveTrackable(Iterable<Map<String, dynamic>> jobs) {
+  static ClientBooking? pickActiveTrackable(
+      Iterable<Map<String, dynamic>> jobs) {
     for (final Map<String, dynamic> json in jobs) {
       final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
       if (statusRaw == 'matched' ||

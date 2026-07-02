@@ -140,8 +140,16 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       }
 
       if (!mounted) return;
-      AppToast.showSuccess(context, 'Job posted — finding an artisan…');
-      ClientNavigation.startFindingArtisan(context, jobData: jobData);
+      if (_draft.urgency == 'scheduled') {
+        AppToast.showSuccess(
+          context,
+          'Scheduled job posted. We will start matching before the appointment.',
+        );
+        ClientNavigation.goToBookingsTab(context);
+      } else {
+        AppToast.showSuccess(context, 'Job posted — finding an artisan…');
+        ClientNavigation.startFindingArtisan(context, jobData: jobData);
+      }
     } catch (e) {
       if (!mounted) return;
       final bool offline = e is NetworkException;
@@ -157,8 +165,8 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
         );
         ClientNavigation.popToShell(context);
       } else {
-        AppToast.showError(
-            context, e, fallback: 'Failed to post job. Please try again.');
+        AppToast.showError(context, e,
+            fallback: 'Failed to post job. Please try again.');
       }
     } finally {
       if (mounted) setState(() => _isPosting = false);
@@ -171,8 +179,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
         ? '${_draft.preferredDate!.day}/${_draft.preferredDate!.month}/${_draft.preferredDate!.year}'
         : '—';
 
-    final double totalFee =
-        (_estimate?.minimumFee ?? 50) + _clientPremium;
+    final double totalFee = (_estimate?.minimumFee ?? 50) + _clientPremium;
 
     return JobPostWizardScaffold(
       step: JobPostWizardStep.summary,
@@ -201,8 +208,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                 : _draft.displaySubcategory,
           ),
           _SummaryRow(label: 'Title', value: _draft.displayTitle),
-          _SummaryRow(
-              label: 'Description', value: _draft.displayDescription),
+          _SummaryRow(label: 'Description', value: _draft.displayDescription),
           _SummaryRow(label: 'Location', value: _draft.displayLocation),
           _SummaryRow(label: 'Urgency', value: _draft.displayUrgency),
           if (_draft.urgency == 'scheduled')
@@ -220,8 +226,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               color: AppColors.primaryContainer.withValues(alpha: 0.15),
-              borderRadius:
-                  BorderRadius.circular(AppSpacing.radiusLarge),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
               border: Border.all(
                 color: AppColors.primary.withValues(alpha: 0.3),
               ),
@@ -321,11 +326,9 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                       // ),
                       // const Divider(height: 20),
                       Row(
-                        mainAxisAlignment:
-                            MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('TOTAL',
-                              style: AppTypography.labelLarge),
+                          Text('TOTAL', style: AppTypography.labelLarge),
                           Text(
                             ClientJobDraft.formatGhs(totalFee),
                             style: AppTypography.displaySmall.copyWith(

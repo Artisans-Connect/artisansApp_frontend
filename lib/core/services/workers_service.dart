@@ -3,6 +3,13 @@ import '../network/api_client.dart';
 class WorkersService {
   final ApiClient _api = ApiClient.instance;
 
+  Future<bool> getAvailability() async {
+    final dynamic response = await _api.get('/workers/availability');
+    final Map<String, dynamic> availability =
+        Map<String, dynamic>.from(response as Map);
+    return availability['is_available'] == true;
+  }
+
   Future<dynamic> updateLocation(double lat, double lng) async {
     return await _api.put('/workers/location', body: {
       'current_lat': lat,
@@ -41,9 +48,18 @@ class WorkersService {
     return await _api.post(
       '/workers/$jobId/cancel',
       body: <String, dynamic>{
-        if (reason != null && reason.trim().isNotEmpty)
-          'reason': reason.trim(),
+        if (reason != null && reason.trim().isNotEmpty) 'reason': reason.trim(),
       },
+    );
+  }
+
+  Future<dynamic> respondToTermination(
+    String jobId, {
+    required bool accept,
+  }) async {
+    return await _api.post(
+      '/workers/$jobId/respond-termination',
+      body: <String, dynamic>{'accept': accept},
     );
   }
 

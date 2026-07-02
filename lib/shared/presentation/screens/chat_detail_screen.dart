@@ -8,6 +8,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/errors/error_messages.dart';
+import '../../../core/navigation/app_routes.dart';
 import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
 import '../../../core/services/storage_service.dart';
@@ -54,8 +55,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     final Object? routeArgs = ModalRoute.of(context)?.settings.arguments;
     if (routeArgs is ChatDetailArgs && _args == null) {
       _args = routeArgs;
-      final String conversationId =
-          routeArgs.isDirect ? routeArgs.conversationId : routeArgs.jobId ?? routeArgs.conversationId;
+      final String conversationId = routeArgs.isDirect
+          ? routeArgs.conversationId
+          : routeArgs.jobId ?? routeArgs.conversationId;
       if (!ClientNavigation.isValidJobChatId(conversationId)) {
         setState(() {
           _loadError =
@@ -102,7 +104,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   id: id,
                   senderId: senderId ?? '',
                   content: record['content'] as String? ?? '',
-                  sentAt: DateTime.tryParse(record['created_at'] as String? ?? '') ??
+                  sentAt: DateTime.tryParse(
+                          record['created_at'] as String? ?? '') ??
                       DateTime.now(),
                   isMine: false,
                   imageUrls: (record['image_urls'] as List<dynamic>?)
@@ -124,7 +127,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         .subscribe();
   }
 
-  Future<void> _loadMessages(String conversationId, {bool silent = false}) async {
+  Future<void> _loadMessages(String conversationId,
+      {bool silent = false}) async {
     if (!silent) {
       setState(() {
         _isLoading = true;
@@ -154,7 +158,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       }
     }
   }
-  
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -176,21 +180,25 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     super.dispose();
   }
 
-  Future<void> _pickAndUploadAttachment(ImageSource source, {bool video = false}) async {
+  Future<void> _pickAndUploadAttachment(ImageSource source,
+      {bool video = false}) async {
     if (_isUploadingMedia) return;
     setState(() => _showAttachmentMenu = false);
 
     try {
       setState(() => _isUploadingMedia = true);
       final XFile? file = video
-          ? await _picker.pickVideo(source: source, maxDuration: const Duration(seconds: 60))
+          ? await _picker.pickVideo(
+              source: source, maxDuration: const Duration(seconds: 60))
           : await _picker.pickImage(source: source, imageQuality: 85);
       if (file == null) return;
 
-      final String? publicUrl = await StorageService.instance.uploadChatMedia(File(file.path));
+      final String? publicUrl =
+          await StorageService.instance.uploadChatMedia(File(file.path));
       if (publicUrl == null) {
         if (!mounted) return;
-        AppToast.showError(context, Exception('Media upload failed.'), fallback: 'Media upload failed.');
+        AppToast.showError(context, Exception('Media upload failed.'),
+            fallback: 'Media upload failed.');
         return;
       }
 
@@ -261,15 +269,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         clientMessageId: clientMessageId,
       );
       final Map<String, dynamic> json = response as Map<String, dynamic>;
-      
+
       setState(() {
-        final int index = _messages.indexWhere((ChatMessage m) => m.id == tempId);
+        final int index =
+            _messages.indexWhere((ChatMessage m) => m.id == tempId);
         if (index != -1) {
           _messages[index] = ChatMessage(
             id: json['id'] as String,
             senderId: json['sender_id'] as String,
             content: json['content'] as String? ?? '',
-            sentAt: DateTime.tryParse(json['created_at'] as String) ?? DateTime.now(),
+            sentAt: DateTime.tryParse(json['created_at'] as String) ??
+                DateTime.now(),
             isMine: true,
             imageUrls: (json['image_urls'] as List<dynamic>?)
                 ?.map((dynamic item) => item.toString())
@@ -287,7 +297,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        final int index = _messages.indexWhere((ChatMessage m) => m.id == tempId);
+        final int index =
+            _messages.indexWhere((ChatMessage m) => m.id == tempId);
         if (index != -1) {
           _messages[index] = ChatMessage(
             id: tempId,
@@ -309,6 +320,20 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   void _openProfile(ChatDetailArgs args) {
+    if (SharedUserContext.isClient && args.counterpartUserId.isNotEmpty) {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.artisanProfile,
+        arguments: <String, dynamic>{
+          'id': args.counterpartUserId,
+          'worker_id': args.counterpartUserId,
+          'name': args.counterpartName,
+          if ((args.counterpartPhone ?? '').trim().isNotEmpty)
+            'phone': args.counterpartPhone,
+        },
+      );
+      return;
+    }
     Navigator.pushNamed(
       context,
       UserProfileScreen.routeName,
@@ -361,7 +386,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
               children: <Widget>[
-                // Avatar with online dot
+                // Avatar
                 SizedBox(
                   width: 40,
                   height: 40,
@@ -377,19 +402,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           style: AppTypography.bodyLarge.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF00E676),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.white, width: 2),
                           ),
                         ),
                       ),
@@ -411,10 +423,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      const Text(
-                        'Online',
-                        style: TextStyle(
-                          color: Color(0xFF00E676),
+                      Text(
+                        args.isDirect == true ? 'Direct enquiry' : 'Job chat',
+                        style: const TextStyle(
+                          color: AppColors.textSecondary,
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                         ),
@@ -428,7 +440,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         ),
         actions: <Widget>[
           PopupMenuButton<String>(
-            icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
+            icon: Icon(PhosphorIcons.dotsThreeVertical,
+                color: AppColors.textPrimary),
             onSelected: (String action) => _handleMoreAction(action, args),
             itemBuilder: (_) => <PopupMenuEntry<String>>[
               const PopupMenuItem<String>(
@@ -471,42 +484,47 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                   _args!.conversationId,
                             ),
                           )
-                    : _messages.isEmpty
-                        ? Center(
-                            child: Text(
-                              'Say hello to start the conversation.',
-                              style: AppTypography.bodyLarge,
-                            ),
-                          )
-                        : ListView.builder(
-                            controller: _scrollController,
-                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                            itemCount: _messages.length + 1,
-                            itemBuilder: (BuildContext context, int index) {
-                              if (index == 0) {
-                                // Date separator
-                                return Center(
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 16),
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 16, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surfaceContainerHigh,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Text(
-                                      'Today',
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        color: AppColors.textSecondary,
-                                        fontSize: 12,
+                        : _messages.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'Say hello to start the conversation.',
+                                  style: AppTypography.bodyLarge,
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: _scrollController,
+                                padding:
+                                    const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                                itemCount: _messages.length + 1,
+                                itemBuilder: (BuildContext context, int index) {
+                                  if (index == 0) {
+                                    // Date separator
+                                    return Center(
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(bottom: 16),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.surfaceContainerHigh,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          'Today',
+                                          style:
+                                              AppTypography.bodyMedium.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontSize: 12,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                                );
-                              }
-                              return ChatBubble(message: _messages[index - 1]);
-                            },
-                          ),
+                                    );
+                                  }
+                                  return ChatBubble(
+                                      message: _messages[index - 1]);
+                                },
+                              ),
               ),
               _buildComposer(),
             ],
@@ -542,7 +560,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           IconButton(
             onPressed: _isUploadingMedia
                 ? null
-                : () => _pickAndUploadAttachment(ImageSource.gallery, video: true),
+                : () =>
+                    _pickAndUploadAttachment(ImageSource.gallery, video: true),
             icon: Icon(PhosphorIcons.video, color: AppColors.primary),
             tooltip: 'Video',
           ),
@@ -586,11 +605,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             color: AppColors.surfaceDim,
             borderRadius: BorderRadius.circular(99),
             child: InkWell(
-              onTap: _isUploadingMedia ? null : () {
-                setState(() => _showAttachmentMenu = !_showAttachmentMenu);
-              },
+              onTap: _isUploadingMedia
+                  ? null
+                  : () {
+                      setState(
+                          () => _showAttachmentMenu = !_showAttachmentMenu);
+                    },
               borderRadius: BorderRadius.circular(99),
-              child: Padding(padding: const EdgeInsets.all(10), child: Icon(PhosphorIcons.plus, color: AppColors.textSecondary, size: 22),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Icon(PhosphorIcons.plus,
+                    color: AppColors.textSecondary, size: 22),
               ),
             ),
           ),
@@ -652,7 +677,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Icon(PhosphorIcons.paperPlaneRight, color: Colors.white, size: 22),
+                    : Icon(PhosphorIcons.paperPlaneRight,
+                        color: Colors.white, size: 22),
               ),
             ),
           ),

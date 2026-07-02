@@ -12,6 +12,7 @@ import '../state/worker_session_state.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
 import '../../../../shared/widgets/job_site_map.dart';
+
 class WorkerActivePreStartScreen extends StatefulWidget {
   const WorkerActivePreStartScreen({
     super.key,
@@ -21,9 +22,12 @@ class WorkerActivePreStartScreen extends StatefulWidget {
   final WorkerJob job;
   final WorkerJobPhase phase;
   @override
-  State<WorkerActivePreStartScreen> createState() => _WorkerActivePreStartScreenState();
+  State<WorkerActivePreStartScreen> createState() =>
+      _WorkerActivePreStartScreenState();
 }
-class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen> {
+
+class _WorkerActivePreStartScreenState
+    extends State<WorkerActivePreStartScreen> {
   final WorkersService _workersService = WorkersService();
   bool _isStarting = false;
   bool _isOpeningDirections = false;
@@ -116,7 +120,8 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(job.clientName, style: AppTypography.titleLarge),
+                            Text(job.clientName,
+                                style: AppTypography.titleLarge),
                             Row(
                               children: [
                                 Icon(
@@ -203,10 +208,12 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
       ),
     );
   }
+
   void _openMessage(BuildContext context, WorkerJob job) {
     final String clientId = job.clientId ?? '';
     if (clientId.isEmpty) {
-      AppToast.showInfo(context, 'Client chat is not available for this booking.');
+      AppToast.showInfo(
+          context, 'Client chat is not available for this booking.');
       return;
     }
     Navigator.pushNamed(
@@ -222,6 +229,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
       ),
     );
   }
+
   List<Widget> _buildPhaseActions(
     WorkerSessionState session,
     WorkerJob job,
@@ -267,6 +275,7 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
           ),
         ];
       case WorkerJobPhase.inProgress:
+      case WorkerJobPhase.terminationRequested:
       case WorkerJobPhase.none:
         return const <Widget>[];
     }
@@ -290,7 +299,8 @@ class _WorkerActivePreStartScreenState extends State<WorkerActivePreStartScreen>
       AppToast.showSuccess(context, 'Client notified that you are on the way.');
     } catch (e) {
       if (mounted) {
-        AppToast.showError(context, e, fallback: 'Could not update job status.');
+        AppToast.showError(context, e,
+            fallback: 'Could not update job status.');
       }
     } finally {
       if (mounted) setState(() => _isAdvancing = false);
@@ -445,6 +455,7 @@ class _PhaseHint extends StatelessWidget {
       WorkerJobPhase.arrived =>
         'Only start work after you have met the client and are ready to begin.',
       WorkerJobPhase.inProgress => 'Work is already in progress.',
+      WorkerJobPhase.terminationRequested => '',
       WorkerJobPhase.none => '',
     };
     if (text.isEmpty) return const SizedBox.shrink();

@@ -34,6 +34,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _pushEnabled = true;
   bool _emailUpdates = false;
   bool _isLoggingOut = false;
+  bool _isDeleting = false;
 
 
   bool get _isWorker => SharedUserContext.isWorker;
@@ -75,6 +76,87 @@ class _SettingsScreenState extends State<SettingsScreen> {
       AppToast.showError(context, e, fallback: 'Could not sign out.');
     } finally {
       if (mounted) setState(() => _isLoggingOut = false);
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    if (_isDeleting) return;
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) {
+        final TextEditingController controller = TextEditingController();
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setDialogState) {
+            bool canDelete = controller.text.trim().toLowerCase() == 'delete my account';
+            return AlertDialog(
+              title: const Text('Delete your account?', style: TextStyle(color: AppColors.error)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  const Text(
+                    'This action is permanent and cannot be undone. '
+                    'All your profile data, jobs, reviews, messages, and uploaded files will be permanently deleted.',
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'To confirm, please type "delete my account" below:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: controller,
+                    decoration: const InputDecoration(
+                      hintText: 'delete my account',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (String val) {
+                      setDialogState(() {
+                        canDelete = val.trim().toLowerCase() == 'delete my account';
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: canDelete ? () => Navigator.pop(ctx, true) : null,
+                  child: Text(
+                    'Delete permanently',
+                    style: TextStyle(
+                      color: canDelete ? AppColors.error : Colors.grey,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (confirmed != true) return;
+    setState(() => _isDeleting = true);
+    try {
+      await AuthService.instance.deleteAccount();
+      SharedUserContext.session.reset();
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Your account has been deleted.');
+      await Navigator.pushNamedAndRemoveUntil(
+        context,
+        SignInScreen.routeName,
+        (_) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not delete account.');
+    } finally {
+      if (mounted) setState(() => _isDeleting = false);
     }
   }
 
@@ -255,6 +337,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           switchViewSubtitle: _switchViewSubtitle,
           onLogout: _logout,
           isLoggingOut: _isLoggingOut,
+          onDeleteAccount: _deleteAccount,
+          isDeleting: _isDeleting,
         ),
         const SizedBox(height: 20),
         const _CommunityPromoCard(),
@@ -309,6 +393,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           switchViewSubtitle: _switchViewSubtitle,
           onLogout: _logout,
           isLoggingOut: _isLoggingOut,
+          onDeleteAccount: _deleteAccount,
+          isDeleting: _isDeleting,
         ),
         const SizedBox(height: 28),
         const _SettingsFooter(),
@@ -324,6 +410,8 @@ class _LegalAndSupportGroup extends StatelessWidget {
     required this.onHelp,
     required this.onLogout,
     required this.isLoggingOut,
+    required this.onDeleteAccount,
+    required this.isDeleting,
     this.onSwitchView,
     this.switchViewLabel,
     this.switchViewSubtitle,
@@ -334,6 +422,8 @@ class _LegalAndSupportGroup extends StatelessWidget {
   final VoidCallback onHelp;
   final VoidCallback onLogout;
   final bool isLoggingOut;
+  final VoidCallback onDeleteAccount;
+  final bool isDeleting;
   final VoidCallback? onSwitchView;
   final String? switchViewLabel;
   final String? switchViewSubtitle;
@@ -404,6 +494,34 @@ class _LegalAndSupportGroup extends StatelessWidget {
             titleColor: AppColors.error,
             onTap: isLoggingOut ? null : onLogout,
             trailing: isLoggingOut
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.error,
+                    ),
+                  )
+                : const SizedBox.shrink(),
+            showDivider: false,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.outline.withValues(alpha: 0.35)),
+          ),
+          child: SettingsTile(
+            icon: isDeleting ? PhosphorIcons.spinnerGap : PhosphorIcons.trash,
+            title: isDeleting ? 'Deleting account...' : 'Delete Account',
+            subtitle: isDeleting
+                ? 'Please wait while we delete your account'
+                : 'Permanently delete your account and history',
+            titleColor: AppColors.error,
+            onTap: isDeleting ? null : onDeleteAccount,
+            trailing: isDeleting
                 ? const SizedBox(
                     width: 20,
                     height: 20,

@@ -100,6 +100,10 @@ class TradeSelectionPage extends StatelessWidget {
                   controller: customTradeController,
                   hint: "Search or describe what you do (e.g. I fix shoes)",
                   prefixIcon: PhosphorIcons.magnifyingGlass,
+                  textInputAction: TextInputAction.search,
+                  onFieldSubmitted: (_) {
+                    if (!isResolvingTrade) onResolveCustomTrade();
+                  },
                   suffixIcon: isResolvingTrade
                       ? const Padding(
                           padding: EdgeInsets.all(12),
@@ -219,8 +223,8 @@ class TradeSelectionPage extends StatelessWidget {
                     final List<String> predefinedLabels =
                         trades.map((TradeEntry t) => t.label).toList();
                     final List<String> customTrades = session.selectedTrades
-                        .where((String trade) =>
-                            !predefinedLabels.contains(trade))
+                        .where(
+                            (String trade) => !predefinedLabels.contains(trade))
                         .toList();
 
                     if (customTrades.isEmpty) return const SizedBox.shrink();

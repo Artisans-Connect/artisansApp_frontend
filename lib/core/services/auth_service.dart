@@ -7,6 +7,7 @@ import '../cache/cache_keys.dart';
 import '../cache/cache_store.dart';
 import '../constants/app_constants.dart';
 import '../errors/auth_failure.dart';
+import '../location/worker_location_service.dart';
 import '../network/api_client.dart';
 import '../session/app_user_session.dart';
 import '../utils/cache_logger.dart';
@@ -315,6 +316,11 @@ class AuthService {
     final appUser = _appUserFromProfile(map);
     _session.updateUser(appUser);
     unawaited(NotificationService.instance.registerCurrentDevice());
+    if (mode == 'client') {
+      try {
+        await _apiClient.put('/workers/availability', body: {'is_available': false});
+      } catch (_) {}
+    }
     return appUser;
   }
 
@@ -336,6 +342,11 @@ class AuthService {
   }
 
   Future<void> signOut() async {
+    if (_session.activeMode == 'worker') {
+      try {
+        await _apiClient.put('/workers/availability', body: {'is_available': false});
+      } catch (_) {}
+    }
     try {
       await NotificationService.instance.unregisterCurrentDevice();
     } catch (_) {
@@ -348,8 +359,28 @@ class AuthService {
     } catch (_) {
       // Ignore remote auth errors to ensure local session always clears.
     } finally {
+      await WorkerLocationService.instance.stop();
       _session.clear();
       await CacheStore.instance.clearOnSignOut();
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    if (_session.activeMode == 'worker') {
+      try {
+        await _apiClient.put('/workers/availability', body: {'is_available': false});
+      } catch (_) {}
+    }
+    try {
+      await _apiClient.delete('/profiles/me');
+    } finally {
+      await WorkerLocationService.instance.stop();
+      _session.clear();
+      await CacheStore.instance.clearOnSignOut();
+      try {
+        await _supabaseAuth.signOut();
+        await _googleSignIn.signOut();
+      } catch (_) {}
     }
   }
 

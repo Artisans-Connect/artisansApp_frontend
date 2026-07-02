@@ -9,7 +9,11 @@ import '../widgets/skeleton_box.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import '../../../../shared/widgets/job_requests_map.dart';
+import '../../../../shared/widgets/category_icon_badge.dart';
 import 'job_request_detail_screen.dart';
+import 'worker_application_detail_screen.dart';
+import 'worker_booking_history_screen.dart';
+import '../utils/worker_application_navigation.dart';
 import '../../../../core/theme/design_tokens.dart';
  
  
@@ -104,12 +108,14 @@ class _AvailabilityCard extends StatelessWidget {
     required this.onChanged,
     required this.lastCheckedAt,
     required this.isSilentRefreshing,
+    required this.isAvailabilityLoading,
   });
  
   final bool isAvailable;
-  final ValueChanged<bool> onChanged;
+  final ValueChanged<bool>? onChanged;
   final DateTime? lastCheckedAt;
   final bool isSilentRefreshing;
+  final bool isAvailabilityLoading;
  
   String get _checkedLabel {
     if (lastCheckedAt == null) return '';
@@ -156,8 +162,14 @@ class _AvailabilityCard extends StatelessWidget {
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 200),
                       child: Text(
-                        isAvailable ? 'Online & available' : 'Offline',
-                        key: ValueKey<bool>(isAvailable),
+                        isAvailabilityLoading
+                            ? 'Checking availability...'
+                            : isAvailable
+                                ? 'Online & available'
+                                : 'Offline',
+                        key: ValueKey<String>(
+                          '$isAvailabilityLoading-$isAvailable',
+                        ),
                         style: TextStyle(
                           fontFamily: 'Satoshi',
                           fontSize: 16,
@@ -173,7 +185,7 @@ class _AvailabilityCard extends StatelessWidget {
               ),
               Switch(
                 value: isAvailable,
-                onChanged: onChanged,
+                onChanged: isAvailabilityLoading ? null : onChanged,
                 activeThumbColor: Colors.white,
                 activeTrackColor: DesignTokens.successGreen,
                 inactiveThumbColor: Colors.white,
@@ -315,13 +327,6 @@ class _RequestJobCard extends StatelessWidget {
   final VoidCallback onViewDetails;
   final VoidCallback onAccept;
  
-  /// Initials from a full name string.
-  String _initials(String name) {
-    final List<String> parts =
-        name.trim().split(RegExp(r'\s+')).take(2).toList();
-    return parts.map((String p) => p.isNotEmpty ? p[0].toUpperCase() : '').join();
-  }
- 
   /// Relative time from a DateTime.
   String _relativeTime(DateTime? dt) {
     if (dt == null) return '';
@@ -333,8 +338,6 @@ class _RequestJobCard extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
-    final String initials = _initials(job.clientName);
- 
     return Container(
       decoration: BoxDecoration(
         color: DesignTokens.surfaceCard,
@@ -349,24 +352,10 @@ class _RequestJobCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                // Avatar with initials
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: DesignTokens.warmTint,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    initials,
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: DesignTokens.primary,
-                    ),
-                  ),
+                CategoryIconBadge(
+                  iconName: job.categoryIconName,
+                  colorHex: job.categoryColorHex,
+                  size: 46,
                 ),
                 const SizedBox(width: 12),
                 // Name + description
@@ -607,9 +596,13 @@ class _EmptyState extends StatelessWidget {
 }
 
 class _PendingApplicationCard extends StatelessWidget {
-  const _PendingApplicationCard({required this.application});
+  const _PendingApplicationCard({
+    required this.application,
+    required this.onTap,
+  });
 
   final Map<String, dynamic> application;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -623,29 +616,23 @@ class _PendingApplicationCard extends StatelessWidget {
     final bool accepted = status == 'accepted';
     final Object? budget = job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
 
-    return Container(
-      padding: const EdgeInsets.all(DesignTokens.md),
-      decoration: BoxDecoration(
-        color: DesignTokens.surfaceCard,
-        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-        border: Border.all(color: DesignTokens.borderSubtle),
-      ),
-      child: Row(
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+      child: Container(
+        padding: const EdgeInsets.all(DesignTokens.md),
+        decoration: BoxDecoration(
+          color: DesignTokens.surfaceCard,
+          borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+          border: Border.all(color: DesignTokens.borderSubtle),
+        ),
+        child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: accepted
-                  ? DesignTokens.successGreen.withValues(alpha: 0.12)
-                  : DesignTokens.primaryTint08,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              accepted ? Icons.check_circle_outline : Icons.hourglass_top,
-              color: accepted ? DesignTokens.successGreen : DesignTokens.primary,
-            ),
+          CategoryIconBadge(
+            iconName: category is Map ? category['icon_name']?.toString() : null,
+            colorHex: category is Map ? category['color_hex']?.toString() : null,
+            size: 42,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -690,6 +677,7 @@ class _PendingApplicationCard extends StatelessWidget {
           const SizedBox(width: 8),
           _JobTag(label: accepted ? 'Accepted' : 'Pending'),
         ],
+        ),
       ),
     );
   }
@@ -765,6 +753,13 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
       setState(() => _isSilentRefreshing = true);
     }
  
+    if (mounted) {
+      try {
+        final session = WorkerScope.read(context);
+        unawaited(session.loadAvailability());
+      } catch (_) {}
+    }
+
     try {
       final List<dynamic> results = await Future.wait<dynamic>([
         _workersService.getJobRequests(),
@@ -817,6 +812,38 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           onAcceptResponse: (accepted) {
             _load();
           },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openApplication(Map<String, dynamic> application) async {
+    final Map<String, dynamic> job =
+        Map<String, dynamic>.from(application['job'] as Map? ?? const {});
+    final WorkerApplicationDestination destination =
+        workerApplicationDestination(
+      (application['status'] ?? '').toString(),
+      (job['status'] ?? '').toString(),
+    );
+
+    if (destination == WorkerApplicationDestination.activeBooking) {
+      final WorkerSessionState session = WorkerScope.of(context);
+      await session.loadActiveJob();
+      if (session.hasActiveJob || !mounted) return;
+    } else if (destination == WorkerApplicationDestination.history) {
+      await Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => const WorkerBookingHistoryScreen(),
+        ),
+      );
+      return;
+    }
+
+    if (!mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => WorkerApplicationDetailScreen(
+          application: application,
         ),
       ),
     );
@@ -922,6 +949,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
         // ── Availability card ──────────────────────────────────
         _AvailabilityCard(
           isAvailable: session.isAvailable,
+          isAvailabilityLoading: session.isAvailabilityLoading,
           lastCheckedAt: _lastCheckedAt,
           isSilentRefreshing: _isSilentRefreshing,
           onChanged: (bool value) async {
@@ -960,7 +988,10 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
             ..._applications.map(
               (Map<String, dynamic> application) => Padding(
                 padding: const EdgeInsets.only(bottom: DesignTokens.md),
-                child: _PendingApplicationCard(application: application),
+                child: _PendingApplicationCard(
+                  application: application,
+                  onTap: () => _openApplication(application),
+                ),
               ),
             ),
             const SizedBox(height: DesignTokens.sm),

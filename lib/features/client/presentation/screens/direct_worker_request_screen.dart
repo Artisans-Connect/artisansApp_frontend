@@ -69,15 +69,17 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
             const <String, dynamic>{},
       );
 
-  String get _workerId =>
-      (_artisan['id'] ?? _artisan['worker_id'] ?? _artisan['userId'] ?? _profile['id'] ?? '')
-          .toString();
+  String get _workerId => (_artisan['id'] ??
+          _artisan['worker_id'] ??
+          _artisan['userId'] ??
+          _profile['id'] ??
+          '')
+      .toString();
 
   String get _name =>
       (_artisan['name'] ?? _profile['full_name'] ?? 'Artisan').toString();
 
-  String get _profession =>
-      (_artisan['profession'] ?? 'Artisan').toString();
+  String get _profession => (_artisan['profession'] ?? 'Artisan').toString();
 
   String get _imageUrl =>
       (_artisan['imageUrl'] ?? _profile['avatar_url'] ?? '').toString();
@@ -110,7 +112,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       ]);
       final List<dynamic> categories = results[0] as List<dynamic>;
       final dynamic loc = results[1];
-      final LatLng pin = LatLng(loc.latitude as double, loc.longitude as double);
+      final LatLng pin =
+          LatLng(loc.latitude as double, loc.longitude as double);
       if (!mounted) return;
       final List<Map<String, dynamic>> workerCategories =
           _resolveWorkerCategories(categories);
@@ -132,7 +135,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     }
   }
 
-  List<Map<String, dynamic>> _resolveWorkerCategories(List<dynamic> categories) {
+  List<Map<String, dynamic>> _resolveWorkerCategories(
+      List<dynamic> categories) {
     final String text = <String>[
       _profession,
       ...(_artisan['skills'] is List
@@ -141,7 +145,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     ].join(' ').toLowerCase();
     final List<Map<String, dynamic>> matches = <Map<String, dynamic>>[];
     for (final dynamic item in categories) {
-      final Map<String, dynamic> category = Map<String, dynamic>.from(item as Map);
+      final Map<String, dynamic> category =
+          Map<String, dynamic>.from(item as Map);
       final String name = (category['name'] ?? '').toString().toLowerCase();
       final String slug = (category['slug'] ?? '').toString().toLowerCase();
       if ((name.isNotEmpty && text.contains(name)) ||
@@ -171,7 +176,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   }
 
   Future<void> _selectSuggestion(PlaceSuggestion suggestion) async {
-    final result = await PlaceLookupService.instance.details(suggestion.placeId);
+    final result =
+        await PlaceLookupService.instance.details(suggestion.placeId);
     if (result == null || !mounted) return;
     setState(() {
       _pin = result.position;
@@ -192,7 +198,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
 
   Future<void> _updateAddressFromPin(LatLng pin) async {
     if (mounted) setState(() => _updatingAddress = true);
-    final String? address = await PlaceLookupService.instance.reverseGeocode(pin);
+    final String? address =
+        await PlaceLookupService.instance.reverseGeocode(pin);
     if (!mounted) return;
     setState(() {
       if (address != null) _addressController.text = address;
@@ -204,7 +211,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     if (_usingCurrentLocation) return;
     setState(() => _usingCurrentLocation = true);
     try {
-      final DeviceLocation loc = await DeviceLocationService.getCurrentOrDefault();
+      final DeviceLocation loc =
+          await DeviceLocationService.getCurrentOrDefault();
       final LatLng pin = LatLng(loc.latitude, loc.longitude);
       if (!mounted) return;
       setState(() {
@@ -221,7 +229,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       await _updateAddressFromPin(pin);
     } catch (e) {
       if (mounted) {
-        AppToast.showError(context, e, fallback: 'Could not use current location.');
+        AppToast.showError(context, e,
+            fallback: 'Could not use current location.');
       }
     } finally {
       if (mounted) setState(() => _usingCurrentLocation = false);
@@ -239,11 +248,13 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     if (file == null) return;
     setState(() => _uploadingPhoto = true);
     try {
-      final String? url = await StorageService.instance.uploadJobPhoto(File(file.path));
+      final String? url =
+          await StorageService.instance.uploadJobPhoto(File(file.path));
       if (!mounted) return;
       if (url != null) setState(() => _photoUrls.add(url));
     } catch (e) {
-      if (mounted) AppToast.showError(context, e, fallback: 'Could not upload photo.');
+      if (mounted)
+        AppToast.showError(context, e, fallback: 'Could not upload photo.');
     } finally {
       if (mounted) setState(() => _uploadingPhoto = false);
     }
@@ -270,10 +281,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       'requested_worker_id': _workerId,
     };
     if (_urgency == 'scheduled') {
-      payload['scheduled_for'] = DateTime.now()
-          .add(const Duration(days: 1))
-          .toUtc()
-          .toIso8601String();
+      payload['scheduled_for'] =
+          DateTime.now().add(const Duration(days: 1)).toUtc().toIso8601String();
     }
 
     try {
@@ -282,19 +291,26 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
         idempotencyKey: idempotencyKey,
       );
       if (!mounted) return;
-      final Map<String, dynamic> jobData = Map<String, dynamic>.from(created as Map);
+      final Map<String, dynamic> jobData =
+          Map<String, dynamic>.from(created as Map);
       AppToast.showSuccess(context, 'Request sent to $_name.');
-      ClientNavigation.startFindingArtisan(
-        context,
-        jobData: jobData,
-        artisan: _artisan,
-      );
+      if (_urgency == 'scheduled') {
+        ClientNavigation.goToBookingsTab(context);
+      } else {
+        ClientNavigation.startFindingArtisan(
+          context,
+          jobData: jobData,
+          artisan: _artisan,
+        );
+      }
     } catch (e) {
       final bool offline = e is NetworkException;
       if (offline) {
-        await JobPostQueue.instance.enqueue(payload, idempotencyKey: idempotencyKey);
+        await JobPostQueue.instance
+            .enqueue(payload, idempotencyKey: idempotencyKey);
         if (!mounted) return;
-        AppToast.showInfo(context, 'Request queued and will post when connection returns.');
+        AppToast.showInfo(
+            context, 'Request queued and will post when connection returns.');
         ClientNavigation.goToBookingsTab(context);
       } else if (mounted) {
         AppToast.showError(
@@ -353,19 +369,22 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                   const SizedBox(height: AppSpacing.md),
                   TextField(
                     controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Request title'),
+                    decoration:
+                        const InputDecoration(labelText: 'Request title'),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.md),
                   TextField(
                     controller: _descriptionController,
                     maxLines: 4,
-                    decoration: const InputDecoration(labelText: 'What do you need done?'),
+                    decoration: const InputDecoration(
+                        labelText: 'What do you need done?'),
                     onChanged: (_) => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   OutlinedButton.icon(
-                    onPressed: _usingCurrentLocation ? null : _useCurrentLocation,
+                    onPressed:
+                        _usingCurrentLocation ? null : _useCurrentLocation,
                     icon: _usingCurrentLocation
                         ? const SizedBox(
                             width: 16,
@@ -423,7 +442,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                     maxLines: 2,
                     decoration: const InputDecoration(
                       labelText: 'Address fallback',
-                      helperText: 'Edit only if the map address is not precise.',
+                      helperText:
+                          'Edit only if the map address is not precise.',
                     ),
                     onChanged: (_) => setState(() {}),
                   ),
@@ -431,7 +451,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                   SegmentedButton<String>(
                     segments: const <ButtonSegment<String>>[
                       ButtonSegment<String>(value: 'asap', label: Text('ASAP')),
-                      ButtonSegment<String>(value: 'scheduled', label: Text('Scheduled')),
+                      ButtonSegment<String>(
+                          value: 'scheduled', label: Text('Scheduled')),
                     ],
                     selected: <String>{_urgency},
                     onSelectionChanged: (Set<String> value) =>
@@ -575,7 +596,8 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                   style: OutlinedButton.styleFrom(
                     fixedSize: const Size(88, 88),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusMedium),
                     ),
                   ),
                   child: _uploadingPhoto

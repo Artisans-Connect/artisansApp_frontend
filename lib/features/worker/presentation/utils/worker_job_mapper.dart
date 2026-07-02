@@ -13,6 +13,10 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
   final String categoryName = category is Map<String, dynamic>
       ? category['name'] as String? ?? 'General'
       : 'General';
+  final String? categoryIconName =
+      category is Map<String, dynamic> ? category['icon_name'] as String? : null;
+  final String? categoryColorHex =
+      category is Map<String, dynamic> ? category['color_hex'] as String? : null;
   final List<String> photoUrls =
       (json['photo_urls'] as List<dynamic>? ?? <dynamic>[])
           .map((dynamic url) => url.toString())
@@ -29,6 +33,8 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
     id: json['id'] as String,
     title: json['title'] as String? ?? 'Job request',
     category: categoryName,
+    categoryIconName: categoryIconName,
+    categoryColorHex: categoryColorHex,
     description: json['description'] as String? ?? '',
     addressLabel: json['address_label'] as String? ?? 'Unknown',
     latitude: (json['location_lat'] as num?)?.toDouble() ?? 0,
@@ -73,6 +79,10 @@ WorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
   final String categoryName = category is Map<String, dynamic>
       ? category['name'] as String? ?? 'General'
       : 'General';
+  final String? categoryIconName =
+      category is Map<String, dynamic> ? category['icon_name'] as String? : null;
+  final String? categoryColorHex =
+      category is Map<String, dynamic> ? category['color_hex'] as String? : null;
   final String status = (json['status'] as String? ?? '').toLowerCase();
   final Map<String, dynamic> completion =
       _firstRelated(json['completion_details']);
@@ -85,6 +95,8 @@ WorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     id: json['id'] as String,
     title: json['title'] as String? ?? 'Job',
     category: categoryName,
+    categoryIconName: categoryIconName,
+    categoryColorHex: categoryColorHex,
     description: '',
     addressLabel: json['address_label'] as String? ?? 'Unknown',
     latitude: 0,

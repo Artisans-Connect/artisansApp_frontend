@@ -124,6 +124,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
           final onboarding = OnboardingSession.instance;
           onboarding.fullName = name ?? supUser.email;
           onboarding.phone = phone ?? '';
+          onboarding.avatarUrl = (metaRaw is Map<String, dynamic>
+                  ? metaRaw['avatar_url'] ?? metaRaw['picture']
+                  : null)
+              ?.toString();
         }
 
         await Navigator.pushReplacementNamed(

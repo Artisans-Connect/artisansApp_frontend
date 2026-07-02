@@ -27,8 +27,7 @@ class ClientNavigation {
   static void popToShell(BuildContext context) {
     Navigator.popUntil(
       context,
-      (Route<dynamic> route) =>
-          route.settings.name == ClientShell.routeName,
+      (Route<dynamic> route) => route.settings.name == ClientShell.routeName,
     );
   }
 
@@ -153,12 +152,13 @@ class ClientNavigation {
   }) {
     Navigator.pushNamed(
       context,
-      UserProfileScreen.routeName,
-      arguments: ProfileArgs(
-        userId: userId,
-        viewAsWorker: true,
-        profileData: artisan,
-      ),
+      AppRoutes.artisanProfile,
+      arguments: <String, dynamic>{
+        if (artisan != null) ...artisan,
+        'id': userId,
+        'worker_id': userId,
+        if (name != null) 'name': name,
+      },
     );
   }
 
@@ -166,11 +166,20 @@ class ClientNavigation {
     BuildContext context,
     Map<String, dynamic> artisan,
   ) async {
-    final String? jobId = artisan['job_id'] as String? ?? artisan['jobId'] as String?;
+    final String? jobId =
+        artisan['job_id'] as String? ?? artisan['jobId'] as String?;
     if (!isValidJobChatId(jobId)) {
-      final Map<String, dynamic> profile = Map<String, dynamic>.from(artisan['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
-      final String workerId = (artisan['id'] ?? artisan['worker_id'] ?? artisan['userId'] ?? profile['id'] ?? '').toString();
-      final String name = (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
+      final Map<String, dynamic> profile = Map<String, dynamic>.from(
+          artisan['profiles'] as Map<String, dynamic>? ??
+              const <String, dynamic>{});
+      final String workerId = (artisan['id'] ??
+              artisan['worker_id'] ??
+              artisan['userId'] ??
+              profile['id'] ??
+              '')
+          .toString();
+      final String name =
+          (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
       final String? phone = (artisan['phone'] ?? profile['phone']) as String?;
       if (workerId.isEmpty || workerId == CurrentUser.id) {
         AppToast.showInfo(context, 'You cannot message this profile.');
@@ -202,9 +211,17 @@ class ClientNavigation {
       }
       return;
     }
-    final Map<String, dynamic> profile = Map<String, dynamic>.from(artisan['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
-    final String name = (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
-    final String workerId = (artisan['id'] ?? artisan['worker_id'] ?? artisan['userId'] ?? profile['id'] ?? '').toString();
+    final Map<String, dynamic> profile = Map<String, dynamic>.from(
+        artisan['profiles'] as Map<String, dynamic>? ??
+            const <String, dynamic>{});
+    final String name =
+        (artisan['name'] ?? profile['full_name'] ?? 'Artisan').toString();
+    final String workerId = (artisan['id'] ??
+            artisan['worker_id'] ??
+            artisan['userId'] ??
+            profile['id'] ??
+            '')
+        .toString();
     final String? phone = (artisan['phone'] ?? profile['phone']) as String?;
     openChat(
       context,
@@ -212,7 +229,12 @@ class ClientNavigation {
       counterpartUserId: workerId.isNotEmpty ? workerId : 'worker-unknown',
       counterpartName: name,
       jobId: jobId,
-      jobTitle: (artisan['profession'] ?? (artisan['skills'] is List && (artisan['skills'] as List).isNotEmpty ? (artisan['skills'] as List).first.toString() : null)).toString(),
+      jobTitle: (artisan['profession'] ??
+              (artisan['skills'] is List &&
+                      (artisan['skills'] as List).isNotEmpty
+                  ? (artisan['skills'] as List).first.toString()
+                  : null))
+          .toString(),
       counterpartPhone: phone,
     );
   }
@@ -241,8 +263,7 @@ class ClientNavigation {
     Navigator.pushNamedAndRemoveUntil(
       context,
       AppRoutes.liveTracking,
-      (Route<dynamic> route) =>
-          route.settings.name == ClientShell.routeName,
+      (Route<dynamic> route) => route.settings.name == ClientShell.routeName,
       arguments: booking,
     );
   }
@@ -267,7 +288,16 @@ class ClientNavigation {
           );
         }
       case ClientBookingStatus.requested:
-        pushFlow(context, AppRoutes.jobApplicants, arguments: booking.toMap());
+        if (booking.backendStatus == 'draft' &&
+            booking.jobMode == 'scheduled') {
+          AppToast.showInfo(
+            context,
+            'This scheduled job will start matching before the appointment.',
+          );
+        } else {
+          pushFlow(context, AppRoutes.jobApplicants,
+              arguments: booking.toMap());
+        }
       case ClientBookingStatus.accepted:
         pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.cancelled:

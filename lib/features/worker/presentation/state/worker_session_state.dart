@@ -7,7 +7,15 @@ import '../models/worker_ui_contracts.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/worker_bottom_nav.dart';
 
-enum WorkerJobPhase { none, accepted, onTheWay, arrived, inProgress }
+enum WorkerJobPhase {
+  none,
+  accepted,
+  onTheWay,
+  arrived,
+  inProgress,
+  terminationRequested,
+}
+
 enum WorkerProfilePage { earnings, stats, history }
 
 class WorkerSessionState extends ChangeNotifier {
@@ -17,18 +25,20 @@ class WorkerSessionState extends ChangeNotifier {
   WorkerProfilePage profilePage = WorkerProfilePage.earnings;
 
   bool isAvailable = false;
+  bool isAvailabilityLoading = true;
+  int _availabilityChangeVersion = 0;
   WorkerJob? activeJob;
   WorkerJobPhase jobPhase = WorkerJobPhase.none;
 
-  bool get hasActiveJob =>
-      activeJob != null && jobPhase != WorkerJobPhase.none;
+  bool get hasActiveJob => activeJob != null && jobPhase != WorkerJobPhase.none;
 
-  WorkerAvailabilityStatus get availabilityStatus =>
-      isAvailable
-          ? WorkerAvailabilityStatus.online
-          : WorkerAvailabilityStatus.offline;
+  WorkerAvailabilityStatus get availabilityStatus => isAvailable
+      ? WorkerAvailabilityStatus.online
+      : WorkerAvailabilityStatus.offline;
 
   Future<bool> setAvailable(bool value) async {
+    if (isAvailabilityLoading) return false;
+    _availabilityChangeVersion++;
     isAvailable = value;
     notifyListeners();
     try {
@@ -46,10 +56,22 @@ class WorkerSessionState extends ChangeNotifier {
     }
   }
 
-  /// Call when worker shell mounts if already available.
-  Future<void> syncLocationTracking() async {
-    if (isAvailable) {
-      await WorkerLocationService.instance.start();
+  Future<void> loadAvailability() async {
+    final int versionAtStart = _availabilityChangeVersion;
+    try {
+      final bool savedAvailability = await _workersService.getAvailability();
+      if (versionAtStart != _availabilityChangeVersion) return;
+      isAvailable = savedAvailability;
+      if (savedAvailability) {
+        await WorkerLocationService.instance.start();
+      } else {
+        await WorkerLocationService.instance.stop();
+      }
+    } catch (_) {
+      // Keep the toggle usable if availability could not be refreshed.
+    } finally {
+      isAvailabilityLoading = false;
+      notifyListeners();
     }
   }
 
@@ -74,7 +96,6 @@ class WorkerSessionState extends ChangeNotifier {
 
   @override
   void dispose() {
-    WorkerLocationService.instance.stop();
     super.dispose();
   }
 
@@ -151,6 +172,7 @@ class WorkerSessionState extends ChangeNotifier {
       'on_the_way' => WorkerJobPhase.onTheWay,
       'arrived' => WorkerJobPhase.arrived,
       'in_progress' => WorkerJobPhase.inProgress,
+      'termination_requested' => WorkerJobPhase.terminationRequested,
       'matched' => WorkerJobPhase.accepted,
       _ => WorkerJobPhase.accepted,
     };
@@ -165,9 +187,15 @@ class WorkerScope extends InheritedNotifier<WorkerSessionState> {
   });
 
   static WorkerSessionState of(BuildContext context) {
-    final scope =
-        context.dependOnInheritedWidgetOfExactType<WorkerScope>();
+    final scope = context.dependOnInheritedWidgetOfExactType<WorkerScope>();
     assert(scope != null, 'WorkerScope not found');
     return scope!.notifier!;
+  }
+
+  static WorkerSessionState read(BuildContext context) {
+    final element =
+        context.getElementForInheritedWidgetOfExactType<WorkerScope>();
+    assert(element != null, 'WorkerScope not found');
+    return (element!.widget as WorkerScope).notifier!;
   }
 }
