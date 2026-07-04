@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/worker/presentation/worker_shell.dart';
+import '../navigation/app_routes.dart';
 import '../network/api_client.dart';
 
 @pragma('vm:entry-point')
@@ -144,6 +145,12 @@ class NotificationService {
         'job_started',
         'job_completion_submitted',
         'job_completed',
+        'worker_cancelled_job',
+        'client_cancelled_job',
+        'job_cancelled',
+        'job_expired',
+        'termination_requested',
+        'termination_resolved',
       ];
       if (clientJobTypes.contains(type) && jobId is String && jobId.isNotEmpty) {
         if (navigatorKey.currentState == null) {
@@ -191,7 +198,7 @@ class NotificationService {
     }
 
     navigator.pushNamed(
-      '/client/live-tracking',
+      AppRoutes.liveTracking,
       arguments: <String, dynamic>{'id': jobId},
     );
   }

@@ -41,7 +41,7 @@ class ArtisanDetailCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                        color: DesignTokens.primary.withOpacity(0.15),
+                        color: DesignTokens.primary.withValues(alpha: 0.15),
                         blurRadius: 10,
                         offset: const Offset(0, 4))
                   ],
@@ -74,7 +74,7 @@ class ArtisanDetailCard extends StatelessWidget {
                     border: Border.all(color: DesignTokens.surfaceCard, width: 2),
                     boxShadow: [
                       BoxShadow(
-                          color: DesignTokens.successGreen.withOpacity(0.4),
+                          color: DesignTokens.successGreen.withValues(alpha: 0.4),
                           blurRadius: 6)
                     ],
                   ),
@@ -116,10 +116,10 @@ class ArtisanDetailCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
             decoration: BoxDecoration(
-              color: DesignTokens.accentGold.withOpacity(0.12),
+              color: DesignTokens.accentGold.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                  color: DesignTokens.accentGold.withOpacity(0.25), width: 1),
+                  color: DesignTokens.accentGold.withValues(alpha: 0.25), width: 1),
             ),
             child: Column(
               children: [

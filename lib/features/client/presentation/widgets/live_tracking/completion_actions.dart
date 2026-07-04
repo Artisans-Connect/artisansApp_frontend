@@ -92,7 +92,7 @@ class RateButton extends StatelessWidget {
           boxShadow: enabled
               ? [
                   BoxShadow(
-                      color: DesignTokens.primary.withOpacity(0.30),
+                      color: DesignTokens.primary.withValues(alpha: 0.30),
                       blurRadius: 16,
                       offset: const Offset(0, 6))
                 ]

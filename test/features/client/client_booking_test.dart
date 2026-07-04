@@ -28,6 +28,22 @@ void main() {
     expect(active, isNull);
   });
 
+  test('picks termination requested jobs as active trackable jobs', () {
+    final active = ClientBooking.pickActiveTrackable(<Map<String, dynamic>>[
+      <String, dynamic>{
+        'id': 'job-termination',
+        'title': 'Fix wiring',
+        'status': 'termination_requested',
+        'worker_id': 'worker-1',
+      },
+    ]);
+
+    expect(active, isNotNull);
+    expect(active!.backendStatus, 'termination_requested');
+    expect(active.status, ClientBookingStatus.inProgress);
+    expect(active.isTrackable, isTrue);
+  });
+
   test('maps local job draft as a draft booking', () {
     final booking = ClientBooking.fromLocalDraft(
       draftId: 'draft-1',

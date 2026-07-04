@@ -126,7 +126,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
  
   Future<void> _loadActiveJob() async {
     try {
-      final List<dynamic> data = await _jobsService.getMyJobs();
+      final List<dynamic> data = await _jobsService.getMyJobs(forceRefresh: true);
       if (!mounted) return;
       setState(() {
         _activeJob = ClientBooking.pickActiveTrackable(

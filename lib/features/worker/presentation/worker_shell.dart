@@ -11,6 +11,7 @@ import 'screens/worker_active_in_progress_screen.dart';
 import 'screens/worker_active_pre_start_screen.dart';
 import 'screens/worker_booking_history_screen.dart';
 import 'screens/worker_earnings_screen.dart';
+import 'screens/worker_pending_approval_screen.dart';
 import 'screens/worker_requests_screen.dart';
 import 'screens/worker_termination_request_screen.dart';
 import 'screens/worker_stats_screen.dart';
@@ -155,6 +156,8 @@ class _WorkerShellState extends State<WorkerShell> {
         return WorkerActiveInProgressScreen(job: job);
       case WorkerJobPhase.terminationRequested:
         return WorkerTerminationRequestScreen(job: job);
+      case WorkerJobPhase.pendingApproval:
+        return WorkerPendingApprovalScreen(job: job);
       case WorkerJobPhase.none:
         return const WorkerActiveEmptyScreen();
     }

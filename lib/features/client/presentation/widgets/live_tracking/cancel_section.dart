@@ -29,9 +29,9 @@ class CancelSection extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         decoration: BoxDecoration(
-          color: DesignTokens.accentWarm.withOpacity(0.06),
+          color: DesignTokens.accentWarm.withValues(alpha: 0.06),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: DesignTokens.accentWarm.withOpacity(0.2)),
+          border: Border.all(color: DesignTokens.accentWarm.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -71,7 +71,7 @@ class CancelSection extends StatelessWidget {
         label: Text(isRequestingTermination ? 'Sending\u2026' : 'Request Termination'),
         style: OutlinedButton.styleFrom(
           foregroundColor: DesignTokens.accentWarm,
-          side: BorderSide(color: DesignTokens.accentWarm.withOpacity(0.4)),
+          side: BorderSide(color: DesignTokens.accentWarm.withValues(alpha: 0.4)),
           padding: const EdgeInsets.symmetric(vertical: 12),
           minimumSize: const Size(double.infinity, 44),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -92,7 +92,7 @@ class CancelSection extends StatelessWidget {
       label: Text(isCancelling ? 'Cancelling\u2026' : 'Cancel Job'),
       style: OutlinedButton.styleFrom(
         foregroundColor: DesignTokens.error,
-        side: BorderSide(color: DesignTokens.error.withOpacity(0.4)),
+        side: BorderSide(color: DesignTokens.error.withValues(alpha: 0.4)),
         padding: const EdgeInsets.symmetric(vertical: 12),
         minimumSize: const Size(double.infinity, 44),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

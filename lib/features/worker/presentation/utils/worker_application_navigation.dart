@@ -16,6 +16,7 @@ WorkerApplicationDestination workerApplicationDestination(
     'arrived',
     'in_progress',
     'termination_requested',
+    'pending_client_approval',
   }.contains(job)) {
     return WorkerApplicationDestination.activeBooking;
   }

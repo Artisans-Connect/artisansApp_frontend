@@ -65,7 +65,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     try {
       final List<ClientBooking> draftBookings =
           await JobDraftStore.instance.listBookings();
-      final List<dynamic> data = await _jobsService.getMyJobs();
+      final List<dynamic> data = await _jobsService.getMyJobs(forceRefresh: true);
       if (!mounted) return;
       setState(() {
         _bookings = <ClientBooking>[

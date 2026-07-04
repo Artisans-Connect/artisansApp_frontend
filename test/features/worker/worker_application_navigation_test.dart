@@ -41,10 +41,10 @@ void main() {
     );
   });
 
-  test('unknown combinations safely open details', () {
+  test('approval-pending accepted jobs redirect to active bookings', () {
     expect(
       workerApplicationDestination('accepted', 'pending_client_approval'),
-      WorkerApplicationDestination.details,
+      WorkerApplicationDestination.activeBooking,
     );
   });
 }

@@ -14,6 +14,7 @@ enum WorkerJobPhase {
   arrived,
   inProgress,
   terminationRequested,
+  pendingApproval,
 }
 
 enum WorkerProfilePage { earnings, stats, history }
@@ -156,9 +157,9 @@ class WorkerSessionState extends ChangeNotifier {
   }
 
   void completeJob() {
-    activeJob = null;
-    jobPhase = WorkerJobPhase.none;
-    currentTab = WorkerNavTab.explore;
+    if (activeJob == null) return;
+    jobPhase = WorkerJobPhase.pendingApproval;
+    currentTab = WorkerNavTab.bookings;
     notifyListeners();
   }
 
@@ -173,6 +174,7 @@ class WorkerSessionState extends ChangeNotifier {
       'arrived' => WorkerJobPhase.arrived,
       'in_progress' => WorkerJobPhase.inProgress,
       'termination_requested' => WorkerJobPhase.terminationRequested,
+      'pending_client_approval' => WorkerJobPhase.pendingApproval,
       'matched' => WorkerJobPhase.accepted,
       _ => WorkerJobPhase.accepted,
     };

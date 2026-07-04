@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
+import '../../../core/navigation/app_routes.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
@@ -119,7 +120,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   void _routeToDestination(NotificationItem notification) {
-    final String type = notification.type;
+    final String type =
+        (notification.data?['type'] as String?) ?? notification.type;
     final String? jobId = notification.data?['jobId'] as String?;
 
     if (type == 'chat_message' && jobId != null) {
@@ -133,8 +135,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           counterpartName: 'Chat',
         ),
       );
+      return;
     }
-    // Other notification types stay on the screen (already read).
+
+    const Set<String> jobTypes = <String>{
+      'worker_on_the_way',
+      'worker_arrived',
+      'job_started',
+      'job_completion_submitted',
+      'job_completed',
+      'worker_cancelled_job',
+      'client_cancelled_job',
+      'job_cancelled',
+      'job_expired',
+      'termination_requested',
+      'termination_resolved',
+    };
+    if (jobId != null && jobTypes.contains(type)) {
+      Navigator.pushNamed(
+        context,
+        AppRoutes.liveTracking,
+        arguments: <String, dynamic>{'id': jobId},
+      );
+    }
   }
 
   int get _unreadCount =>

@@ -66,14 +66,14 @@ class ProgressTimeline extends StatelessWidget {
                         boxShadow: isCurrent
                             ? [
                                 BoxShadow(
-                                    color: DesignTokens.primary.withOpacity(0.30),
+                                    color: DesignTokens.primary.withValues(alpha: 0.30),
                                     blurRadius: 14,
                                     offset: const Offset(0, 4))
                               ]
                             : isCompleted
                                 ? [
                                     BoxShadow(
-                                        color: DesignTokens.primary.withOpacity(0.15),
+                                        color: DesignTokens.primary.withValues(alpha: 0.15),
                                         blurRadius: 8,
                                         offset: const Offset(0, 3))
                                   ]
@@ -83,7 +83,7 @@ class ProgressTimeline extends StatelessWidget {
                         step['icon'] as IconData,
                         color: isCompleted
                             ? Colors.white
-                            : DesignTokens.textSecondary.withOpacity(0.45),
+                            : DesignTokens.textSecondary.withValues(alpha: 0.45),
                         size: 20,
                       ),
                     ),
@@ -105,7 +105,7 @@ class ProgressTimeline extends StatelessWidget {
                                 ? DesignTokens.primary
                                 : isCompleted
                                     ? DesignTokens.textPrimary
-                                    : DesignTokens.textSecondary.withOpacity(0.5),
+                                    : DesignTokens.textSecondary.withValues(alpha: 0.5),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -115,7 +115,7 @@ class ProgressTimeline extends StatelessWidget {
                             fontFamily: 'Satoshi',
                             fontSize: 12,
                             color: isUpcoming
-                                ? DesignTokens.textSecondary.withOpacity(0.35)
+                                ? DesignTokens.textSecondary.withValues(alpha: 0.35)
                                 : DesignTokens.textSecondary,
                           ),
                         ),

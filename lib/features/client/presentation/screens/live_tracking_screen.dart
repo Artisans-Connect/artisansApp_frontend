@@ -391,9 +391,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: DesignTokens.accentWarm.withOpacity(0.08),
+                      color: DesignTokens.accentWarm.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: DesignTokens.accentWarm.withOpacity(0.2)),
+                      border: Border.all(color: DesignTokens.accentWarm.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       children: [
@@ -419,7 +419,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     style: TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 12,
-                      color: DesignTokens.textSecondary.withOpacity(0.8),
+                      color: DesignTokens.textSecondary.withValues(alpha: 0.8),
                       fontStyle: FontStyle.italic,
                     ),
                   ),
@@ -531,7 +531,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: DesignTokens.accentWarm.withOpacity(0.06),
+                  color: DesignTokens.accentWarm.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(

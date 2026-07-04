@@ -344,6 +344,7 @@ class ClientBooking {
           statusRaw == 'on_the_way' ||
           statusRaw == 'arrived' ||
           statusRaw == 'in_progress' ||
+          statusRaw == 'termination_requested' ||
           statusRaw == 'pending_client_approval') {
         return ClientBooking.fromApiJob(json);
       }

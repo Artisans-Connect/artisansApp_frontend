@@ -276,6 +276,7 @@ class _WorkerActivePreStartScreenState
         ];
       case WorkerJobPhase.inProgress:
       case WorkerJobPhase.terminationRequested:
+      case WorkerJobPhase.pendingApproval:
       case WorkerJobPhase.none:
         return const <Widget>[];
     }
@@ -456,6 +457,7 @@ class _PhaseHint extends StatelessWidget {
         'Only start work after you have met the client and are ready to begin.',
       WorkerJobPhase.inProgress => 'Work is already in progress.',
       WorkerJobPhase.terminationRequested => '',
+      WorkerJobPhase.pendingApproval => '',
       WorkerJobPhase.none => '',
     };
     if (text.isEmpty) return const SizedBox.shrink();

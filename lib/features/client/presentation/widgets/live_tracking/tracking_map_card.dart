@@ -90,14 +90,14 @@ class TrackingMapPlaceholder extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.location_searching_rounded,
-                size: 36, color: DesignTokens.textSecondary.withOpacity(0.4)),
+                size: 36, color: DesignTokens.textSecondary.withValues(alpha: 0.4)),
             const SizedBox(height: 10),
             Text(
               'Waiting for artisan location…',
               style: TextStyle(
                 fontFamily: 'Satoshi',
                 fontSize: 13,
-                color: DesignTokens.textSecondary.withOpacity(0.7),
+                color: DesignTokens.textSecondary.withValues(alpha: 0.7),
               ),
             ),
           ],

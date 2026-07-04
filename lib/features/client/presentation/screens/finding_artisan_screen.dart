@@ -119,7 +119,12 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
   void _handleJobUpdate(Map<String, dynamic> job) {
     if (!mounted) return;
     final String status = (job['status'] as String? ?? '').toLowerCase();
-    if (status == 'matched' || status == 'in_progress') {
+    if (status == 'matched' ||
+        status == 'on_the_way' ||
+        status == 'arrived' ||
+        status == 'in_progress' ||
+        status == 'termination_requested' ||
+        status == 'pending_client_approval') {
       _realtime.unsubscribe();
       _progressTimer?.cancel();
       _openTracking(job);

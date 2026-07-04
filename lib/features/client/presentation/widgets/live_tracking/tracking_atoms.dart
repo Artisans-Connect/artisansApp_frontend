@@ -236,7 +236,7 @@ class _LiveDotState extends State<LiveDot>
             width: 7,
             height: 7,
             decoration: BoxDecoration(
-              color: DesignTokens.successGreen.withOpacity(0.4 + _ctrl.value * 0.6),
+              color: DesignTokens.successGreen.withValues(alpha: 0.4 + _ctrl.value * 0.6),
               shape: BoxShape.circle,
             ),
           ),
@@ -247,7 +247,7 @@ class _LiveDotState extends State<LiveDot>
               fontFamily: 'Satoshi',
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: DesignTokens.successGreen.withOpacity(0.7 + _ctrl.value * 0.3),
+              color: DesignTokens.successGreen.withValues(alpha: 0.7 + _ctrl.value * 0.3),
             ),
           ),
         ],
@@ -284,7 +284,7 @@ class ActionButton extends StatelessWidget {
           color: isEnabled ? DesignTokens.surfaceCard : const Color(0xFFF5F0EC),
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isEnabled ? DesignTokens.primary.withOpacity(0.25) : DesignTokens.borderSubtle,
+            color: isEnabled ? DesignTokens.primary.withValues(alpha: 0.25) : DesignTokens.borderSubtle,
             width: 1.2,
           ),
           boxShadow: isEnabled
@@ -302,7 +302,7 @@ class ActionButton extends StatelessWidget {
             Icon(
               icon,
               size: 18,
-              color: isEnabled ? DesignTokens.primary : DesignTokens.textSecondary.withOpacity(0.4),
+              color: isEnabled ? DesignTokens.primary : DesignTokens.textSecondary.withValues(alpha: 0.4),
             ),
             const SizedBox(width: 8),
             Text(
@@ -313,7 +313,7 @@ class ActionButton extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: isEnabled
                     ? DesignTokens.primary
-                    : DesignTokens.textSecondary.withOpacity(0.4),
+                    : DesignTokens.textSecondary.withValues(alpha: 0.4),
               ),
             ),
           ],
