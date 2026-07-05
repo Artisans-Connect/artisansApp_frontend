@@ -1,7 +1,7 @@
 import 'dart:async';
- 
+
 import 'package:flutter/material.dart';
- 
+
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/services/job_realtime_service.dart';
@@ -25,24 +25,24 @@ import '../widgets/live_tracking/completion_actions.dart';
 // ---------------------------------------------------------------------------
 // Main screen
 // ---------------------------------------------------------------------------
- 
+
 class LiveTrackingScreen extends StatefulWidget {
   final Map<String, dynamic>? job;
- 
+
   const LiveTrackingScreen({
     super.key,
     this.job,
   });
- 
+
   @override
   State<LiveTrackingScreen> createState() => _LiveTrackingScreenState();
 }
- 
+
 class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     with TickerProviderStateMixin {
   final JobsService _jobsService = JobsService();
   final JobRealtimeService _realtime = JobRealtimeService();
- 
+
   Map<String, dynamic>? _job;
   bool _loading = true;
   bool _requestingAnotherWorker = false;
@@ -52,10 +52,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   String? _loadError;
   int _currentStep = 0;
   String _etaLabel = 'Calculating ETA…';
- 
+
   // Animation for timeline step transitions
   late AnimationController _stepPulse;
- 
+
   List<Map<String, dynamic>> get _steps => <Map<String, dynamic>>[
         {
           'title': 'Confirmed',
@@ -83,14 +83,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           'icon': Icons.celebration_rounded,
         },
       ];
- 
+
   @override
   void initState() {
     super.initState();
     _stepPulse = AnimationController(
         vsync: this, duration: const Duration(milliseconds: 900))
       ..repeat(reverse: true);
- 
+
     _job = widget.job != null ? Map<String, dynamic>.from(widget.job!) : null;
     _applyStepFromStatus(_job?['status'] as String?);
     _loadJobDetails();
@@ -99,12 +99,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       _realtime.subscribeToJob(jobId, onUpdate: _handleJobUpdate);
     }
   }
- 
+
   String? get _currentJobId =>
       _job?['job_id'] as String? ??
       _job?['jobId'] as String? ??
       _job?['id'] as String?;
- 
+
   Future<void> _loadJobDetails() async {
     final String? jobId = _currentJobId;
     if (jobId == null || jobId.isEmpty) {
@@ -145,11 +145,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       });
     }
   }
- 
+
   void _handleJobUpdate(Map<String, dynamic> job) {
     unawaited(_refreshFromRealtimeJob(job));
   }
- 
+
   Future<void> _refreshFromRealtimeJob(Map<String, dynamic> job) async {
     Map<String, dynamic> fullJob = job;
     final String? jobId = job['id'] as String?;
@@ -184,7 +184,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     });
     _applyStepFromStatus(booking.backendStatus);
   }
- 
+
   void _applyStepFromStatus(String? statusRaw) {
     final String status = (statusRaw ?? '').toLowerCase();
     final int step = switch (status) {
@@ -199,7 +199,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     };
     setState(() => _currentStep = step);
   }
- 
+
   @override
   void dispose() {
     _stepPulse.dispose();
@@ -327,7 +327,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
     setState(() => _isCancelling = true);
     try {
-      final dynamic preview = await _jobsService.getCancellationPreview(jobUuid);
+      final dynamic preview =
+          await _jobsService.getCancellationPreview(jobUuid);
       if (!mounted) return;
 
       if (preview is! Map<String, dynamic>) {
@@ -339,14 +340,18 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       if (!canCancel) {
         setState(() => _isCancelling = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(preview['warning_message'] as String? ?? 'Cannot cancel this job.')),
+          SnackBar(
+              content: Text(preview['warning_message'] as String? ??
+                  'Cannot cancel this job.')),
         );
         return;
       }
 
       final double fee = (preview['fee_amount'] as num?)?.toDouble() ?? 0;
-      final String warningTitle = preview['warning_title'] as String? ?? 'Cancel this job?';
-      final String warningMessage = preview['warning_message'] as String? ?? 'Are you sure?';
+      final String warningTitle =
+          preview['warning_title'] as String? ?? 'Cancel this job?';
+      final String warningMessage =
+          preview['warning_message'] as String? ?? 'Are you sure?';
 
       final TextEditingController reasonCtrl = TextEditingController();
       final bool? confirmed = await showDialog<bool>(
@@ -393,11 +398,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     decoration: BoxDecoration(
                       color: DesignTokens.accentWarm.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: DesignTokens.accentWarm.withValues(alpha: 0.2)),
+                      border: Border.all(
+                          color:
+                              DesignTokens.accentWarm.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.payments_rounded, color: DesignTokens.accentWarm, size: 20),
+                        const Icon(Icons.payments_rounded,
+                            color: DesignTokens.accentWarm, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
@@ -442,7 +450,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                 child: const Text('Keep Job'),
               ),
               FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: DesignTokens.error),
+                style:
+                    FilledButton.styleFrom(backgroundColor: DesignTokens.error),
                 onPressed: () => Navigator.pop(ctx, true),
                 child: const Text('Yes, Cancel'),
               ),
@@ -468,7 +477,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
       String snackMessage = 'Job cancelled.';
       if (fee > 0) {
-        snackMessage = 'Job cancelled. Please pay GH\u20B5 ${fee.toStringAsFixed(2)} to the artisan.';
+        snackMessage =
+            'Job cancelled. Please pay GH\u20B5 ${fee.toStringAsFixed(2)} to the artisan.';
       }
 
       AppToast.showInfo(context, snackMessage);
@@ -562,7 +572,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               child: const Text('Keep Job'),
             ),
             FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: DesignTokens.accentWarm),
+              style: FilledButton.styleFrom(
+                  backgroundColor: DesignTokens.accentWarm),
               onPressed: () => Navigator.pop(ctx, true),
               child: const Text('Request Termination'),
             ),
@@ -603,30 +614,34 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   // ---------------------------------------------------------------------------
   // Build
   // ---------------------------------------------------------------------------
- 
+
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> job = _job ?? <String, dynamic>{
-      'title': 'Your Job',
-      'artisan': 'Artisan',
-      'profession': 'Service provider',
-      'eta': _etaLabel,
-    };
+    final Map<String, dynamic> job = _job ??
+        <String, dynamic>{
+          'title': 'Your Job',
+          'artisan': 'Artisan',
+          'profession': 'Service provider',
+          'eta': _etaLabel,
+        };
     job['eta'] = _etaLabel;
- 
+
     final String? workerId = job['worker_id'] as String?;
     final double? jobLat = (job['location_lat'] as num?)?.toDouble();
     final double? jobLng = (job['location_lng'] as num?)?.toDouble();
-    final String? jobUuid =
-        job['job_id'] as String? ?? job['jobId'] as String? ?? job['id'] as String?;
+    final String? jobUuid = job['job_id'] as String? ??
+        job['jobId'] as String? ??
+        job['id'] as String?;
     final String status = (job['status'] as String? ?? '').toLowerCase();
     final bool canRate =
         status == 'pending_client_approval' || status == 'completed';
     final bool pendingApproval = status == 'pending_client_approval';
-    final bool workerCancelled =
-        status == 'cancelled' && (job['cancelled_by'] as String?) == 'worker';
+    final bool recoverableServiceInterruption = status == 'cancelled' &&
+        (((job['cancelled_by'] as String?) ?? '').toLowerCase() == 'worker' ||
+            (((job['cancellation_stage'] as String?) ?? '').toLowerCase() ==
+                'termination_requested'));
 
-    if (!_loading && workerCancelled) {
+    if (!_loading && recoverableServiceInterruption) {
       return Scaffold(
         backgroundColor: DesignTokens.surfaceBase,
         appBar: _buildAppBar(context),
@@ -666,7 +681,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                         fontWeight: FontWeight.w600,
                         color: DesignTokens.primary,
                         decoration: TextDecoration.underline,
-                        decorationColor: DesignTokens.primary.withAlpha((0.4 * 255).round()),
+                        decorationColor:
+                            DesignTokens.primary.withAlpha((0.4 * 255).round()),
                       ),
                     ),
                   ),
@@ -678,7 +694,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         ),
       );
     }
- 
+
     return Scaffold(
       backgroundColor: DesignTokens.surfaceBase,
       appBar: _buildAppBar(context),
@@ -693,16 +709,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     if (_loadError != null) _buildErrorBanner(),
-
                     MiniHero(
                       height: 112,
                       child: heroForStep(_currentStep),
                     ),
                     const SizedBox(height: 16),
-
                     TrackingJobInfoCard(job: job, etaLabel: _etaLabel),
                     const SizedBox(height: 20),
-
                     if (workerId != null && jobLat != null && jobLng != null)
                       TrackingMapCard(
                         workerId: workerId,
@@ -712,9 +725,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       )
                     else
                       const TrackingMapPlaceholder(),
-
                     const SizedBox(height: 20),
-
                     const SectionHeader(title: 'Job Progress'),
                     const SizedBox(height: 14),
                     ProgressTimeline(
@@ -723,15 +734,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       pulseAnimation: _stepPulse,
                     ),
                     const SizedBox(height: 20),
-
                     const SectionHeader(title: 'Your Artisan'),
                     const SizedBox(height: 14),
                     ArtisanDetailCard(job: job),
                     const SizedBox(height: 20),
-
                     _buildActionRow(job, jobUuid, workerId),
                     const SizedBox(height: 12),
-
                     CancelSection(
                       status: status,
                       isCancelling: _isCancelling,
@@ -740,10 +748,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       onRequestTermination: _handleRequestTermination,
                     ),
                     const SizedBox(height: 16),
-
-                    if (pendingApproval)
-                      SettlementDetailsCard(job: job),
-
+                    if (pendingApproval) SettlementDetailsCard(job: job),
                     CompletionActions(
                       canRate: canRate,
                       pendingApproval: pendingApproval,
@@ -756,7 +761,6 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       onReopen: _reopenCompletion,
                     ),
                     const SizedBox(height: 12),
-
                     Center(
                       child: TextButton(
                         onPressed: () =>
@@ -769,7 +773,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                             fontWeight: FontWeight.w600,
                             color: DesignTokens.primary,
                             decoration: TextDecoration.underline,
-                            decorationColor: DesignTokens.primary.withAlpha((0.4 * 255).round()),
+                            decorationColor: DesignTokens.primary
+                                .withAlpha((0.4 * 255).round()),
                           ),
                         ),
                       ),
@@ -781,7 +786,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             ),
     );
   }
- 
+
   // ---------------------------------------------------------------------------
   // Small helpers that stay in the shell
   // ---------------------------------------------------------------------------
@@ -792,8 +797,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       child: Container(
         decoration: const BoxDecoration(
           color: DesignTokens.surfaceBase,
-          border: Border(
-              bottom: BorderSide(color: Color(0x12000000), width: 1)),
+          border:
+              Border(bottom: BorderSide(color: Color(0x12000000), width: 1)),
         ),
         child: SafeArea(
           child: Padding(
@@ -836,10 +841,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: DesignTokens.successGreen.withAlpha((0.12 * 255).round()),
+                    color: DesignTokens.successGreen
+                        .withAlpha((0.12 * 255).round()),
                     borderRadius: BorderRadius.circular(99),
                     border: Border.all(
-                        color: DesignTokens.successGreen.withAlpha((0.3 * 255).round()), width: 1),
+                        color: DesignTokens.successGreen
+                            .withAlpha((0.3 * 255).round()),
+                        width: 1),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -848,7 +856,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                           width: 6,
                           height: 6,
                           decoration: const BoxDecoration(
-                              color: DesignTokens.successGreen, shape: BoxShape.circle)),
+                              color: DesignTokens.successGreen,
+                              shape: BoxShape.circle)),
                       const SizedBox(width: 5),
                       const Text(
                         'LIVE',
@@ -901,7 +910,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       decoration: BoxDecoration(
         color: DesignTokens.error.withAlpha((0.08 * 255).round()),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DesignTokens.error.withAlpha((0.2 * 255).round())),
+        border: Border.all(
+            color: DesignTokens.error.withAlpha((0.2 * 255).round())),
       ),
       child: Row(
         children: [
@@ -933,8 +943,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
             label: 'Call',
             isEnabled: job['phone'] != null,
             onTap: job['phone'] != null
-                ? () => ClientNavigation.callPhone(
-                    context, job['phone'] as String)
+                ? () =>
+                    ClientNavigation.callPhone(context, job['phone'] as String)
                 : null,
           ),
         ),
@@ -950,8 +960,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       conversationId: jobUuid,
                       counterpartUserId:
                           job['counterpartUserId'] as String? ?? workerId ?? '',
-                      counterpartName:
-                          job['artisan'] as String? ?? 'Artisan',
+                      counterpartName: job['artisan'] as String? ?? 'Artisan',
                       jobId: jobUuid,
                       jobTitle: job['title'] as String?,
                     )

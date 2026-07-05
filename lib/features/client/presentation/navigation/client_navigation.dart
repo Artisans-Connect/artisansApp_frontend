@@ -301,7 +301,11 @@ class ClientNavigation {
       case ClientBookingStatus.accepted:
         pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.cancelled:
-        AppToast.showInfo(context, '${booking.title} was cancelled.');
+        if (booking.isRecoverableServiceInterruption) {
+          pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
+        } else {
+          AppToast.showInfo(context, '${booking.title} was cancelled.');
+        }
       case ClientBookingStatus.draft:
         openJobDraft(context, booking);
     }

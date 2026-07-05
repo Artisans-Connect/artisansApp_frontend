@@ -25,13 +25,17 @@ class WorkerCancellationCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String reason = (job['cancelled_reason'] as String? ?? '').trim();
+    final bool terminationAccepted =
+        ((job['cancellation_stage'] as String?) ?? '').toLowerCase() ==
+            'termination_requested';
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: DesignTokens.surfaceCard,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: DesignTokens.error.withAlpha((0.18 * 255).round())),
+        border: Border.all(
+            color: DesignTokens.error.withAlpha((0.18 * 255).round())),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha((0.05 * 255).round()),
@@ -46,13 +50,17 @@ class WorkerCancellationCard extends StatelessWidget {
           Row(
             children: <Widget>[
               CircleAvatar(
-                backgroundColor: DesignTokens.error.withAlpha((0.12 * 255).round()),
-                child: Icon(Icons.error_outline_rounded, color: DesignTokens.error),
+                backgroundColor:
+                    DesignTokens.error.withAlpha((0.12 * 255).round()),
+                child: Icon(Icons.error_outline_rounded,
+                    color: DesignTokens.error),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'The worker cancelled this booking',
+                  terminationAccepted
+                      ? 'This job was terminated'
+                      : 'The worker cancelled this booking',
                   style: AppTypography.titleLarge.copyWith(
                     color: DesignTokens.textPrimary,
                     fontWeight: FontWeight.w800,
@@ -66,7 +74,8 @@ class WorkerCancellationCard extends StatelessWidget {
             reason.isNotEmpty
                 ? reason
                 : 'You can reopen this same job and we will search for another available worker.',
-            style: AppTypography.bodyMedium.copyWith(color: DesignTokens.textSecondary),
+            style: AppTypography.bodyMedium
+                .copyWith(color: DesignTokens.textSecondary),
           ),
           const SizedBox(height: 16),
           PrimaryButton(

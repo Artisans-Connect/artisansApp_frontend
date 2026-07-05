@@ -128,6 +128,14 @@ class ClientBooking {
   /// Whether this job allows termination requests
   bool get isTerminationRequestable => backendStatus == 'in_progress';
 
+  bool get isRecoverableServiceInterruption {
+    final String raw = (backendStatus ?? '').toLowerCase();
+    final String by = (cancelledBy ?? '').toLowerCase();
+    final String stage = (cancellationStage ?? '').toLowerCase();
+    return raw == 'cancelled' &&
+        (by == 'worker' || stage == 'termination_requested');
+  }
+
   bool get isTrackable {
     final String raw = (backendStatus ?? '').toLowerCase();
     return raw == 'matched' ||
@@ -135,7 +143,8 @@ class ClientBooking {
         raw == 'arrived' ||
         raw == 'in_progress' ||
         raw == 'pending_client_approval' ||
-        raw == 'termination_requested';
+        raw == 'termination_requested' ||
+        isRecoverableServiceInterruption;
   }
 
   bool get isNavigable =>
@@ -144,6 +153,7 @@ class ClientBooking {
       status == ClientBookingStatus.draft ||
       status == ClientBookingStatus.requested ||
       status == ClientBookingStatus.accepted ||
+      isRecoverableServiceInterruption ||
       canRate;
 
   Map<String, dynamic> toMap() => toTrackingMap();
@@ -345,7 +355,13 @@ class ClientBooking {
           statusRaw == 'arrived' ||
           statusRaw == 'in_progress' ||
           statusRaw == 'termination_requested' ||
-          statusRaw == 'pending_client_approval') {
+          statusRaw == 'pending_client_approval' ||
+          (statusRaw == 'cancelled' &&
+              (((json['cancelled_by'] as String?) ?? '').toLowerCase() ==
+                      'worker' ||
+                  (((json['cancellation_stage'] as String?) ?? '')
+                          .toLowerCase() ==
+                      'termination_requested')))) {
         return ClientBooking.fromApiJob(json);
       }
     }

@@ -44,6 +44,55 @@ void main() {
     expect(active.isTrackable, isTrue);
   });
 
+  test('picks worker-cancelled jobs as recoverable active jobs', () {
+    final active = ClientBooking.pickActiveTrackable(<Map<String, dynamic>>[
+      <String, dynamic>{
+        'id': 'job-worker-cancelled',
+        'title': 'Fix wiring',
+        'status': 'cancelled',
+        'cancelled_by': 'worker',
+      },
+    ]);
+
+    expect(active, isNotNull);
+    expect(active!.status, ClientBookingStatus.cancelled);
+    expect(active.isRecoverableServiceInterruption, isTrue);
+    expect(active.isTrackable, isTrue);
+    expect(active.isNavigable, isTrue);
+  });
+
+  test('picks accepted termination jobs as recoverable active jobs', () {
+    final active = ClientBooking.pickActiveTrackable(<Map<String, dynamic>>[
+      <String, dynamic>{
+        'id': 'job-termination-accepted',
+        'title': 'Fix wiring',
+        'status': 'cancelled',
+        'cancelled_by': 'client',
+        'cancellation_stage': 'termination_requested',
+      },
+    ]);
+
+    expect(active, isNotNull);
+    expect(active!.status, ClientBookingStatus.cancelled);
+    expect(active.isRecoverableServiceInterruption, isTrue);
+    expect(active.isTrackable, isTrue);
+    expect(active.isNavigable, isTrue);
+  });
+
+  test('does not pick ordinary client cancellations as active jobs', () {
+    final active = ClientBooking.pickActiveTrackable(<Map<String, dynamic>>[
+      <String, dynamic>{
+        'id': 'job-client-cancelled',
+        'title': 'Fix wiring',
+        'status': 'cancelled',
+        'cancelled_by': 'client',
+        'cancellation_stage': 'free',
+      },
+    ]);
+
+    expect(active, isNull);
+  });
+
   test('maps local job draft as a draft booking', () {
     final booking = ClientBooking.fromLocalDraft(
       draftId: 'draft-1',
