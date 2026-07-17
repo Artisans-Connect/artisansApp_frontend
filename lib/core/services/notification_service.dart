@@ -10,6 +10,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/worker/presentation/worker_shell.dart';
 import '../navigation/app_routes.dart';
 import '../network/api_client.dart';
+import '../notifications/notification_metadata.dart';
+import '../../shared/presentation/navigation/shared_route_args.dart';
+import '../../shared/presentation/screens/chat_detail_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
@@ -25,7 +28,9 @@ class NotificationService {
   String? _lastTokenHash;
   String? _pendingJobRequestId;
   String? _pendingClientJobId;
-  bool _pendingChatNavigate = false;
+  String? _pendingClientApplicantsJobId;
+  String? _pendingChatJobId;
+  bool _pendingWorkerBookings = false;
   bool _initialized = false;
 
   Future<void> initialize() async {
@@ -99,9 +104,21 @@ class NotificationService {
       _openClientJob(clientJobId);
       return;
     }
-    if (_pendingChatNavigate) {
-      _pendingChatNavigate = false;
-      _openChat();
+    final applicantsJobId = _pendingClientApplicantsJobId;
+    if (applicantsJobId != null) {
+      _pendingClientApplicantsJobId = null;
+      _openClientApplicants(applicantsJobId);
+      return;
+    }
+    final chatJobId = _pendingChatJobId;
+    if (chatJobId != null) {
+      _pendingChatJobId = null;
+      _openChat(chatJobId);
+      return;
+    }
+    if (_pendingWorkerBookings) {
+      _pendingWorkerBookings = false;
+      _openWorkerBookings();
     }
   }
 
@@ -126,39 +143,40 @@ class NotificationService {
   }
 
   void _handleMessageTap(RemoteMessage message) {
-    final type = message.data['type'];
-    final jobId = message.data['jobId'];
-    
-    if (type == 'new_job' && jobId is String && jobId.isNotEmpty) {
-      if (navigatorKey.currentState == null) {
-        _pendingJobRequestId = jobId;
-        return;
-      }
-      _openWorkerRequest(jobId);
-    } else if (type == 'chat_message') {
-      _openChat();
-    } else {
-      // Client job updates
-      final clientJobTypes = <String>[
-        'worker_on_the_way',
-        'worker_arrived',
-        'job_started',
-        'job_completion_submitted',
-        'job_completed',
-        'worker_cancelled_job',
-        'client_cancelled_job',
-        'job_cancelled',
-        'job_expired',
-        'termination_requested',
-        'termination_resolved',
-      ];
-      if (clientJobTypes.contains(type) && jobId is String && jobId.isNotEmpty) {
-        if (navigatorKey.currentState == null) {
-          _pendingClientJobId = jobId;
-          return;
-        }
+    openFromData(message.data);
+  }
+
+  bool openFromData(Map<String, dynamic>? data, {String fallbackType = 'general'}) {
+    final metadata =
+        NotificationMetadata.fromData(data, fallbackType: fallbackType);
+    final String? jobId = metadata.jobId;
+
+    switch (metadata.route) {
+      case NotificationRouteTarget.workerJobRequest:
+        if (jobId == null) return false;
+        _openWorkerRequest(jobId);
+        return true;
+      case NotificationRouteTarget.workerActiveBooking:
+        _openWorkerBookings();
+        return true;
+      case NotificationRouteTarget.clientJobApplicants:
+        if (jobId == null) return false;
+        _openClientApplicants(jobId);
+        return true;
+      case NotificationRouteTarget.clientLiveTracking:
+        if (jobId == null) return false;
         _openClientJob(jobId);
-      }
+        return true;
+      case NotificationRouteTarget.chatDetail:
+        if (jobId == null) {
+          _openMessages();
+          return true;
+        }
+        _openChat(jobId);
+        return true;
+      case NotificationRouteTarget.notifications:
+        _openNotifications();
+        return true;
     }
   }
 
@@ -186,6 +204,26 @@ class NotificationService {
   void _openClientJob(String jobId) {
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
+      _pendingClientApplicantsJobId = jobId;
+      return;
+    }
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
+      _pendingClientApplicantsJobId = jobId;
+      return;
+    }
+
+    navigator.pushNamed(
+      AppRoutes.liveTracking,
+      arguments: <String, dynamic>{'id': jobId},
+    );
+  }
+
+  void _openClientApplicants(String jobId) {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) {
       _pendingClientJobId = jobId;
       return;
     }
@@ -198,26 +236,67 @@ class NotificationService {
     }
 
     navigator.pushNamed(
-      AppRoutes.liveTracking,
-      arguments: <String, dynamic>{'id': jobId},
+      AppRoutes.jobApplicants,
+      arguments: <String, dynamic>{'id': jobId, 'job_id': jobId},
     );
   }
 
-  void _openChat() {
+  void _openWorkerBookings() {
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
-      _pendingChatNavigate = true;
+      _pendingWorkerBookings = true;
       return;
     }
 
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
       navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
-      _pendingChatNavigate = true;
+      _pendingWorkerBookings = true;
       return;
     }
 
+    navigator.pushNamedAndRemoveUntil(
+      WorkerShell.routeName,
+      (_) => false,
+      arguments: <String, dynamic>{'initialTab': 'bookings'},
+    );
+  }
+
+  void _openMessages() {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) return;
     navigator.pushNamed('/shared/messages');
+  }
+
+  void _openChat(String jobId) {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) {
+      _pendingChatJobId = jobId;
+      return;
+    }
+
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
+      _pendingChatJobId = jobId;
+      return;
+    }
+
+    navigator.pushNamed(
+      ChatDetailScreen.routeName,
+      arguments: ChatDetailArgs(
+        conversationId: jobId,
+        jobId: jobId,
+        counterpartUserId: '',
+        counterpartName: 'Chat',
+      ),
+    );
+  }
+
+  void _openNotifications() {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) return;
+    navigator.pushNamed(AppRoutes.notifications);
   }
 
   // ── Notification API methods ──────────────────────────────────────
@@ -227,6 +306,16 @@ class NotificationService {
     final dynamic result = await _api.get('/notifications?limit=$limit');
     if (result is List) return result;
     return <dynamic>[];
+  }
+
+  Future<int> getUnreadCount() async {
+    final dynamic result = await _api.get('/notifications/unread-count');
+    if (result is Map<String, dynamic>) {
+      final dynamic count = result['unread_count'];
+      if (count is int) return count;
+      if (count is num) return count.toInt();
+    }
+    return 0;
   }
 
   /// Marks a single notification as read.
