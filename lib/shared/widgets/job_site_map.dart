@@ -212,6 +212,8 @@ class _JobSiteMapState extends State<JobSiteMap> {
                       : '${estimate!.distanceLabel} estimated route to client',
                   style: AppTypography.bodySmall,
                   textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ),
@@ -219,10 +221,19 @@ class _JobSiteMapState extends State<JobSiteMap> {
               Positioned(
                 right: 12,
                 bottom: 12,
-                child: FilledButton.icon(
-                  onPressed: _openDirections,
-                  icon: const Icon(Icons.navigation, size: 18),
-                  label: const Text('Directions'),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.sizeOf(context).width - 48,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.icon(
+                      onPressed: _openDirections,
+                      icon: const Icon(Icons.navigation, size: 18),
+                      label: const Text('Directions'),
+                    ),
+                  ),
                 ),
               ),
           ],

@@ -85,6 +85,15 @@ class JobsService {
     return result;
   }
 
+  /// Either party confirms the work is finished. Stops the settlement clock
+  /// (work_ended_at) without changing the job status.
+  Future<dynamic> confirmWorkDone(dynamic id) async {
+    final dynamic result =
+        await _apiClient.post('/jobs/$id/confirm-work-done');
+    await _invalidateJobsCache();
+    return result;
+  }
+
   Future<dynamic> getJobById(dynamic id) async {
     return await _apiClient.get('/jobs/$id');
   }

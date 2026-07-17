@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -123,7 +125,9 @@ class _WorkerActiveInProgressScreenState extends State<WorkerActiveInProgressScr
                   MaterialPageRoute<void>(
                     builder: (_) => WorkerCompletionFormScreen(
                       job: job,
-                      onCompletionSubmitted: session.completeJob,
+                      onCompletionSubmitted: () {
+                        unawaited(session.loadActiveJob());
+                      },
                     ),
                   ),
                 );

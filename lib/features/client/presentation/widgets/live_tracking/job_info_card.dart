@@ -16,6 +16,7 @@ String statusPillLabel(String? statusRaw) {
     'completed' => 'Completed',
     'cancelled' => 'Cancelled',
     'matched' => 'Confirmed',
+    'scheduled_confirmed' => 'Scheduled',
     _ => 'Pending',
   };
 }

@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../models/worker_job.dart';
+import '../state/worker_session_state.dart';
 import '../widgets/job_detail_card.dart';
+import 'worker_completion_form_screen.dart';
 
 class WorkerPendingApprovalScreen extends StatelessWidget {
   const WorkerPendingApprovalScreen({super.key, required this.job});
@@ -75,6 +79,23 @@ class WorkerPendingApprovalScreen extends StatelessWidget {
                   Text(job.addressLabel, style: AppTypography.bodyMedium),
                 ],
               ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => WorkerCompletionFormScreen(
+                      job: job,
+                      onCompletionSubmitted: () {
+                        unawaited(WorkerScope.read(context).loadActiveJob());
+                      },
+                    ),
+                  ),
+                );
+              },
+              icon: Icon(PhosphorIcons.pencilSimple),
+              label: const Text('Edit completion details'),
             ),
           ],
         ),

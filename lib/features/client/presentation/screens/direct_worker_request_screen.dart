@@ -14,6 +14,7 @@ import '../../../../core/location/place_lookup_service.dart';
 import '../../../../core/offline/job_post_queue.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/jobs_service.dart';
+import '../../../../core/services/pricing_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -38,6 +39,7 @@ class DirectWorkerRequestScreen extends StatefulWidget {
 class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   final JobsService _jobsService = JobsService();
   final CategoriesService _categoriesService = CategoriesService();
+  final PricingService _pricingService = PricingService();
   final ImagePicker _picker = ImagePicker();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -48,18 +50,23 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   List<Map<String, dynamic>> _workerCategories = <Map<String, dynamic>>[];
   List<PlaceSuggestion> _suggestions = <PlaceSuggestion>[];
   String? _categoryId;
+  bool _usingFallbackCategories = false;
   bool _loading = true;
   bool _submitting = false;
   bool _uploadingPhoto = false;
   bool _usingCurrentLocation = false;
   bool _updatingAddress = false;
   String _urgency = 'asap';
+  FeeEstimate? _estimate;
+  bool _estimating = false;
+  bool _estimateFailed = false;
   LatLng _pin = LatLng(
-    DeviceLocation.accraDefault.latitude,
-    DeviceLocation.accraDefault.longitude,
+    DeviceLocation.knustDefault.latitude,
+    DeviceLocation.knustDefault.longitude,
   );
   Timer? _searchDebounce;
   Timer? _reverseDebounce;
+  Timer? _estimateDebounce;
 
   Map<String, dynamic> get _artisan =>
       Map<String, dynamic>.from(widget.artisan ?? const <String, dynamic>{});
@@ -84,6 +91,14 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   String get _imageUrl =>
       (_artisan['imageUrl'] ?? _profile['avatar_url'] ?? '').toString();
 
+  bool get _isVerified {
+    final dynamic worker = _artisan['worker'];
+    return _artisan['is_verified'] == true ||
+        _artisan['isVerified'] == true ||
+        _artisan['verified'] == true ||
+        (worker is Map && worker['is_verified'] == true);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -97,6 +112,7 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   void dispose() {
     _searchDebounce?.cancel();
     _reverseDebounce?.cancel();
+    _estimateDebounce?.cancel();
     _titleController.dispose();
     _descriptionController.dispose();
     _addressController.dispose();
@@ -117,17 +133,27 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       if (!mounted) return;
       final List<Map<String, dynamic>> workerCategories =
           _resolveWorkerCategories(categories);
+      final List<Map<String, dynamic>> selectableCategories =
+          workerCategories.isNotEmpty
+              ? workerCategories
+              : categories
+                  .whereType<Map<dynamic, dynamic>>()
+                  .map((Map<dynamic, dynamic> item) =>
+                      Map<String, dynamic>.from(item))
+                  .toList();
       setState(() {
-        _workerCategories = workerCategories;
-        _categoryId = workerCategories.length == 1
-            ? workerCategories.first['id'] as String?
-            : workerCategories.isNotEmpty
-                ? workerCategories.first['id'] as String?
+        _workerCategories = selectableCategories;
+        _usingFallbackCategories = workerCategories.isEmpty;
+        _categoryId = selectableCategories.length == 1
+            ? selectableCategories.first['id'] as String?
+            : selectableCategories.isNotEmpty
+                ? selectableCategories.first['id'] as String?
                 : null;
         _pin = pin;
         _loading = false;
       });
       unawaited(_updateAddressFromPin(pin));
+      _refreshEstimate();
     } catch (e) {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -161,10 +187,43 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       !_submitting &&
       _workerId.isNotEmpty &&
       _categoryId != null &&
-      _workerCategories.isNotEmpty &&
       _titleController.text.trim().length >= 3 &&
       _descriptionController.text.trim().length >= 20 &&
       _addressController.text.trim().isNotEmpty;
+
+  /// Fetches the real fee estimate for the selected category/location/mode
+  /// (debounced). The estimate replaces the old hardcoded GH₵50 budget.
+  void _refreshEstimate() {
+    final String? categoryId = _categoryId;
+    if (categoryId == null) return;
+    _estimateDebounce?.cancel();
+    _estimateDebounce = Timer(const Duration(milliseconds: 400), () async {
+      if (!mounted) return;
+      setState(() {
+        _estimating = true;
+        _estimateFailed = false;
+      });
+      try {
+        final FeeEstimate estimate = await _pricingService.estimateFee(
+          categoryId: categoryId,
+          locationLat: _pin.latitude,
+          locationLng: _pin.longitude,
+          jobMode: _urgency,
+        );
+        if (!mounted) return;
+        setState(() {
+          _estimate = estimate;
+          _estimating = false;
+        });
+      } catch (_) {
+        if (!mounted) return;
+        setState(() {
+          _estimating = false;
+          _estimateFailed = true;
+        });
+      }
+    });
+  }
 
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
@@ -185,6 +244,7 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       _searchController.text = suggestion.description;
       _suggestions = <PlaceSuggestion>[];
     });
+    _refreshEstimate();
   }
 
   void _onPinChanged(LatLng value) {
@@ -194,6 +254,7 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       const Duration(milliseconds: 500),
       () => _updateAddressFromPin(value),
     );
+    _refreshEstimate();
   }
 
   Future<void> _updateAddressFromPin(LatLng pin) async {
@@ -209,6 +270,10 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
 
   Future<void> _useCurrentLocation() async {
     if (_usingCurrentLocation) return;
+    final hasPermission =
+        await DeviceLocationService.requestPermissionInteractive(context);
+    if (!hasPermission) return;
+
     setState(() => _usingCurrentLocation = true);
     try {
       final DeviceLocation loc =
@@ -220,6 +285,7 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
         _suggestions = <PlaceSuggestion>[];
         _searchController.text = '';
       });
+      _refreshEstimate();
       if (loc.isFallback) {
         AppToast.showInfo(
           context,
@@ -264,6 +330,9 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     if (!_canSubmit) return;
     setState(() => _submitting = true);
     final String idempotencyKey = const Uuid().v4();
+    // Real estimated budget; falls back to the server-side minimum (GH₵50)
+    // only when the pricing API was unreachable.
+    final int budget = _estimate != null ? _estimate!.minimumFee.round() : 50;
     final Map<String, dynamic> payload = <String, dynamic>{
       'category_id': _categoryId,
       'title': _titleController.text.trim(),
@@ -274,9 +343,9 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       'address_label': _addressController.text.trim(),
       'job_mode': _urgency,
       'budget_type': 'fixed',
-      'budget_fixed': 50,
-      'budget_min': 50,
-      'budget_max': 50,
+      'budget_fixed': budget,
+      'budget_min': budget,
+      'budget_max': budget,
       'service_type': 'home_visit',
       'requested_worker_id': _workerId,
     };
@@ -364,6 +433,10 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                       ),
                     ],
                   ),
+                  if (!_isVerified) ...<Widget>[
+                    const SizedBox(height: AppSpacing.md),
+                    _buildUnverifiedNotice(),
+                  ],
                   const SizedBox(height: AppSpacing.lg),
                   _buildWorkerServiceSelector(),
                   const SizedBox(height: AppSpacing.md),
@@ -455,9 +528,13 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                           value: 'scheduled', label: Text('Scheduled')),
                     ],
                     selected: <String>{_urgency},
-                    onSelectionChanged: (Set<String> value) =>
-                        setState(() => _urgency = value.first),
+                    onSelectionChanged: (Set<String> value) {
+                      setState(() => _urgency = value.first);
+                      _refreshEstimate();
+                    },
                   ),
+                  const SizedBox(height: AppSpacing.lg),
+                  _buildEstimateCard(),
                   const SizedBox(height: AppSpacing.lg),
                   _buildPhotoPicker(),
                   const SizedBox(height: AppSpacing.xl),
@@ -512,16 +589,35 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
 
     if (_workerCategories.length == 1) {
       final Map<String, dynamic> category = _workerCategories.first;
-      return InputDecorator(
-        decoration: const InputDecoration(labelText: 'Worker service'),
-        child: Text((category['name'] ?? 'Service').toString()),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          if (_usingFallbackCategories) ...<Widget>[
+            _buildServiceFallbackNotice(),
+            const SizedBox(height: AppSpacing.sm),
+          ],
+          InputDecorator(
+            decoration: InputDecoration(
+              labelText:
+                  _usingFallbackCategories ? 'Service category' : 'Worker service',
+            ),
+            child: Text((category['name'] ?? 'Service').toString()),
+          ),
+        ],
       );
     }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        Text('Worker service', style: AppTypography.labelLarge),
+        if (_usingFallbackCategories) ...<Widget>[
+          _buildServiceFallbackNotice(),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        Text(
+          _usingFallbackCategories ? 'Service category' : 'Worker service',
+          style: AppTypography.labelLarge,
+        ),
         const SizedBox(height: AppSpacing.sm),
         Wrap(
           spacing: AppSpacing.sm,
@@ -532,11 +628,113 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
             return FilterChip(
               label: Text((category['name'] ?? 'Service').toString()),
               selected: selected,
-              onSelected: (_) => setState(() => _categoryId = id),
+              onSelected: (_) {
+                setState(() => _categoryId = id);
+                _refreshEstimate();
+              },
             );
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildEstimateCard() {
+    final FeeEstimate? estimate = _estimate;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Row(
+        children: <Widget>[
+          Icon(PhosphorIcons.currencyCircleDollar,
+              color: AppColors.textSecondary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: _estimating
+                ? Row(
+                    children: <Widget>[
+                      const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Calculating estimate...',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  )
+                : estimate != null
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Estimated minimum: ${estimate.formatGhs(estimate.minimumFee)}',
+                            style: AppTypography.labelLarge,
+                          ),
+                          Text(
+                            'Final price is confirmed by the artisan\'s quote.',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      )
+                    : Text(
+                        _estimateFailed
+                            ? 'Could not load a fee estimate. A minimum budget will be used.'
+                            : 'Select a service to see the fee estimate.',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUnverifiedNotice() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(PhosphorIcons.warningCircle, color: AppColors.textSecondary),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              'This worker has not been verified yet. You can still send the request.',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServiceFallbackNotice() {
+    return Text(
+      'This worker has not set up a service category yet. Choose the closest category for your request.',
+      style: AppTypography.bodySmall.copyWith(
+        color: AppColors.textSecondary,
+      ),
     );
   }
 

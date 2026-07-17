@@ -557,6 +557,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   Future<void> _autoDetectLocation() async {
     if (_isLoadingLocation) return;
+    final hasPermission =
+        await DeviceLocationService.requestPermissionInteractive(context);
+    if (!hasPermission) return;
+
     setState(() => _isLoadingLocation = true);
     try {
       final loc = await DeviceLocationService.getCurrentOrDefault();

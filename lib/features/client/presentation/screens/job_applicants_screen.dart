@@ -287,7 +287,15 @@ class _ApplicantCard extends StatelessWidget {
     final int totalJobs = (stats['total_jobs'] as num?)?.toInt() ?? 0;
     final List<dynamic> skills =
         stats['skills'] as List<dynamic>? ?? <dynamic>[];
-    final Object? rate = application['proposed_rate'];
+    final double? totalQuote = (application['total_quote'] as num?)?.toDouble() ??
+        (application['proposed_rate'] as num?)?.toDouble();
+    final double? distanceKm = (application['distance_km'] as num?)?.toDouble();
+    final double? distanceCost =
+        (application['distance_cost'] as num?)?.toDouble();
+    final double? baseServiceFee =
+        (application['base_service_fee'] as num?)?.toDouble();
+    final double? urgencyPremium =
+        (application['urgency_premium'] as num?)?.toDouble();
     final String message = (application['message'] ?? '').toString();
     final bool canAccept = status == 'pending' && !isAccepting;
 
@@ -342,10 +350,15 @@ class _ApplicantCard extends StatelessWidget {
                       .toList(),
                 ),
               ],
-              if (rate != null) ...<Widget>[
-                const SizedBox(height: AppSpacing.sm),
-                Text('Proposed rate: GHS $rate',
-                    style: AppTypography.bodyMedium),
+              if (totalQuote != null) ...<Widget>[
+                const SizedBox(height: AppSpacing.md),
+                _ApplicantQuote(
+                  totalQuote: totalQuote,
+                  distanceKm: distanceKm,
+                  distanceCost: distanceCost,
+                  baseServiceFee: baseServiceFee,
+                  urgencyPremium: urgencyPremium,
+                ),
               ],
               if (message.isNotEmpty) ...<Widget>[
                 const SizedBox(height: AppSpacing.sm),
@@ -375,6 +388,74 @@ class _ApplicantCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ApplicantQuote extends StatelessWidget {
+  const _ApplicantQuote({
+    required this.totalQuote,
+    this.distanceKm,
+    this.distanceCost,
+    this.baseServiceFee,
+    this.urgencyPremium,
+  });
+
+  final double totalQuote;
+  final double? distanceKm;
+  final double? distanceCost;
+  final double? baseServiceFee;
+  final double? urgencyPremium;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primaryContainer.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        children: <Widget>[
+          if (baseServiceFee != null) _row('Base service', baseServiceFee!),
+          if (distanceCost != null)
+            _row(
+              distanceKm != null
+                  ? 'Travel (${distanceKm!.toStringAsFixed(1)} km)'
+                  : 'Travel',
+              distanceCost!,
+            ),
+          if ((urgencyPremium ?? 0) > 0)
+            _row('ASAP premium', urgencyPremium!),
+          const Divider(height: 18),
+          _row('Total quote', totalQuote, isTotal: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _row(String label, double amount, {bool isTotal = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text(
+            label,
+            style: (isTotal ? AppTypography.labelLarge : AppTypography.bodySmall)
+                .copyWith(
+              color: isTotal ? AppColors.textPrimary : AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            'GHS ${amount.toStringAsFixed(2)}',
+            style: (isTotal ? AppTypography.labelLarge : AppTypography.bodyMedium)
+                .copyWith(color: AppColors.primary),
+          ),
+        ],
       ),
     );
   }

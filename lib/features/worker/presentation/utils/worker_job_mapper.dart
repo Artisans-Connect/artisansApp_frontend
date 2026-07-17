@@ -1,5 +1,21 @@
 import '../models/worker_job.dart';
 
+JobUrgency _urgencyFromJobMode(dynamic jobMode) {
+  return (jobMode?.toString().toLowerCase() ?? '') == 'asap'
+      ? JobUrgency.asap
+      : JobUrgency.scheduled;
+}
+
+String? _scheduledLabelFor(Map<String, dynamic> json) {
+  final String? scheduledFor = json['scheduled_for'] as String?;
+  if (scheduledFor == null) return null;
+  final DateTime? when = DateTime.tryParse(scheduledFor)?.toLocal();
+  if (when == null) return null;
+  final String hour = when.hour.toString().padLeft(2, '0');
+  final String minute = when.minute.toString().padLeft(2, '0');
+  return 'Scheduled ${when.day}/${when.month} $hour:$minute';
+}
+
 WorkerJob workerJobFromApi(Map<String, dynamic> json) {
   final dynamic client = json['client'] ?? json['profiles'];
   final String clientName = client is Map<String, dynamic>
@@ -24,6 +40,8 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
 
   final Map<String, dynamic> completion =
       _firstRelated(json['completion_details']);
+  final Map<String, dynamic> applicationQuote =
+      _firstRelated(json['application_quote']);
   final List<String> completionPhotoUrls =
       (completion['photo_urls'] as List<dynamic>? ?? <dynamic>[])
           .map((dynamic url) => url.toString())
@@ -43,12 +61,13 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
     clientId: json['client_id'] as String?,
     clientPhone: clientPhone,
     clientAvatarUrl: clientAvatarUrl,
-    urgency: JobUrgency.scheduled,
+    urgency: _urgencyFromJobMode(json['job_mode']),
+    scheduledLabel: _scheduledLabelFor(json),
     estimatedBudgetLabel: _budgetLabel(json),
     referencePhotoLabels: photoUrls,
     photoCount: photoUrls.length,
     backendStatus: json['status'] as String?,
-    distanceKm: null,
+    distanceKm: (applicationQuote['distance_km'] as num?)?.toDouble(),
     createdAt: json['created_at'] != null ? DateTime.tryParse(json['created_at'].toString()) : null,
     trade: categoryName,
     area: json['address_label'] as String?,
@@ -63,6 +82,17 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
     grossAmount: (completion['gross_amount'] as num?)?.toDouble(),
     platformFee: (completion['platform_fee'] as num?)?.toDouble(),
     artisanPayout: (completion['artisan_payout'] as num?)?.toDouble(),
+    applicationDistanceKm:
+        (applicationQuote['distance_km'] as num?)?.toDouble(),
+    applicationDistanceCost:
+        (applicationQuote['distance_cost'] as num?)?.toDouble(),
+    applicationBaseServiceFee:
+        (applicationQuote['base_service_fee'] as num?)?.toDouble(),
+    applicationUrgencyPremium:
+        (applicationQuote['urgency_premium'] as num?)?.toDouble(),
+    applicationTotalQuote:
+        (applicationQuote['total_quote'] as num?)?.toDouble(),
+    applicationQuoteCurrency: applicationQuote['quote_currency'] as String?,
   );
 }
 

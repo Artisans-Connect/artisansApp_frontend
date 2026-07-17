@@ -49,6 +49,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   bool _isReopeningCompletion = false;
   bool _isCancelling = false;
   bool _isRequestingTermination = false;
+  bool _isConfirmingWorkDone = false;
+  bool _suppressRealtimeRefresh = false;
   String? _loadError;
   int _currentStep = 0;
   String _etaLabel = 'Calculating ETA…';
@@ -132,8 +134,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           _job = booking.toTrackingMap();
           _loading = false;
           _loadError = null;
+          _currentStep = _stepForStatus(booking.backendStatus);
         });
-        _applyStepFromStatus(booking.backendStatus);
       } else {
         setState(() => _loading = false);
       }
@@ -147,6 +149,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   }
 
   void _handleJobUpdate(Map<String, dynamic> job) {
+    if (_suppressRealtimeRefresh) return;
     unawaited(_refreshFromRealtimeJob(job));
   }
 
@@ -181,13 +184,13 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       _job = booking.toTrackingMap();
       _loading = false;
       _loadError = null;
+      _currentStep = _stepForStatus(booking.backendStatus);
     });
-    _applyStepFromStatus(booking.backendStatus);
   }
 
-  void _applyStepFromStatus(String? statusRaw) {
+  int _stepForStatus(String? statusRaw) {
     final String status = (statusRaw ?? '').toLowerCase();
-    final int step = switch (status) {
+    return switch (status) {
       'matched' => 0,
       'on_the_way' => 1,
       'arrived' => 2,
@@ -197,7 +200,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       'completed' => 4,
       _ => 0,
     };
-    setState(() => _currentStep = step);
+  }
+
+  void _applyStepFromStatus(String? statusRaw) {
+    if (!mounted) return;
+    setState(() => _currentStep = _stepForStatus(statusRaw));
   }
 
   @override
@@ -257,56 +264,55 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     }
   }
 
-  Future<void> _reopenCompletion() async {
+  /// Client confirms the work is finished. Stops the settlement clock on the
+  /// backend without changing job status (the worker still submits details).
+  Future<void> _confirmWorkDone() async {
     final String? jobUuid = _currentJobId;
+    if (_isConfirmingWorkDone || jobUuid == null || jobUuid.isEmpty) return;
+
+    setState(() => _isConfirmingWorkDone = true);
+    try {
+      await _jobsService.confirmWorkDone(jobUuid);
+      if (!mounted) return;
+      AppToast.showSuccess(
+        context,
+        'Marked as finished. The artisan will submit the completion details.',
+      );
+      await _loadJobDetails();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not confirm the work as finished.',
+      );
+    } finally {
+      if (mounted) setState(() => _isConfirmingWorkDone = false);
+    }
+  }
+
+  Future<void> _reopenCompletion() async {    final String? jobUuid = _currentJobId;
     if (_isReopeningCompletion || jobUuid == null || jobUuid.isEmpty) return;
 
-    final TextEditingController noteController = TextEditingController();
     final String? note = await showDialog<String>(
       context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Job not done?'),
-          content: TextField(
-            controller: noteController,
-            maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Tell the artisan what still needs attention.',
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () =>
-                  Navigator.pop(dialogContext, noteController.text.trim()),
-              child: const Text('Reopen job'),
-            ),
-          ],
-        );
-      },
+      builder: (_) => const _ReopenCompletionDialog(),
     );
-    noteController.dispose();
     if (note == null || !mounted) return;
 
-    setState(() => _isReopeningCompletion = true);
+    setState(() {
+      _isReopeningCompletion = true;
+      _suppressRealtimeRefresh = true;
+    });
     try {
-      final dynamic reopened = await _jobsService.reopenJob(
+      await _jobsService.reopenJob(
         jobUuid,
         body: <String, dynamic>{
           if (note.isNotEmpty) 'note': note,
         },
       );
       if (!mounted) return;
-      if (reopened is Map<String, dynamic>) {
-        final ClientBooking booking = ClientBooking.fromApiJob(reopened);
-        setState(() => _job = booking.toTrackingMap());
-        _applyStepFromStatus(booking.backendStatus);
-      } else {
-        await _loadJobDetails();
-      }
+      await _loadJobDetails();
       if (!mounted) return;
       AppToast.showSuccess(context, 'Job reopened for the artisan.');
     } catch (e) {
@@ -317,7 +323,12 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         fallback: 'Could not reopen this job.',
       );
     } finally {
-      if (mounted) setState(() => _isReopeningCompletion = false);
+      if (mounted) {
+        setState(() {
+          _isReopeningCompletion = false;
+          _suppressRealtimeRefresh = false;
+        });
+      }
     }
   }
 
@@ -747,6 +758,26 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       onCancelJob: _handleCancelJob,
                       onRequestTermination: _handleRequestTermination,
                     ),
+                    if (status == 'in_progress' &&
+                        job['work_ended_at'] == null) ...<Widget>[
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              _isConfirmingWorkDone ? null : _confirmWorkDone,
+                          icon: _isConfirmingWorkDone
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.check_circle_outline),
+                          label: const Text('Confirm job is done'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 16),
                     if (pendingApproval) SettlementDetailsCard(job: job),
                     CompletionActions(
@@ -966,6 +997,54 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     )
                 : null,
           ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ReopenCompletionDialog extends StatefulWidget {
+  const _ReopenCompletionDialog();
+
+  @override
+  State<_ReopenCompletionDialog> createState() =>
+      _ReopenCompletionDialogState();
+}
+
+class _ReopenCompletionDialogState extends State<_ReopenCompletionDialog> {
+  late final TextEditingController _noteController;
+
+  @override
+  void initState() {
+    super.initState();
+    _noteController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Job not done?'),
+      content: TextField(
+        controller: _noteController,
+        maxLines: 3,
+        decoration: const InputDecoration(
+          hintText: 'Tell the artisan what still needs attention.',
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _noteController.text.trim()),
+          child: const Text('Reopen job'),
         ),
       ],
     );

@@ -30,8 +30,8 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
   bool _locationUnavailable = false;
   String? _loadError;
   LatLng _userPosition = LatLng(
-    DeviceLocation.accraDefault.latitude,
-    DeviceLocation.accraDefault.longitude,
+    DeviceLocation.knustDefault.latitude,
+    DeviceLocation.knustDefault.longitude,
   );
   int? _selectedWorkerIndex;
   String? _selectedCategoryId;
@@ -62,6 +62,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
               nearbyWorkers[i]['lat'] as double,
               nearbyWorkers[i]['lng'] as double,
             ),
+            iconData: (nearbyWorkers[i]['tradeType'] as TradeType? ?? TradeType.other).icon,
             kind: _selectedWorkerIndex == i
                 ? MapMarkerKind.selectedWorker
                 : nearbyWorkers[i]['hasFreshLocation'] == true
@@ -142,6 +143,21 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
 
   Future<void> _fetchNearbyWorkers() async {
     try {
+      final hasPermission =
+          await DeviceLocationService.requestPermissionInteractive(context);
+      if (!hasPermission) {
+        if (mounted) {
+          setState(() {
+            nearbyWorkers = <Map<String, dynamic>>[];
+            _selectedWorkerIndex = null;
+            _locationUnavailable = true;
+            _loadError = null;
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
       final loc = await DeviceLocationService.getCurrentOrDefault();
       _userPosition = LatLng(loc.latitude, loc.longitude);
       if (loc.isFallback) {
@@ -884,7 +900,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                                     child: Container(
                                       decoration: BoxDecoration(
                                         color: _selectedWorkerIndex == index
-                                            ? AppColors.primaryContainer
+                                            ? AppColors.inversePrimary
                                             : AppColors.surfaceContainerLowest,
                                         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
                                         border: Border.all(

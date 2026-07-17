@@ -499,7 +499,7 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
 
   Widget _buildMapbox(WorkerJob? selected) {
     final center = selected == null
-        ? MapFeatureHelpers.accraDefault
+        ? MapFeatureHelpers.knustDefault
         : google.LatLng(selected.latitude, selected.longitude);
     return mapbox.MapWidget(
       key: const ValueKey<String>('job-requests-fullscreen-mapbox-map'),
@@ -520,7 +520,7 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
     return google.GoogleMap(
       initialCameraPosition: google.CameraPosition(
         target: selected == null
-            ? MapFeatureHelpers.accraDefault
+            ? MapFeatureHelpers.knustDefault
             : google.LatLng(selected.latitude, selected.longitude),
         zoom: selected == null ? 12 : 13,
       ),

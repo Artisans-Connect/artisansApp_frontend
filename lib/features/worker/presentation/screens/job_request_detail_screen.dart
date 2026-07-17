@@ -30,8 +30,16 @@ class JobRequestDetailScreen extends StatefulWidget {
 }
 class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
   final WorkersService _workersService = WorkersService();
+  final TextEditingController _noteController = TextEditingController();
   bool _applyLocked = false;
   bool _isApplying = false;
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
   void _onApply() async {
     if (_isApplying || _applyLocked) return;
     await HapticFeedback.mediumImpact();
@@ -40,7 +48,10 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
       _isApplying = true;
     });
     try {
-      final dynamic application = await _workersService.applyToJob(widget.job.id);
+      final dynamic application = await _workersService.applyToJob(
+        widget.job.id,
+        message: _noteController.text,
+      );
       if (!mounted) return;
       if (application is Map<String, dynamic>) {
         widget.onAcceptResponse?.call(application);
@@ -177,9 +188,13 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                         color: AppColors.outline,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        '${job.distanceText} from your location',
-                        style: AppTypography.bodyMedium,
+                      Expanded(
+                        child: Text(
+                          '${job.distanceText} from your location',
+                          style: AppTypography.bodyMedium,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ],
                   ),
@@ -222,6 +237,25 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                   ],
                   const SizedBox(height: AppSpacing.lg),
                   TimingEstimateRow(job: job),
+                  if (job.applicationTotalQuote != null) ...[
+                    const SizedBox(height: AppSpacing.lg),
+                    _QuoteBreakdown(job: job),
+                  ],
+                  const SizedBox(height: AppSpacing.lg),
+                  Text('NOTE TO CLIENT', style: AppTypography.labelCaps),
+                  const SizedBox(height: AppSpacing.sm),
+                  TextField(
+                    controller: _noteController,
+                    maxLines: 3,
+                    maxLength: 300,
+                    decoration: InputDecoration(
+                      hintText: 'Optional note about your availability or approach',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      counterText: '',
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   OutlinedButton.icon(
                     onPressed: () => _callClient(job),
@@ -296,5 +330,71 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     if (!launched && mounted) {
       AppToast.showInfo(context, 'Could not start the call.');
     }
+  }
+}
+
+class _QuoteBreakdown extends StatelessWidget {
+  const _QuoteBreakdown({required this.job});
+
+  final WorkerJob job;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primaryFixed.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('YOUR LOCKED QUOTE', style: AppTypography.labelCaps),
+          const SizedBox(height: AppSpacing.sm),
+          if (job.applicationBaseServiceFee != null)
+            _QuoteRow('Base service', job.applicationBaseServiceFee!),
+          if (job.applicationDistanceKm != null &&
+              job.applicationDistanceCost != null)
+            _QuoteRow(
+              'Travel (${job.applicationDistanceKm!.toStringAsFixed(1)} km)',
+              job.applicationDistanceCost!,
+            ),
+          if ((job.applicationUrgencyPremium ?? 0) > 0)
+            _QuoteRow('ASAP premium', job.applicationUrgencyPremium!),
+          const Divider(height: 18),
+          _QuoteRow('Total', job.applicationTotalQuote!, isTotal: true),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuoteRow extends StatelessWidget {
+  const _QuoteRow(this.label, this.amount, {this.isTotal = false});
+
+  final String label;
+  final double amount;
+  final bool isTotal;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: isTotal ? AppTypography.labelLarge : AppTypography.bodyMedium,
+          ),
+          Text(
+            'GHS ${amount.toStringAsFixed(2)}',
+            style: (isTotal ? AppTypography.labelLarge : AppTypography.bodyMedium)
+                .copyWith(color: AppColors.primary),
+          ),
+        ],
+      ),
+    );
   }
 }

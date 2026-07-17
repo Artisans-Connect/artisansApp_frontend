@@ -176,6 +176,10 @@ class WorkerSessionState extends ChangeNotifier {
       'termination_requested' => WorkerJobPhase.terminationRequested,
       'pending_client_approval' => WorkerJobPhase.pendingApproval,
       'matched' => WorkerJobPhase.accepted,
+      // A confirmed scheduled job is not an active booking yet: it activates
+      // (becomes matched) near the scheduled time. Showing on-the-way/arrive
+      // actions before then would be wrong.
+      'scheduled_confirmed' => WorkerJobPhase.none,
       _ => WorkerJobPhase.accepted,
     };
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../../../core/location/device_location_service.dart';
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
 import '../models/worker_job.dart';
@@ -338,6 +339,7 @@ class _RequestJobCard extends StatelessWidget {
  
   @override
   Widget build(BuildContext context) {
+    final double? totalQuote = job.applicationTotalQuote;
     return Container(
       decoration: BoxDecoration(
         color: DesignTokens.surfaceCard,
@@ -411,6 +413,30 @@ class _RequestJobCard extends StatelessWidget {
                 children: _tagsFor(job),
               ),
             ),
+          if (totalQuote != null) ...<Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.payments_rounded,
+                    size: 16,
+                    color: DesignTokens.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Quote: ${_formatGhs(totalQuote)}',
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: DesignTokens.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
  
           // ── Divider ──
           const Divider(height: 1, thickness: 0.5, color: DesignTokens.borderSubtle),
@@ -488,6 +514,8 @@ class _RequestJobCard extends StatelessWidget {
     if (job.area != null) tags.add(_JobTag(label: job.area!));
     return tags;
   }
+
+  String _formatGhs(double amount) => 'GHS ${amount.toStringAsFixed(2)}';
 }
  
 /// Empty state — used for both online-but-no-jobs and offline states.
@@ -615,6 +643,8 @@ class _PendingApplicationCard extends StatelessWidget {
     final String status = (application['status'] ?? 'pending').toString();
     final bool accepted = status == 'accepted';
     final Object? budget = job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
+    final double? totalQuote = (application['total_quote'] as num?)?.toDouble() ??
+        (application['proposed_rate'] as num?)?.toDouble();
 
     return InkWell(
       onTap: onTap,
@@ -667,6 +697,18 @@ class _PendingApplicationCard extends StatelessWidget {
                       fontFamily: 'Satoshi',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
+                      color: DesignTokens.primary,
+                    ),
+                  ),
+                ],
+                if (totalQuote != null) ...<Widget>[
+                  const SizedBox(height: 6),
+                  Text(
+                    'Your quote: GHS ${totalQuote.toStringAsFixed(2)}',
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
                       color: DesignTokens.primary,
                     ),
                   ),
@@ -953,6 +995,11 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           lastCheckedAt: _lastCheckedAt,
           isSilentRefreshing: _isSilentRefreshing,
           onChanged: (bool value) async {
+            if (value) {
+              final bool hasLoc =
+                  await DeviceLocationService.requestPermissionInteractive(context);
+              if (!hasLoc) return;
+            }
             final bool ok = await session.setAvailable(value);
             if (ok && mounted) {
               await _load();

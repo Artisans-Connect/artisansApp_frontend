@@ -100,9 +100,12 @@ class _MyAppState extends State<MyApp> {
           final String? jobId = args is Map
               ? args['openJobRequestId'] as String?
               : null;
-          final WorkerNavTab initialTab =
-              args is Map && args['initialTab'] == 'messages'
-                  ? WorkerNavTab.messages
+          final Object? initialTabArg =
+              args is Map ? args['initialTab'] : null;
+          final WorkerNavTab initialTab = initialTabArg == 'messages'
+              ? WorkerNavTab.messages
+              : initialTabArg == 'bookings'
+                  ? WorkerNavTab.bookings
                   : WorkerNavTab.explore;
           return WorkerShell(
             initialJobRequestId: jobId,

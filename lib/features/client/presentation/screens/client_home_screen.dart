@@ -16,6 +16,7 @@ import '../widgets/client_home/marquee_categories.dart';
 import '../../../../shared/widgets/search_bar.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/jobs_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/session/app_user_session.dart';
 import '../../../../core/utils/icon_mapper.dart';
 import '../../services/explore_service.dart';
@@ -40,7 +41,9 @@ const Map<String, List<String>> _categoryAliases = <String, List<String>>{
 // Main screen
 // ─────────────────────────────────────────────────────────────────────────────
 class ClientHomeScreen extends StatefulWidget {
-  const ClientHomeScreen({Key? key}) : super(key: key);
+  const ClientHomeScreen({Key? key, this.refreshSignal = 0}) : super(key: key);
+
+  final int refreshSignal;
  
   @override
   State<ClientHomeScreen> createState() => _ClientHomeScreenState();
@@ -59,9 +62,11 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   bool _isLoadingCategories  = true;
   ClientBooking? _activeJob;
   bool _loadingActiveJob     = true;
+  int _unreadNotifications   = 0;
  
   final JobsService        _jobsService        = JobsService();
   final CategoriesService  _categoriesService  = CategoriesService();
+  final NotificationService _notificationService = NotificationService.instance;
  
   // ── Greeting ───────────────────────────────────────────────────────────────
   String get _greeting {
@@ -78,6 +83,35 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
     _loadCategories();
     _fetchFeaturedArtisans();
     _loadActiveJob();
+    _loadUnreadNotifications();
+  }
+
+  @override
+  void didUpdateWidget(covariant ClientHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.refreshSignal != oldWidget.refreshSignal) {
+      unawaited(_refreshHome());
+    }
+  }
+
+  Future<void> _refreshHome() async {
+    await Future.wait<void>([
+      _loadCategories(),
+      _fetchFeaturedArtisans(),
+      _loadActiveJob(),
+      _loadUnreadNotifications(),
+    ]);
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final int count = await _notificationService.getUnreadCount();
+      if (!mounted) return;
+      setState(() => _unreadNotifications = count);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _unreadNotifications = 0);
+    }
   }
  
   Future<void> _loadCategories() async {
@@ -262,15 +296,19 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
     return Scaffold(
       backgroundColor: DesignTokens.surfaceBase,
       body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: <Widget>[
-            SliverToBoxAdapter(child: _buildAppBar()),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: DesignTokens.gutter, vertical: 8),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate(<Widget>[
+        child: RefreshIndicator(
+          onRefresh: _refreshHome,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
+            ),
+            slivers: <Widget>[
+              SliverToBoxAdapter(child: _buildAppBar()),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: DesignTokens.gutter, vertical: 8),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate(<Widget>[
                   // Hero
                   AnimatedBuilder(
                     animation: AppUserSession.instance,
@@ -407,10 +445,11 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   const SizedBox(height: 14),
                   _buildArtisanList(),
                   const SizedBox(height: 32),
-                ]),
+                  ]),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -458,7 +497,10 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
           ),
           // Notification bell
           GestureDetector(
-            onTap: () => Navigator.pushNamed(context, AppRoutes.notifications),
+            onTap: () async {
+              await Navigator.pushNamed(context, AppRoutes.notifications);
+              if (mounted) unawaited(_loadUnreadNotifications());
+            },
             child: Container(
               width: 42,
               height: 42,
@@ -478,20 +520,36 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                 children: <Widget>[
                   const Icon(Icons.notifications_outlined,
                       color: DesignTokens.textPrimary, size: 20),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: DesignTokens.primary,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: DesignTokens.surfaceCard, width: 1.5),
+                  if (_unreadNotifications > 0)
+                    Positioned(
+                      top: 5,
+                      right: 4,
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 17,
+                          minHeight: 17,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: DesignTokens.primary,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                              color: DesignTokens.surfaceCard, width: 1.5),
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          _unreadNotifications > 9
+                              ? '9+'
+                              : _unreadNotifications.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            height: 1,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

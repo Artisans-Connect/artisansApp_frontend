@@ -55,6 +55,12 @@ class WorkerJob {
     this.grossAmount,
     this.platformFee,
     this.artisanPayout,
+    this.applicationDistanceKm,
+    this.applicationDistanceCost,
+    this.applicationBaseServiceFee,
+    this.applicationUrgencyPremium,
+    this.applicationTotalQuote,
+    this.applicationQuoteCurrency,
   });
 
   final String id;
@@ -108,6 +114,12 @@ class WorkerJob {
   final double? grossAmount;
   final double? platformFee;
   final double? artisanPayout;
+  final double? applicationDistanceKm;
+  final double? applicationDistanceCost;
+  final double? applicationBaseServiceFee;
+  final double? applicationUrgencyPremium;
+  final double? applicationTotalQuote;
+  final String? applicationQuoteCurrency;
 
   String get urgencyLabel => urgencyBadge ??
       (urgency == JobUrgency.asap ? 'ASAP' : (scheduledLabel ?? 'Scheduled'));
@@ -181,6 +193,12 @@ class WorkerJob {
       grossAmount: grossAmount,
       platformFee: platformFee,
       artisanPayout: artisanPayout,
+      applicationDistanceKm: applicationDistanceKm,
+      applicationDistanceCost: applicationDistanceCost,
+      applicationBaseServiceFee: applicationBaseServiceFee,
+      applicationUrgencyPremium: applicationUrgencyPremium,
+      applicationTotalQuote: applicationTotalQuote,
+      applicationQuoteCurrency: applicationQuoteCurrency,
     );
   }
 }

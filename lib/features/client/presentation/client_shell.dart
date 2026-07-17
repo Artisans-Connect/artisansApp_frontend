@@ -23,6 +23,7 @@ class ClientShell extends StatefulWidget {
 
 class _ClientShellState extends State<ClientShell> {
   late ClientNavTab _currentTab;
+  int _homeRefreshSignal = 0;
   int _bookingsRefreshSignal = 0;
   int _messagesRefreshSignal = 0;
 
@@ -35,7 +36,9 @@ class _ClientShellState extends State<ClientShell> {
   void _selectTab(ClientNavTab tab) {
     setState(() {
       _currentTab = tab;
-      if (tab == ClientNavTab.bookings) {
+      if (tab == ClientNavTab.home) {
+        _homeRefreshSignal++;
+      } else if (tab == ClientNavTab.bookings) {
         _bookingsRefreshSignal++;
       } else if (tab == ClientNavTab.messages) {
         _messagesRefreshSignal++;
@@ -51,7 +54,7 @@ class _ClientShellState extends State<ClientShell> {
         body: IndexedStack(
           index: _currentTab.index,
           children: <Widget>[
-            const ClientHomeScreen(),
+            ClientHomeScreen(refreshSignal: _homeRefreshSignal),
             BookingHistoryScreen(
               embedInShell: true,
               refreshSignal: _bookingsRefreshSignal,

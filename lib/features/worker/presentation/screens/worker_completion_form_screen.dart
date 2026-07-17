@@ -8,6 +8,7 @@ import '../../../../core/services/jobs_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/worker_job.dart';
+import '../utils/worker_job_mapper.dart';
 import '../widgets/completion_photo_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/job_detail_card.dart';
@@ -35,6 +36,23 @@ class _WorkerCompletionFormScreenState
   final ImagePicker _picker = ImagePicker();
   final List<File> _photos = <File>[];
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final double? amount =
+        widget.job.grossAmount ?? widget.job.applicationTotalQuote;
+    if (amount != null && amount > 0) {
+      _proposedAmountController.text = amount.toStringAsFixed(2);
+    }
+    if ((widget.job.completionMaterials ?? '').isNotEmpty) {
+      _materialsController.text = widget.job.completionMaterials!;
+    }
+    if ((widget.job.completionNotes ?? '').isNotEmpty) {
+      _notesController.text = widget.job.completionNotes!;
+    }
+  }
+
   @override
   void dispose() {
     _proposedAmountController.dispose();
@@ -44,7 +62,8 @@ class _WorkerCompletionFormScreenState
   }
   Future<void> _submit() async {
     if (_isSubmitting) return;
-    final double? proposedAmount = double.tryParse(_proposedAmountController.text.trim());
+    final double? proposedAmount =
+        double.tryParse(_proposedAmountController.text.trim());
     if (proposedAmount == null || proposedAmount <= 0) {
       AppToast.showError(context, 'Enter a valid proposed amount.');
       return;
@@ -58,7 +77,7 @@ class _WorkerCompletionFormScreenState
             await StorageService.instance.uploadCompletionPhoto(file);
         if (url != null) photoUrls.add(url);
       }
-      await _jobsService.completeJob(
+      final dynamic updated = await _jobsService.completeJob(
         widget.job.id,
         body: <String, dynamic>{
           'proposed_amount': proposedAmount,
@@ -70,11 +89,14 @@ class _WorkerCompletionFormScreenState
         },
       );
       if (!mounted) return;
+      final WorkerJob successJob = updated is Map<String, dynamic>
+          ? workerJobFromApi(updated)
+          : widget.job;
       setState(() => _isSubmitting = false);
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => WorkerCompletionSuccessScreen(
-            job: widget.job,
+            job: successJob,
             onDone: widget.onCompletionSubmitted,
           ),
         ),
@@ -132,7 +154,7 @@ class _WorkerCompletionFormScreenState
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'Time spent will be automatically calculated based on when the job was started.',
+              'You can edit this amount until the client approves completion. Time spent is recorded automatically from when the job started.',
               style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.lg),

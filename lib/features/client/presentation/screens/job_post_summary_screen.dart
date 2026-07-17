@@ -267,10 +267,6 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                           label: 'Base service fee',
                           amount: _estimate!.baseServiceFee,
                         ),
-                        _PriceBreakdownRow(
-                          label: 'Travel/distance cost',
-                          amount: _estimate!.distanceCost,
-                        ),
                         if (_estimate!.urgencyPremium > 0)
                           _PriceBreakdownRow(
                             label: 'ASAP urgency premium',
@@ -282,6 +278,13 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             amount: _estimate!.verificationPremium,
                           ),
                         const Divider(height: 20),
+                        Text(
+                          'Travel cost is calculated separately for each artisan when they apply.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
                         // _PriceBreakdownRow(
                         //   label: 'Recommended fee',
                         //   amount: _estimate!.minimumFee,

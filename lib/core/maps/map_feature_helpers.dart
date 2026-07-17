@@ -181,7 +181,7 @@ class MapFeatureHelpers {
   const MapFeatureHelpers._();
 
   static const Duration locationFreshnessWindow = Duration(minutes: 15);
-  static const LatLng accraDefault = LatLng(5.6037, -0.1870);
+  static const LatLng knustDefault = LatLng(6.674, -1.570);
 
   static const RouteProvider defaultRouteProvider = HaversineRouteProvider();
 

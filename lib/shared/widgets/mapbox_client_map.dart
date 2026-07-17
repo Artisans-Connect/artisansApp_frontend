@@ -11,17 +11,20 @@ import '../../core/maps/map_feature_helpers.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import 'custom_marker_builder.dart';
 
 class MapboxWorkerMarker {
   const MapboxWorkerMarker({
     required this.id,
     required this.position,
     required this.kind,
+    this.iconData,
   });
 
   final String id;
   final google.LatLng position;
   final MapMarkerKind kind;
+  final IconData? iconData;
 }
 
 class MapboxWorkerDiscoveryMap extends StatefulWidget {
@@ -50,6 +53,7 @@ class MapboxWorkerDiscoveryMap extends StatefulWidget {
 class _MapboxWorkerDiscoveryMapState extends State<MapboxWorkerDiscoveryMap> {
   mapbox.MapboxMap? _map;
   mapbox.CircleAnnotationManager? _manager;
+  mapbox.PointAnnotationManager? _pointManager;
   mapbox.PolylineAnnotationManager? _ringManager;
   bool _styleReady = false;
 
@@ -70,8 +74,23 @@ class _MapboxWorkerDiscoveryMapState extends State<MapboxWorkerDiscoveryMap> {
 
   Future<void> _onMapCreated(mapbox.MapboxMap map) async {
     _map = map;
+    
+    final userIconBytes = await CustomMarkerBuilder.createMarkerImage(
+      Icons.waving_hand_rounded,
+      AppColors.primary,
+      size: 90.0,
+    );
+    
     await map.location.updateSettings(
-      mapbox.LocationComponentSettings(enabled: true, pulsingEnabled: true),
+      mapbox.LocationComponentSettings(
+        enabled: true,
+        pulsingEnabled: true,
+        locationPuck: mapbox.LocationPuck(
+          locationPuck2D: mapbox.LocationPuck2D(
+            topImage: userIconBytes,
+          ),
+        ),
+      ),
     );
   }
 
@@ -81,10 +100,18 @@ class _MapboxWorkerDiscoveryMapState extends State<MapboxWorkerDiscoveryMap> {
     _styleReady = true;
     _ringManager ??= await map.annotations.createPolylineAnnotationManager();
     _manager ??= await map.annotations.createCircleAnnotationManager();
+    _pointManager ??= await map.annotations.createPointAnnotationManager();
+    
     _manager?.tapEvents(onTap: (annotation) {
       final id = annotation.customData?['workerId']?.toString();
       if (id != null && id.isNotEmpty) widget.onWorkerSelected(id);
     });
+    
+    _pointManager?.tapEvents(onTap: (annotation) {
+      final id = annotation.customData?['workerId']?.toString();
+      if (id != null && id.isNotEmpty) widget.onWorkerSelected(id);
+    });
+    
     await _syncSearchRings();
     await _syncMarkers();
     await _fitCamera();
@@ -92,31 +119,49 @@ class _MapboxWorkerDiscoveryMapState extends State<MapboxWorkerDiscoveryMap> {
 
   Future<void> _syncMarkers() async {
     final manager = _manager;
-    if (manager == null) return;
+    final pManager = _pointManager;
+    if (manager == null || pManager == null) return;
+    
     await manager.deleteAll();
-    final options = <mapbox.CircleAnnotationOptions>[
-      mapbox.CircleAnnotationOptions(
-        geometry: _point(widget.userPosition),
-        circleColor: _argb(AppColors.primary),
-        circleRadius: 10,
-        circleStrokeColor: _argb(Colors.white),
-        circleStrokeWidth: 3,
-        circleSortKey: 10,
-      ),
-      ...widget.workers.map((worker) {
-        final selected = worker.id == widget.selectedWorkerId;
-        return mapbox.CircleAnnotationOptions(
+    await pManager.deleteAll();
+    
+    final pointOptions = <mapbox.PointAnnotationOptions>[];
+    for (final worker in widget.workers) {
+      final selected = worker.id == widget.selectedWorkerId;
+      final color = _colorFor(worker.kind, selected);
+      
+      Uint8List? imageBytes;
+      if (worker.iconData != null) {
+        imageBytes = await CustomMarkerBuilder.createMarkerImage(
+          worker.iconData!,
+          color,
+          size: selected ? 110.0 : 90.0,
+        );
+      }
+      
+      if (imageBytes != null) {
+        pointOptions.add(mapbox.PointAnnotationOptions(
           geometry: _point(worker.position),
-          circleColor: _argb(_colorFor(worker.kind, selected)),
+          image: imageBytes,
+          symbolSortKey: selected ? 30 : 20,
+          customData: <String, Object>{'workerId': worker.id},
+        ));
+      } else {
+        await manager.create(mapbox.CircleAnnotationOptions(
+          geometry: _point(worker.position),
+          circleColor: _argb(color),
           circleRadius: selected ? 14 : 11,
           circleStrokeColor: _argb(Colors.white),
           circleStrokeWidth: selected ? 4 : 3,
           circleSortKey: selected ? 30 : 20,
           customData: <String, Object>{'workerId': worker.id},
-        );
-      }),
-    ];
-    await manager.createMulti(options);
+        ));
+      }
+    }
+    
+    if (pointOptions.isNotEmpty) {
+      await pManager.createMulti(pointOptions);
+    }
   }
 
   Future<void> _syncSearchRings() async {

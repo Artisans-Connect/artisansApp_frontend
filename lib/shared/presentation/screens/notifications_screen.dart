@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../core/errors/error_messages.dart';
-import '../../../core/navigation/app_routes.dart';
+import '../../../core/notifications/notification_metadata.dart';
 import '../../../core/services/notification_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../models/notification_item.dart';
+import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/error_state_view.dart';
-import '../../widgets/app_toast.dart';
-import '../navigation/shared_route_args.dart';
-import 'chat_detail_screen.dart';
+
+enum _NotificationFilter { all, unread, actionNeeded }
 
 class NotificationsScreen extends StatefulWidget {
-  const NotificationsScreen({Key? key}) : super(key: key);
+  const NotificationsScreen({super.key});
 
   static const String routeName = '/notifications';
 
@@ -28,6 +28,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   bool _isLoading = true;
   String? _loadError;
   List<NotificationItem> _notifications = <NotificationItem>[];
+  _NotificationFilter _filter = _NotificationFilter.all;
 
   @override
   void initState() {
@@ -46,7 +47,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       setState(() {
         _notifications = raw
             .whereType<Map<String, dynamic>>()
-            .map((Map<String, dynamic> json) => NotificationItem.fromJson(json))
+            .map(NotificationItem.fromJson)
             .toList();
         _isLoading = false;
       });
@@ -64,19 +65,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     try {
       await _notificationService.markAllAsRead();
       if (!mounted) return;
+      final DateTime readAt = DateTime.now();
       setState(() {
         _notifications = _notifications
-            .map((NotificationItem n) => n.isRead
-                ? n
-                : NotificationItem(
-                    id: n.id,
-                    type: n.type,
-                    title: n.title,
-                    body: n.body,
-                    data: n.data,
-                    readAt: DateTime.now(),
-                    createdAt: n.createdAt,
-                  ))
+            .map(
+              (NotificationItem n) => n.isRead
+                  ? n
+                  : NotificationItem(
+                      id: n.id,
+                      type: n.type,
+                      title: n.title,
+                      body: n.body,
+                      data: n.data,
+                      readAt: readAt,
+                      createdAt: n.createdAt,
+                    ),
+            )
             .toList();
       });
     } catch (e) {
@@ -94,68 +98,36 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     try {
       await _notificationService.markAsRead(notification.id);
       if (!mounted) return;
-      final int index =
-          _notifications.indexWhere((NotificationItem n) => n.id == notification.id);
-      if (index != -1) {
-        setState(() {
-          _notifications[index] = NotificationItem(
-            id: notification.id,
-            type: notification.type,
-            title: notification.title,
-            body: notification.body,
-            data: notification.data,
-            readAt: DateTime.now(),
-            createdAt: notification.createdAt,
-          );
-        });
-      }
+      final int index = _notifications
+          .indexWhere((NotificationItem n) => n.id == notification.id);
+      if (index == -1) return;
+      setState(() {
+        _notifications[index] = NotificationItem(
+          id: notification.id,
+          type: notification.type,
+          title: notification.title,
+          body: notification.body,
+          data: notification.data,
+          readAt: DateTime.now(),
+          createdAt: notification.createdAt,
+        );
+      });
     } catch (_) {
-      // Silently fail; notification will be marked on next fetch.
+      // Best effort; the next fetch will reconcile read state.
     }
   }
 
   void _onNotificationTap(NotificationItem notification) {
     _markAsRead(notification);
-    _routeToDestination(notification);
-  }
-
-  void _routeToDestination(NotificationItem notification) {
-    final String type =
-        (notification.data?['type'] as String?) ?? notification.type;
-    final String? jobId = notification.data?['jobId'] as String?;
-
-    if (type == 'chat_message' && jobId != null) {
-      Navigator.pushNamed(
+    final bool opened = _notificationService.openFromData(
+      notification.data,
+      fallbackType: notification.type,
+    );
+    if (!opened) {
+      AppToast.showError(
         context,
-        ChatDetailScreen.routeName,
-        arguments: ChatDetailArgs(
-          conversationId: jobId,
-          jobId: jobId,
-          counterpartUserId: '',
-          counterpartName: 'Chat',
-        ),
-      );
-      return;
-    }
-
-    const Set<String> jobTypes = <String>{
-      'worker_on_the_way',
-      'worker_arrived',
-      'job_started',
-      'job_completion_submitted',
-      'job_completed',
-      'worker_cancelled_job',
-      'client_cancelled_job',
-      'job_cancelled',
-      'job_expired',
-      'termination_requested',
-      'termination_resolved',
-    };
-    if (jobId != null && jobTypes.contains(type)) {
-      Navigator.pushNamed(
-        context,
-        AppRoutes.liveTracking,
-        arguments: <String, dynamic>{'id': jobId},
+        Exception('This update is missing job details.'),
+        fallback: 'This update is missing job details.',
       );
     }
   }
@@ -163,7 +135,28 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   int get _unreadCount =>
       _notifications.where((NotificationItem n) => !n.isRead).length;
 
-  // ── Build ──────────────────────────────────────────────────────────
+  int get _actionNeededCount =>
+      _notifications.where(_isActionRequired).length;
+
+  bool _isActionRequired(NotificationItem notification) {
+    return NotificationMetadata.fromData(
+      notification.data,
+      fallbackType: notification.type,
+    ).isActionRequired;
+  }
+
+  List<NotificationItem> get _visibleNotifications {
+    switch (_filter) {
+      case _NotificationFilter.unread:
+        return _notifications
+            .where((NotificationItem notification) => !notification.isRead)
+            .toList();
+      case _NotificationFilter.actionNeeded:
+        return _notifications.where(_isActionRequired).toList();
+      case _NotificationFilter.all:
+        return _notifications;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,8 +168,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final String title =
+        _unreadCount > 0 ? 'Notifications ($_unreadCount)' : 'Notifications';
     return CustomAppBar(
-      title: 'Notifications',
+      title: title,
       actions: <Widget>[
         if (_unreadCount > 0)
           TextButton(
@@ -206,24 +201,63 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
     if (_notifications.isEmpty) return _buildEmptyState();
 
+    final List<NotificationItem> visibleNotifications = _visibleNotifications;
     return RefreshIndicator(
       onRefresh: _loadNotifications,
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount: _notifications.length,
-        separatorBuilder: (_, __) => Divider(
-          height: 1,
-          thickness: 0.5,
-          indent: 72,
-          endIndent: 16,
-          color: AppColors.outlineVariant.withAlpha((0.5 * 255).round()),
-        ),
+        itemCount:
+            visibleNotifications.isEmpty ? 2 : visibleNotifications.length + 1,
+        separatorBuilder: (_, int index) => index == 0
+            ? const SizedBox.shrink()
+            : Divider(
+                height: 1,
+                thickness: 0.5,
+                indent: 72,
+                endIndent: 16,
+                color: AppColors.outlineVariant
+                    .withAlpha((0.5 * 255).round()),
+              ),
         itemBuilder: (BuildContext context, int index) {
+          if (index == 0) return _buildFilterBar();
+          if (visibleNotifications.isEmpty) return _buildFilteredEmptyState();
+          final NotificationItem notification = visibleNotifications[index - 1];
           return _NotificationTile(
-            notification: _notifications[index],
-            onTap: () => _onNotificationTap(_notifications[index]),
+            notification: notification,
+            onTap: () => _onNotificationTap(notification),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFilterBar() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+      child: Row(
+        children: <Widget>[
+          _FilterChip(
+            label: 'All',
+            selected: _filter == _NotificationFilter.all,
+            onTap: () => setState(() => _filter = _NotificationFilter.all),
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'Unread',
+            count: _unreadCount,
+            selected: _filter == _NotificationFilter.unread,
+            onTap: () => setState(() => _filter = _NotificationFilter.unread),
+          ),
+          const SizedBox(width: 8),
+          _FilterChip(
+            label: 'Action needed',
+            count: _actionNeededCount,
+            selected: _filter == _NotificationFilter.actionNeeded,
+            onTap: () =>
+                setState(() => _filter = _NotificationFilter.actionNeeded),
+          ),
+        ],
       ),
     );
   }
@@ -235,8 +269,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(PhosphorIcons.bellSlash,
-                size: 64, color: AppColors.outline.withAlpha((0.4 * 255).round())),
+            Icon(
+              PhosphorIcons.bellSlash,
+              size: 64,
+              color: AppColors.outline.withAlpha((0.4 * 255).round()),
+            ),
             const SizedBox(height: 16),
             Text(
               'No notifications yet',
@@ -245,12 +282,48 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'You\'re all caught up! Check back later.',
+              'You are all caught up. Job updates and messages will appear here.',
               textAlign: TextAlign.center,
               style: AppTypography.bodyLarge,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildFilteredEmptyState() {
+    final String label = _filter == _NotificationFilter.unread
+        ? 'No unread notifications'
+        : 'No action needed';
+    final String message = _filter == _NotificationFilter.unread
+        ? 'Everything here has already been read.'
+        : 'You do not have any notifications waiting for a response.';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 80),
+      child: Column(
+        children: <Widget>[
+          Icon(
+            PhosphorIcons.bellSimple,
+            size: 48,
+            color: AppColors.outline.withAlpha((0.45 * 255).round()),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            label,
+            style: AppTypography.labelLarge,
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
@@ -265,9 +338,47 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════
-//  Notification Tile
-// ═══════════════════════════════════════════════════════════════════════
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.count,
+  });
+
+  final String label;
+  final int? count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final String text = count == null ? label : '$label $count';
+    return Material(
+      color: selected ? AppColors.primary : AppColors.surface,
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected ? AppColors.primary : AppColors.outlineVariant,
+            ),
+          ),
+          child: Text(
+            text,
+            style: AppTypography.labelLarge.copyWith(
+              color: selected ? Colors.white : AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _NotificationTile extends StatelessWidget {
   const _NotificationTile({
@@ -278,12 +389,19 @@ class _NotificationTile extends StatelessWidget {
   final NotificationItem notification;
   final VoidCallback onTap;
 
+  NotificationMetadata get _metadata => NotificationMetadata.fromData(
+        notification.data,
+        fallbackType: notification.type,
+      );
+
   IconData _iconForType(String type) {
     switch (type) {
       case 'chat_message':
         return PhosphorIcons.chatCircleText;
       case 'new_job':
         return PhosphorIcons.briefcase;
+      case 'job_application_received':
+      case 'job_application_accepted':
       case 'job_matched':
         return PhosphorIcons.handshake;
       case 'job_started':
@@ -311,8 +429,11 @@ class _NotificationTile extends StatelessWidget {
     }
   }
 
-  Color _iconColorForType(String type) {
-    switch (type) {
+  Color _iconColorForMetadata(NotificationMetadata metadata) {
+    if (metadata.priority == NotificationPriority.actionRequired) {
+      return AppColors.primary;
+    }
+    switch (metadata.type) {
       case 'job_completed':
       case 'job_completion_submitted':
       case 'job_matched':
@@ -345,19 +466,19 @@ class _NotificationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool unread = !notification.isRead;
-    final Color iconColor = _iconColorForType(notification.type);
+    final NotificationMetadata metadata = _metadata;
+    final Color iconColor = _iconColorForMetadata(metadata);
 
     return InkWell(
       onTap: onTap,
       child: Container(
         color: unread
-            ? AppColors.primaryFixed.withAlpha((0.25 * 255).round())
+            ? AppColors.primaryFixed.withAlpha((0.22 * 255).round())
             : Colors.transparent,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            // Icon circle
             Container(
               width: 44,
               height: 44,
@@ -366,13 +487,12 @@ class _NotificationTile extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                _iconForType(notification.type),
+                _iconForType(metadata.type),
                 size: 22,
                 color: iconColor,
               ),
             ),
             const SizedBox(width: 12),
-            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -401,6 +521,18 @@ class _NotificationTile extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (metadata.jobTitle != null) ...<Widget>[
+                    const SizedBox(height: 3),
+                    Text(
+                      metadata.jobTitle!,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                   const SizedBox(height: 4),
                   Text(
                     notification.body,
@@ -412,10 +544,43 @@ class _NotificationTile extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 6,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: <Widget>[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: iconColor.withAlpha((0.1 * 255).round()),
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          metadata.actionLabel,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: iconColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (metadata.isActionRequired) ...<Widget>[
+                        Text(
+                          'Action needed',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
               ),
             ),
-            // Unread dot
             if (unread)
               Padding(
                 padding: const EdgeInsets.only(left: 8, top: 4),
@@ -434,10 +599,6 @@ class _NotificationTile extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════
-//  Skeleton shimmer placeholder
-// ═══════════════════════════════════════════════════════════════════════
 
 class _NotificationSkeleton extends StatelessWidget {
   const _NotificationSkeleton({super.key});

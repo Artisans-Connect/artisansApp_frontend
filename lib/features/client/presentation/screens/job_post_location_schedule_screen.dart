@@ -41,8 +41,8 @@ class _JobPostLocationScheduleScreenState
   bool _needsManualPin = false;
   List<PlaceSuggestion> _placeSuggestions = <PlaceSuggestion>[];
   LatLng _pin = LatLng(
-    DeviceLocation.accraDefault.latitude,
-    DeviceLocation.accraDefault.longitude,
+    DeviceLocation.knustDefault.latitude,
+    DeviceLocation.knustDefault.longitude,
   );
 
   String _urgency = 'asap';
@@ -176,6 +176,10 @@ class _JobPostLocationScheduleScreenState
 
   Future<void> _useCurrentLocation() async {
     if (_usingCurrentLocation) return;
+    final hasPermission =
+        await DeviceLocationService.requestPermissionInteractive(context);
+    if (!hasPermission) return;
+
     setState(() => _usingCurrentLocation = true);
     try {
       final loc = await DeviceLocationService.getCurrentOrDefault();

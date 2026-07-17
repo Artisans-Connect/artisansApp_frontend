@@ -66,6 +66,7 @@ class ClientBooking {
     this.cancellationFeeCurrency,
     this.jobMode,
     this.scheduledFor,
+    this.workEndedAt,
     this.isLocalDraft = false,
     this.draftData,
     this.draftSavedAt,
@@ -102,6 +103,7 @@ class ClientBooking {
   final String? cancellationFeeCurrency;
   final String? jobMode;
   final String? scheduledFor;
+  final String? workEndedAt;
   final bool isLocalDraft;
   final Map<String, dynamic>? draftData;
   final String? draftSavedAt;
@@ -122,6 +124,7 @@ class ClientBooking {
   /// Whether this job can be cancelled by the client from the tracking screen
   bool get isClientCancellable =>
       backendStatus == 'matched' ||
+      backendStatus == 'scheduled_confirmed' ||
       backendStatus == 'on_the_way' ||
       backendStatus == 'arrived';
 
@@ -184,6 +187,7 @@ class ClientBooking {
         'cancellation_fee_currency': cancellationFeeCurrency,
         'job_mode': jobMode,
         'scheduled_for': scheduledFor,
+        'work_ended_at': workEndedAt,
         'isLocalDraft': isLocalDraft,
         'draftData': draftData,
         'draftSavedAt': draftSavedAt,
@@ -272,6 +276,8 @@ class ClientBooking {
     final String jobMode = (json['job_mode'] as String? ?? '').toLowerCase();
     final ClientBookingStatus status = switch (statusRaw) {
       'matched' => ClientBookingStatus.accepted,
+      // Worker confirmed for a future scheduled slot; activates near the time.
+      'scheduled_confirmed' => ClientBookingStatus.accepted,
       'on_the_way' => ClientBookingStatus.accepted,
       'arrived' => ClientBookingStatus.accepted,
       'in_progress' => ClientBookingStatus.inProgress,
@@ -336,6 +342,7 @@ class ClientBooking {
       cancellationFeeCurrency: json['cancellation_fee_currency'] as String?,
       jobMode: json['job_mode'] as String?,
       scheduledFor: json['scheduled_for'] as String?,
+      workEndedAt: json['work_ended_at'] as String?,
       baseRate: (completion['base_rate'] as num?)?.toDouble(),
       distanceCost: (completion['distance_cost'] as num?)?.toDouble(),
       urgencyPremium: (completion['urgency_premium'] as num?)?.toDouble(),
