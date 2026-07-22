@@ -1,11 +1,11 @@
 {
-    "name": "artisans_app",
-    "short_name": "artisans_app",
+    "name": "CraftMatch",
+    "short_name": "CraftMatch",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#4A79E6",
     "theme_color": "#4A79E6",
-    "description": "A new Flutter project.",
+    "description": "Connect with trusted local artisans for home and service jobs.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

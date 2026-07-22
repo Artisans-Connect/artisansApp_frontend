@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,6 +6,7 @@ import '../../../core/services/profile_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
+import '../../models/picked_media.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_input.dart';
 import '../../widgets/app_toast.dart';
@@ -62,7 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _hourlyRateController;
   late final TextEditingController _serviceAreasController;
 
-  File? _imageFile;
+  PickedMedia? _imageFile;
   final ImagePicker _picker = ImagePicker();
   bool _isSaving = false;
 
@@ -184,8 +183,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     final XFile? image =
                         await _picker.pickImage(source: ImageSource.gallery);
                     if (image != null) {
+                      final PickedMedia media =
+                          await PickedMedia.fromXFile(image);
                       setState(() {
-                        _imageFile = File(image.path);
+                        _imageFile = media;
                       });
                     }
                   },
@@ -198,8 +199,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     final XFile? image =
                         await _picker.pickImage(source: ImageSource.camera);
                     if (image != null) {
+                      final PickedMedia media =
+                          await PickedMedia.fromXFile(image);
                       setState(() {
-                        _imageFile = File(image.path);
+                        _imageFile = media;
                       });
                     }
                   },
@@ -242,14 +245,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   DecorationImage? _getAvatarImage() {
     if (_imageFile != null) {
-      return DecorationImage(image: FileImage(_imageFile!), fit: BoxFit.cover);
+      return DecorationImage(
+        image: MemoryImage(_imageFile!.bytes),
+        fit: BoxFit.cover,
+      );
     }
     final String? sessionUrl = SharedUserContext.session.avatarUrl;
     if (sessionUrl != null) {
       if (sessionUrl.startsWith('http')) {
         return DecorationImage(image: NetworkImage(sessionUrl), fit: BoxFit.cover);
-      } else {
-        return DecorationImage(image: FileImage(File(sessionUrl)), fit: BoxFit.cover);
       }
     }
     return null;

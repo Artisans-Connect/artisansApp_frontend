@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 
 const String artisanLogoAsset = 'assets/ArtisanConnect Logo - 1.png';
@@ -46,11 +44,7 @@ class ArtisanLogoAvatar extends StatelessWidget {
                     fit: fit,
                     errorBuilder: (_, __, ___) => const _LogoFallback(),
                   )
-                : Image.file(
-                    File(url),
-                    fit: fit,
-                    errorBuilder: (_, __, ___) => const _LogoFallback(),
-                  ),
+                : const _LogoFallback(),
       ),
     );
   }
@@ -83,11 +77,7 @@ class ArtisanLogoPanel extends StatelessWidget {
                 fit: fit,
                 errorBuilder: (_, __, ___) => const _LogoFallback(),
               )
-            : Image.file(
-                File(url),
-                fit: fit,
-                errorBuilder: (_, __, ___) => const _LogoFallback(),
-              );
+            : const _LogoFallback();
 
     final Widget sized = SizedBox(width: width, height: height, child: child);
     if (borderRadius == null) return sized;

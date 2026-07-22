@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -10,6 +8,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/models/picked_media.dart';
+import '../../../../shared/widgets/picked_media_image.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../widgets/job_post_wizard_scaffold.dart';
@@ -29,7 +29,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
   late TextEditingController _descriptionController;
   late ClientJobDraft _draft;
   final ImagePicker _picker = ImagePicker();
-  final List<File> _localPhotos = <File>[];
+  final List<PickedMedia> _localPhotos = <PickedMedia>[];
   final List<String> _uploadedUrls = <String>[];
   bool _isUploadingPhoto = false;
   static const int _maxPhotos = 5;
@@ -87,15 +87,15 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
     );
     if (image == null || !mounted) return;
 
-    final File file = File(image.path);
+    final PickedMedia media = await PickedMedia.fromXFile(image);
     setState(() {
-      _localPhotos.add(file);
+      _localPhotos.add(media);
       _isUploadingPhoto = true;
     });
 
     try {
       final String? url =
-          await StorageService.instance.uploadJobPhoto(file);
+          await StorageService.instance.uploadJobPhoto(media);
       if (!mounted) return;
       if (url != null) {
         setState(() {
@@ -104,7 +104,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
         });
       } else {
         setState(() {
-          _localPhotos.remove(file);
+          _localPhotos.remove(media);
           _isUploadingPhoto = false;
         });
         if (mounted) {
@@ -114,7 +114,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _localPhotos.remove(file);
+        _localPhotos.remove(media);
         _isUploadingPhoto = false;
       });
       AppToast.showError(context, e, fallback: 'Could not upload photo.');
@@ -310,7 +310,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
               // Show uploaded photos
               for (int i = 0; i < _localPhotos.length; i++)
                 _PhotoThumb(
-                  file: _localPhotos[i],
+                  media: _localPhotos[i],
                   onRemove: () => _removePhoto(i),
                 ),
               // Add button
@@ -390,9 +390,9 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
 }
 
 class _PhotoThumb extends StatelessWidget {
-  const _PhotoThumb({required this.file, required this.onRemove});
+  const _PhotoThumb({required this.media, required this.onRemove});
 
-  final File file;
+  final PickedMedia media;
   final VoidCallback onRemove;
 
   @override
@@ -401,8 +401,8 @@ class _PhotoThumb extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-          child: Image.file(
-            file,
+          child: PickedMediaImage(
+            media: media,
             width: 80,
             height: 80,
             fit: BoxFit.cover,

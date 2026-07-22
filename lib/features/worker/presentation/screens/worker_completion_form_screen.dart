@@ -1,11 +1,10 @@
-import 'dart:io';
-
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../shared/models/picked_media.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/worker_job.dart';
 import '../utils/worker_job_mapper.dart';
@@ -34,7 +33,7 @@ class _WorkerCompletionFormScreenState
   final _notesController = TextEditingController();
   final JobsService _jobsService = JobsService();
   final ImagePicker _picker = ImagePicker();
-  final List<File> _photos = <File>[];
+  final List<PickedMedia> _photos = <PickedMedia>[];
   bool _isSubmitting = false;
 
   @override
@@ -72,7 +71,7 @@ class _WorkerCompletionFormScreenState
     setState(() => _isSubmitting = true);
     try {
       final List<String> photoUrls = <String>[];
-      for (final File file in _photos) {
+      for (final PickedMedia file in _photos) {
         final String? url =
             await StorageService.instance.uploadCompletionPhoto(file);
         if (url != null) photoUrls.add(url);
@@ -224,6 +223,8 @@ class _WorkerCompletionFormScreenState
     if (_isSubmitting || _photos.length >= 4) return;
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image == null || !mounted) return;
-    setState(() => _photos.add(File(image.path)));
+    final PickedMedia media = await PickedMedia.fromXFile(image);
+    if (!mounted) return;
+    setState(() => _photos.add(media));
   }
 }

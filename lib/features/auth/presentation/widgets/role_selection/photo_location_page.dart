@@ -1,10 +1,11 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../../core/theme/app_typography.dart';
 import '../../../../../core/theme/design_tokens.dart';
 import '../../../../../shared/widgets/app_input.dart';
+import '../../../../../shared/widgets/picked_media_image.dart';
+import '../../../../../shared/models/picked_media.dart';
 import '../../../models/onboarding_session.dart';
 import 'onboarding_atoms.dart';
 
@@ -20,7 +21,7 @@ class PhotoLocationPage extends StatelessWidget {
   });
 
   final OnboardingSession session;
-  final File? imageFile;
+  final PickedMedia? imageFile;
   final TextEditingController locationController;
   final bool isLoadingLocation;
   final VoidCallback onPickImage;
@@ -74,8 +75,12 @@ class PhotoLocationPage extends StatelessWidget {
                           ),
                           child: imageFile != null
                               ? ClipOval(
-                                  child: Image.file(imageFile!,
-                                      fit: BoxFit.cover),
+                                  child: PickedMediaImage(
+                                    media: imageFile!,
+                                    fit: BoxFit.cover,
+                                    width: 150,
+                                    height: 150,
+                                  ),
                                 )
                               : Icon(PhosphorIcons.cameraPlus,
                                   color: DesignTokens.textSecondary, size: 42),

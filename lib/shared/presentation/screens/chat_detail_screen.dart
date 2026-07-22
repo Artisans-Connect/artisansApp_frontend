@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,6 +13,7 @@ import '../../../core/services/chat_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_toast.dart';
+import '../../models/picked_media.dart';
 import '../../widgets/error_state_view.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../features/client/presentation/navigation/client_navigation.dart';
@@ -193,8 +193,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           : await _picker.pickImage(source: source, imageQuality: 85);
       if (file == null) return;
 
+      final PickedMedia media = await PickedMedia.fromXFile(file);
       final String? publicUrl =
-          await StorageService.instance.uploadChatMedia(File(file.path));
+          await StorageService.instance.uploadChatMedia(media);
       if (publicUrl == null) {
         if (!mounted) return;
         AppToast.showError(context, Exception('Media upload failed.'),

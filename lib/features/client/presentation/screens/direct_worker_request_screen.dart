@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -20,6 +19,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/models/picked_media.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/job_location_map.dart';
@@ -314,8 +314,9 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     if (file == null) return;
     setState(() => _uploadingPhoto = true);
     try {
+      final PickedMedia media = await PickedMedia.fromXFile(file);
       final String? url =
-          await StorageService.instance.uploadJobPhoto(File(file.path));
+          await StorageService.instance.uploadJobPhoto(media);
       if (!mounted) return;
       if (url != null) setState(() => _photoUrls.add(url));
     } catch (e) {

@@ -1,8 +1,8 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:artisans_app/core/theme/index.dart';
+import '../../../../shared/models/picked_media.dart';
+import '../../../../shared/widgets/picked_media_image.dart';
 
 class CompletionPhotoPicker extends StatelessWidget {
   const CompletionPhotoPicker({
@@ -13,7 +13,7 @@ class CompletionPhotoPicker extends StatelessWidget {
     this.isBusy = false,
   });
 
-  final List<File> photos;
+  final List<PickedMedia> photos;
   final VoidCallback onAdd;
   final ValueChanged<int> onRemove;
   final bool isBusy;
@@ -73,7 +73,7 @@ class _PhotoSlot extends StatelessWidget {
   });
 
   final bool add;
-  final File? file;
+  final PickedMedia? file;
   final VoidCallback? onTap;
   final bool isBusy;
 
@@ -106,7 +106,7 @@ class _PhotoSlot extends StatelessWidget {
                   children: <Widget>[
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
-                      child: Image.file(file!, fit: BoxFit.cover),
+                      child: PickedMediaImage(media: file!, fit: BoxFit.cover),
                     ),
                     Positioned(
                       right: 4,

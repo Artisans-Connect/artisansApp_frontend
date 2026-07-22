@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -9,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/models/picked_media.dart';
 
 class WorkerGalleryScreen extends StatefulWidget {
   const WorkerGalleryScreen({super.key});
@@ -79,8 +79,9 @@ class _WorkerGalleryScreenState extends State<WorkerGalleryScreen> {
 
     setState(() => _isUploadingPhoto = true);
     try {
-      final File file = File(image.path);
-      final String? url = await StorageService.instance.uploadCompletionPhoto(file);
+      final PickedMedia media = await PickedMedia.fromXFile(image);
+      final String? url =
+          await StorageService.instance.uploadCompletionPhoto(media);
       if (url != null) {
         await ProfileService.instance.addGalleryPhoto(url);
         await _fetchGallery();

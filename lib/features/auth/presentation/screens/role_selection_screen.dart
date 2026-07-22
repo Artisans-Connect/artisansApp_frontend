@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,6 +14,7 @@ import '../../../../../core/services/storage_service.dart';
 import '../../../../../core/theme/design_tokens.dart';
 import '../../../../../core/utils/icon_mapper.dart';
 import '../../../../../shared/models/user_profile_view.dart';
+import '../../../../../shared/models/picked_media.dart';
 import '../../../../../shared/widgets/app_toast.dart';
 import '../../../../../shared/widgets/gradient_button.dart';
 import '../../../worker/presentation/worker_shell.dart';
@@ -78,7 +78,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   final GlobalKey<FormState> _bioFormKey = GlobalKey<FormState>();
 
   // Photo
-  File? _imageFile;
+  PickedMedia? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
   int get _totalDots {
@@ -508,8 +508,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     final XFile? image =
                         await _picker.pickImage(source: ImageSource.gallery);
                     if (image != null) {
+                      final PickedMedia media =
+                          await PickedMedia.fromXFile(image);
                       setState(() {
-                        _imageFile = File(image.path);
+                        _imageFile = media;
                         _session.avatarUrl = image.path;
                       });
                     }
@@ -524,8 +526,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     final XFile? image =
                         await _picker.pickImage(source: ImageSource.camera);
                     if (image != null) {
+                      final PickedMedia media =
+                          await PickedMedia.fromXFile(image);
                       setState(() {
-                        _imageFile = File(image.path);
+                        _imageFile = media;
                         _session.avatarUrl = image.path;
                       });
                     }

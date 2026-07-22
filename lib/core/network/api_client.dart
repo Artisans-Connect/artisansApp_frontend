@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -90,8 +89,6 @@ class ApiClient {
     } on ApiException {
       rethrow;
     } on TimeoutException catch (e) {
-      throw NetworkException(e);
-    } on SocketException catch (e) {
       throw NetworkException(e);
     } on http.ClientException catch (e) {
       throw NetworkException(e);

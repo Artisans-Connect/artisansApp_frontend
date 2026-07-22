@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../constants/app_constants.dart';
+import '../../shared/models/picked_media.dart';
 
 class StorageException implements Exception {
   const StorageException(this.message);
@@ -15,32 +15,34 @@ class StorageService {
 
   final _supabase = Supabase.instance.client;
 
-  Future<String?> uploadAvatar(File file) async {
-    return _uploadFile(file, AppConstants.avatarsBucket);
+  Future<String?> uploadAvatar(PickedMedia media) async {
+    return _uploadMedia(media, AppConstants.avatarsBucket);
   }
 
-  Future<String?> uploadJobPhoto(File file) async {
-    return _uploadFile(file, AppConstants.jobPhotosBucket);
+  Future<String?> uploadJobPhoto(PickedMedia media) async {
+    return _uploadMedia(media, AppConstants.jobPhotosBucket);
   }
 
-  Future<String?> uploadChatMedia(File file) async {
-    return _uploadFile(file, AppConstants.chatMediaBucket);
+  Future<String?> uploadChatMedia(PickedMedia media) async {
+    return _uploadMedia(media, AppConstants.chatMediaBucket);
   }
 
-  Future<String?> uploadCompletionPhoto(File file) async {
-    return _uploadFile(file, AppConstants.completionPhotosBucket);
+  Future<String?> uploadCompletionPhoto(PickedMedia media) async {
+    return _uploadMedia(media, AppConstants.completionPhotosBucket);
   }
 
-  Future<String?> _uploadFile(File file, String bucketName) async {
+  Future<String?> _uploadMedia(PickedMedia media, String bucketName) async {
     try {
       final String userId = _supabase.auth.currentUser?.id ?? 'anonymous';
-      final String originalName = file.path.split(Platform.pathSeparator).last;
+      final String originalName = media.name.isNotEmpty
+          ? media.name
+          : media.path.split(RegExp(r'[/\\]')).last;
       final String safeName = originalName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
       final String fileName =
           '$userId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
-      await _supabase.storage.from(bucketName).upload(
+      await _supabase.storage.from(bucketName).uploadBinary(
             fileName,
-            file,
+            media.bytes,
             fileOptions: FileOptions(
               cacheControl: '3600',
               upsert: false,
