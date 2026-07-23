@@ -1,0 +1,53 @@
+name: Deploy Flutter Web PWA to Vercel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Web App
+        run: flutter build web --release
+
+      - name: Prepare build files
+        run: |
+          # Copy vercel.json into the build output directory
+          cp vercel.json build/web/vercel.json
+          
+          # Move Vercel config folder to build output directory so Vercel knows the project context
+          if [ -d ".vercel" ]; then
+            cp -r .vercel build/web/
+          fi
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          # Install Vercel CLI
+          npm install -g vercel
+          
+          # Deploy build/web folder directly as production
+          cd build/web
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes

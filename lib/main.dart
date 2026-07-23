@@ -6,6 +6,8 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:flutter_web_plugins/url_strategy.dart';
+
 import 'app.dart';
 import 'core/cache/cache_store.dart';
 import 'core/constants/app_constants.dart';
@@ -18,6 +20,10 @@ import 'features/worker/presentation/worker_dev_router.dart';
 /// Set `--dart-define=WORKER_DEV=true` to preview worker UI.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (kIsWeb) {
+    usePathUrlStrategy();
+  }
+
   
   await dotenv.load(fileName: ".env");
 

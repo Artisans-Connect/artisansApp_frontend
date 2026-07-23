@@ -1,13 +1,11 @@
 {
   "version": 2,
+  "buildCommand": "if [ ! -d \"flutter\" ]; then git clone https://github.com/flutter/flutter.git -b stable --depth 1; fi && ./flutter/bin/flutter build web --release",
   "outputDirectory": "build/web",
-  "routes": [
+  "rewrites": [
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -35,3 +33,4 @@
     }
   ]
 }
+
