@@ -16,7 +16,9 @@ import '../../../../shared/widgets/gradient_button.dart';
 import '../../../../shared/widgets/legal_agreement_text.dart';
 import '../../../../shared/widgets/secondary_button.dart';
 import '../../models/onboarding_session.dart';
+import '../../models/password_strength.dart';
 import '../../widgets/auth_error_banner.dart';
+import '../../widgets/password_strength_meter.dart';
 import 'role_selection_screen.dart';
 import 'verify_email_screen.dart';
 
@@ -45,13 +47,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_handlePasswordChanged);
+  }
+
+  @override
   void dispose() {
+    _passwordController.removeListener(_handlePasswordChanged);
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _handlePasswordChanged() {
+    setState(() {});
   }
 
   Future<void> _submit() async {
@@ -279,10 +292,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             });
                           },
                         ),
-                        validator: (String? v) => (v == null || v.length < 6)
-                            ? 'Enter at least 6 characters.'
-                            : null,
+                        validator: PasswordPolicy.validate,
                       ),
+                      const SizedBox(height: 10),
+                      PasswordStrengthMeter(password: _passwordController.text),
                       const SizedBox(height: 14),
                       Text('Confirm Password',
                           style: AppTypography.bodyLarge.copyWith(
