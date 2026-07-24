@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import '../services/platform_service.dart';
 import '../../shared/widgets/app_toast.dart';
 
 /// Neutral fallback when GPS is unavailable. Callers must not treat this as
@@ -32,21 +33,24 @@ class DeviceLocationService {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           title: const Text('Location Services Disabled'),
-          content: const Text(
-            'GPS/location services are disabled on your device. Please turn them on so we can find your location.',
+          content: Text(
+            PlatformService.supportsNativeSettings
+                ? 'GPS/location services are disabled on your device. Please turn them on so we can find your location.'
+                : 'Location services are disabled in your browser. Please allow location access in your browser settings.',
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(PlatformService.supportsNativeSettings ? 'Cancel' : 'OK'),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await Geolocator.openLocationSettings();
-              },
-              child: const Text('Enable GPS'),
-            ),
+            if (PlatformService.supportsNativeSettings)
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Geolocator.openLocationSettings();
+                },
+                child: const Text('Enable GPS'),
+              ),
           ],
         ),
       );
@@ -81,21 +85,24 @@ class DeviceLocationService {
         barrierDismissible: false,
         builder: (context) => AlertDialog(
           title: const Text('Location Permission Required'),
-          content: const Text(
-            'Location permission is permanently denied in your device settings. Please enable it to use this feature.',
+          content: Text(
+            PlatformService.supportsNativeSettings
+                ? 'Location permission is permanently denied in your device settings. Please enable it to use this feature.'
+                : 'Location permission is blocked in your browser. Please reset location permissions in your browser URL bar/settings.',
           ),
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
+              child: Text(PlatformService.supportsNativeSettings ? 'Cancel' : 'OK'),
             ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await Geolocator.openAppSettings();
-              },
-              child: const Text('Open Settings'),
-            ),
+            if (PlatformService.supportsNativeSettings)
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await Geolocator.openAppSettings();
+                },
+                child: const Text('Open Settings'),
+              ),
           ],
         ),
       );

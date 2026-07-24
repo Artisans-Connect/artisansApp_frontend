@@ -93,12 +93,18 @@ class WorkersService {
     return response as List<dynamic>;
   }
 
-  Future<dynamic> applyToJob(String jobId, {String? message}) async {
+  Future<dynamic> applyToJob(
+    dynamic jobId, {
+    String? message,
+    double? proposedRate,
+  }) async {
     return await _api.post(
-      '/workers/accept/$jobId',
+      '/workers/job-requests/$jobId/apply',
       body: <String, dynamic>{
         if (message != null && message.trim().isNotEmpty)
           'message': message.trim(),
+        if (proposedRate != null && proposedRate > 0)
+          'proposed_rate': proposedRate,
       },
     );
   }

@@ -10,6 +10,7 @@ import '../../../../../core/location/place_lookup_service.dart';
 import '../../../../../core/navigation/auth_navigation.dart';
 import '../../../../../core/network/api_client.dart';
 import '../../../../../core/services/auth_service.dart';
+import '../../../../../core/services/platform_service.dart';
 import '../../../../../core/services/storage_service.dart';
 import '../../../../../core/theme/design_tokens.dart';
 import '../../../../../core/utils/icon_mapper.dart';
@@ -517,24 +518,25 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     }
                   },
                 ),
-                ListTile(
-                  leading:
-                      Icon(PhosphorIcons.camera, color: DesignTokens.primary),
-                  title: const Text('Take a Photo'),
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    final XFile? image =
-                        await _picker.pickImage(source: ImageSource.camera);
-                    if (image != null) {
-                      final PickedMedia media =
-                          await PickedMedia.fromXFile(image);
-                      setState(() {
-                        _imageFile = media;
-                        _session.avatarUrl = image.path;
-                      });
-                    }
-                  },
-                ),
+                if (PlatformService.supportsCamera)
+                  ListTile(
+                    leading:
+                        Icon(PhosphorIcons.camera, color: DesignTokens.primary),
+                    title: const Text('Take a Photo'),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      final XFile? image =
+                          await _picker.pickImage(source: ImageSource.camera);
+                      if (image != null) {
+                        final PickedMedia media =
+                            await PickedMedia.fromXFile(image);
+                        setState(() {
+                          _imageFile = media;
+                          _session.avatarUrl = image.path;
+                        });
+                      }
+                    },
+                  ),
                 if (_imageFile != null) ...<Widget>[
                   const Divider(),
                   ListTile(

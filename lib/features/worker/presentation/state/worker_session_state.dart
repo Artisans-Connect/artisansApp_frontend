@@ -7,6 +7,8 @@ import '../models/worker_ui_contracts.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/worker_bottom_nav.dart';
 
+import '../../../../core/services/job_realtime_service.dart';
+
 enum WorkerJobPhase {
   none,
   accepted,
@@ -21,6 +23,7 @@ enum WorkerProfilePage { earnings, stats, history }
 
 class WorkerSessionState extends ChangeNotifier {
   final WorkersService _workersService = WorkersService();
+  final JobRealtimeService _realtimeService = JobRealtimeService();
 
   WorkerNavTab currentTab = WorkerNavTab.explore;
   WorkerProfilePage profilePage = WorkerProfilePage.earnings;
@@ -80,6 +83,7 @@ class WorkerSessionState extends ChangeNotifier {
     try {
       final dynamic data = await _workersService.getActiveJob();
       if (data is! Map<String, dynamic>) {
+        _realtimeService.unsubscribe();
         activeJob = null;
         jobPhase = WorkerJobPhase.none;
         notifyListeners();
@@ -90,6 +94,11 @@ class WorkerSessionState extends ChangeNotifier {
       jobPhase = _phaseForStatus(status);
       currentTab = WorkerNavTab.bookings;
       notifyListeners();
+
+      _realtimeService.subscribeToJob(
+        activeJob!.id,
+        onUpdate: (_) => loadActiveJob(),
+      );
     } catch (_) {
       // Keep shell usable; request/booking screens still expose retry states.
     }
@@ -97,6 +106,7 @@ class WorkerSessionState extends ChangeNotifier {
 
   @override
   void dispose() {
+    _realtimeService.unsubscribe();
     super.dispose();
   }
 
@@ -150,6 +160,7 @@ class WorkerSessionState extends ChangeNotifier {
   }
 
   void cancelActiveJob() {
+    _realtimeService.unsubscribe();
     activeJob = null;
     jobPhase = WorkerJobPhase.none;
     currentTab = WorkerNavTab.bookings;

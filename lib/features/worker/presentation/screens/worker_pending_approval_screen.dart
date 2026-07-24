@@ -81,6 +81,32 @@ class WorkerPendingApprovalScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.md),
+            if (job.grossAmount != null || job.earnedAmount != null) ...[
+              JobDetailCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text('PROPOSED PAYOUT', style: AppTypography.labelCaps),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      'GH₵ ${(job.earnedAmount ?? job.grossAmount ?? 0).toStringAsFixed(2)}',
+                      style: AppTypography.titleLarge.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (job.baseRate != null) ...[
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Base: GH₵ ${job.baseRate!.toStringAsFixed(2)} • Distance: GH₵ ${(job.distanceCost ?? 0).toStringAsFixed(2)}',
+                        style: AppTypography.bodySmall,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+            ],
             FilledButton.icon(
               onPressed: () {
                 Navigator.of(context).push(

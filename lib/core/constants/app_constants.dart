@@ -66,4 +66,7 @@ class AppConstants {
 
   /// Set MAPBOX_ACCESS_TOKEN in .env for client-facing embedded Mapbox maps.
   static String get mapboxAccessToken => _env('MAPBOX_ACCESS_TOKEN') ?? '';
+
+  /// Set FIREBASE_VAPID_KEY in .env for web FCM push notifications.
+  static String get firebaseVapidKey => _env('FIREBASE_VAPID_KEY') ?? '';
 }

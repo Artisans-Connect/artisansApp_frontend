@@ -194,6 +194,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       onPrimary: _postJob,
       secondaryLabel: 'Save draft',
       onSecondary: _saveDraft,
+      onBack: () => Navigator.pop(context),
       showDiscardOnBack: _draft.hasAnyData,
       onDiscard: () => ClientNavigation.popToShell(context),
       child: Column(
@@ -276,6 +277,11 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                           _PriceBreakdownRow(
                             label: 'Verified client bonus',
                             amount: _estimate!.verificationPremium,
+                          ),
+                        if (_estimate!.verifiedWorkerMarketPremium > 0)
+                          _PriceBreakdownRow(
+                            label: 'Verified artisan premium',
+                            amount: _estimate!.verifiedWorkerMarketPremium,
                           ),
                         const Divider(height: 20),
                         Text(

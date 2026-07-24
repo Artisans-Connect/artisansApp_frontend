@@ -356,23 +356,13 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     }
 
     try {
-      final dynamic created = await _jobsService.createJob(
+      await _jobsService.createJob(
         payload,
         idempotencyKey: idempotencyKey,
       );
       if (!mounted) return;
-      final Map<String, dynamic> jobData =
-          Map<String, dynamic>.from(created as Map);
       AppToast.showSuccess(context, 'Request sent to $_name.');
-      if (_urgency == 'scheduled') {
-        ClientNavigation.goToBookingsTab(context);
-      } else {
-        ClientNavigation.startFindingArtisan(
-          context,
-          jobData: jobData,
-          artisan: _artisan,
-        );
-      }
+      ClientNavigation.goToBookingsTab(context);
     } catch (e) {
       final bool offline = e is NetworkException;
       if (offline) {

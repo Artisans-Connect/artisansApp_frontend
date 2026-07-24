@@ -10,11 +10,12 @@ import '../../../core/errors/error_messages.dart';
 import '../../../core/navigation/app_routes.dart';
 import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
+import '../../../core/services/platform_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_toast.dart';
-import '../../models/picked_media.dart';
 import '../../widgets/error_state_view.dart';
+import '../../models/picked_media.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../features/client/presentation/navigation/client_navigation.dart';
 import '../../utils/shared_user_context.dart';
@@ -566,13 +567,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             icon: Icon(PhosphorIcons.video, color: AppColors.primary),
             tooltip: 'Video',
           ),
-          IconButton(
-            onPressed: _isUploadingMedia
-                ? null
-                : () => _pickAndUploadAttachment(ImageSource.camera),
-            icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
-            tooltip: 'Camera',
-          ),
+          if (PlatformService.supportsCamera)
+            IconButton(
+              onPressed: _isUploadingMedia
+                  ? null
+                  : () => _pickAndUploadAttachment(ImageSource.camera),
+              icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
+              tooltip: 'Camera',
+            ),
           IconButton(
             onPressed: _isUploadingMedia
                 ? null

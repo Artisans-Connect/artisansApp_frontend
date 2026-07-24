@@ -18,7 +18,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final earned = job.earnedAmount ?? 145;
+    final earned = job.earnedAmount ?? job.grossAmount ?? job.artisanPayout ?? 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,

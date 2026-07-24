@@ -27,7 +27,10 @@ class ClientNavigation {
   static void popToShell(BuildContext context) {
     Navigator.popUntil(
       context,
-      (Route<dynamic> route) => route.settings.name == ClientShell.routeName,
+      (Route<dynamic> route) =>
+          route.settings.name == AppRoutes.clientHome ||
+          route.settings.name == ClientShell.routeName ||
+          route.isFirst,
     );
   }
 
@@ -92,17 +95,35 @@ class ClientNavigation {
   static Future<void> callPhone(BuildContext context, String phone) async {
     final String cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
     if (cleaned.isEmpty) {
-      AppToast.showInfo(context, 'This worker has no phone number yet.');
+      AppToast.showInfo(context, 'This user has no phone number available.');
       return;
     }
-    final bool launched = await launchUrl(Uri(scheme: 'tel', path: cleaned));
-    if (!launched && context.mounted) {
-      AppToast.showError(
-        context,
-        Exception('Could not start a call to $phone.'),
-        fallback: 'Could not start a call to $phone.',
-      );
+    try {
+      final bool launched = await launchUrl(Uri(scheme: 'tel', path: cleaned));
+      if (!launched && context.mounted) {
+        showPhoneDialog(context, phone);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        showPhoneDialog(context, phone);
+      }
     }
+  }
+
+  static void showPhoneDialog(BuildContext context, String phone) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Phone Contact'),
+        content: SelectableText('Phone number: $phone'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   static void goToBookingsTab(BuildContext context) {

@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/services/platform_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -153,15 +154,16 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
                   _pickPhoto(ImageSource.gallery);
                 },
               ),
-              ListTile(
-                leading:
-                    Icon(PhosphorIcons.camera, color: AppColors.primary),
-                title: const Text('Take a Photo'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickPhoto(ImageSource.camera);
-                },
-              ),
+              if (PlatformService.supportsCamera)
+                ListTile(
+                  leading:
+                      Icon(PhosphorIcons.camera, color: AppColors.primary),
+                  title: const Text('Take a Photo'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickPhoto(ImageSource.camera);
+                  },
+                ),
             ],
           ),
         ),

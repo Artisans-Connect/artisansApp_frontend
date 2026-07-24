@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:artisans_app/core/theme/index.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../client/presentation/navigation/client_navigation.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/job_site_map.dart';
 import '../models/worker_job.dart';
@@ -31,12 +31,14 @@ class JobRequestDetailScreen extends StatefulWidget {
 class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
   final WorkersService _workersService = WorkersService();
   final TextEditingController _noteController = TextEditingController();
+  final TextEditingController _proposedRateController = TextEditingController();
   bool _applyLocked = false;
   bool _isApplying = false;
 
   @override
   void dispose() {
     _noteController.dispose();
+    _proposedRateController.dispose();
     super.dispose();
   }
 
@@ -48,9 +50,12 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
       _isApplying = true;
     });
     try {
+      final double? customRate =
+          double.tryParse(_proposedRateController.text.trim());
       final dynamic application = await _workersService.applyToJob(
         widget.job.id,
         message: _noteController.text,
+        proposedRate: customRate,
       );
       if (!mounted) return;
       if (application is Map<String, dynamic>) {
@@ -241,6 +246,20 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     _QuoteBreakdown(job: job),
                   ],
+                  Text('PROPOSED RATE (GH₵)', style: AppTypography.labelCaps),
+                  const SizedBox(height: AppSpacing.sm),
+                  TextField(
+                    controller: _proposedRateController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      hintText: 'Default rate: GH₵ ${(job.grossAmount ?? 0).round()}',
+                      prefixText: 'GH₵ ',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   Text('NOTE TO CLIENT', style: AppTypography.labelCaps),
                   const SizedBox(height: AppSpacing.sm),
@@ -320,16 +339,8 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
   }
 
   Future<void> _callClient(WorkerJob job) async {
-    final String phone =
-        job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
-    if (phone.isEmpty) {
-      AppToast.showInfo(context, 'Client phone number is not available yet.');
-      return;
-    }
-    final bool launched = await launchUrl(Uri(scheme: 'tel', path: phone));
-    if (!launched && mounted) {
-      AppToast.showInfo(context, 'Could not start the call.');
-    }
+    final String phone = job.clientPhone ?? '';
+    await ClientNavigation.callPhone(context, phone);
   }
 }
 

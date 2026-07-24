@@ -535,47 +535,49 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Work has already started. Your artisan will be notified and can accept or decline the termination.',
-                style: TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontSize: 14,
-                  color: DesignTokens.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: DesignTokens.accentWarm.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Note: This is not an instant cancellation. The artisan must agree to stop work.',
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Work has already started. Your artisan will be notified and can accept or decline the termination.',
                   style: TextStyle(
                     fontFamily: 'Satoshi',
-                    fontSize: 12,
+                    fontSize: 14,
                     color: DesignTokens.textSecondary,
-                    fontStyle: FontStyle.italic,
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: reasonCtrl,
-                maxLines: 3,
-                decoration: const InputDecoration(
-                  hintText: 'Why do you want to terminate this job?',
-                  border: OutlineInputBorder(),
-                  isDense: true,
+                const SizedBox(height: 14),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.accentWarm.withValues(alpha: 0.06),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Text(
+                    'Note: This is not an instant cancellation. The artisan must agree to stop work.',
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      color: DesignTokens.textSecondary,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonCtrl,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    hintText: 'Why do you want to terminate this job?',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(

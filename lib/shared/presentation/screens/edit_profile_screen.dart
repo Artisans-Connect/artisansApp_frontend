@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../../../core/services/platform_service.dart';
 import '../../../core/services/profile_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
@@ -191,22 +192,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     }
                   },
                 ),
-                ListTile(
-                  leading: Icon(PhosphorIcons.camera, color: AppColors.primary),
-                  title: const Text('Take a Photo'),
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    final XFile? image =
-                        await _picker.pickImage(source: ImageSource.camera);
-                    if (image != null) {
-                      final PickedMedia media =
-                          await PickedMedia.fromXFile(image);
-                      setState(() {
-                        _imageFile = media;
-                      });
-                    }
-                  },
-                ),
+                if (PlatformService.supportsCamera)
+                  ListTile(
+                    leading: Icon(PhosphorIcons.camera, color: AppColors.primary),
+                    title: const Text('Take a Photo'),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      final XFile? image =
+                          await _picker.pickImage(source: ImageSource.camera);
+                      if (image != null) {
+                        final PickedMedia media =
+                            await PickedMedia.fromXFile(image);
+                        setState(() {
+                          _imageFile = media;
+                        });
+                      }
+                    },
+                  ),
               ],
             ),
           ),

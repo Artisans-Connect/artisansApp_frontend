@@ -4,6 +4,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../client/presentation/navigation/client_navigation.dart';
 import '../../../../shared/presentation/navigation/shared_route_args.dart';
 import '../../../../shared/presentation/screens/chat_detail_screen.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -410,16 +411,8 @@ class _WorkerActivePreStartScreenState
   }
 
   Future<void> _callClient(BuildContext context, WorkerJob job) async {
-    final String phone =
-        job.clientPhone?.replaceAll(RegExp(r'[^0-9+]'), '') ?? '';
-    if (phone.isEmpty) {
-      AppToast.showInfo(context, 'Client phone number is not available yet.');
-      return;
-    }
-    final bool launched = await launchUrl(Uri(scheme: 'tel', path: phone));
-    if (!launched && context.mounted) {
-      AppToast.showInfo(context, 'Could not start the call.');
-    }
+    final String phone = job.clientPhone ?? '';
+    await ClientNavigation.callPhone(context, phone);
   }
 
   Future<void> _openDirections(WorkerJob job) async {
