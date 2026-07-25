@@ -35,6 +35,7 @@ jobs:
           echo "VERIFICATION_PORTAL_URL=${{ secrets.VERIFICATION_PORTAL_URL }}" >> .env
           echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" >> .env
           echo "MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}" >> .env
+          echo "FIREBASE_VAPID_KEY=${{ secrets.FIREBASE_VAPID_KEY }}" >> .env
 
       - name: Install dependencies
         run: flutter pub get

@@ -6,12 +6,12 @@ importScripts('https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-comp
 // Initialize Firebase App in Service Worker
 // The options will be automatically handled if initialized with default options or web config
 firebase.initializeApp({
-  apiKey: "dummy-key-for-sw",
-  authDomain: "dummy.firebaseapp.com",
-  projectId: "dummy-project",
-  storageBucket: "dummy.appspot.com",
-  messagingSenderId: "35491862087",
-  appId: "1:35491862087:web:dummy"
+  apiKey: "AIzaSyBQw2KaahpF_4_NR_pKENRtOS99p2jmseo",
+  authDomain: "artisansk0nnect.firebaseapp.com",
+  projectId: "artisansk0nnect",
+  storageBucket: "artisansk0nnect.firebasestorage.app",
+  messagingSenderId: "266746398570",
+  appId: "1:266746398570:web:dcc89b1918599069534713"
 });
 
 const messaging = firebase.messaging();
