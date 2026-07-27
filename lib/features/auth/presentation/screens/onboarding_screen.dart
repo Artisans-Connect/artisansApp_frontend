@@ -42,7 +42,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_currentPage < _totalPages - 1) {
       _pageController.animateToPage(
         _currentPage + 1,
-        duration: const Duration(milliseconds: 40),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
     } else {
