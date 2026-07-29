@@ -281,7 +281,9 @@ class CategoriesService {
           return category;
         })
         .where((Map<String, dynamic> category) =>
-            (category['id'] as String).isNotEmpty)
+            (category['id'] as String).isNotEmpty &&
+            category['subcategories'] is List &&
+            (category['subcategories'] as List).isNotEmpty)
         .toList();
 
     categories.sort(_compareSortOrder);

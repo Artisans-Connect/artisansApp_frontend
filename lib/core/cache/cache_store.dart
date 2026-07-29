@@ -6,7 +6,7 @@ import '../utils/cache_logger.dart';
 import 'cache_keys.dart';
 
 const String _boxName = 'api_cache';
-const int _cacheVersion = 1; // Increment when cache schema changes
+const int _cacheVersion = 2; // Increment when cache schema changes
 
 /// Persistent TTL cache for JSON-serializable API payloads (Hive).
 class CacheStore {
