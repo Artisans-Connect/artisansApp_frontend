@@ -169,7 +169,7 @@ class _SignInScreenState extends State<SignInScreen> {
       AppToast.showError(
         context,
         e,
-        fallback: 'Google sign in failed. Please try again.',
+        fallback: 'Google sign in failed: $e',
       );
     } finally {
       if (mounted) setState(() => _isGoogleSubmitting = false);

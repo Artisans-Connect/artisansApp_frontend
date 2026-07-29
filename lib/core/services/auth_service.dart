@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 
 import '../cache/cache_keys.dart';
 import '../cache/cache_store.dart';
@@ -108,24 +107,17 @@ class AuthService {
   }) async {
     try {
       if (kIsWeb) {
-        // On Web, get the OAuth URL from Supabase and do a FULL PAGE redirect.
-        // Using getOAuthSignInUrl + launchUrlString avoids popup blockers
-        // that break signInWithOAuth in PWA mode and on some HTTPS hosts.
+        // On Web, use Supabase OAuth redirection. This is 100% reliable,
+        // bypasses browser popup blockers, and avoids client-side GIS SDK issues.
         //
         // 'prompt: select_account' forces Google to always show the account
         // picker even when only one account is signed in.
-        final OAuthResponse res = await _supabaseAuth.getOAuthSignInUrl(
-          provider: OAuthProvider.google,
+        await _supabaseAuth.signInWithOAuth(
+          OAuthProvider.google,
           redirectTo: Uri.base.origin,
           queryParams: <String, String>{
             'prompt': 'select_account',
           },
-        );
-        // Navigate the current tab (not a popup) to the OAuth URL.
-        await launchUrlString(
-          res.url.toString(),
-          mode: LaunchMode.inAppWebView,
-          webOnlyWindowName: '_self',
         );
         // Return a future that never completes because the page is redirecting
         return Completer<AppUser>().future;
