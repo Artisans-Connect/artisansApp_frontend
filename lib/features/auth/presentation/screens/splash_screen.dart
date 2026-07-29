@@ -71,18 +71,23 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Skip the splash when we already have a cached profile for this session.
   Future<bool> _tryFastBootFromCache() async {
     final session = Supabase.instance.client.auth.currentSession;
+    debugPrint('[SplashScreen] _tryFastBootFromCache triggered. Session exists: ${session != null}');
     if (session == null) return false;
 
     final user = await AuthService.instance.loadCachedUser();
+    debugPrint('[SplashScreen] Cached user loaded: ${user?.email}');
     if (user == null || !mounted) return false;
 
-    await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    final targetRoute = shellRouteForUser(user);
+    debugPrint('[SplashScreen] Fast booting to cached user route: $targetRoute');
+    await Navigator.pushReplacementNamed(context, targetRoute);
     unawaited(AuthService.instance.getCurrentUser(forceRefresh: true));
     return true;
   }
 
   Future<bool> _routeCachedUserIfAvailable() async {
     final user = await AuthService.instance.loadCachedUser();
+    debugPrint('[SplashScreen] Routing cached user if available. Found: ${user?.email}');
     if (user == null || !mounted) return false;
     await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
     return true;
@@ -90,22 +95,31 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _routeAfterAuth() async {
     final session = Supabase.instance.client.auth.currentSession;
+    debugPrint('[SplashScreen] _routeAfterAuth triggered. Session exists: ${session != null}');
     if (session != null) {
       try {
         final user = await AuthService.instance.getCurrentUser();
+        debugPrint('[SplashScreen] Current user fetched: ${user.email}, mode: ${user.lastActiveMode}');
         if (!mounted) return;
-        await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+        final targetRoute = shellRouteForUser(user);
+        debugPrint('[SplashScreen] Redirecting to target route: $targetRoute');
+        await Navigator.pushReplacementNamed(context, targetRoute);
       } on AuthFailure catch (e) {
+        debugPrint('[SplashScreen] AuthFailure: ${e.code} - ${e.message}');
         if (!mounted) return;
         if (e.code == AuthFailureCode.profileNotFound) {
+          debugPrint('[SplashScreen] Profile not found, redirecting to RoleSelectionScreen');
           await Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
         } else {
+          debugPrint('[SplashScreen] Redirecting to SignInScreen');
           await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
         }
       } on NetworkException {
+        debugPrint('[SplashScreen] NetworkException during _routeAfterAuth');
         if (!mounted) return;
         if (await _routeCachedUserIfAvailable()) return;
         if (!mounted) return;
+        debugPrint('[SplashScreen] Redirecting to SignInScreen (offline & no cache)');
         await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       } on ApiException catch (e) {
         if (!mounted) return;

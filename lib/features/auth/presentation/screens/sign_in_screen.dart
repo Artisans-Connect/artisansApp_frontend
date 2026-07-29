@@ -77,21 +77,33 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _redirectIfAlreadySignedIn() async {
-    if (Supabase.instance.client.auth.currentSession == null) return;
+    final session = Supabase.instance.client.auth.currentSession;
+    debugPrint('[SignInScreen] _redirectIfAlreadySignedIn triggered. Session exists: ${session != null}');
+    if (session == null) return;
 
     try {
+      debugPrint('[SignInScreen] Session accessToken: ${session.accessToken}');
       final user = await AuthService.instance.getCurrentUser();
-      if (!mounted) return;
-      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+      debugPrint('[SignInScreen] Current user fetched successfully: id=${user.id}, email=${user.email}, mode=${user.lastActiveMode}');
+      if (!mounted) {
+        debugPrint('[SignInScreen] Widget not mounted, aborting redirect');
+        return;
+      }
+      final targetRoute = shellRouteForUser(user);
+      debugPrint('[SignInScreen] Redirecting to target route: $targetRoute');
+      await Navigator.pushReplacementNamed(context, targetRoute);
     } on AuthFailure catch (e) {
+      debugPrint('[SignInScreen] AuthFailure during auto-redirect: ${e.code} - ${e.message}');
       if (!mounted) return;
       if (e.code == AuthFailureCode.profileNotFound) {
+        debugPrint('[SignInScreen] Profile not found, redirecting to RoleSelectionScreen');
         await Navigator.pushReplacementNamed(
           context,
           RoleSelectionScreen.routeName,
         );
       }
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[SignInScreen] Staging error restoring session: $e\n$stack');
       // Stay on sign in when an existing session cannot be restored.
     }
   }
