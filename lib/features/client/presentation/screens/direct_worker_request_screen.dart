@@ -182,19 +182,32 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     'auto_mechanical': <String>["auto", "mechanic", "car", "vehicle", "vulcanizer", "sprayer", "motorcycle", "heavy equipment", "excavator", "truck", "tyre", "wheel", "engine"],
     'home_repairs': <String>["home", "repairs", "handyman", "furniture", "door", "window", "pest", "cleaner", "gardener", "lock", "hinge", "fumigation", "cleaning", "maintenance"],
     'beauty_fashion': <String>["beauty", "fashion", "hairdresser", "barber", "makeup", "tailor", "dressmaker", "shoemaker", "cobbler", "bead", "milliner", "hair", "wig", "uniform", "sandal", "jeweller"],
-    'electronics_it': <String>["electronics", "phones", "it", "phone", "laptop", "tv", "sound", "printer", "computer", "desktop", "screen", "keyboard", "copier"],
+    'electronics_it': <String>["electronics", "phones", "it", "phone", "laptop", "tv", "sound", "printer", "computer", "desktop", "screen", "keyboard", "copier", "ict", "device", "support"],
     'hospitality_events': <String>["hospitality", "events", "caterer", "baker", "decorator", "photographer", "videographer", "dj", "canopy", "chair", "food", "cake", "balloon", "tent", "music"],
     'arts_crafts': <String>["arts", "craft", "potter", "weaver", "wood carver", "drum", "goldsmith", "jeweller", "brass smith", "signwriter", "clay", "pot", "kente", "basket", "carving", "sticker", "signboard"],
   };
 
   List<Map<String, dynamic>> _resolveWorkerCategories(
       List<dynamic> categories) {
-    final List<String> workerTerms = <String>[
+    final List<String> rawTerms = <String>[
       _profession.toLowerCase(),
       ...(_artisan['skills'] is List
           ? (_artisan['skills'] as List).map((dynamic item) => item.toString().toLowerCase())
           : <String>[]),
     ];
+
+    final List<String> workerTerms = <String>[];
+    for (final String term in rawTerms) {
+      if (term.trim().isEmpty) continue;
+      workerTerms.add(term);
+      // Split into words to match tokens (e.g. "ICT", "Device", "Support" from "ICT & Device Support")
+      final List<String> words = term
+          .split(RegExp(r'[^a-zA-Z0-9]+'))
+          .map((String w) => w.trim().toLowerCase())
+          .where((String w) => w.length > 1)
+          .toList();
+      workerTerms.addAll(words);
+    }
 
     final List<Map<String, dynamic>> matches = <Map<String, dynamic>>[];
     for (final dynamic item in categories) {
