@@ -882,13 +882,16 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     }
 
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final dynamic updated = await Navigator.of(context).push(
+      MaterialPageRoute<dynamic>(
         builder: (_) => WorkerApplicationDetailScreen(
           application: application,
         ),
       ),
     );
+    if (updated == true && mounted) {
+      _load();
+    }
   }
  
   // ── Build ──────────────────────────────────────────────────────────────────

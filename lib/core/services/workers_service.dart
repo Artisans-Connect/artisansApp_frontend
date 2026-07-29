@@ -53,6 +53,10 @@ class WorkersService {
     );
   }
 
+  Future<dynamic> withdrawApplication(String jobId) async {
+    return await _api.post('/workers/applications/$jobId/withdraw');
+  }
+
   Future<dynamic> respondToTermination(
     String jobId, {
     required bool accept,
