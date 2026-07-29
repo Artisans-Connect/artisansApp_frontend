@@ -4,7 +4,6 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
-import '../client_shell.dart';
 import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../core/services/reviews_service.dart';
@@ -144,10 +143,7 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                     if (!context.mounted) return;
                     AppToast.showSuccess(context, 'Rating submitted successfully!');
 
-                    ClientNavigation.popToShellAndSelectTab(
-                      context,
-                      ClientNavTab.bookings,
-                    );
+                    ClientNavigation.replaceWithBookingsTab(context);
                   } catch (e) {
                     if (!context.mounted) return;
                     AppToast.showError(context, e, fallback: 'Could not submit rating.');

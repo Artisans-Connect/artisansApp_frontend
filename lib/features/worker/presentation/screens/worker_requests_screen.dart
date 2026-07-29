@@ -340,6 +340,7 @@ class _RequestJobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double? totalQuote = job.applicationTotalQuote;
+    final String clientEstimate = job.estimateDisplay;
     return Container(
       decoration: BoxDecoration(
         color: DesignTokens.surfaceCard,
@@ -411,6 +412,31 @@ class _RequestJobCard extends StatelessWidget {
                 spacing: 6,
                 runSpacing: 6,
                 children: _tagsFor(job),
+            ),
+          ),
+          if (clientEstimate != 'â€”' && clientEstimate.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.request_quote_rounded,
+                    size: 16,
+                    color: DesignTokens.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Client estimate: $clientEstimate',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: DesignTokens.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           if (totalQuote != null) ...<Widget>[
@@ -425,7 +451,7 @@ class _RequestJobCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Quote: ${_formatGhs(totalQuote)}',
+                    'Your proposed quote: ${_formatGhs(totalQuote)}',
                     style: const TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 13,
@@ -642,7 +668,8 @@ class _PendingApplicationCard extends StatelessWidget {
         : 'Service';
     final String status = (application['status'] ?? 'pending').toString();
     final bool accepted = status == 'accepted';
-    final Object? budget = job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
+    final Object? clientEstimate =
+        job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
     final double? totalQuote = (application['total_quote'] as num?)?.toDouble() ??
         (application['proposed_rate'] as num?)?.toDouble();
 
@@ -689,22 +716,22 @@ class _PendingApplicationCard extends StatelessWidget {
                     color: DesignTokens.textSecondary,
                   ),
                 ),
-                if (budget != null) ...<Widget>[
+                if (clientEstimate != null) ...<Widget>[
                   const SizedBox(height: 6),
                   Text(
-                    'Budget: GHS $budget',
+                    'Client estimate: GHS $clientEstimate',
                     style: const TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: DesignTokens.primary,
+                      color: DesignTokens.textSecondary,
                     ),
                   ),
                 ],
                 if (totalQuote != null) ...<Widget>[
                   const SizedBox(height: 6),
                   Text(
-                    'Your quote: GHS ${totalQuote.toStringAsFixed(2)}',
+                    'Your proposed quote: GHS ${totalQuote.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 12,

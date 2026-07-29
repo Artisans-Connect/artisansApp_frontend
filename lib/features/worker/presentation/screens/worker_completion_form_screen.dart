@@ -39,8 +39,9 @@ class _WorkerCompletionFormScreenState
   @override
   void initState() {
     super.initState();
-    final double? amount =
-        widget.job.grossAmount ?? widget.job.applicationTotalQuote;
+    final double? amount = widget.job.grossAmount ??
+        widget.job.applicationTotalQuote ??
+        _amountFromEstimateLabel(widget.job.estimatedBudgetLabel);
     if (amount != null && amount > 0) {
       _proposedAmountController.text = amount.toStringAsFixed(2);
     }
@@ -144,7 +145,7 @@ class _WorkerCompletionFormScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            Text('PROPOSED AMOUNT TO CHARGE', style: AppTypography.labelCaps),
+            Text('FINAL AMOUNT FOR CLIENT APPROVAL', style: AppTypography.labelCaps),
             const SizedBox(height: AppSpacing.sm),
             TextField(
               controller: _proposedAmountController,
@@ -153,7 +154,7 @@ class _WorkerCompletionFormScreenState
             ),
             const SizedBox(height: AppSpacing.xs),
             Text(
-              'You can edit this amount until the client approves completion. Time spent is recorded automatically from when the job started.',
+              'Prefilled from your accepted quote when available, otherwise from the client estimate. You can still edit it before sending for client approval.',
               style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -226,5 +227,12 @@ class _WorkerCompletionFormScreenState
     final PickedMedia media = await PickedMedia.fromXFile(image);
     if (!mounted) return;
     setState(() => _photos.add(media));
+  }
+
+  double? _amountFromEstimateLabel(String? label) {
+    if (label == null) return null;
+    final RegExpMatch? match =
+        RegExp(r'(\d+(?:\.\d+)?)').firstMatch(label.replaceAll(',', ''));
+    return match == null ? null : double.tryParse(match.group(1)!);
   }
 }

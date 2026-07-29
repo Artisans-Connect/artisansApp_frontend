@@ -55,6 +55,7 @@ class ClientBooking {
     this.counterpartUserId,
     this.backendStatus,
     this.workerId,
+    this.workerIsVerified = false,
     this.locationLat,
     this.locationLng,
     this.phone,
@@ -92,6 +93,7 @@ class ClientBooking {
   final String? counterpartUserId;
   final String? backendStatus;
   final String? workerId;
+  final bool workerIsVerified;
   final double? locationLat;
   final double? locationLng;
   final String? phone;
@@ -172,10 +174,12 @@ class ClientBooking {
         'date': date,
         'amount': amount,
         'rating': rating,
+        'client_review_rating': rating,
         'imageUrl': imageUrl,
         'conversationId': jobUuid ?? conversationId,
         'counterpartUserId': workerId ?? counterpartUserId,
         'worker_id': workerId,
+        'worker_is_verified': workerIsVerified,
         'location_lat': locationLat,
         'location_lng': locationLng,
         'phone': phone,
@@ -220,6 +224,9 @@ class ClientBooking {
       counterpartUserId: map['counterpartUserId'] as String?,
       backendStatus: map['status'] as String?,
       workerId: map['worker_id'] as String?,
+      workerIsVerified: map['worker_is_verified'] == true ||
+          map['isVerified'] == true ||
+          map['verified'] == true,
       locationLat: (map['location_lat'] as num?)?.toDouble(),
       locationLng: (map['location_lng'] as num?)?.toDouble(),
       phone: map['phone'] as String?,
@@ -302,6 +309,8 @@ class ClientBooking {
         : categoryName;
     final String? phone =
         worker is Map<String, dynamic> ? worker['phone'] as String? : null;
+    final bool workerIsVerified =
+        worker is Map<String, dynamic> && worker['is_verified'] == true;
     final String? jobId = json['id'] as String?;
 
     final dynamic completionRaw = json['completion_details'];
@@ -322,6 +331,7 @@ class ClientBooking {
       status: status,
       date: json['created_at']?.toString().split('T').first ?? '',
       amount: 'GHS ${json['budget_min'] ?? json['budget_fixed'] ?? '—'}',
+      rating: (json['client_review_rating'] as num?)?.toDouble(),
       imageUrl: worker is Map<String, dynamic>
           ? worker['avatar_url'] as String?
           : null,
@@ -331,6 +341,7 @@ class ClientBooking {
       conversationId: jobId,
       backendStatus: statusRaw,
       workerId: json['worker_id'] as String?,
+      workerIsVerified: workerIsVerified,
       locationLat: (json['location_lat'] as num?)?.toDouble(),
       locationLng: (json['location_lng'] as num?)?.toDouble(),
       phone: phone,
@@ -399,6 +410,9 @@ class ClientBooking {
       counterpartUserId: jobData['worker_id'] as String?,
       backendStatus: (jobData['status'] as String?) ?? 'matched',
       workerId: jobData['worker_id'] as String?,
+      workerIsVerified: artisan?['is_verified'] == true ||
+          artisan?['isVerified'] == true ||
+          artisan?['verified'] == true,
       locationLat: (jobData['locationLat'] as num?)?.toDouble() ??
           (jobData['location_lat'] as num?)?.toDouble(),
       locationLng: (jobData['locationLng'] as num?)?.toDouble() ??
