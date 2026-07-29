@@ -290,6 +290,13 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             color: AppColors.textSecondary,
                           ),
                         ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'This amount is only an estimate. The final price may change after the artisan reviews the job scope, materials, and travel needs.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                         const SizedBox(height: AppSpacing.sm),
                         // _PriceBreakdownRow(
                         //   label: 'Recommended fee',
@@ -337,7 +344,10 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('TOTAL', style: AppTypography.labelLarge),
+                          Text(
+                            'ESTIMATED TOTAL',
+                            style: AppTypography.labelLarge,
+                          ),
                           Text(
                             ClientJobDraft.formatGhs(totalFee),
                             style: AppTypography.displaySmall.copyWith(
