@@ -586,6 +586,11 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   }
 
   Widget _buildWorkerServiceSelector() {
+    if (!_usingFallbackCategories) {
+      // Category successfully resolved under the hood. No need to show the section.
+      return const SizedBox.shrink();
+    }
+
     if (_workerCategories.isEmpty) {
       return Container(
         width: double.infinity,
@@ -603,35 +608,13 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       );
     }
 
-    if (_workerCategories.length == 1) {
-      final Map<String, dynamic> category = _workerCategories.first;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          if (_usingFallbackCategories) ...<Widget>[
-            _buildServiceFallbackNotice(),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-          InputDecorator(
-            decoration: InputDecoration(
-              labelText:
-                  _usingFallbackCategories ? 'Service category' : 'Worker service',
-            ),
-            child: Text((category['name'] ?? 'Service').toString()),
-          ),
-        ],
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (_usingFallbackCategories) ...<Widget>[
-          _buildServiceFallbackNotice(),
-          const SizedBox(height: AppSpacing.sm),
-        ],
+        _buildServiceFallbackNotice(),
+        const SizedBox(height: AppSpacing.sm),
         Text(
-          _usingFallbackCategories ? 'Service category' : 'Worker service',
+          'Service category',
           style: AppTypography.labelLarge,
         ),
         const SizedBox(height: AppSpacing.sm),
