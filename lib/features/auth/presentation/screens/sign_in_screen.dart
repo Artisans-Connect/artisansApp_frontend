@@ -155,6 +155,7 @@ class _SignInScreenState extends State<SignInScreen> {
       await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
     } on AuthFailure catch (e) {
       if (!mounted) return;
+      debugPrint('[SignIn] Google AuthFailure: ${e.code} - ${e.message}');
       if (e.code == AuthFailureCode.profileNotFound) {
         await Navigator.pushReplacementNamed(
             context, RoleSelectionScreen.routeName);
@@ -163,6 +164,8 @@ class _SignInScreenState extends State<SignInScreen> {
       setState(() => _authError = e);
     } catch (e) {
       if (!mounted) return;
+      debugPrint('[SignIn] Google sign-in error: $e');
+      debugPrint('[SignIn] Error type: ${e.runtimeType}');
       AppToast.showError(
         context,
         e,
