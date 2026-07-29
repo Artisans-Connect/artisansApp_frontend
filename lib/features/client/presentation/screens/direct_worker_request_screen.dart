@@ -86,7 +86,21 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   String get _name =>
       (_artisan['name'] ?? _profile['full_name'] ?? 'Artisan').toString();
 
-  String get _profession => (_artisan['profession'] ?? 'Artisan').toString();
+  String get _profession {
+    final dynamic rawProfession = _artisan['profession'] ?? _profile['profession'];
+    if (rawProfession != null && rawProfession.toString().trim().isNotEmpty) {
+      return rawProfession.toString().trim();
+    }
+
+    final dynamic rawSkills = _artisan['skills'] ??
+        (_artisan['worker'] as Map?)?['skills'] ??
+        _profile['skills'];
+    if (rawSkills is List && rawSkills.isNotEmpty) {
+      return rawSkills.first.toString();
+    }
+
+    return 'Artisan';
+  }
 
   String get _imageUrl =>
       (_artisan['imageUrl'] ?? _profile['avatar_url'] ?? '').toString();
