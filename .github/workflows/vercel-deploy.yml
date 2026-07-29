@@ -61,5 +61,6 @@ jobs:
           
           # Deploy build/web folder directly as production
           cd build/web
-          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+          vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes --non-interactive
+
 
