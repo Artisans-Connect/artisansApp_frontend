@@ -99,7 +99,7 @@ class WorkersService {
     double? proposedRate,
   }) async {
     return await _api.post(
-      '/workers/job-requests/$jobId/apply',
+      '/workers/accept/$jobId',
       body: <String, dynamic>{
         if (message != null && message.trim().isNotEmpty)
           'message': message.trim(),
