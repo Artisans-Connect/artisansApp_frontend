@@ -100,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'All your profile data, jobs, reviews, messages, and uploaded files will be permanently deleted.',
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  const SelectableText(
                     'To confirm, please type "delete my account" below:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
