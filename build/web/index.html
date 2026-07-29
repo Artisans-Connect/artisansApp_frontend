@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="CraftMatch connects clients with trusted local artisans for home and service jobs.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4A79E6">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CraftMatch">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>CraftMatch</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Identity Services for Web Auth -->
+  <meta name="google-signin-client_id" content="35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com">
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Google Maps JavaScript API for Flutter Web Maps is loaded dynamically in main.dart -->
+  <!-- <script src="https://maps.googleapis.com/maps/api/js?key="></script> -->
+
+  <script>
+    // The value below is injected by flutter build, do not touch.
+    const serviceWorkerVersion = "238925094" /* Flutter's service worker is deprecated and will be removed in a future Flutter release. */;
+  </script>
+  <!-- This script adds the flutter initialization JS code -->
+  <script src="flutter.js" defer></script>
+</head>
+<body>
+  <div id="pwa-splash">
+    <div class="splash-container">
+      <div class="logo-circle">
+        <img src="assets/ArtisanConnect Logo - 1.png" alt="CraftMatch Logo" />
+      </div>
+      <h1 class="splash-title">CraftMatch</h1>
+      <div class="spinner"></div>
+    </div>
+  </div>
+  <style>
+    #pwa-splash {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #C15A3D;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .splash-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .logo-circle {
+      width: 172px;
+      height: 172px;
+      border-radius: 50%;
+      background-color: #FFF6ED;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .logo-circle img {
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+    }
+    .splash-title {
+      color: #FFFFFF;
+      font-size: 42px;
+      font-weight: 700;
+      margin: 0 0 32px 0;
+      letter-spacing: -0.5px;
+    }
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      border-top-color: #FFFFFF;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+
+  <script>
+    window.addEventListener('load', function(ev) {
+      // Download main.dart.js
+      _flutter.loader.loadEntrypoint({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+        },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine().then(function(appRunner) {
+            appRunner.runApp().then(function() {
+              // Hide and remove the splash screen once the app is running
+              const splash = document.getElementById('pwa-splash');
+              if (splash) {
+                splash.style.opacity = '0';
+                setTimeout(() => splash.remove(), 400);
+              }
+            });
+          });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
