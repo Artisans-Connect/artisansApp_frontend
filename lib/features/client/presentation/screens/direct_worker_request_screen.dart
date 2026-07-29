@@ -161,22 +161,47 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     }
   }
 
+  static const Map<String, List<String>> _categoryAliases = <String, List<String>>{
+    'construction_building': <String>["construction", "building", "builder", "mason", "carpenter", "tiler", "painter", "welder", "steel bender", "ceiling", "glass", "roof", "paver", "masonry", "blockwork", "roofing", "woodwork", "metal", "fabricator"],
+    'electrical_power': <String>["electrical", "electrician", "wiring", "lighting", "socket", "outlet", "generator", "inverter", "solar", "battery", "cctv", "security", "intercom", "power", "appliance"],
+    'plumbing_water': <String>["plumbing", "plumber", "pipe", "pipes", "leak", "borehole", "pump", "drainage", "sanitary", "sink", "toilet", "shower", "water"],
+    'auto_mechanical': <String>["auto", "mechanic", "car", "vehicle", "vulcanizer", "sprayer", "motorcycle", "heavy equipment", "excavator", "truck", "tyre", "wheel", "engine"],
+    'home_repairs': <String>["home", "repairs", "handyman", "furniture", "door", "window", "pest", "cleaner", "gardener", "lock", "hinge", "fumigation", "cleaning", "maintenance"],
+    'beauty_fashion': <String>["beauty", "fashion", "hairdresser", "barber", "makeup", "tailor", "dressmaker", "shoemaker", "cobbler", "bead", "milliner", "hair", "wig", "uniform", "sandal", "jeweller"],
+    'electronics_it': <String>["electronics", "phones", "it", "phone", "laptop", "tv", "sound", "printer", "computer", "desktop", "screen", "keyboard", "copier"],
+    'hospitality_events': <String>["hospitality", "events", "caterer", "baker", "decorator", "photographer", "videographer", "dj", "canopy", "chair", "food", "cake", "balloon", "tent", "music"],
+    'arts_crafts': <String>["arts", "craft", "potter", "weaver", "wood carver", "drum", "goldsmith", "jeweller", "brass smith", "signwriter", "clay", "pot", "kente", "basket", "carving", "sticker", "signboard"],
+  };
+
   List<Map<String, dynamic>> _resolveWorkerCategories(
       List<dynamic> categories) {
-    final String text = <String>[
-      _profession,
+    final List<String> workerTerms = <String>[
+      _profession.toLowerCase(),
       ...(_artisan['skills'] is List
-          ? (_artisan['skills'] as List).map((dynamic item) => item.toString())
+          ? (_artisan['skills'] as List).map((dynamic item) => item.toString().toLowerCase())
           : <String>[]),
-    ].join(' ').toLowerCase();
+    ];
+
     final List<Map<String, dynamic>> matches = <Map<String, dynamic>>[];
     for (final dynamic item in categories) {
       final Map<String, dynamic> category =
           Map<String, dynamic>.from(item as Map);
       final String name = (category['name'] ?? '').toString().toLowerCase();
       final String slug = (category['slug'] ?? '').toString().toLowerCase();
-      if ((name.isNotEmpty && text.contains(name)) ||
-          (slug.isNotEmpty && text.contains(slug))) {
+
+      bool isMatch = workerTerms.any((term) =>
+          name.contains(term) ||
+          term.contains(name) ||
+          slug.contains(term) ||
+          term.contains(slug));
+
+      if (!isMatch) {
+        final List<String> aliases = _categoryAliases[slug] ?? <String>[];
+        isMatch = workerTerms.any((term) =>
+            aliases.any((alias) => term.contains(alias) || alias.contains(term)));
+      }
+
+      if (isMatch) {
         matches.add(category);
       }
     }
