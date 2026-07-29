@@ -130,6 +130,15 @@ class ClientNavigation {
     popToShellAndSelectTab(context, ClientNavTab.bookings);
   }
 
+  static void replaceWithBookingsTab(BuildContext context) {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.clientHome,
+      (_) => false,
+      arguments: <String, dynamic>{'initialTab': ClientNavTab.bookings},
+    );
+  }
+
   static void goToMessagesTab(BuildContext context) {
     popToShellAndSelectTab(context, ClientNavTab.messages);
   }

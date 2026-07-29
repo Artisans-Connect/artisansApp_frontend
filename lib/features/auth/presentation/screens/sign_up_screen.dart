@@ -131,12 +131,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
           String? name;
           String? phone;
           if (metaRaw is Map<String, dynamic>) {
-            name = (metaRaw['full_name'] ?? metaRaw['name'])?.toString();
-            phone = metaRaw['phone']?.toString();
+            name = (metaRaw['full_name'] ??
+                    metaRaw['name'] ??
+                    metaRaw['user_name'] ??
+                    metaRaw['preferred_username'])
+                ?.toString();
+            phone = (metaRaw['phone'] ?? metaRaw['phone_number'])?.toString();
           }
           final onboarding = OnboardingSession.instance;
           onboarding.fullName = name ?? supUser.email;
-          onboarding.phone = phone ?? '';
+          onboarding.phone = phone ?? supUser.phone ?? '';
           onboarding.avatarUrl = (metaRaw is Map<String, dynamic>
                   ? metaRaw['avatar_url'] ?? metaRaw['picture']
                   : null)

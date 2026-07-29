@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../../core/location/device_location_service.dart';
 import '../../../../../core/location/place_lookup_service.dart';
@@ -409,6 +410,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     }
 
     try {
+      _hydrateSessionFromAuthMetadata();
       final String role = _session.isWorker ? 'worker' : 'client';
       if (_isBecomingWorker) {
         final Map<String, dynamic> workerBody = <String, dynamic>{
@@ -471,6 +473,47 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       AppToast.showError(context, e, fallback: 'Could not save your profile.');
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  void _hydrateSessionFromAuthMetadata() {
+    final User? authUser = Supabase.instance.client.auth.currentUser;
+    if (authUser == null) return;
+
+    final dynamic rawMetadata = authUser.userMetadata;
+    final Map<String, dynamic> metadata = rawMetadata is Map<String, dynamic>
+        ? rawMetadata
+        : const <String, dynamic>{};
+    final String? metadataName = (metadata['full_name'] ??
+            metadata['name'] ??
+            metadata['user_name'] ??
+            metadata['preferred_username'])
+        ?.toString()
+        .trim();
+    final String? metadataPhone =
+        (metadata['phone'] ?? metadata['phone_number'])?.toString().trim();
+    final String? metadataAvatar =
+        (metadata['avatar_url'] ?? metadata['picture'])?.toString().trim();
+
+    if ((_session.fullName == null || _session.fullName!.trim().isEmpty) &&
+        metadataName != null &&
+        metadataName.isNotEmpty) {
+      _session.fullName = metadataName;
+    }
+    if ((_session.phone == null || _session.phone!.trim().isEmpty) &&
+        metadataPhone != null &&
+        metadataPhone.isNotEmpty) {
+      _session.phone = metadataPhone;
+    }
+    if ((_session.phone == null || _session.phone!.trim().isEmpty) &&
+        authUser.phone != null &&
+        authUser.phone!.trim().isNotEmpty) {
+      _session.phone = authUser.phone!.trim();
+    }
+    if ((_session.avatarUrl == null || _session.avatarUrl!.trim().isEmpty) &&
+        metadataAvatar != null &&
+        metadataAvatar.startsWith('http')) {
+      _session.avatarUrl = metadataAvatar;
     }
   }
 

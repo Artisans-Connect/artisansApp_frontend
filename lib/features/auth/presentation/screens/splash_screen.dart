@@ -86,6 +86,11 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<bool> _routeCachedUserIfAvailable() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      debugPrint('[SplashScreen] Cannot route to cached user: No active session');
+      return false;
+    }
     final user = await AuthService.instance.loadCachedUser();
     debugPrint('[SplashScreen] Routing cached user if available. Found: ${user?.email}');
     if (user == null || !mounted) return false;

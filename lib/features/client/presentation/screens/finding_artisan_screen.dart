@@ -165,13 +165,13 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
     _progressTimer?.cancel();
     // Navigate back to the shell and select the Bookings tab so the user
     // can track matching progress there.
-    ClientNavigation.popToShellAndSelectTab(context, ClientNavTab.bookings);
+    ClientNavigation.replaceWithBookingsTab(context);
   }
 
   void _openBookings() {
     _realtime.unsubscribe();
     _progressTimer?.cancel();
-    ClientNavigation.popToShellAndSelectTab(context, ClientNavTab.bookings);
+    ClientNavigation.replaceWithBookingsTab(context);
   }
 
   Future<void> _cancelSearch() async {
@@ -210,7 +210,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
 
     if (mounted) {
       AppToast.showInfo(context, 'Search cancelled.');
-      ClientNavigation.popToShellAndSelectTab(context, ClientNavTab.bookings);
+      ClientNavigation.replaceWithBookingsTab(context);
     }
   }
 
@@ -285,10 +285,7 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
               message: _errorMessage!,
               title: _isExpired ? 'No match found' : 'Something went wrong',
               onRetry: _isExpired
-                  ? () => ClientNavigation.popToShellAndSelectTab(
-                        context,
-                        ClientNavTab.bookings,
-                      )
+                  ? () => ClientNavigation.replaceWithBookingsTab(context)
                   : () {
                       setState(() => _errorMessage = null);
                       _startWatching();
