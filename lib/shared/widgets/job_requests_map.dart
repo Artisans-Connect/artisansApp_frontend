@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -53,11 +55,15 @@ class JobRequestsMapPreview extends StatefulWidget {
   const JobRequestsMapPreview({
     super.key,
     required this.jobs,
+    required this.selectedJobId,
+    required this.onSelectJob,
     required this.onOpenJob,
     this.height = 190,
   });
 
   final List<WorkerJob> jobs;
+  final String selectedJobId;
+  final ValueChanged<String> onSelectJob;
   final ValueChanged<WorkerJob> onOpenJob;
   final double height;
 
@@ -83,6 +89,7 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
   @override
   void initState() {
     super.initState();
+    _selectedIndex = max(0, widget.jobs.indexWhere((job) => job.id == widget.selectedJobId));
     _loadWorkerPosition();
   }
 
@@ -92,6 +99,14 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
     if (oldWidget.jobs != widget.jobs && _styleReady) {
       _syncMapboxMarkers();
       _fitVisiblePoints();
+    }
+    if (oldWidget.selectedJobId != widget.selectedJobId) {
+      final int selectedIndex = widget.jobs.indexWhere((job) => job.id == widget.selectedJobId);
+      if (selectedIndex >= 0) {
+        setState(() {
+          _selectedIndex = selectedIndex;
+        });
+      }
     }
   }
 
@@ -204,9 +219,8 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
                       : MapMarkerKind.job,
             ),
           ),
-          infoWindow:
-              google.InfoWindow(title: job.title, snippet: job.addressLabel),
-          onTap: () => setState(() => _selectedIndex = i),
+          infoWindow: google.InfoWindow(title: job.title, snippet: job.addressLabel),
+          onTap: () => _selectJobById(job.id),
         ),
       );
     }
@@ -239,33 +253,7 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
       height: widget.height,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        child: Stack(
-          children: <Widget>[
-            _useMapbox
-                ? _buildMapbox(selected)
-                : _buildGoogle(selected),
-            Positioned(
-              left: 12,
-              right: 12,
-              top: 12,
-              child: _MapHeader(
-                title: '${jobs.length} dispatched request${jobs.length == 1 ? '' : 's'}',
-                actionLabel: 'Expand',
-                onAction: _openExpandedMap,
-              ),
-            ),
-            Positioned(
-              left: 12,
-              right: 12,
-              bottom: 12,
-              child: _JobRequestMapCard(
-                job: selected,
-                workerPosition: _workerPosition,
-                onOpen: () => widget.onOpenJob(selected),
-              ),
-            ),
-          ],
-        ),
+        child: _useMapbox ? _buildMapbox(selected) : _buildGoogle(selected),
       ),
     );
   }
