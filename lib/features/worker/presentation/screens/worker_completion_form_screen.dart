@@ -28,6 +28,7 @@ class WorkerCompletionFormScreen extends StatefulWidget {
 }
 class _WorkerCompletionFormScreenState
     extends State<WorkerCompletionFormScreen> {
+  static const double _platformFeeRate = 0.10;
   final _proposedAmountController = TextEditingController();
   final _materialsController = TextEditingController();
   final _notesController = TextEditingController();
@@ -35,6 +36,7 @@ class _WorkerCompletionFormScreenState
   final ImagePicker _picker = ImagePicker();
   final List<PickedMedia> _photos = <PickedMedia>[];
   bool _isSubmitting = false;
+  double? _previewAmount;
 
   @override
   void initState() {
@@ -45,6 +47,8 @@ class _WorkerCompletionFormScreenState
     if (amount != null && amount > 0) {
       _proposedAmountController.text = amount.toStringAsFixed(2);
     }
+    _previewAmount = amount;
+    _proposedAmountController.addListener(_updateAmountPreview);
     if ((widget.job.completionMaterials ?? '').isNotEmpty) {
       _materialsController.text = widget.job.completionMaterials!;
     }
@@ -55,6 +59,7 @@ class _WorkerCompletionFormScreenState
 
   @override
   void dispose() {
+    _proposedAmountController.removeListener(_updateAmountPreview);
     _proposedAmountController.dispose();
     _materialsController.dispose();
     _notesController.dispose();
@@ -157,6 +162,8 @@ class _WorkerCompletionFormScreenState
               'Prefilled from your accepted quote when available, otherwise from the client estimate. You can still edit it before sending for client approval.',
               style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
+            const SizedBox(height: AppSpacing.md),
+            _PayoutPreview(amount: _previewAmount, feeRate: _platformFeeRate),
             const SizedBox(height: AppSpacing.lg),
             Text('MATERIALS USED (OPTIONAL)', style: AppTypography.labelCaps),
             const SizedBox(height: AppSpacing.sm),
@@ -229,10 +236,114 @@ class _WorkerCompletionFormScreenState
     setState(() => _photos.add(media));
   }
 
+  void _updateAmountPreview() {
+    final double? amount =
+        double.tryParse(_proposedAmountController.text.trim());
+    if (amount == _previewAmount) return;
+    setState(() => _previewAmount = amount);
+  }
+
   double? _amountFromEstimateLabel(String? label) {
     if (label == null) return null;
     final RegExpMatch? match =
         RegExp(r'(\d+(?:\.\d+)?)').firstMatch(label.replaceAll(',', ''));
     return match == null ? null : double.tryParse(match.group(1)!);
+  }
+}
+
+class _PayoutPreview extends StatelessWidget {
+  const _PayoutPreview({
+    required this.amount,
+    required this.feeRate,
+  });
+
+  final double? amount;
+  final double feeRate;
+
+  @override
+  Widget build(BuildContext context) {
+    final double grossAmount = amount != null && amount! > 0 ? amount! : 0;
+    final double platformFee =
+        (grossAmount * feeRate * 100).roundToDouble() / 100;
+    final double payout = grossAmount - platformFee;
+    final bool hasAmount = grossAmount > 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'PAYOUT PREVIEW',
+            style: AppTypography.labelCaps.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          _PayoutRow(
+            label: 'Amount sent to client',
+            value: hasAmount ? _formatGhs(grossAmount) : '--',
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          _PayoutRow(
+            label: 'Platform fee (${(feeRate * 100).toStringAsFixed(0)}%)',
+            value: hasAmount ? '-${_formatGhs(platformFee)}' : '--',
+          ),
+          const Divider(height: AppSpacing.lg),
+          _PayoutRow(
+            label: 'Estimated payout',
+            value: hasAmount ? _formatGhs(payout) : '--',
+            isEmphasis: true,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'This preview updates as you type. Final payout is confirmed after the client approves the completion.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatGhs(double value) => 'GHS ${value.toStringAsFixed(2)}';
+}
+
+class _PayoutRow extends StatelessWidget {
+  const _PayoutRow({
+    required this.label,
+    required this.value,
+    this.isEmphasis = false,
+  });
+
+  final String label;
+  final String value;
+  final bool isEmphasis;
+
+  @override
+  Widget build(BuildContext context) {
+    final TextStyle labelStyle = AppTypography.bodySmall.copyWith(
+      color: isEmphasis ? AppColors.textPrimary : AppColors.textSecondary,
+      fontWeight: isEmphasis ? FontWeight.w700 : FontWeight.w500,
+    );
+    final TextStyle valueStyle = AppTypography.bodyMedium.copyWith(
+      color: isEmphasis ? AppColors.primary : AppColors.textPrimary,
+      fontWeight: isEmphasis ? FontWeight.w800 : FontWeight.w600,
+    );
+
+    return Row(
+      children: [
+        Expanded(child: Text(label, style: labelStyle)),
+        const SizedBox(width: AppSpacing.sm),
+        Text(value, style: valueStyle),
+      ],
+    );
   }
 }
