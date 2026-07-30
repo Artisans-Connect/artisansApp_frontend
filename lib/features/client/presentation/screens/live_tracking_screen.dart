@@ -646,8 +646,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         job['jobId'] as String? ??
         job['id'] as String?;
     final String status = (job['status'] as String? ?? '').toLowerCase();
+    final bool hasReviewed = job['client_review_rating'] != null;
     final bool canRate =
-        status == 'pending_client_approval' || status == 'completed';
+        !hasReviewed &&
+        (status == 'pending_client_approval' || status == 'completed');
     final bool pendingApproval = status == 'pending_client_approval';
     final bool recoverableServiceInterruption = status == 'cancelled' &&
         (((job['cancelled_by'] as String?) ?? '').toLowerCase() == 'worker' ||

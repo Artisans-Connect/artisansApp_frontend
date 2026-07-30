@@ -146,7 +146,12 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
                   label: 'Location',
                   value: (job['address_label'] ?? 'Location pending').toString(),
                 ),
-                _DetailRow(label: 'Budget', value: _budgetLabel(job)),
+                _DetailRow(label: 'Client estimate', value: _budgetLabel(job)),
+                if (widget.application['total_quote'] != null)
+                  _DetailRow(
+                    label: 'Your quote shown to client',
+                    value: 'GHS ${widget.application['total_quote']}',
+                  ),
                 if ((widget.application['message'] ?? '').toString().trim().isNotEmpty)
                   _DetailRow(
                     label: 'Your message',
@@ -154,7 +159,7 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
                   ),
                 if (widget.application['proposed_rate'] != null)
                   _DetailRow(
-                    label: 'Your proposed rate',
+                    label: 'Custom amount you entered',
                     value: 'GHS ${widget.application['proposed_rate']}',
                   ),
               ],

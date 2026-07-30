@@ -18,7 +18,13 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final earned = job.earnedAmount ?? job.grossAmount ?? job.artisanPayout ?? 0;
+    final double clientCharge = job.grossAmount ??
+        job.applicationTotalQuote ??
+        job.earnedAmount ??
+        job.artisanPayout ??
+        0;
+    final double? platformFee = job.platformFee;
+    final double? payout = job.artisanPayout ?? job.earnedAmount;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -59,7 +65,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
             Text('Booking Completed!', style: AppTypography.displayMedium),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'The client has been notified and will rate you shortly.',
+              'Your completion report and final amount have been sent to the client for approval.',
               style: AppTypography.bodyMedium,
               textAlign: TextAlign.center,
             ),
@@ -82,9 +88,9 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('EARNED TOTAL', style: AppTypography.labelCaps),
+                      Text('SENT FOR APPROVAL', style: AppTypography.labelCaps),
                       Text(
-                        formatCedis(earned),
+                        formatCedis(clientCharge),
                         style: AppTypography.titleLarge.copyWith(
                           color: AppColors.success,
                           fontSize: 22,
@@ -92,6 +98,30 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                       ),
                     ],
                   ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'This is the amount the client will review before the booking is closed.',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                  if (platformFee != null || payout != null) ...[
+                    const Divider(height: AppSpacing.lg),
+                    if (platformFee != null)
+                      _AmountRow(
+                        label: 'Platform fee',
+                        amount: platformFee,
+                      ),
+                    if (payout != null)
+                      _AmountRow(
+                        label: 'Estimated payout after approval',
+                        amount: payout,
+                        highlight: true,
+                      ),
+                  ],
                   const Divider(height: AppSpacing.lg),
                   Row(
                     children: [
@@ -143,5 +173,42 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
   void _goHome(BuildContext context) {
     onDone();
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+}
+
+class _AmountRow extends StatelessWidget {
+  const _AmountRow({
+    required this.label,
+    required this.amount,
+    this.highlight = false,
+  });
+
+  final String label;
+  final double amount;
+  final bool highlight;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          Text(
+            formatCedis(amount),
+            style: AppTypography.bodyMedium.copyWith(
+              color: highlight ? AppColors.success : AppColors.textPrimary,
+              fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

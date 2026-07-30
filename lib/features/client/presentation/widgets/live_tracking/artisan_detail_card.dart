@@ -16,6 +16,9 @@ class ArtisanDetailCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final String? imageUrl = job['imageUrl'] as String?;
     final double? rating = (job['rating'] as num?)?.toDouble();
+    final bool isVerified = job['worker_is_verified'] == true ||
+        job['isVerified'] == true ||
+        job['verified'] == true;
 
     return Container(
       decoration: BoxDecoration(
@@ -112,33 +115,35 @@ class ArtisanDetailCard extends StatelessWidget {
               ],
             ),
           ),
-          // Verified badge
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-            decoration: BoxDecoration(
-              color: DesignTokens.accentGold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                  color: DesignTokens.accentGold.withValues(alpha: 0.25), width: 1),
-            ),
-            child: Column(
-              children: [
-                const Icon(Icons.verified_rounded,
-                    color: DesignTokens.accentGold, size: 18),
-                const SizedBox(height: 2),
-                Text(
-                  'Verified',
-                  style: TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: DesignTokens.accentWarm,
-                    letterSpacing: 0.3,
-                  ),
+          if (isVerified)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: DesignTokens.accentGold.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: DesignTokens.accentGold.withValues(alpha: 0.25),
+                  width: 1,
                 ),
-              ],
+              ),
+              child: Column(
+                children: [
+                  const Icon(Icons.verified_rounded,
+                      color: DesignTokens.accentGold, size: 18),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Verified',
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: DesignTokens.accentWarm,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

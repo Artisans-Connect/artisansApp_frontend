@@ -287,8 +287,11 @@ class _ApplicantCard extends StatelessWidget {
     final int totalJobs = (stats['total_jobs'] as num?)?.toInt() ?? 0;
     final List<dynamic> skills =
         stats['skills'] as List<dynamic>? ?? <dynamic>[];
-    final double? totalQuote = (application['total_quote'] as num?)?.toDouble() ??
+    final double? proposedRate =
         (application['proposed_rate'] as num?)?.toDouble();
+    final double? totalQuote =
+        (application['total_quote'] as num?)?.toDouble() ?? proposedRate;
+    final bool hasCustomProposal = proposedRate != null;
     final double? distanceKm = (application['distance_km'] as num?)?.toDouble();
     final double? distanceCost =
         (application['distance_cost'] as num?)?.toDouble();
@@ -358,6 +361,7 @@ class _ApplicantCard extends StatelessWidget {
                   distanceCost: distanceCost,
                   baseServiceFee: baseServiceFee,
                   urgencyPremium: urgencyPremium,
+                  hasCustomProposal: hasCustomProposal,
                 ),
               ],
               if (message.isNotEmpty) ...<Widget>[
@@ -400,6 +404,7 @@ class _ApplicantQuote extends StatelessWidget {
     this.distanceCost,
     this.baseServiceFee,
     this.urgencyPremium,
+    required this.hasCustomProposal,
   });
 
   final double totalQuote;
@@ -407,6 +412,7 @@ class _ApplicantQuote extends StatelessWidget {
   final double? distanceCost;
   final double? baseServiceFee;
   final double? urgencyPremium;
+  final bool hasCustomProposal;
 
   @override
   Widget build(BuildContext context) {
@@ -419,7 +425,26 @@ class _ApplicantQuote extends StatelessWidget {
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.18)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          Text(
+            hasCustomProposal
+                ? 'Artisan proposed quote'
+                : 'Artisan quote estimate',
+            style: AppTypography.labelLarge.copyWith(
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            hasCustomProposal
+                ? 'This artisan edited the amount before applying. Review this total before accepting.'
+                : 'This total is calculated from the service estimate and travel details.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
           if (baseServiceFee != null) _row('Base service', baseServiceFee!),
           if (distanceCost != null)
             _row(
@@ -431,7 +456,7 @@ class _ApplicantQuote extends StatelessWidget {
           if ((urgencyPremium ?? 0) > 0)
             _row('ASAP premium', urgencyPremium!),
           const Divider(height: 18),
-          _row('Total quote', totalQuote, isTotal: true),
+          _row('Total to review', totalQuote, isTotal: true),
         ],
       ),
     );

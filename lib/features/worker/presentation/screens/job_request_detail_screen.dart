@@ -246,14 +246,21 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     const SizedBox(height: AppSpacing.lg),
                     _QuoteBreakdown(job: job),
                   ],
-                  Text('PROPOSED RATE (GH₵)', style: AppTypography.labelCaps),
+                  Text('YOUR PROPOSED QUOTE (GH₵)', style: AppTypography.labelCaps),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'This is the amount the client will review. Leave it blank to use the system estimate, including any travel cost.',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   TextField(
                     controller: _proposedRateController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      hintText: 'Default rate: GH₵ ${(job.grossAmount ?? 0).round()}',
+                      hintText: 'System estimate: GH₵ ${(job.grossAmount ?? 0).round()}',
                       prefixText: 'GH₵ ',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
@@ -361,7 +368,14 @@ class _QuoteBreakdown extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('YOUR LOCKED QUOTE', style: AppTypography.labelCaps),
+          Text('YOUR PROPOSED QUOTE', style: AppTypography.labelCaps),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Shown to the client with travel included where applicable.',
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
           const SizedBox(height: AppSpacing.sm),
           if (job.applicationBaseServiceFee != null)
             _QuoteRow('Base service', job.applicationBaseServiceFee!),

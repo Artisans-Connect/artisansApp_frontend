@@ -22,74 +22,78 @@ import 'worker_reviews_screen.dart';
 import '../utils/worker_application_navigation.dart';
 import '../../../../core/session/app_user_session.dart';
 import '../../../../core/theme/design_tokens.dart';
- 
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// Local reusable widgets
-// ─────────────────────────────────────────────────────────────────────────────
- 
-/// Pulsing dot indicator — shows as green when online, muted grey when offline.
-class _PulseDot extends StatefulWidget {
-  const _PulseDot({required this.online});
-  final bool online;
- 
-  @override
-  State<_PulseDot> createState() => _PulseDotState();
-}
- 
-class _PulseDotState extends State<_PulseDot>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scale;
- 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _scale = Tween<double>(begin: 1, end: 1.7).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
-    if (widget.online) _ctrl.repeat(reverse: true);
-  }
- 
-  @override
-  void didUpdateWidget(_PulseDot old) {
-    super.didUpdateWidget(old);
-    if (widget.online && !_ctrl.isAnimating) {
-      _ctrl.repeat(reverse: true);
-    } else if (!widget.online) {
-      _ctrl.stop();
-      _ctrl.reset();
-    }
-  }
- 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
- 
-  @override
-  Widget build(BuildContext context) {
-    final Color dotColor =
-        widget.online ? DesignTokens.successGreen : DesignTokens.offlineSurface;
-    return SizedBox(
-      width: 14,
-      height: 14,
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          if (widget.online)
-            ScaleTransition(
-              scale: _scale,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: DesignTokens.successGreen.withAlpha((0.25 * 255).round()),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            CategoryIconBadge(
+              iconName: category is Map ? category['icon_name']?.toString() : null,
+              colorHex: category is Map ? category['color_hex']?.toString() : null,
+              size: 42,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    (job['title'] ?? 'Job application').toString(),
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: DesignTokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$categoryName · ${job['address_label'] ?? 'Location pending'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      color: DesignTokens.textSecondary,
+                    ),
+                  ),
+                  if (budget != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Budget: GHS $budget',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: DesignTokens.primary,
+                      ),
+                    ),
+                  ],
+                  if (clientEstimate != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Client estimate: GHS $clientEstimate',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: DesignTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                  if (totalQuote != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Your quote: GHS ${totalQuote.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: DesignTokens.primary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -346,6 +350,7 @@ class _RequestJobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final double? totalQuote = job.applicationTotalQuote;
+    final String clientEstimate = job.estimateDisplay;
     return Container(
       decoration: BoxDecoration(
         color: DesignTokens.surfaceCard,
@@ -417,6 +422,31 @@ class _RequestJobCard extends StatelessWidget {
                 spacing: 6,
                 runSpacing: 6,
                 children: _tagsFor(job),
+            ),
+          ),
+          if (clientEstimate != 'â€”' && clientEstimate.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: <Widget>[
+                  const Icon(
+                    Icons.request_quote_rounded,
+                    size: 16,
+                    color: DesignTokens.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Client estimate: $clientEstimate',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: DesignTokens.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           if (totalQuote != null) ...<Widget>[
@@ -431,7 +461,7 @@ class _RequestJobCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    'Quote: ${_formatGhs(totalQuote)}',
+                    'Your proposed quote: ${_formatGhs(totalQuote)}',
                     style: const TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 13,
@@ -1453,7 +1483,8 @@ class _PendingApplicationCard extends StatelessWidget {
         : 'Service';
     final String status = (application['status'] ?? 'pending').toString();
     final bool accepted = status == 'accepted';
-    final Object? budget = job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
+    final Object? clientEstimate =
+        job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
     final double? totalQuote = (application['total_quote'] as num?)?.toDouble() ??
         (application['proposed_rate'] as num?)?.toDouble();
 
@@ -1509,6 +1540,18 @@ class _PendingApplicationCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: DesignTokens.primary,
+                      ),
+                    ),
+                  ],
+                  if (clientEstimate != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Client estimate: GHS $clientEstimate',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: DesignTokens.textSecondary,
                       ),
                     ),
                   ],
@@ -2015,3 +2058,4 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     );
   }
 }
+
