@@ -22,95 +22,6 @@ import 'worker_reviews_screen.dart';
 import '../utils/worker_application_navigation.dart';
 import '../../../../core/session/app_user_session.dart';
 import '../../../../core/theme/design_tokens.dart';
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            CategoryIconBadge(
-              iconName: category is Map ? category['icon_name']?.toString() : null,
-              colorHex: category is Map ? category['color_hex']?.toString() : null,
-              size: 42,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text(
-                    (job['title'] ?? 'Job application').toString(),
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: DesignTokens.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '$categoryName · ${job['address_label'] ?? 'Location pending'}',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                      color: DesignTokens.textSecondary,
-                    ),
-                  ),
-                  if (budget != null) ...<Widget>[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Budget: GHS $budget',
-                      style: const TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: DesignTokens.primary,
-                      ),
-                    ),
-                  ],
-                  if (clientEstimate != null) ...<Widget>[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Client estimate: GHS $clientEstimate',
-                      style: const TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: DesignTokens.textSecondary,
-                      ),
-                    ),
-                  ],
-                  if (totalQuote != null) ...<Widget>[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Your quote: GHS ${totalQuote.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: DesignTokens.primary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
  
 /// Premium availability toggle card.
 class _AvailabilityCard extends StatelessWidget {
@@ -245,6 +156,25 @@ class _AvailabilityCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _PulseDot extends StatelessWidget {
+  const _PulseDot({required this.online});
+
+  final bool online;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color dotColor = online ? DesignTokens.successGreen : DesignTokens.textMuted;
+    return Container(
+      width: 8,
+      height: 8,
+      decoration: BoxDecoration(
+        color: dotColor,
+        shape: BoxShape.circle,
       ),
     );
   }
@@ -1531,18 +1461,7 @@ class _PendingApplicationCard extends StatelessWidget {
                       color: DesignTokens.textSecondary,
                     ),
                   ),
-                  if (budget != null) ...<Widget>[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Budget: GHS $budget',
-                      style: const TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: DesignTokens.primary,
-                      ),
-                    ),
-                  ],
+
                   if (clientEstimate != null) ...<Widget>[
                     const SizedBox(height: 6),
                     Text(
