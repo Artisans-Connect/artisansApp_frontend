@@ -191,6 +191,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   int _stepForStatus(String? statusRaw) {
     final String status = (statusRaw ?? '').toLowerCase();
     return switch (status) {
+      'scheduled_confirmed' => 0,
       'matched' => 0,
       'on_the_way' => 1,
       'arrived' => 2,

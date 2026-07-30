@@ -144,6 +144,7 @@ class ClientBooking {
   bool get isTrackable {
     final String raw = (backendStatus ?? '').toLowerCase();
     return raw == 'matched' ||
+        raw == 'scheduled_confirmed' ||
         raw == 'on_the_way' ||
         raw == 'arrived' ||
         raw == 'in_progress' ||
@@ -369,6 +370,7 @@ class ClientBooking {
     for (final Map<String, dynamic> json in jobs) {
       final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
       if (statusRaw == 'matched' ||
+          statusRaw == 'scheduled_confirmed' ||
           statusRaw == 'on_the_way' ||
           statusRaw == 'arrived' ||
           statusRaw == 'in_progress' ||
