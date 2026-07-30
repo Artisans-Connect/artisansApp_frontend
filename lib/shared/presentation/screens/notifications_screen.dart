@@ -24,25 +24,49 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   final NotificationService _notificationService = NotificationService.instance;
+  final ScrollController _scrollController = ScrollController();
 
   bool _isLoading = true;
   String? _loadError;
   List<NotificationItem> _notifications = <NotificationItem>[];
   _NotificationFilter _filter = _NotificationFilter.all;
 
+  int _offset = 0;
+  bool _hasMore = true;
+  bool _isFetchingMore = false;
+
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
     _loadNotifications();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isFetchingMore &&
+        _hasMore &&
+        !_isLoading) {
+      _loadMoreNotifications();
+    }
   }
 
   Future<void> _loadNotifications() async {
     setState(() {
       _isLoading = true;
       _loadError = null;
+      _offset = 0;
+      _hasMore = true;
     });
     try {
-      final List<dynamic> raw = await _notificationService.getNotifications();
+      final List<dynamic> raw = await _notificationService.getNotifications(limit: 20, offset: 0);
       if (!mounted) return;
       setState(() {
         _notifications = raw
@@ -50,6 +74,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             .map(NotificationItem.fromJson)
             .toList();
         _isLoading = false;
+        _offset = _notifications.length;
+        if (raw.length < 20) {
+          _hasMore = false;
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -58,6 +86,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         _loadError =
             userMessageFor(e, fallback: 'Failed to load notifications.');
       });
+    }
+  }
+
+  Future<void> _loadMoreNotifications() async {
+    if (_isFetchingMore || !_hasMore) return;
+    setState(() {
+      _isFetchingMore = true;
+    });
+    try {
+      final List<dynamic> raw = await _notificationService.getNotifications(
+        limit: 20,
+        offset: _offset,
+      );
+      if (!mounted) return;
+      final List<NotificationItem> newItems = raw
+          .whereType<Map<String, dynamic>>()
+          .map(NotificationItem.fromJson)
+          .toList();
+      setState(() {
+        _notifications.addAll(newItems);
+        _offset = _notifications.length;
+        _isFetchingMore = false;
+        if (raw.length < 20) {
+          _hasMore = false;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isFetchingMore = false;
+      });
+      AppToast.showError(context, e, fallback: 'Could not load older notifications.');
     }
   }
 
@@ -205,9 +265,11 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return RefreshIndicator(
       onRefresh: _loadNotifications,
       child: ListView.separated(
+        controller: _scrollController,
         padding: const EdgeInsets.symmetric(vertical: 8),
-        itemCount:
-            visibleNotifications.isEmpty ? 2 : visibleNotifications.length + 1,
+        itemCount: visibleNotifications.isEmpty
+            ? 2
+            : visibleNotifications.length + 1 + (_hasMore ? 1 : 0),
         separatorBuilder: (_, int index) => index == 0
             ? const SizedBox.shrink()
             : Divider(
@@ -221,10 +283,53 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         itemBuilder: (BuildContext context, int index) {
           if (index == 0) return _buildFilterBar();
           if (visibleNotifications.isEmpty) return _buildFilteredEmptyState();
+          if (index == visibleNotifications.length + 1) {
+            return const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                  ),
+                ),
+              ),
+            );
+          }
           final NotificationItem notification = visibleNotifications[index - 1];
-          return _NotificationTile(
-            notification: notification,
-            onTap: () => _onNotificationTap(notification),
+          return Dismissible(
+            key: Key('notification_${notification.id}'),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              color: AppColors.error,
+              child: Icon(
+                PhosphorIcons.trash,
+                color: Colors.white,
+                size: 24,
+              ),
+            ),
+            onDismissed: (DismissDirection direction) async {
+              final String id = notification.id;
+              setState(() {
+                _notifications.removeWhere((NotificationItem n) => n.id == id);
+              });
+              try {
+                await _notificationService.deleteNotification(id);
+              } catch (e) {
+                if (context.mounted) {
+                  AppToast.showError(context, e, fallback: 'Could not delete notification.');
+                  _loadNotifications();
+                }
+              }
+            },
+            child: _NotificationTile(
+              notification: notification,
+              onTap: () => _onNotificationTap(notification),
+            ),
           );
         },
       ),

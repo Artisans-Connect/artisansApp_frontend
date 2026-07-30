@@ -308,8 +308,9 @@ class NotificationService {
   // ── Notification API methods ──────────────────────────────────────
 
   /// Fetches the current user's notifications from the backend.
-  Future<List<dynamic>> getNotifications({int limit = 50}) async {
-    final dynamic result = await _api.get('/notifications?limit=$limit');
+  Future<List<dynamic>> getNotifications({int limit = 20, int offset = 0}) async {
+    final dynamic result =
+        await _api.get('/notifications?limit=$limit&offset=$offset');
     if (result is List) return result;
     return <dynamic>[];
   }
@@ -332,5 +333,10 @@ class NotificationService {
   /// Marks all unread notifications as read.
   Future<void> markAllAsRead() async {
     await _api.patch('/notifications/read-all');
+  }
+
+  /// Deletes a single notification.
+  Future<void> deleteNotification(String notificationId) async {
+    await _api.delete('/notifications/$notificationId');
   }
 }

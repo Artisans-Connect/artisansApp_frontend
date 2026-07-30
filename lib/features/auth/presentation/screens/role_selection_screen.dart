@@ -73,6 +73,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   // Location
   final TextEditingController _locationController = TextEditingController();
+  late final TextEditingController _phoneController;
   bool _isLoadingLocation = false;
 
   // Bio
@@ -114,6 +115,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       _session.locationLabel = _locationController.text.trim();
     });
 
+    _phoneController = TextEditingController(text: _session.phone);
+    _phoneController.addListener(() {
+      _session.phone = _phoneController.text.trim();
+    });
+
     _areaSearchController.addListener(_onAreaSearchChanged);
 
     _loadTrades();
@@ -123,6 +129,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   void dispose() {
     _pageController.dispose();
     _locationController.dispose();
+    _phoneController.dispose();
     _customTradeController.dispose();
     _areaSearchController.dispose();
     _bioController.dispose();
@@ -343,6 +350,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   // ── Navigation ─────────────────────────────────────────────────────────────
 
   bool _canProceed() {
+    final bool hasValidPhone = _session.phone != null &&
+        _session.phone!.trim().length >= 8 &&
+        _session.phone!.trim() != '0000000000';
+
     if (_isBecomingWorker) {
       if (_currentIndex == 0) return _session.selectedTrades.isNotEmpty;
       if (_currentIndex == 1) {
@@ -351,7 +362,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       }
       if (_currentIndex == 2) {
         return _session.locationLabel != null &&
-            _session.locationLabel!.isNotEmpty;
+            _session.locationLabel!.isNotEmpty &&
+            hasValidPhone;
       }
       return true;
     } else {
@@ -359,7 +371,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       if (_session.isClient) {
         if (_currentIndex == 1) {
           return _session.locationLabel != null &&
-              _session.locationLabel!.isNotEmpty;
+              _session.locationLabel!.isNotEmpty &&
+              hasValidPhone;
         }
         return true;
       } else {
@@ -370,7 +383,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         }
         if (_currentIndex == 3) {
           return _session.locationLabel != null &&
-              _session.locationLabel!.isNotEmpty;
+              _session.locationLabel!.isNotEmpty &&
+              hasValidPhone;
         }
         return true;
       }
@@ -800,6 +814,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       session: _session,
       imageFile: _imageFile,
       locationController: _locationController,
+      phoneController: _phoneController,
       isLoadingLocation: _isLoadingLocation,
       onPickImage: _pickImage,
       onAutoDetectLocation: _autoDetectLocation,

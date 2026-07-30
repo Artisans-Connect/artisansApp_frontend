@@ -15,6 +15,7 @@ class PhotoLocationPage extends StatelessWidget {
     required this.session,
     required this.imageFile,
     required this.locationController,
+    required this.phoneController,
     required this.isLoadingLocation,
     required this.onPickImage,
     required this.onAutoDetectLocation,
@@ -23,6 +24,7 @@ class PhotoLocationPage extends StatelessWidget {
   final OnboardingSession session;
   final PickedMedia? imageFile;
   final TextEditingController locationController;
+  final TextEditingController phoneController;
   final bool isLoadingLocation;
   final VoidCallback onPickImage;
   final VoidCallback onAutoDetectLocation;
@@ -204,6 +206,17 @@ class PhotoLocationPage extends StatelessWidget {
                           ),
                           onPressed: onAutoDetectLocation,
                         ),
+                ),
+
+                const SizedBox(height: 22),
+
+                // Contact input
+                const SectionLabel('Contact Number'),
+                AppInput(
+                  controller: phoneController,
+                  hint: 'e.g., +233 24 123 4567',
+                  prefixIcon: PhosphorIcons.phone,
+                  keyboardType: TextInputType.phone,
                 ),
               ],
             ),

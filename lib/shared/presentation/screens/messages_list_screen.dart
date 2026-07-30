@@ -12,6 +12,7 @@ import '../../widgets/conversation_tile.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/error_state_view.dart';
 import '../../widgets/search_bar.dart';
+import '../../widgets/app_toast.dart';
 import '../../utils/shared_user_context.dart';
 import '../navigation/shared_route_args.dart';
 import 'chat_detail_screen.dart';
@@ -257,9 +258,72 @@ class _MessagesListScreenState extends State<MessagesListScreen> {
                     itemBuilder: (BuildContext context, int index) {
                       final ConversationSummary conversation =
                           _filteredConversations[index];
-                      return ConversationTile(
-                        conversation: conversation,
-                        onTap: () => _openChat(conversation),
+                      if (!conversation.isDirect) {
+                        return ConversationTile(
+                          conversation: conversation,
+                          onTap: () => _openChat(conversation),
+                        );
+                      }
+                      return Dismissible(
+                        key: Key('conversation_${conversation.id}'),
+                        direction: DismissDirection.endToStart,
+                        background: Container(
+                          alignment: Alignment.centerRight,
+                          padding: const EdgeInsets.only(right: 20),
+                          color: AppColors.error,
+                          child: Icon(
+                            PhosphorIcons.trash,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                        confirmDismiss: (DismissDirection direction) async {
+                          return await showDialog<bool>(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return AlertDialog(
+                                title: const Text('Delete Chat?'),
+                                content: const Text(
+                                  'Are you sure you want to permanently delete this chat? This cannot be undone.',
+                                ),
+                                actions: <Widget>[
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(false),
+                                    child: const Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => Navigator.of(context).pop(true),
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: AppColors.error,
+                                    ),
+                                    child: const Text('Delete'),
+                                  ),
+                                ],
+                              );
+                            },
+                          ) ?? false;
+                        },
+                        onDismissed: (DismissDirection direction) async {
+                          final String id = conversation.id;
+                          setState(() {
+                            _conversations.removeWhere((ConversationSummary c) => c.id == id);
+                          });
+                          try {
+                            await _chatService.deleteConversation(id);
+                            if (context.mounted) {
+                              AppToast.showSuccess(context, 'Chat deleted successfully.');
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              AppToast.showError(context, e, fallback: 'Could not delete chat.');
+                              _loadConversations(forceRefresh: true);
+                            }
+                          }
+                        },
+                        child: ConversationTile(
+                          conversation: conversation,
+                          onTap: () => _openChat(conversation),
+                        ),
                       );
                     },
                   ),

@@ -17,6 +17,7 @@ import '../../../../shared/widgets/secondary_button.dart';
 import '../../widgets/auth_error_banner.dart';
 import 'forgot_password_screen.dart';
 import 'role_selection_screen.dart';
+import '../../models/onboarding_session.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key, this.initialEmail});
@@ -157,6 +158,23 @@ class _SignInScreenState extends State<SignInScreen> {
       if (!mounted) return;
       debugPrint('[SignIn] Google AuthFailure: ${e.code} - ${e.message}');
       if (e.code == AuthFailureCode.profileNotFound) {
+        final supUser = Supabase.instance.client.auth.currentUser;
+        if (supUser != null) {
+          final dynamic metaRaw = supUser.userMetadata;
+          String? name;
+          String? phone;
+          if (metaRaw is Map<String, dynamic>) {
+            name = (metaRaw['full_name'] ?? metaRaw['name'])?.toString();
+            phone = metaRaw['phone']?.toString();
+          }
+          final onboarding = OnboardingSession.instance;
+          onboarding.fullName = name ?? supUser.email;
+          onboarding.phone = phone ?? '';
+          onboarding.avatarUrl = (metaRaw is Map<String, dynamic>
+                  ? metaRaw['avatar_url'] ?? metaRaw['picture']
+                  : null)
+              ?.toString();
+        }
         await Navigator.pushReplacementNamed(
             context, RoleSelectionScreen.routeName);
         return;
