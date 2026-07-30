@@ -98,6 +98,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
     _session = widget.session ?? OnboardingSession.instance;
 
+    _hydrateSessionFromAuthMetadata();
+
     if (_isBecomingWorker) {
       _session.setRole(UserRole.worker);
     }
@@ -810,6 +812,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   Widget _buildPhotoLocationPageWrapper() {
+    final User? authUser = Supabase.instance.client.auth.currentUser;
+    final bool isGoogleUser = authUser?.appMetadata['provider'] == 'google' ||
+        (authUser?.identities?.any((id) => id.provider == 'google') ?? false);
+
     return PhotoLocationPage(
       session: _session,
       imageFile: _imageFile,
@@ -818,6 +824,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       isLoadingLocation: _isLoadingLocation,
       onPickImage: _pickImage,
       onAutoDetectLocation: _autoDetectLocation,
+      isGoogleUser: isGoogleUser,
     );
   }
 
