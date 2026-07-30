@@ -32,12 +32,18 @@ class AuthService {
   Future<SignUpOutcome> signUp({
     required String email,
     required String password,
+    String? phone,
+    String? fullName,
   }) async {
     try {
       final AuthResponse response = await _supabaseAuth.signUp(
         email: email,
         password: password,
         emailRedirectTo: AppConstants.supabaseRedirectUrl,
+        data: <String, dynamic>{
+          if (phone != null) 'phone': phone,
+          if (fullName != null) 'full_name': fullName,
+        },
       );
 
       if (response.user == null) {

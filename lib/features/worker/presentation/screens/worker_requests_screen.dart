@@ -22,7 +22,6 @@ import 'worker_reviews_screen.dart';
 import '../utils/worker_application_navigation.dart';
 import '../../../../core/session/app_user_session.dart';
 import '../../../../core/theme/design_tokens.dart';
-
 class _PulseDot extends StatelessWidget {
   const _PulseDot({required this.online});
 
@@ -41,7 +40,6 @@ class _PulseDot extends StatelessWidget {
     );
   }
 }
-
 /// Premium availability toggle card.
 class _AvailabilityCard extends StatelessWidget {
   const _AvailabilityCard({
@@ -169,6 +167,8 @@ class _AvailabilityCard extends StatelessWidget {
     );
   }
 }
+
+
  
 /// Section header row with optional count badge.
 class _SectionHeader extends StatelessWidget {
@@ -1569,18 +1569,7 @@ class _PendingApplicationCard extends StatelessWidget {
                       color: DesignTokens.textSecondary,
                     ),
                   ),
-                  if (budget != null) ...<Widget>[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Budget: GHS $budget',
-                      style: const TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: DesignTokens.primary,
-                      ),
-                    ),
-                  ],
+
                   if (clientEstimate != null) ...<Widget>[
                     const SizedBox(height: 6),
                     Text(

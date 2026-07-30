@@ -76,13 +76,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final String email = _emailController.text.trim();
     final onboarding = OnboardingSession.instance;
-    onboarding.fullName = _nameController.text.trim();
-    onboarding.phone = _phoneController.text.trim();
+    final String fullName = _nameController.text.trim();
+    final String phone = _phoneController.text.trim();
+    onboarding.fullName = fullName;
+    onboarding.phone = phone;
 
     try {
       final outcome = await AuthService.instance.signUp(
         email: email,
         password: _passwordController.text,
+        phone: phone,
+        fullName: fullName,
       );
 
       if (!mounted) return;
