@@ -176,44 +176,60 @@ class _SplashScreenState extends State<SplashScreen> {
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        color: AppColors.primary,
+        child: Stack(
+          alignment: Alignment.center,
           children: <Widget>[
-            Container(
-              width: 172,
-              height: 172,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFFFF6ED),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
+            // Exact 2D screen center alignment matching native splash
+            Center(
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF6ED),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.14),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Image.asset(
+                  'assets/ArtisanConnect Logo - 1.png',
+                  width: 108,
+                  height: 108,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            // Branding and progress indicator positioned below center
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 80,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'CraftMatch',
+                    style: AppTypography.displayMedium.copyWith(
+                      color: Colors.white,
+                      fontSize: 38,
+                      letterSpacing: -0.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3.0,
                   ),
                 ],
               ),
-              alignment: Alignment.center,
-              child: Image.asset(
-                'assets/ArtisanConnect Logo - 1.png',
-                width: 120,
-                height: 120,
-                fit: BoxFit.contain,
-              ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'CraftMatch',
-              style: AppTypography.displayMedium.copyWith(
-                color: Colors.white,
-                fontSize: 42,
-              ),
-            ),
-            const SizedBox(height: 32),
-            const CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

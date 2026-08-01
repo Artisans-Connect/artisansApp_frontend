@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -130,15 +131,18 @@ class AuthService {
       }
 
       await _ensureGoogleSignInInitialized();
-      await _googleSignIn.signOut();
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
 
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+      final GoogleSignInAccount googleUser =
+          await _googleSignIn.authenticate();
       final String? idToken = googleUser.authentication.idToken;
 
       if (idToken == null) {
         throw const AuthFailure(
           AuthFailureCode.unknown,
-          'Google sign in failed. No ID token received.',
+          'Google sign in failed. No ID token received from Google.',
         );
       }
 
@@ -440,8 +444,9 @@ class AuthService {
 
   Future<void> _ensureGoogleSignInInitialized() {
     return _googleSignInInit ??= _googleSignIn.initialize(
-      clientId:
-          '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com',
+      clientId: kIsWeb || defaultTargetPlatform == TargetPlatform.iOS
+          ? '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com'
+          : null,
       serverClientId:
           '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com',
     );
