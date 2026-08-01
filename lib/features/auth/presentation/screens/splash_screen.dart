@@ -172,15 +172,20 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    // Circle is 160x160 centered at screenHeight / 2.
+    // Bottom edge of circle is (screenHeight / 2) + 80.
+    // Positioning content starting 100px below screen center places it 20px directly below the circle.
+    final double contentTop = (screenHeight / 2) + 100;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
         color: AppColors.primary,
         child: Stack(
-          alignment: Alignment.center,
           children: <Widget>[
-            // Exact 2D screen center alignment matching native splash
+            // 1. Warm white circle pinned at exact 2D screen center (matches native splash 1:1)
             Center(
               child: Container(
                 width: 160,
@@ -205,11 +210,11 @@ class _SplashScreenState extends State<SplashScreen> {
                 ),
               ),
             ),
-            // Branding and progress indicator positioned below center
+            // 2. App title & progress spinner placed directly underneath the centered circle
             Positioned(
+              top: contentTop,
               left: 0,
               right: 0,
-              bottom: 80,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[

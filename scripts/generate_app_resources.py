@@ -23,11 +23,10 @@ def generate_resources():
     circle_diameter = 300
     logo_target_size = 200
 
-    # 1. Create transparent 512x512 foreground canvas
+    # 1. Create transparent 512x512 foreground canvas with warm white circle (#FFF6ED) and emblem
     foreground = Image.new('RGBA', (canvas_size, canvas_size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(foreground)
 
-    # Draw warm white circle (#FFF6ED)
     circle_left = (canvas_size - circle_diameter) // 2
     circle_top = (canvas_size - circle_diameter) // 2
     circle_right = circle_left + circle_diameter
@@ -49,13 +48,49 @@ def generate_resources():
     # Save to launcher_icon_foreground.png
     launcher_fg_path = os.path.join(project_root, 'assets', 'launcher_icon_foreground.png')
     foreground.save(launcher_fg_path, 'PNG')
-    print(f"Successfully generated {launcher_fg_path} (size={foreground.size}, circle={circle_diameter}px, bbox={foreground.getbbox()})")
+    print(f"Successfully generated {launcher_fg_path} (size={foreground.size}, circle={circle_diameter}px)")
 
-    # 2. Save launch_logo.png for native splash
+    # 2. Save launch_logo.png for native splash screen
     launch_logo_path = os.path.join(project_root, 'android', 'app', 'src', 'main', 'res', 'drawable', 'launch_logo.png')
     os.makedirs(os.path.dirname(launch_logo_path), exist_ok=True)
     foreground.save(launch_logo_path, 'PNG')
     print(f"Successfully generated {launch_logo_path}")
+
+    # 3. Generate clean PWA splash emblem (transparent 256x256 with emblem only for HTML splash)
+    web_icons_dir = os.path.join(project_root, 'web', 'icons')
+    os.makedirs(web_icons_dir, exist_ok=True)
+    
+    pwa_emblem = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
+    scale_pwa = 180 / float(max(crop_w, crop_h))
+    pw_w, pw_h = int(crop_w * scale_pwa), int(crop_h * scale_pwa)
+    r_pwa_logo = cropped_logo.resize((pw_w, pw_h), Image.Resampling.LANCZOS)
+    pwa_emblem.paste(r_pwa_logo, ((256 - pw_w) // 2, (256 - pw_h) // 2), r_pwa_logo)
+    
+    pwa_splash_logo_path = os.path.join(web_icons_dir, 'pwa_splash_logo.png')
+    pwa_emblem.save(pwa_splash_logo_path, 'PNG')
+    print(f"Successfully generated {pwa_splash_logo_path}")
+
+    # 4. Generate Web / PWA App Icons (Solid Warm White #FFF6ED background with emblem for home screen icons)
+    pwa_512 = Image.new('RGBA', (512, 512), (255, 246, 237, 255))
+    scale_icon = 320 / float(max(crop_w, crop_h))
+    iw_w, iw_h = int(crop_w * scale_icon), int(crop_h * scale_icon)
+    r_icon_logo = cropped_logo.resize((iw_w, iw_h), Image.Resampling.LANCZOS)
+    pwa_512.paste(r_icon_logo, ((512 - iw_w) // 2, (512 - iw_h) // 2), r_icon_logo)
+
+    # Save Icon-512.png & Icon-maskable-512.png
+    pwa_512.save(os.path.join(web_icons_dir, 'Icon-512.png'), 'PNG')
+    pwa_512.save(os.path.join(web_icons_dir, 'Icon-maskable-512.png'), 'PNG')
+
+    # Save Icon-192.png & Icon-maskable-192.png
+    pwa_192 = pwa_512.resize((192, 192), Image.Resampling.LANCZOS)
+    pwa_192.save(os.path.join(web_icons_dir, 'Icon-192.png'), 'PNG')
+    pwa_192.save(os.path.join(web_icons_dir, 'Icon-maskable-192.png'), 'PNG')
+
+    # Save favicon.png
+    favicon_path = os.path.join(project_root, 'web', 'favicon.png')
+    favicon = pwa_512.resize((64, 64), Image.Resampling.LANCZOS)
+    favicon.save(favicon_path, 'PNG')
+    print("Successfully generated all Web PWA home screen icons with warm white background.")
 
 if __name__ == '__main__':
     generate_resources()
