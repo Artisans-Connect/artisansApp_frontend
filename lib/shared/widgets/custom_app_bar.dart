@@ -5,6 +5,7 @@ import 'custom_back_button.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final String? subtitle;
   final bool showBackButton;
   final VoidCallback? onBackPressed;
   final List<Widget>? actions;
@@ -15,6 +16,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   const CustomAppBar({
     Key? key,
     required this.title,
+    this.subtitle,
     this.showBackButton = true,
     this.onBackPressed,
     this.actions,
@@ -24,17 +26,39 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   }) : super(key: key);
 
   @override
-  Size get preferredSize => const Size.fromHeight(56);
+  Size get preferredSize => Size.fromHeight(subtitle != null && subtitle!.isNotEmpty ? 64 : 56);
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
-      title: Text(
-        title,
-        style: AppTypography.displayMedium.copyWith(
-          color: AppColors.primary,
-        ),
-      ),
+      title: subtitle != null && subtitle!.isNotEmpty
+          ? Column(
+              crossAxisAlignment: centerTitle
+                  ? CrossAxisAlignment.center
+                  : CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  title,
+                  style: AppTypography.displayMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+                Text(
+                  subtitle!,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textMuted,
+                    fontSize: 11,
+                  ),
+                ),
+              ],
+            )
+          : Text(
+              title,
+              style: AppTypography.displayMedium.copyWith(
+                color: AppColors.primary,
+              ),
+            ),
       centerTitle: centerTitle,
       backgroundColor: backgroundColor ?? AppColors.surface,
       elevation: elevation,

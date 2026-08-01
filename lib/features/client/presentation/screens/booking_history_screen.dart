@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/jobs_service.dart';
@@ -11,6 +10,7 @@ import '../../../../shared/widgets/error_state_view.dart';
 import '../../data/job_draft_store.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
+import '../widgets/client_booking_card.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
   const BookingHistoryScreen({
@@ -90,8 +90,41 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     }
   }
 
+  int _countForFilter(String filter) {
+    if (filter == 'All') return _bookings.length;
+    if (filter == 'In Progress') {
+      return _bookings
+          .where((ClientBooking b) =>
+              b.status == ClientBookingStatus.inProgress ||
+              b.status == ClientBookingStatus.accepted)
+          .length;
+    }
+    if (filter == 'Draft') {
+      return _bookings
+          .where((ClientBooking b) =>
+              b.status == ClientBookingStatus.draft || b.isLocalDraft)
+          .length;
+    }
+    return _bookings
+        .where((ClientBooking b) => b.status.displayLabel == filter)
+        .length;
+  }
+
   List<ClientBooking> get _filteredBookings {
     if (_selectedFilter == 'All') return _bookings;
+    if (_selectedFilter == 'In Progress') {
+      return _bookings
+          .where((ClientBooking b) =>
+              b.status == ClientBookingStatus.inProgress ||
+              b.status == ClientBookingStatus.accepted)
+          .toList();
+    }
+    if (_selectedFilter == 'Draft') {
+      return _bookings
+          .where((ClientBooking b) =>
+              b.status == ClientBookingStatus.draft || b.isLocalDraft)
+          .toList();
+    }
     return _bookings
         .where((ClientBooking b) => b.status.displayLabel == _selectedFilter)
         .toList();
@@ -102,7 +135,8 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
-        title: 'Booking History',
+        title: 'Bookings',
+        subtitle: 'Your past and ongoing jobs',
         showBackButton: !widget.embedInShell,
         onBackPressed: () => Navigator.pop(context),
       ),
@@ -137,22 +171,18 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                                 ),
                               ),
                             ),
-                          Text(
-                            'Your Past & Ongoing Jobs',
-                            style: AppTypography.displaySmall,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
                             child: Row(
                               children: _filters.map((String filter) {
                                 final bool isSelected =
                                     _selectedFilter == filter;
+                                final int count = _countForFilter(filter);
                                 return Padding(
                                   padding: const EdgeInsets.only(
                                       right: AppSpacing.md),
                                   child: FilterChip(
-                                    label: Text(filter),
+                                    label: Text('$filter ($count)'),
                                     selected: isSelected,
                                     onSelected: (_) {
                                       setState(() => _selectedFilter = filter);
@@ -172,7 +202,7 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                             )
                           else
                             ..._filteredBookings.map(
-                              (ClientBooking booking) => _BookingCard(
+                              (ClientBooking booking) => ClientBookingCard(
                                 booking: booking,
                                 onTap: () => ClientNavigation.handleBookingTap(
                                   context,
@@ -184,31 +214,6 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                       ),
                     ),
                   ),
-      ),
-    );
-  }
-}
-
-class _BookingCard extends StatelessWidget {
-  const _BookingCard({required this.booking, required this.onTap});
-
-  final ClientBooking booking;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final String subtitle = booking.isLocalDraft
-        ? 'Draft saved on this device'
-        : booking.status == ClientBookingStatus.requested
-        ? 'View interested artisans'
-        : '${booking.artisan} · ${booking.status.displayLabel}';
-    return Card(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      child: ListTile(
-        title: Text(booking.title),
-        subtitle: Text(subtitle),
-        trailing: Icon(PhosphorIcons.caretRight),
-        onTap: onTap,
       ),
     );
   }

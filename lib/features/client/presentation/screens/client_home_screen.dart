@@ -13,7 +13,6 @@ import '../widgets/client_home/home_atoms.dart';
 import '../widgets/client_home/active_job_banner.dart';
 import '../widgets/client_home/artisan_list_states.dart';
 import '../widgets/client_home/marquee_categories.dart';
-import '../../../../shared/widgets/search_bar.dart';
 import '../../../../core/services/categories_service.dart';
 import '../../../../core/services/jobs_service.dart';
 import '../../../../core/services/notification_service.dart';
@@ -270,26 +269,54 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
         .where((String term) => term.isNotEmpty)
         .toList();
   }
- 
-  // ── Filtered artisans ──────────────────────────────────────────────────────
-  List<Map<String, dynamic>> get _visibleArtisans {
-    return _featuredArtisans.where((Map<String, dynamic> a) {
-      final Map<String, dynamic> profile = Map<String, dynamic>.from(
-          a['profiles'] as Map<String, dynamic>? ?? const <String, dynamic>{});
-      final List<dynamic> skills =
-          a['skills'] as List<dynamic>? ?? <dynamic>[];
-      final String haystack = <String>[
-        (profile['full_name'] ?? a['name'] ?? '').toString(),
-        ...skills.map((dynamic s) => s.toString()),
-      ].join(' ').toLowerCase();
- 
-      final String trimmedQuery = _searchQuery.trim();
-      if (trimmedQuery.isNotEmpty &&
-          !haystack.contains(trimmedQuery.toLowerCase())) return false;
-      return true;
-    }).toList();
+  List<Map<String, dynamic>> get _visibleArtisans => _featuredArtisans;
+
+  Future<void> _handleSearchSubmitted() async {
+    final String query = _searchQuery.trim();
+    if (query.isEmpty) return;
+
+    setState(() => _isParsingIntent = true);
+    try {
+      final SmartSearchIntent intent =
+          await SmartSearchService.instance.parseIntent(query);
+      if (mounted) {
+        setState(() => _isParsingIntent = false);
+        await Navigator.pushNamed(
+          context,
+          AppRoutes.exploreArtisans,
+          arguments: <String, dynamic>{
+            'query': intent.refinedQuery,
+            'categoryIds': intent.categoryIds,
+            'categories': intent.categoryNames,
+            'intentSummary': intent.intentSummary.isNotEmpty
+                ? intent.intentSummary
+                : null,
+          },
+        );
+        if (mounted) {
+          setState(() => _searchQuery = '');
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isParsingIntent = false);
+        await Navigator.pushNamed(
+          context,
+          AppRoutes.exploreArtisans,
+          arguments: <String, dynamic>{
+            'query': query,
+            if (_selectedCategory.isNotEmpty) 'category': _selectedCategory,
+            if (_selectedCategoryId.isNotEmpty)
+              'categoryId': _selectedCategoryId,
+          },
+        );
+        if (mounted) {
+          setState(() => _searchQuery = '');
+        }
+      }
+    }
   }
- 
+
   // ── Build ──────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
@@ -309,7 +336,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                     horizontal: DesignTokens.gutter, vertical: 8),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate(<Widget>[
-                  // Hero
+                  // Hero with Embedded Search
                   AnimatedBuilder(
                     animation: AppUserSession.instance,
                     builder: (BuildContext context, Widget? child) {
@@ -320,11 +347,19 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                       final String name = firstName.isNotEmpty
                           ? 'Welcome, $firstName 🙃'
                           : 'Welcome back 🙃';
-                      return HomeHero(greeting: _greeting, name: name);
+                      return HomeHero(
+                        greeting: _greeting,
+                        name: name,
+                        searchQuery: _searchQuery,
+                        isParsingIntent: _isParsingIntent,
+                        onSearchChanged: (String v) =>
+                            setState(() => _searchQuery = v),
+                        onSearchSubmitted: _handleSearchSubmitted,
+                      );
                     },
                   ),
                   const SizedBox(height: 18),
- 
+
                   // Active job banner
                   if (!_loadingActiveJob && _activeJob != null) ...<Widget>[
                     ActiveJobBanner(
@@ -335,54 +370,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                     ),
                     const SizedBox(height: 18),
                   ],
- 
-                  // Search
-                  CustomSearchBar(
-                    hintText: 'Search artisans or services...',
-                    isLoading: _isParsingIntent,
-                    onChanged: (String v) => setState(() => _searchQuery = v),
-                    onSearch: () async {
-                      final String query = _searchQuery.trim();
-                      if (query.isEmpty) return;
-
-                      setState(() => _isParsingIntent = true);
-                      try {
-                        final SmartSearchIntent intent =
-                            await SmartSearchService.instance.parseIntent(query);
-                        if (mounted) {
-                          setState(() => _isParsingIntent = false);
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.exploreArtisans,
-                            arguments: <String, dynamic>{
-                              'query': intent.refinedQuery,
-                              'categoryIds': intent.categoryIds,
-                              'categories': intent.categoryNames,
-                              'intentSummary': intent.intentSummary.isNotEmpty
-                                  ? intent.intentSummary
-                                  : null,
-                            },
-                          );
-                        }
-                      } catch (_) {
-                        if (mounted) {
-                          setState(() => _isParsingIntent = false);
-                          Navigator.pushNamed(
-                            context,
-                            AppRoutes.exploreArtisans,
-                            arguments: <String, dynamic>{
-                              'query': query,
-                              if (_selectedCategory.isNotEmpty)
-                                'category': _selectedCategory,
-                              if (_selectedCategoryId.isNotEmpty)
-                                'categoryId': _selectedCategoryId,
-                            },
-                          );
-                        }
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 6),
  
                   // Quick actions
                   const SectionHeader(title: 'Quick Actions'),

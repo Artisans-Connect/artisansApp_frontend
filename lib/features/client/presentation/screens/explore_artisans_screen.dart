@@ -12,6 +12,7 @@ import '../../../../shared/widgets/search_bar.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../navigation/client_navigation.dart';
 import '../../services/explore_service.dart';
+import '../../../../core/services/smart_search_service.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
   const ExploreArtisansScreen({
@@ -49,9 +50,35 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
 
   List<Map<String, dynamic>> allArtisans = [];
   bool _isLoading = true;
+  bool _isParsingIntent = false;
   bool _openingMap = false;
   bool _openingMessages = false;
   final Set<String> _openingChatWorkerIds = <String>{};
+
+  Future<void> _triggerSmartIntent() async {
+    final String query = _searchController.text.trim();
+    if (query.isEmpty || _isParsingIntent) return;
+
+    setState(() => _isParsingIntent = true);
+    try {
+      final SmartSearchIntent intent =
+          await SmartSearchService.instance.parseIntent(query);
+      if (!mounted) return;
+      setState(() {
+        _isParsingIntent = false;
+        _searchQuery = intent.refinedQuery;
+        _categoryIds = intent.categoryIds;
+        _categoryNames = intent.categoryNames;
+        _intentSummary =
+            intent.intentSummary.isNotEmpty ? intent.intentSummary : null;
+        _isLoading = true;
+      });
+      await _fetchArtisans();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isParsingIntent = false);
+    }
+  }
 
   @override
   void initState() {
@@ -226,21 +253,37 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
 
   List<Map<String, dynamic>> get _filteredArtisans {
     return allArtisans.where((Map<String, dynamic> artisan) {
-      final String name = (artisan['name'] as String).toLowerCase();
+      final Map<String, dynamic> profile = Map<String, dynamic>.from(
+          artisan['profiles'] as Map<String, dynamic>? ??
+              const <String, dynamic>{});
+      final String name = (artisan['name'] as String? ?? '').toLowerCase();
+      final String fullName =
+          (profile['full_name'] ?? artisan['name'] ?? profile['name'] ?? '')
+              .toString()
+              .toLowerCase();
+      final String businessName =
+          (profile['business_name'] ?? artisan['business_name'] ?? '')
+              .toString()
+              .toLowerCase();
       final String profession =
-          (artisan['profession'] as String).toLowerCase();
+          (artisan['profession'] as String? ?? profile['profession'] as String? ?? '')
+              .toLowerCase();
       final List<String> skills =
           (artisan['skills'] as List<dynamic>? ?? <dynamic>[])
               .map((dynamic item) => item.toString().toLowerCase())
               .toList();
       final String skillText = skills.join(' ');
-      final String trimmedQuery = _searchQuery.trim();
-      
+      final String trimmedQuery = _searchQuery.trim().toLowerCase();
+
       // Bypass simple text match if this was parsed by AI into categories
       if (trimmedQuery.isNotEmpty && _intentSummary == null) {
-        final List<String> queryParts = trimmedQuery.toLowerCase().split(RegExp(r'\s+'));
+        final List<String> queryParts = trimmedQuery.split(RegExp(r'\s+'));
         for (final String part in queryParts) {
-          if (!name.contains(part) && !profession.contains(part) && !skillText.contains(part)) {
+          if (!name.contains(part) &&
+              !fullName.contains(part) &&
+              !businessName.contains(part) &&
+              !profession.contains(part) &&
+              !skillText.contains(part)) {
             return false;
           }
         }
@@ -361,6 +404,10 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
               CustomSearchBar(
                 hintText: 'Search by name or skill...',
                 controller: _searchController,
+                isLoading: _isParsingIntent,
+                showAiButton: true,
+                onAiTap: _triggerSmartIntent,
+                onSearch: _triggerSmartIntent,
                 onChanged: (String value) {
                   setState(() {
                     _searchQuery = value;
