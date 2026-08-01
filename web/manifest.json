@@ -3,7 +3,7 @@
     "short_name": "CraftMatch",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFF8F0",
+    "background_color": "#C15A3D",
     "theme_color": "#C15A3D",
     "description": "Connect with trusted local artisans for home and service jobs.",
     "orientation": "portrait-primary",

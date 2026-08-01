@@ -63,27 +63,20 @@ dev_dependencies:
 dependency_overrides:
   path_provider_foundation: 2.3.2
 
-  
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/launcher_icon_foreground.png"
   remove_alpha_ios: true
-  bg_color_ios: "#FFF8F0"
-  adaptive_icon_background: "#FFF8F0"
+  bg_color_ios: "#C15A3D"
+  adaptive_icon_background: "#C15A3D"
   adaptive_icon_foreground: "assets/launcher_icon_foreground.png"
   min_sdk_android: 21
   web:
     generate: true
     image_path: "assets/launcher_icon_foreground.png"
-    background_color: "#FFF8F0"
+    background_color: "#C15A3D"
     theme_color: "#C15A3D"
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
