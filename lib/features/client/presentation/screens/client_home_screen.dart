@@ -20,6 +20,7 @@ import '../../../../core/session/app_user_session.dart';
 import '../../../../core/utils/icon_mapper.dart';
 import '../../services/explore_service.dart';
 import '../../../../core/services/smart_search_service.dart';
+import '../../../../shared/utils/greeting_utils.dart';
 
 const Map<String, List<String>> _categoryAliases = <String, List<String>>{
   'construction_building': <String>['builder', 'building', 'mason', 'carpenter', 'tiler', 'painter', 'steel bender', 'welder', 'fabricator', 'ceiling', 'glass', 'roofer', 'paver', 'construction'],
@@ -68,12 +69,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
   final NotificationService _notificationService = NotificationService.instance;
  
   // ── Greeting ───────────────────────────────────────────────────────────────
-  String get _greeting {
-    final int h = DateTime.now().hour;
-    if (h < 12) return 'Good Morning';
-    if (h < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  }
+  String get _greeting => GreetingUtils.getGreeting(capitalizeWords: true);
  
   // ── Lifecycle ──────────────────────────────────────────────────────────────
   @override

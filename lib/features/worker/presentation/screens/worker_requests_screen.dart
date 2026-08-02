@@ -22,6 +22,7 @@ import 'worker_reviews_screen.dart';
 import '../utils/worker_application_navigation.dart';
 import '../../../../core/session/app_user_session.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../shared/utils/greeting_utils.dart';
 class _PulseDot extends StatelessWidget {
   const _PulseDot({required this.online});
 
@@ -576,35 +577,21 @@ class _RequestBadge extends StatelessWidget {
     );
   }
 }
- 
+
 class _DashboardHeader extends StatelessWidget {
   const _DashboardHeader();
- 
+
   String _firstName() {
     final String fullName = AppUserSession.instance.currentUser?.fullName ?? '';
     final List<String> parts = fullName.trim().split(' ');
     return parts.isNotEmpty && parts.first.isNotEmpty ? parts.first : '';
   }
- 
-  String _greeting() {
-    final int hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
-  }
- 
-  String _subtitle() {
-    final int hour = DateTime.now().hour;
-    if (hour < 12) return 'Ready to earn today?';
-    if (hour < 17) return 'Let\'s find you your next client.';
-    return 'Keep up the great work!';
-  }
- 
+
   @override
   Widget build(BuildContext context) {
     final String firstName = _firstName();
-    final String greeting = _greeting();
-    final String subtitle = _subtitle();
+    final String greeting = GreetingUtils.getGreeting();
+    final String subtitle = GreetingUtils.getWorkerSubtitle();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -620,7 +607,7 @@ class _DashboardHeader extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          '$subtitle',
+          subtitle,
           style: const TextStyle(
             fontFamily: 'Satoshi',
             fontSize: 14,
