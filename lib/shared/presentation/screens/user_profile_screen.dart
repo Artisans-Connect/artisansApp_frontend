@@ -259,25 +259,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                   ),
                 ],
-                if (profile.totalJobs != null) ...<Widget>[
-                  const SizedBox(height: 14),
-                  ProfileSectionCard(
-                    title: 'Activity',
-                    child: _StatBlock(
-                      label: 'Jobs posted',
-                      value: '${profile.totalJobs}',
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: 14),
-                ProfileSectionCard(
-                  title: 'Activity',
-                  child: _StatBlock(
-                    label: 'Jobs posted',
-                    value: '${profile.totalJobs}',
-                  ),
-                ),
               ],
               const SizedBox(height: 24),
               if (isOwnProfile) ...<Widget>[
