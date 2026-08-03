@@ -250,6 +250,29 @@ class CategoriesService {
     return <dynamic>[];
   }
 
+  static const Set<String> _legacyFlatSlugs = <String>{
+    'plumbing',
+    'electrical',
+    'carpentry',
+    'masonry',
+    'welding',
+    'construction',
+    'automotive',
+    'painting',
+    'tiling',
+    'roofing',
+    'hvac',
+    'appliance_repair',
+    'cleaning',
+    'landscaping',
+    'fashion',
+    'beauty',
+    'catering',
+    'upholstery',
+    'security',
+    'ict_support',
+  };
+
   List<Map<String, dynamic>> _normalizeCategories(List<dynamic> raw) {
     final List<Map<String, dynamic>> categories = raw
         .whereType<Map<dynamic, dynamic>>()
@@ -282,6 +305,9 @@ class CategoriesService {
         })
         .where((Map<String, dynamic> category) =>
             (category['id'] as String).isNotEmpty &&
+            !_legacyFlatSlugs.contains(
+              (category['slug'] ?? '').toString().trim().toLowerCase(),
+            ) &&
             category['subcategories'] is List &&
             (category['subcategories'] as List).isNotEmpty)
         .toList();

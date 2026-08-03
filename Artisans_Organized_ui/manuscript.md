@@ -13,7 +13,7 @@ Current digital solutions for the informal artisan economy fail to adequately ba
 ### SMART Objectives
 1. **Specific:** Develop an interpretable multi-factor matching system that ranks available artisans on three weighted signals — spatial proximity (~0.32), historical response rate (~0.35), and rating (~0.33) — with portal-issued verification as a tie-breaker, location freshness as an eligibility filter, and a fairness slot that guarantees new artisans exposure.
 2. **Measurable:** Keep single-round ranking latency in the tens-of-milliseconds range for candidate pools up to 5,000 workers on commodity hardware, degrading gracefully to ~10,000.
-3. **Achievable:** Leverage Supabase (PostgreSQL) for relational storage and Row-Level Security, application-level Haversine distance for geospatial scoring, and Express.js for dispatch scheduling.
+3. **Achievable:** Leverage Supabase (PostgreSQL) for relational storage and Row-Level Security, Supabase PostGIS spatial queries with application-level Haversine fallback for geospatial scoring, and Express.js for dispatch scheduling.
 4. **Relevant:** Reduce wasted dispatch effort (push notifications per successful match) relative to a proximity-only baseline by steering toward responsive workers, and quantify the resulting equity trade-off so it can be mitigated — rather than claiming an inflated match-rate improvement.
 5. **Time-bound:** Deploy, test, and validate the end-to-end prototype across Android, iOS, and Web environments within a simulated 12-day rapid development cycle.
 
@@ -21,10 +21,10 @@ Current digital solutions for the informal artisan economy fail to adequately ba
 
 ### System Architecture and Data Flow
 The platform is engineered using a decoupled, client-server microservices architecture designed to leverage real-time state synchronization.
-*   **Cross-Platform Client (Flutter):** Provides role-based interfaces (Client vs. Worker) and is distributed as native mobile applications (Android/iOS) and a Progressive Web App (PWA) to maximize accessibility. It captures periodic geolocation via the Google Maps SDK and communicates state changes over RESTful endpoints; live updates are delivered by polling and Firebase Cloud Messaging pushes rather than persistent WebSocket streams. Additional logic includes skill aliasing and tokenization to auto-resolve artisan categories, minimizing search friction.
+*   **Cross-Platform Client (Flutter):** Provides role-based interfaces (Client vs. Worker) and is distributed as native mobile applications (Android/iOS) and a Progressive Web App (PWA) to maximize accessibility. It captures periodic geolocation via the Google Maps SDK and communicates state changes over RESTful endpoints; live updates and tracking are delivered via Supabase Realtime (PostgreSQL change events) supplemented by Firebase Cloud Messaging pushes. Additional logic includes skill aliasing and tokenization to auto-resolve artisan categories, minimizing search friction.
 *   **Web Portal (React/Vite):** A dedicated administrative verification portal for onboarding artisans and reviewing credentials, interacting directly with the backend.
 *   **Backend Server (Node.js/Express):** Handles the core business logic, including the `matchingService` (dispatch orchestration + `recommendationEngine` ranking) and notification dispatch via Firebase Cloud Messaging.
-*   **Data Layer (Supabase/PostgreSQL):** Stores relational data and manages Row Level Security (RLS) policies. Geospatial scoring is performed in application code via the Haversine formula; the system does not use PostGIS geospatial indexing.
+*   **Data Layer (Supabase/PostgreSQL):** Stores relational data and manages Row Level Security (RLS) policies. Geospatial distance scoring is performed via Supabase PostGIS spatial RPC functions (`calculate_distance_km`) with application-level Haversine formula fallback for offline resilience.
 
 **Data Flow:** A client submits a job request with geographic coordinates. The Express backend receives the payload, queries PostgreSQL for active workers within an initial radius, and runs the ranking algorithm. The system dispatches Firebase push notifications to the top-ranked cohort and initiates a dispatch timeout. If unaccepted, the system iteratively expands the search radius in subsequent rounds.
 

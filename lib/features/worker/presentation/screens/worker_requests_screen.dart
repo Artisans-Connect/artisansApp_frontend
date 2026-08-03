@@ -326,7 +326,7 @@ class _RequestJobCard extends StatelessWidget {
                                       vertical: 6,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: DesignTokens.primary.withOpacity(0.18),
+                                      color: DesignTokens.primary.withValues(alpha: 0.18),
                                       borderRadius: BorderRadius.circular(14),
                                     ),
                                     child: const Text(
@@ -563,7 +563,7 @@ class _RequestBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: isAccent ? DesignTokens.primary.withOpacity(0.14) : DesignTokens.background,
+        color: isAccent ? DesignTokens.primary.withValues(alpha: 0.14) : DesignTokens.background,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: DesignTokens.borderSubtle),
       ),
@@ -1647,7 +1647,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     WidgetsBinding.instance.addObserver(this);
     _load();
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 8),
+      const Duration(seconds: 30),
       (_) => _load(silent: true),
     );
   }
@@ -1802,6 +1802,43 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _handleQuickAccept(WorkerJob job) async {
+    _selectJob(job.id);
+    final String budgetStr = job.rateLabel ?? job.estimatedBudgetLabel ?? 'this job';
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Apply for ${job.title}?'),
+        content: Text(
+          'Do you want to send an application to client ${job.clientName} ($budgetStr)?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: DesignTokens.primary),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Submit Application'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await _workersService.applyToJob(job.id);
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Application submitted successfully.');
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not submit application.');
+    }
   }
 
   void _selectJob(String jobId) {
@@ -2082,7 +2119,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           onSelectJob: _selectJob,
           onOpenJob: _openDetail,
           onViewDetails: _openDetail,
-          onAccept: _openDetail,
+          onAccept: _handleQuickAccept,
         ),
         const SizedBox(height: DesignTokens.lg),
         if (_applications.isNotEmpty) ...<Widget>[

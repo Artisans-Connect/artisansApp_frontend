@@ -18,12 +18,14 @@ class WorkerJobAlertSheet extends StatefulWidget {
     required this.job,
     required this.onAccepted,
     required this.onDeclined,
+    this.onViewDetails,
     this.initialSeconds = 90,
   });
 
   final WorkerJob job;
   final ValueChanged<Map<String, dynamic>> onAccepted;
   final VoidCallback onDeclined;
+  final ValueChanged<WorkerJob>? onViewDetails;
   final int initialSeconds;
 
   @override
@@ -204,11 +206,38 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                     onPressed: _declining ? null : _decline,
                   ),
                 ),
-                const SizedBox(width: 12),
+                if (widget.onViewDetails != null) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        side: BorderSide(color: Colors.black.withAlpha((0.15 * 255).round())),
+                      ),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        widget.onViewDetails?.call(job);
+                      },
+                      child: const Text(
+                        'Details',
+                        style: TextStyle(
+                          fontFamily: 'Satoshi',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 8),
                 Expanded(
                   flex: 2,
                   child: GradientButton(
-                    label: 'Apply for Job',
+                    label: 'Apply',
                     isLoading: _accepting,
                     enabled: !_declining,
                     onPressed: _accept,

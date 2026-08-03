@@ -79,18 +79,39 @@ class WorkerSessionState extends ChangeNotifier {
     }
   }
 
+  String? pendingCancellationMessage;
+
+  void clearCancellationMessage() {
+    pendingCancellationMessage = null;
+  }
+
   Future<void> loadActiveJob() async {
     try {
       final dynamic data = await _workersService.getActiveJob();
       if (data is! Map<String, dynamic>) {
+        if (activeJob != null) {
+          pendingCancellationMessage = 'The client has cancelled this booking.';
+        }
         _realtimeService.unsubscribe();
         activeJob = null;
         jobPhase = WorkerJobPhase.none;
         notifyListeners();
         return;
       }
-      activeJob = workerJobFromApi(data);
+
       final String status = (data['status'] as String? ?? '').toLowerCase();
+      if (status == 'cancelled' || status == 'client_cancelled') {
+        if (activeJob != null) {
+          pendingCancellationMessage = 'The client has cancelled this booking.';
+        }
+        _realtimeService.unsubscribe();
+        activeJob = null;
+        jobPhase = WorkerJobPhase.none;
+        notifyListeners();
+        return;
+      }
+
+      activeJob = workerJobFromApi(data);
       jobPhase = _phaseForStatus(status);
       currentTab = WorkerNavTab.bookings;
       notifyListeners();
