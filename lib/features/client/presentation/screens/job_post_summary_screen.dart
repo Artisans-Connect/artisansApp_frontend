@@ -65,6 +65,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
 
       final estimate = await _pricingService.estimateFee(
         categoryId: categoryId,
+        subcategoryId: _draft.subcategoryId,
         locationLat: lat,
         locationLng: lng,
         jobMode: jobMode,

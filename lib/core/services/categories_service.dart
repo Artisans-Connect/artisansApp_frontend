@@ -349,6 +349,9 @@ class CategoriesService {
           subcategory['name'] = (subcategory['name'] ?? 'Service type').toString();
           subcategory['slug'] = (subcategory['slug'] ?? subcategory['id']).toString();
           subcategory['description'] = subcategory['description']?.toString();
+          if (subcategory['base_fee'] != null) {
+            subcategory['base_fee'] = (subcategory['base_fee'] as num).toInt();
+          }
           return subcategory;
         })
         .where((Map<String, dynamic> subcategory) =>

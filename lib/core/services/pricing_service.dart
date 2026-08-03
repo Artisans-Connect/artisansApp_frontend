@@ -47,6 +47,7 @@ class PricingService {
   /// Fetches a smart fee estimate from the backend.
   Future<FeeEstimate> estimateFee({
     required String categoryId,
+    String? subcategoryId,
     required double locationLat,
     required double locationLng,
     required String jobMode,
@@ -55,6 +56,8 @@ class PricingService {
       '/pricing/estimate',
       body: <String, dynamic>{
         'category_id': categoryId,
+        if (subcategoryId != null && subcategoryId.isNotEmpty)
+          'subcategory_id': subcategoryId,
         'location_lat': locationLat,
         'location_lng': locationLng,
         'job_mode': jobMode,
