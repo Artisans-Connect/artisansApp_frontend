@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/navigation/app_routes.dart';
@@ -51,6 +52,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   bool _isRequestingTermination = false;
   bool _isConfirmingWorkDone = false;
   bool _suppressRealtimeRefresh = false;
+  bool _hasNavigatedAway = false;
   String? _loadError;
   int _currentStep = 0;
   String _etaLabel = 'Calculating ETA…';
@@ -110,7 +112,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   Future<void> _loadJobDetails() async {
     final String? jobId = _currentJobId;
     if (jobId == null || jobId.isEmpty) {
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        _loadError = 'Job details unavailable or invalid job ID.';
+      });
       return;
     }
     try {
@@ -120,6 +125,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         final ClientBooking booking = ClientBooking.fromApiJob(raw);
         final String status = (booking.backendStatus ?? '').toLowerCase();
         if (status == 'matching' || status == 'searching') {
+          if (_hasNavigatedAway) return;
+          _hasNavigatedAway = true;
           _realtime.unsubscribe();
           unawaited(Navigator.pushReplacementNamed(
             context,
@@ -137,7 +144,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           _currentStep = _stepForStatus(booking.backendStatus);
         });
       } else {
-        setState(() => _loading = false);
+        setState(() {
+          _loading = false;
+          _loadError = 'Could not retrieve details for this job.';
+        });
       }
     } catch (e) {
       if (!mounted) return;
@@ -170,6 +180,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     if (!mounted) return;
     final String status = (booking.backendStatus ?? '').toLowerCase();
     if (status == 'matching' || status == 'searching') {
+      if (_hasNavigatedAway) return;
+      _hasNavigatedAway = true;
       _realtime.unsubscribe();
       unawaited(Navigator.pushReplacementNamed(
         context,
@@ -205,7 +217,11 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
   void _applyStepFromStatus(String? statusRaw) {
     if (!mounted) return;
-    setState(() => _currentStep = _stepForStatus(statusRaw));
+    final int newStep = _stepForStatus(statusRaw);
+    if (newStep != _currentStep) {
+      HapticFeedback.mediumImpact();
+    }
+    setState(() => _currentStep = newStep);
   }
 
   @override
@@ -271,10 +287,33 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     final String? jobUuid = _currentJobId;
     if (_isConfirmingWorkDone || jobUuid == null || jobUuid.isEmpty) return;
 
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm Work Finished?'),
+        content: const Text(
+          'Confirming that the artisan has completed the work will stop the work timer. The artisan will then submit the settlement breakdown.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Not Yet'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Yes, Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
     setState(() => _isConfirmingWorkDone = true);
     try {
       await _jobsService.confirmWorkDone(jobUuid);
       if (!mounted) return;
+      HapticFeedback.mediumImpact();
       AppToast.showSuccess(
         context,
         'Marked as finished. The artisan will submit the completion details.',
@@ -370,6 +409,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         context: context,
         builder: (BuildContext ctx) {
           return AlertDialog(
+            scrollable: true,
             title: Row(
               children: [
                 Icon(
@@ -390,71 +430,73 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                 ),
               ],
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  warningMessage,
-                  style: const TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 14,
-                    color: DesignTokens.textSecondary,
-                  ),
-                ),
-                if (fee > 0) ...[
-                  const SizedBox(height: 14),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: DesignTokens.accentWarm.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                          color:
-                              DesignTokens.accentWarm.withValues(alpha: 0.2)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    warningMessage,
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 14,
+                      color: DesignTokens.textSecondary,
                     ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.payments_rounded,
-                            color: DesignTokens.accentWarm, size: 20),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'GH\u20B5 ${fee.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontFamily: 'Satoshi',
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: DesignTokens.accentWarm,
+                  ),
+                  if (fee > 0) ...[
+                    const SizedBox(height: 14),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: DesignTokens.accentWarm.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color:
+                                DesignTokens.accentWarm.withValues(alpha: 0.2)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.payments_rounded,
+                              color: DesignTokens.accentWarm, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'GH\u20B5 ${fee.toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontFamily: 'Satoshi',
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: DesignTokens.accentWarm,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Please pay this amount directly to the artisan.',
-                    style: TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                      color: DesignTokens.textSecondary.withValues(alpha: 0.8),
-                      fontStyle: FontStyle.italic,
+                    const SizedBox(height: 6),
+                    Text(
+                      'Please pay this amount directly to the artisan.',
+                      style: TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        color: DesignTokens.textSecondary.withValues(alpha: 0.8),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: reasonCtrl,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      hintText: 'Reason for cancellation (optional)',
+                      border: OutlineInputBorder(),
+                      isDense: true,
                     ),
                   ),
                 ],
-                const SizedBox(height: 16),
-                TextField(
-                  controller: reasonCtrl,
-                  maxLines: 2,
-                  decoration: const InputDecoration(
-                    hintText: 'Reason for cancellation (optional)',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ],
+              ),
             ),
             actions: [
               TextButton(
@@ -674,7 +716,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                 if (_loadError != null) _buildErrorBanner(),
                 MiniHero(
                   height: 112,
-                  child: heroForStep(0),
+                  child: heroForStep(0, status: 'cancelled'),
                 ),
                 const SizedBox(height: 16),
                 TrackingJobInfoCard(job: job, etaLabel: _etaLabel),
@@ -727,7 +769,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     if (_loadError != null) _buildErrorBanner(),
                     MiniHero(
                       height: 112,
-                      child: heroForStep(_currentStep),
+                      child: heroForStep(_currentStep, status: status),
                     ),
                     const SizedBox(height: 16),
                     TrackingJobInfoCard(job: job, etaLabel: _etaLabel),

@@ -42,8 +42,9 @@ class ClientNavigation {
     BuildContext context,
     ClientNavTab tab,
   ) {
+    final ClientShellScope? scope = ClientShellScope.maybeOf(context);
     popToShell(context);
-    selectTab(context, tab);
+    scope?.selectTab(tab);
   }
 
   static Future<T?> pushFlow<T extends Object?>(
