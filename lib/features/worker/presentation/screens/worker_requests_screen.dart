@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/location/device_location_service.dart';
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/services/notification_service.dart';
 import '../models/worker_job.dart';
 import '../models/worker_stats.dart';
 import '../state/worker_session_state.dart';
@@ -1612,7 +1614,9 @@ class WorkerRequestsScreen extends StatefulWidget {
 class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     with WidgetsBindingObserver {
   final WorkersService _workersService = WorkersService();
- 
+  final NotificationService _notificationService = NotificationService.instance;
+  int _unreadNotifications = 0;
+
   RequestsViewState _viewState = RequestsViewState.loading;
   List<WorkerJob> _jobs = <WorkerJob>[];
   String? _selectedJobId;
@@ -1727,9 +1731,24 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     }
 
     if (!silent) {
-      await _loadOverview();
+      await Future.wait<dynamic>([
+        _loadOverview(),
+        _loadUnreadNotifications(),
+      ]);
     } else {
       unawaited(_loadOverview(silent: true));
+      unawaited(_loadUnreadNotifications());
+    }
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final int count = await _notificationService.getUnreadCount();
+      if (!mounted) return;
+      setState(() => _unreadNotifications = count);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _unreadNotifications = 0);
     }
   }
 
@@ -1897,6 +1916,73 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           letterSpacing: 0.01,
         ),
       ),
+      actions: <Widget>[
+        GestureDetector(
+          onTap: () async {
+            await Navigator.pushNamed(context, AppRoutes.notifications);
+            if (mounted) unawaited(_loadUnreadNotifications());
+          },
+          child: Container(
+            margin: const EdgeInsets.only(right: DesignTokens.gutter),
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: DesignTokens.surfaceCard,
+              shape: BoxShape.circle,
+              border: Border.all(color: DesignTokens.borderSubtle),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                  color: DesignTokens.shadow,
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: <Widget>[
+                const Icon(
+                  Icons.notifications_outlined,
+                  color: DesignTokens.textPrimary,
+                  size: 20,
+                ),
+                if (_unreadNotifications > 0)
+                  Positioned(
+                    top: 5,
+                    right: 4,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 17,
+                        minHeight: 17,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: DesignTokens.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: DesignTokens.surfaceCard,
+                          width: 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _unreadNotifications > 99
+                            ? '99+'
+                            : '$_unreadNotifications',
+                        style: const TextStyle(
+                          fontFamily: 'Satoshi',
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
  

@@ -14,6 +14,8 @@ import '../network/api_client.dart';
 import '../notifications/notification_metadata.dart';
 import '../../shared/presentation/navigation/shared_route_args.dart';
 import '../../shared/presentation/screens/chat_detail_screen.dart';
+import '../session/app_user_session.dart';
+import 'auth_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
@@ -200,6 +202,10 @@ class NotificationService {
       return;
     }
 
+    unawaited(AuthService.instance
+        .updateActiveMode('worker')
+        .catchError((_) => AppUserSession.instance.updateActiveMode('worker')));
+
     navigator.pushNamedAndRemoveUntil(
       WorkerShell.routeName,
       (_) => false,
@@ -260,6 +266,10 @@ class NotificationService {
       _pendingWorkerBookings = true;
       return;
     }
+
+    unawaited(AuthService.instance
+        .updateActiveMode('worker')
+        .catchError((_) => AppUserSession.instance.updateActiveMode('worker')));
 
     navigator.pushNamedAndRemoveUntil(
       WorkerShell.routeName,

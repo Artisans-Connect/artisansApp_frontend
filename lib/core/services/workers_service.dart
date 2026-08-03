@@ -67,8 +67,15 @@ class WorkersService {
     );
   }
 
-  Future<dynamic> getHistory() async {
-    return await _api.get('/workers/me/history');
+  Future<dynamic> getHistory({int? limit, int? offset}) async {
+    String endpoint = '/workers/me/history';
+    final List<String> params = <String>[];
+    if (limit != null) params.add('limit=$limit');
+    if (offset != null) params.add('offset=$offset');
+    if (params.isNotEmpty) {
+      endpoint += '?${params.join('&')}';
+    }
+    return await _api.get(endpoint);
   }
 
   Future<List<dynamic>> getJobRequests() async {

@@ -27,22 +27,51 @@ class JobsService {
 
   Future<List<dynamic>> getMyJobs({
     String? status,
+    int? limit,
+    int? offset,
     bool forceRefresh = false,
   }) async {
-    final String cacheKey = CacheKeys.jobsMine(status: status);
+    final String cacheKey = CacheKeys.jobsMine(status: status) +
+        (limit != null ? '_l${limit}_o$offset' : '');
     return CachedFetch.get<List<dynamic>>(
       key: cacheKey,
       ttl: CacheKeys.jobsTtl,
       forceRefresh: forceRefresh,
       fetch: () async {
         String endpoint = '/jobs/mine';
+        final params = <String>[];
         if (status != null && status.isNotEmpty) {
-          endpoint += '?status=$status';
+          params.add('status=$status');
+        }
+        if (limit != null) {
+          params.add('limit=$limit');
+        }
+        if (offset != null) {
+          params.add('offset=$offset');
+        }
+        if (params.isNotEmpty) {
+          endpoint += '?${params.join('&')}';
         }
         final response = await _apiClient.get(endpoint);
         return response as List<dynamic>;
       },
     );
+  }
+
+  Future<Map<String, int>> getMyJobsCounts({bool forceRefresh = false}) async {
+    final String cacheKey = '${CacheKeys.jobsMinePrefix}_counts';
+    final dynamic response = await CachedFetch.get<dynamic>(
+      key: cacheKey,
+      ttl: CacheKeys.jobsTtl,
+      forceRefresh: forceRefresh,
+      fetch: () async {
+        return await _apiClient.get('/jobs/mine/counts');
+      },
+    );
+    final Map<String, dynamic> rawCounts =
+        Map<String, dynamic>.from(response as Map);
+    return rawCounts.map((String key, dynamic value) =>
+        MapEntry<String, int>(key, value as int? ?? 0));
   }
 
   Future<dynamic> cancelJob(dynamic id) async {

@@ -16,6 +16,7 @@ import 'core/offline/job_post_queue.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/notification_service.dart';
 import 'features/client/data/job_draft_store.dart';
+import 'features/client/data/hidden_bookings_store.dart';
 import 'features/worker/presentation/worker_dev_router.dart';
 
 /// Set `--dart-define=WORKER_DEV=true` to preview worker UI.
@@ -32,6 +33,7 @@ Future<void> main() async {
   await CacheStore.instance.init();
   await JobPostQueue.instance.init();
   await JobDraftStore.instance.init();
+  await HiddenBookingsStore.instance.init();
 
   await Supabase.initialize(
     url: AppConstants.supabaseUrl,
