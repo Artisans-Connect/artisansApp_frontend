@@ -1002,6 +1002,35 @@ class _NearbyJobsSection extends StatelessWidget {
       );
     }
 
+    if (jobs.isNotEmpty) {
+      final String selectedId = selectedJobId ?? jobs.first.id;
+      return Column(
+        key: const ValueKey('has_jobs'),
+        children: <Widget>[
+          JobRequestsMapPreview(
+            jobs: jobs,
+            selectedJobId: selectedId,
+            onSelectJob: onSelectJob,
+            onOpenJob: onOpenJob,
+            height: 145,
+          ),
+          const SizedBox(height: DesignTokens.md),
+          ...jobs.map(
+            (WorkerJob job) => Padding(
+              padding: const EdgeInsets.only(bottom: DesignTokens.md),
+              child: _RequestJobCard(
+                job: job,
+                isSelected: job.id == selectedId,
+                onTap: () => onSelectJob(job.id),
+                onAccept: () => onAccept(job),
+                onViewDetails: () => onViewDetails(job),
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     if (isSearching) {
       return const _MinimalisticStatusCard(
         key: ValueKey('searching'),
@@ -1012,45 +1041,16 @@ class _NearbyJobsSection extends StatelessWidget {
       );
     }
 
-    if (jobs.isEmpty) {
-      return _MinimalisticStatusCard(
-        key: const ValueKey('empty'),
-        title: 'Listening for requests',
-        subtitle: _checkedLabel.isNotEmpty
-            ? 'Last checked: $_checkedLabel'
-            : 'No active requests nearby right now.',
-        isOnline: true,
-        isLoading: false,
-        actionLabel: 'Refresh',
-        onAction: onStartMatching,
-      );
-    }
-
-    final String selectedId = selectedJobId ?? jobs.first.id;
-    return Column(
-      key: const ValueKey('has_jobs'),
-      children: <Widget>[
-        JobRequestsMapPreview(
-          jobs: jobs,
-          selectedJobId: selectedId,
-          onSelectJob: onSelectJob,
-          onOpenJob: onOpenJob,
-          height: 145,
-        ),
-        const SizedBox(height: DesignTokens.md),
-        ...jobs.map(
-          (WorkerJob job) => Padding(
-            padding: const EdgeInsets.only(bottom: DesignTokens.md),
-            child: _RequestJobCard(
-              job: job,
-              isSelected: job.id == selectedId,
-              onTap: () => onSelectJob(job.id),
-              onAccept: () => onAccept(job),
-              onViewDetails: () => onViewDetails(job),
-            ),
-          ),
-        ),
-      ],
+    return _MinimalisticStatusCard(
+      key: const ValueKey('empty'),
+      title: 'Listening for requests',
+      subtitle: _checkedLabel.isNotEmpty
+          ? 'Last checked: $_checkedLabel'
+          : 'No active requests nearby right now.',
+      isOnline: true,
+      isLoading: false,
+      actionLabel: 'Refresh',
+      onAction: onStartMatching,
     );
   }
 }

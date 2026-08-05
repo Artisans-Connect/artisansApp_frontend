@@ -108,7 +108,7 @@ class _SearchBarState extends State<CustomSearchBar> {
                       IconButton(
                         tooltip: 'Smart AI Search',
                         icon: const Icon(
-                          PhosphorIcons.sparkle,
+                          PhosphorIcons.lightning,
                           color: AppColors.primary,
                           size: 18,
                         ),

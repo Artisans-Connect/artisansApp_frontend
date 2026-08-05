@@ -184,7 +184,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
                     Row(
                       children: <Widget>[
                         Icon(
-                          PhosphorIcons.sparkle,
+                          PhosphorIcons.lightbulb,
                           size: 18,
                           color: DesignTokens.primary,
                         ),
