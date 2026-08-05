@@ -18,6 +18,7 @@ import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import '../navigation/client_navigation.dart';
 import '../widgets/job_post_wizard_scaffold.dart';
+import 'payment_checkout_screen.dart';
 
 class JobPostSummaryScreen extends StatefulWidget {
   const JobPostSummaryScreen({super.key, this.jobData});
@@ -115,6 +116,8 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
   Future<void> _postJob() async {
     if (!_agreeToTerms || _isPosting) return;
 
+    final double totalFee = (_estimate?.minimumFee ?? 50) + _clientPremium;
+
     // Ensure premium is synced
     _draft.merge(<String, dynamic>{'clientPremium': _clientPremium});
 
@@ -134,8 +137,10 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
         await JobDraftStore.instance.delete(draftId);
       }
       final Map<String, dynamic> jobData = _draft.toMap();
+      String? createdJobId;
       if (created is Map<String, dynamic>) {
-        jobData['id'] = created['id'];
+        createdJobId = created['id'] as String?;
+        jobData['id'] = createdJobId;
         jobData['status'] = created['status'];
       }
 
@@ -147,8 +152,25 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
         );
         ClientNavigation.goToBookingsTab(context);
       } else {
-        AppToast.showSuccess(context, 'Job posted — finding an artisan…');
-        ClientNavigation.startFindingArtisan(context, jobData: jobData);
+        // ASAP or Flexible job - redirect to Paystack escrow deposit checkout
+        final bool? paid = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute<bool>(
+            builder: (BuildContext context) => PaymentCheckoutScreen(
+              jobId: createdJobId ?? '',
+              amount: totalFee,
+            ),
+          ),
+        );
+        
+        if (!mounted) return;
+        if (paid == true) {
+          AppToast.showSuccess(context, 'Job posted — finding an artisan…');
+          ClientNavigation.startFindingArtisan(context, jobData: jobData);
+        } else {
+          AppToast.showInfo(context, 'Payment pending. You can pay later from Bookings.');
+          ClientNavigation.goToBookingsTab(context);
+        }
       }
     } catch (e) {
       if (!mounted) return;

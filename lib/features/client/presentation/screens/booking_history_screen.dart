@@ -174,10 +174,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                             ..._filteredBookings.map(
                               (ClientBooking booking) => _BookingCard(
                                 booking: booking,
-                                onTap: () => ClientNavigation.handleBookingTap(
-                                  context,
-                                  booking,
-                                ),
+                                onTap: () async {
+                                  await ClientNavigation.handleBookingTap(
+                                    context,
+                                    booking,
+                                  );
+                                  _loadBookings();
+                                },
                               ),
                             ),
                         ],

@@ -14,6 +14,7 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../models/client_booking.dart';
+import 'payment_checkout_screen.dart';
 
 class JobApplicantsScreen extends StatefulWidget {
   const JobApplicantsScreen({super.key, this.job});
@@ -99,18 +100,38 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
     setState(() => _isAccepting = true);
     try {
-      final dynamic job = await _applicationsService.acceptApplication(
-        jobId: _jobId,
-        applicationId: applicationId,
-      );
-      if (!mounted) return;
-      AppToast.showSuccess(context, 'Artisan selected for this job.');
-      final Map<String, dynamic> jobMap = Map<String, dynamic>.from(job as Map);
-      Navigator.pushNamed(
+      final double totalQuote = double.tryParse((application['total_quote'] ?? '').toString()) ?? 100.00;
+      final double deposit = totalQuote * 0.20; // Escrow deposit is 20%
+
+      final bool? paid = await Navigator.push<bool>(
         context,
-        AppRoutes.liveTracking,
-        arguments: ClientBooking.fromApiJob(jobMap).toTrackingMap(),
+        MaterialPageRoute<bool>(
+          builder: (BuildContext context) => PaymentCheckoutScreen(
+            jobId: _jobId,
+            applicationId: applicationId,
+            amount: deposit,
+          ),
+        ),
       );
+
+      if (!mounted) return;
+      if (paid == true) {
+        final List<dynamic> jobs = await JobsService().getMyJobs(forceRefresh: true);
+        final Iterable<Map<String, dynamic>> matches = jobs
+            .whereType<Map<String, dynamic>>()
+            .where((j) => j['id'].toString() == _jobId);
+        final Map<String, dynamic>? updatedJob = matches.isNotEmpty ? matches.first : null;
+
+        if (updatedJob != null && mounted) {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.liveTracking,
+            arguments: ClientBooking.fromApiJob(updatedJob).toTrackingMap(),
+          );
+        } else if (mounted) {
+          Navigator.pop(context, true);
+        }
+      }
     } catch (e) {
       if (mounted) {
         AppToast.showError(context, e, fallback: 'Could not accept artisan.');
