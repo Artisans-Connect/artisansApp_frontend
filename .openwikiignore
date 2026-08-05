@@ -10,8 +10,13 @@ build/
 .vercel/
 
 # Generated platform/build artifacts
-android/.gradle/
-ios/Flutter/.last_build_id
+android/
+ios/
+windows/
+macos/
+linux/
+web/
 
 # Keep generated OpenWiki pages out of their own source scan.
 openwiki/
+
