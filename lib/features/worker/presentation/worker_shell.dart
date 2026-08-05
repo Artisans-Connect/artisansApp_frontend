@@ -6,6 +6,7 @@ import '../../../core/services/worker_dispatch_realtime_service.dart';
 import '../../../core/services/workers_service.dart';
 import '../../../shared/presentation/screens/messages_list_screen.dart';
 import '../../../shared/presentation/screens/user_profile_screen.dart';
+import 'screens/job_request_detail_screen.dart';
 import 'screens/worker_active_empty_screen.dart';
 import 'screens/worker_active_in_progress_screen.dart';
 import 'screens/worker_active_pre_start_screen.dart';
@@ -44,6 +45,7 @@ class _WorkerShellState extends State<WorkerShell> {
   final WorkerDispatchRealtimeService _dispatchRealtime =
       WorkerDispatchRealtimeService();
   final Set<String> _shownRequestIds = <String>{};
+  final Set<String> _declinedModalJobIds = <String>{};
   int _messagesRefreshSignal = 0;
 
   @override
@@ -70,7 +72,52 @@ class _WorkerShellState extends State<WorkerShell> {
     super.dispose();
   }
 
-  void _onSessionChanged() => setState(() {});
+  void _onSessionChanged() {
+    if (mounted) {
+      setState(() {});
+      _checkCancellationNotice();
+    }
+  }
+
+  void _checkCancellationNotice() {
+    final msg = _session.pendingCancellationMessage;
+    if (msg != null && mounted) {
+      _session.clearCancellationMessage();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.info_outline, color: Color(0xFFF59E0B)),
+                SizedBox(width: 8),
+                Text(
+                  'Booking Cancelled',
+                  style: TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              msg,
+              style: const TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: 14,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('OK'),
+              ),
+            ],
+          ),
+        );
+      });
+    }
+  }
 
   void _selectTab(WorkerNavTab tab) {
     if (tab == WorkerNavTab.messages) {
@@ -92,6 +139,7 @@ class _WorkerShellState extends State<WorkerShell> {
       },
       onClosed: (String jobId) {
         _shownRequestIds.remove(jobId);
+        _declinedModalJobIds.remove(jobId);
       },
     );
   }
@@ -100,13 +148,28 @@ class _WorkerShellState extends State<WorkerShell> {
     String jobId, {
     DateTime? expiresAt,
   }) async {
-    if (!mounted || _shownRequestIds.contains(jobId)) return;
+    if (!mounted ||
+        _shownRequestIds.contains(jobId) ||
+        _declinedModalJobIds.contains(jobId)) return;
     _shownRequestIds.add(jobId);
 
     try {
       final dynamic data = await _workersService.getJobRequestById(jobId);
       if (!mounted) return;
-      if (data is! Map<String, dynamic>) return;
+      if (data is! Map<String, dynamic>) {
+        _shownRequestIds.remove(jobId);
+        return;
+      }
+
+      final String status = (data['status'] as String? ?? '').toLowerCase();
+      if (status == 'cancelled' ||
+          status == 'client_cancelled' ||
+          status == 'completed' ||
+          status == 'in_progress' ||
+          status == 'assigned') {
+        _shownRequestIds.remove(jobId);
+        return;
+      }
 
       final secondsLeft = expiresAt == null
           ? 90
@@ -129,14 +192,26 @@ class _WorkerShellState extends State<WorkerShell> {
           job: workerJobFromApi(data),
           initialSeconds: secondsLeft,
           onAccepted: (Map<String, dynamic> application) {
+            _declinedModalJobIds.add(jobId);
             _shownRequestIds.remove(application['job_id']?.toString() ?? jobId);
           },
           onDeclined: () {
-            _shownRequestIds.remove(jobId);
+            _declinedModalJobIds.add(jobId);
+          },
+          onViewDetails: (job) {
+            _declinedModalJobIds.add(jobId);
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => JobRequestDetailScreen(
+                  job: job,
+                  onAcceptRequest: (_) => _session.loadActiveJob(),
+                ),
+              ),
+            );
           },
         ),
       );
-      _shownRequestIds.remove(jobId);
+      _declinedModalJobIds.add(jobId);
     } catch (_) {
       _shownRequestIds.remove(jobId);
     }

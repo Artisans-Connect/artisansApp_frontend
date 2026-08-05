@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/services/chat_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/current_user.dart';
 import '../../../../shared/presentation/navigation/shared_route_args.dart';
 import '../../../../shared/presentation/screens/chat_detail_screen.dart';
 import '../../../../shared/presentation/screens/settings_screen.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
-import '../../../worker/presentation/worker_shell.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/artisan_logo_avatar.dart';
+import '../../../worker/presentation/worker_shell.dart';
 import '../client_shell.dart';
 import '../models/client_booking.dart';
 import '../models/client_job_draft.dart';
@@ -28,7 +32,10 @@ class ClientNavigation {
   static void popToShell(BuildContext context) {
     Navigator.popUntil(
       context,
-      (Route<dynamic> route) => route.settings.name == ClientShell.routeName,
+      (Route<dynamic> route) =>
+          route.settings.name == AppRoutes.clientHome ||
+          route.settings.name == ClientShell.routeName ||
+          route.isFirst,
     );
   }
 
@@ -36,8 +43,9 @@ class ClientNavigation {
     BuildContext context,
     ClientNavTab tab,
   ) {
+    final ClientShellScope? scope = ClientShellScope.maybeOf(context);
     popToShell(context);
-    selectTab(context, tab);
+    scope?.selectTab(tab);
   }
 
   static Future<T?> pushFlow<T extends Object?>(
@@ -93,21 +101,48 @@ class ClientNavigation {
   static Future<void> callPhone(BuildContext context, String phone) async {
     final String cleaned = phone.replaceAll(RegExp(r'[^0-9+]'), '');
     if (cleaned.isEmpty) {
-      AppToast.showInfo(context, 'This worker has no phone number yet.');
+      AppToast.showInfo(context, 'This user has no phone number available.');
       return;
     }
-    final bool launched = await launchUrl(Uri(scheme: 'tel', path: cleaned));
-    if (!launched && context.mounted) {
-      AppToast.showError(
-        context,
-        Exception('Could not start a call to $phone.'),
-        fallback: 'Could not start a call to $phone.',
-      );
+    try {
+      final bool launched = await launchUrl(Uri(scheme: 'tel', path: cleaned));
+      if (!launched && context.mounted) {
+        showPhoneDialog(context, phone);
+      }
+    } catch (_) {
+      if (context.mounted) {
+        showPhoneDialog(context, phone);
+      }
     }
+  }
+
+  static void showPhoneDialog(BuildContext context, String phone) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Phone Contact'),
+        content: SelectableText('Phone number: $phone'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
   }
 
   static void goToBookingsTab(BuildContext context) {
     popToShellAndSelectTab(context, ClientNavTab.bookings);
+  }
+
+  static void replaceWithBookingsTab(BuildContext context) {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AppRoutes.clientHome,
+      (_) => false,
+      arguments: <String, dynamic>{'initialTab': ClientNavTab.bookings},
+    );
   }
 
   static void goToMessagesTab(BuildContext context) {
@@ -283,10 +318,7 @@ class ClientNavigation {
         if (booking.canRate) {
           await pushFlow(context, AppRoutes.rateService, arguments: booking.toMap());
         } else {
-          AppToast.showInfo(
-            context,
-            '${booking.title} — rated ${booking.rating}★',
-          );
+          showBookingSummaryModal(context, booking);
         }
       case ClientBookingStatus.requested:
         if (booking.backendStatus == 'draft') {
@@ -315,11 +347,215 @@ class ClientNavigation {
         if (booking.isRecoverableServiceInterruption) {
           await pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
         } else {
-          AppToast.showInfo(context, '${booking.title} was cancelled.');
+          showBookingSummaryModal(context, booking);
         }
       case ClientBookingStatus.draft:
         openJobDraft(context, booking);
     }
+  }
+
+  static void showBookingSummaryModal(
+    BuildContext context,
+    ClientBooking booking,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext ctx) {
+        final bool isCompleted =
+            booking.status == ClientBookingStatus.completed;
+        final bool isCancelled =
+            booking.status == ClientBookingStatus.cancelled;
+        final bool hasWorkerProfile = booking.counterpartUserId != null &&
+            booking.counterpartUserId!.isNotEmpty;
+
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(PhosphorIcons.x, size: 20),
+                    onPressed: () => Navigator.pop(ctx),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
+                      booking.title,
+                      style: AppTypography.displaySmall,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: isCompleted
+                          ? const Color(0xFFF0FDF4)
+                          : isCancelled
+                              ? const Color(0xFFFEF2F2)
+                              : AppColors.surfaceContainer,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      booking.status.displayLabel,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: isCompleted
+                            ? const Color(0xFF16A34A)
+                            : isCancelled
+                                ? const Color(0xFFDC2626)
+                                : AppColors.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.borderSubtle),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    ArtisanLogoAvatar(
+                      imageUrl: booking.imageUrl,
+                      size: 40,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            booking.artisan.isNotEmpty &&
+                                    booking.artisan != 'Artisan'
+                                ? booking.artisan
+                                : 'Unmatched',
+                            style: AppTypography.labelLarge,
+                          ),
+                          if (booking.profession.isNotEmpty &&
+                              booking.profession != 'Artisan') ...<Widget>[
+                            const SizedBox(height: 2),
+                            Text(
+                              booking.profession,
+                              style: AppTypography.bodySmall,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (booking.rating != null) ...<Widget>[
+                      Row(
+                        children: <Widget>[
+                          const Icon(
+                            PhosphorIcons.starFill,
+                            size: 16,
+                            color: Color(0xFFFFC107),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            booking.rating!.toStringAsFixed(1),
+                            style: AppTypography.labelMedium,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: <Widget>[
+                  const Icon(PhosphorIcons.calendarBlank,
+                      size: 16, color: AppColors.textMuted),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Date: ${booking.date.isNotEmpty ? booking.date : 'Recent'}',
+                    style: AppTypography.bodyMedium,
+                  ),
+                ],
+              ),
+              if (booking.cancelledReason != null &&
+                  booking.cancelledReason!.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 10),
+                Text(
+                  'Cancellation Reason: ${booking.cancelledReason}',
+                  style: AppTypography.bodySmall
+                      .copyWith(color: AppColors.error),
+                ),
+              ],
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    if (isCompleted && hasWorkerProfile) {
+                      openArtisanProfile(
+                        context,
+                        userId: booking.counterpartUserId!,
+                        name: booking.artisan,
+                      );
+                    } else if (isCancelled) {
+                      pushFlow(context, AppRoutes.jobPostCategory);
+                    }
+                  },
+                  child: Text(
+                    isCompleted && hasWorkerProfile
+                        ? 'Book Artisan Again'
+                        : isCancelled
+                            ? 'Post Similar Job'
+                            : 'Done',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   static void openJobDraft(BuildContext context, ClientBooking booking) {

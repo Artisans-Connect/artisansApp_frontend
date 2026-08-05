@@ -17,6 +17,7 @@ import '../../../../shared/widgets/secondary_button.dart';
 import '../../widgets/auth_error_banner.dart';
 import 'forgot_password_screen.dart';
 import 'role_selection_screen.dart';
+import '../../models/onboarding_session.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key, this.initialEmail});
@@ -77,21 +78,33 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _redirectIfAlreadySignedIn() async {
-    if (Supabase.instance.client.auth.currentSession == null) return;
+    final session = Supabase.instance.client.auth.currentSession;
+    debugPrint('[SignInScreen] _redirectIfAlreadySignedIn triggered. Session exists: ${session != null}');
+    if (session == null) return;
 
     try {
+      debugPrint('[SignInScreen] Session accessToken: ${session.accessToken}');
       final user = await AuthService.instance.getCurrentUser();
-      if (!mounted) return;
-      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+      debugPrint('[SignInScreen] Current user fetched successfully: id=${user.id}, email=${user.email}, mode=${user.lastActiveMode}');
+      if (!mounted) {
+        debugPrint('[SignInScreen] Widget not mounted, aborting redirect');
+        return;
+      }
+      final targetRoute = shellRouteForUser(user);
+      debugPrint('[SignInScreen] Redirecting to target route: $targetRoute');
+      await Navigator.pushReplacementNamed(context, targetRoute);
     } on AuthFailure catch (e) {
+      debugPrint('[SignInScreen] AuthFailure during auto-redirect: ${e.code} - ${e.message}');
       if (!mounted) return;
       if (e.code == AuthFailureCode.profileNotFound) {
+        debugPrint('[SignInScreen] Profile not found, redirecting to RoleSelectionScreen');
         await Navigator.pushReplacementNamed(
           context,
           RoleSelectionScreen.routeName,
         );
       }
-    } catch (_) {
+    } catch (e, stack) {
+      debugPrint('[SignInScreen] Staging error restoring session: $e\n$stack');
       // Stay on sign in when an existing session cannot be restored.
     }
   }
@@ -143,7 +156,25 @@ class _SignInScreenState extends State<SignInScreen> {
       await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
     } on AuthFailure catch (e) {
       if (!mounted) return;
+      debugPrint('[SignIn] Google AuthFailure: ${e.code} - ${e.message}');
       if (e.code == AuthFailureCode.profileNotFound) {
+        final supUser = Supabase.instance.client.auth.currentUser;
+        if (supUser != null) {
+          final dynamic metaRaw = supUser.userMetadata;
+          String? name;
+          String? phone;
+          if (metaRaw is Map<String, dynamic>) {
+            name = (metaRaw['full_name'] ?? metaRaw['name'])?.toString();
+            phone = metaRaw['phone']?.toString();
+          }
+          final onboarding = OnboardingSession.instance;
+          onboarding.fullName = name ?? supUser.email;
+          onboarding.phone = phone ?? '';
+          onboarding.avatarUrl = (metaRaw is Map<String, dynamic>
+                  ? metaRaw['avatar_url'] ?? metaRaw['picture']
+                  : null)
+              ?.toString();
+        }
         await Navigator.pushReplacementNamed(
             context, RoleSelectionScreen.routeName);
         return;
@@ -151,10 +182,12 @@ class _SignInScreenState extends State<SignInScreen> {
       setState(() => _authError = e);
     } catch (e) {
       if (!mounted) return;
+      debugPrint('[SignIn] Google sign-in error: $e');
+      debugPrint('[SignIn] Error type: ${e.runtimeType}');
       AppToast.showError(
         context,
         e,
-        fallback: 'Google sign in failed. Please try again.',
+        fallback: 'Google sign in failed: $e',
       );
     } finally {
       if (mounted) setState(() => _isGoogleSubmitting = false);

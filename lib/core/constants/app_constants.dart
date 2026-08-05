@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
@@ -20,9 +21,16 @@ class AppConstants {
 
   /// Redirect used after password recovery emails.
   /// Configure `SUPABASE_PASSWORD_RESET_REDIRECT_URL` when a separate callback is needed.
-  static String get supabasePasswordResetRedirectUrl =>
-      _env('SUPABASE_PASSWORD_RESET_REDIRECT_URL') ??
-      supabasePasswordResetFallbackUrl;
+  static String get supabasePasswordResetRedirectUrl {
+    final String baseUrl = _env('SUPABASE_PASSWORD_RESET_REDIRECT_URL') ??
+        supabasePasswordResetFallbackUrl;
+    final String separator = baseUrl.contains('?') ? '&' : '?';
+    if (kIsWeb) {
+      return '$baseUrl${separator}source=web&redirect_to=${Uri.encodeComponent(Uri.base.origin)}';
+    } else {
+      return '$baseUrl${separator}source=app';
+    }
+  }
 
   /// Deep link redirect for email confirmation. Falls back to verification portal if app is not installed.
   static String get supabaseRedirectUrl {
@@ -58,4 +66,7 @@ class AppConstants {
 
   /// Set MAPBOX_ACCESS_TOKEN in .env for client-facing embedded Mapbox maps.
   static String get mapboxAccessToken => _env('MAPBOX_ACCESS_TOKEN') ?? '';
+
+  /// Set FIREBASE_VAPID_KEY in .env for web FCM push notifications.
+  static String get firebaseVapidKey => _env('FIREBASE_VAPID_KEY') ?? '';
 }

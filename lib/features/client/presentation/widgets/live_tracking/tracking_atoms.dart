@@ -35,7 +35,7 @@ class MiniHero extends StatelessWidget {
 // heroForStep – top-level helper returning a StepHero for a given step index
 // ---------------------------------------------------------------------------
 
-Widget heroForStep(int step) => StepHero(step: step);
+Widget heroForStep(int step, {String? status}) => StepHero(step: step, status: status);
 
 // ---------------------------------------------------------------------------
 // StepHero – animated pulsing icon + title + subtitle for each timeline step
@@ -43,7 +43,8 @@ Widget heroForStep(int step) => StepHero(step: step);
 
 class StepHero extends StatefulWidget {
   final int step;
-  const StepHero({super.key, required this.step});
+  final String? status;
+  const StepHero({super.key, required this.step, this.status});
 
   @override
   State<StepHero> createState() => _StepHeroState();
@@ -74,7 +75,7 @@ class _StepHeroState extends State<StepHero>
 
   @override
   Widget build(BuildContext context) {
-    final StepHeroData data = _dataForStep(widget.step);
+    final StepHeroData data = _dataForStep(widget.step, widget.status);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
@@ -115,7 +116,17 @@ class _StepHeroState extends State<StepHero>
     );
   }
 
-  StepHeroData _dataForStep(int step) {
+  StepHeroData _dataForStep(int step, String? statusRaw) {
+    final String status = (statusRaw ?? '').toLowerCase();
+    if (status == 'cancelled') {
+      return const StepHeroData(
+        icon: Icons.cancel_outlined,
+        title: 'Job Cancelled',
+        subtitle: 'This booking has been cancelled',
+        color: DesignTokens.error,
+      );
+    }
+
     return switch (step) {
       1 => const StepHeroData(
           icon: Icons.directions_bike_rounded,
@@ -143,7 +154,7 @@ class _StepHeroState extends State<StepHero>
         ),
       _ => const StepHeroData(
           icon: Icons.check_circle_rounded,
-          title: 'Booking Confirmed',
+          title: 'Artisan Assigned',
           subtitle: 'Your artisan is getting ready',
           color: DesignTokens.primary,
         ),

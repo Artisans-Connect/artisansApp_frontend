@@ -47,6 +47,8 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap>
   mapbox.CircleAnnotationManager? _markerManager;
   mapbox.PolylineAnnotationManager? _routeManager;
   bool _styleReady = false;
+  bool _hasInitialFit = false;
+  google.LatLng? _lastSyncedWorkerPos;
 
   // Google fallback controller.
   google.GoogleMapController? _googleController;
@@ -114,21 +116,32 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap>
         .subscribe();
   }
 
-  void _applyWorker(double lat, double lng, {DateTime? locationAt}) {
+  Future<void> _applyWorker(double lat, double lng, {DateTime? locationAt}) async {
     final worker = google.LatLng(lat, lng);
-    final estimate = MapRouteEstimate.between(origin: worker, destination: _job);
+    final estimate = await MapFeatureHelpers.defaultRouteProvider.estimate(
+      origin: worker,
+      destination: _job,
+    );
+    if (!mounted) return;
     setState(() {
       _workerPosition = worker;
       _workerLocationAt = locationAt ?? DateTime.now().toUtc();
     });
-    widget.onEtaChanged?.call('${estimate.etaLabel} away');
+    widget.onEtaChanged?.call(
+      estimate.distanceKm < 0.2 || estimate.etaMinutes <= 1
+          ? 'Arriving now'
+          : '${estimate.etaLabel} away',
+    );
     _fitMap();
     if (_styleReady) _syncMapboxAnnotations();
   }
 
-  void _fitMap() {
+  void _fitMap({bool force = false}) {
     final worker = _workerPosition;
     if (worker == null) return;
+    if (!force && _hasInitialFit) return;
+    _hasInitialFit = true;
+
     if (_useMapbox) {
       final map = _map;
       if (map == null || !_styleReady) return;
@@ -167,6 +180,11 @@ class _WorkerTrackingMapState extends State<WorkerTrackingMap>
     final markerManager = _markerManager;
     final routeManager = _routeManager;
     if (markerManager == null || routeManager == null) return;
+
+    if (_lastSyncedWorkerPos != null && _lastSyncedWorkerPos == _workerPosition) {
+      return;
+    }
+    _lastSyncedWorkerPos = _workerPosition;
 
     final hasFreshLocation =
         MapFeatureHelpers.isFreshLocation(_workerLocationAt);
@@ -361,7 +379,9 @@ class _TrackingStatusCard extends StatelessWidget {
             : 'Worker location may be stale';
     final String subtitle = estimate == null
         ? 'Live tracking starts when the worker shares location.'
-        : '${estimate!.distanceLabel} estimated distance - ${estimate!.etaLabel} away';
+        : !fresh && !waiting
+            ? '${estimate!.distanceLabel} estimated distance • Try calling artisan if location is quiet'
+            : '${estimate!.distanceLabel} estimated distance - ${estimate!.etaLabel} away';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

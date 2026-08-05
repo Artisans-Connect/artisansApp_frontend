@@ -11,6 +11,8 @@ void main() {
         home: Scaffold(
           body: JobRequestsMapPreview(
             jobs: const <WorkerJob>[],
+            selectedJobId: '',
+            onSelectJob: (_) {},
             onOpenJob: (_) {},
           ),
         ),
@@ -40,6 +42,8 @@ void main() {
                 urgency: JobUrgency.asap,
               ),
             ],
+            selectedJobId: 'job-1',
+            onSelectJob: (_) {},
             onOpenJob: (_) {},
           ),
         ),

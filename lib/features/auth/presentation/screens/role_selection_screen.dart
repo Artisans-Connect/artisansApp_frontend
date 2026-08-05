@@ -4,12 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../../core/location/device_location_service.dart';
 import '../../../../../core/location/place_lookup_service.dart';
 import '../../../../../core/navigation/auth_navigation.dart';
 import '../../../../../core/network/api_client.dart';
 import '../../../../../core/services/auth_service.dart';
+import '../../../../../core/services/platform_service.dart';
 import '../../../../../core/services/storage_service.dart';
 import '../../../../../core/theme/design_tokens.dart';
 import '../../../../../core/utils/icon_mapper.dart';
@@ -71,6 +73,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
   // Location
   final TextEditingController _locationController = TextEditingController();
+  late final TextEditingController _phoneController;
   bool _isLoadingLocation = false;
 
   // Bio
@@ -95,6 +98,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
 
     _session = widget.session ?? OnboardingSession.instance;
 
+    _hydrateSessionFromAuthMetadata();
+
     if (_isBecomingWorker) {
       _session.setRole(UserRole.worker);
     }
@@ -112,6 +117,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       _session.locationLabel = _locationController.text.trim();
     });
 
+    _phoneController = TextEditingController(text: _session.phone);
+    _phoneController.addListener(() {
+      _session.phone = _phoneController.text.trim();
+    });
+
     _areaSearchController.addListener(_onAreaSearchChanged);
 
     _loadTrades();
@@ -121,6 +131,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   void dispose() {
     _pageController.dispose();
     _locationController.dispose();
+    _phoneController.dispose();
     _customTradeController.dispose();
     _areaSearchController.dispose();
     _bioController.dispose();
@@ -341,6 +352,10 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   // ── Navigation ─────────────────────────────────────────────────────────────
 
   bool _canProceed() {
+    final bool hasValidPhone = _session.phone != null &&
+        _session.phone!.trim().length >= 8 &&
+        _session.phone!.trim() != '0000000000';
+
     if (_isBecomingWorker) {
       if (_currentIndex == 0) return _session.selectedTrades.isNotEmpty;
       if (_currentIndex == 1) {
@@ -349,7 +364,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       }
       if (_currentIndex == 2) {
         return _session.locationLabel != null &&
-            _session.locationLabel!.isNotEmpty;
+            _session.locationLabel!.isNotEmpty &&
+            hasValidPhone;
       }
       return true;
     } else {
@@ -357,7 +373,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       if (_session.isClient) {
         if (_currentIndex == 1) {
           return _session.locationLabel != null &&
-              _session.locationLabel!.isNotEmpty;
+              _session.locationLabel!.isNotEmpty &&
+              hasValidPhone;
         }
         return true;
       } else {
@@ -368,7 +385,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         }
         if (_currentIndex == 3) {
           return _session.locationLabel != null &&
-              _session.locationLabel!.isNotEmpty;
+              _session.locationLabel!.isNotEmpty &&
+              hasValidPhone;
         }
         return true;
       }
@@ -408,6 +426,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     }
 
     try {
+      _hydrateSessionFromAuthMetadata();
       final String role = _session.isWorker ? 'worker' : 'client';
       if (_isBecomingWorker) {
         final Map<String, dynamic> workerBody = <String, dynamic>{
@@ -473,6 +492,47 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     }
   }
 
+  void _hydrateSessionFromAuthMetadata() {
+    final User? authUser = Supabase.instance.client.auth.currentUser;
+    if (authUser == null) return;
+
+    final dynamic rawMetadata = authUser.userMetadata;
+    final Map<String, dynamic> metadata = rawMetadata is Map<String, dynamic>
+        ? rawMetadata
+        : const <String, dynamic>{};
+    final String? metadataName = (metadata['full_name'] ??
+            metadata['name'] ??
+            metadata['user_name'] ??
+            metadata['preferred_username'])
+        ?.toString()
+        .trim();
+    final String? metadataPhone =
+        (metadata['phone'] ?? metadata['phone_number'])?.toString().trim();
+    final String? metadataAvatar =
+        (metadata['avatar_url'] ?? metadata['picture'])?.toString().trim();
+
+    if ((_session.fullName == null || _session.fullName!.trim().isEmpty) &&
+        metadataName != null &&
+        metadataName.isNotEmpty) {
+      _session.fullName = metadataName;
+    }
+    if ((_session.phone == null || _session.phone!.trim().isEmpty) &&
+        metadataPhone != null &&
+        metadataPhone.isNotEmpty) {
+      _session.phone = metadataPhone;
+    }
+    if ((_session.phone == null || _session.phone!.trim().isEmpty) &&
+        authUser.phone != null &&
+        authUser.phone!.trim().isNotEmpty) {
+      _session.phone = authUser.phone!.trim();
+    }
+    if ((_session.avatarUrl == null || _session.avatarUrl!.trim().isEmpty) &&
+        metadataAvatar != null &&
+        metadataAvatar.startsWith('http')) {
+      _session.avatarUrl = metadataAvatar;
+    }
+  }
+
   // ── Image picker ───────────────────────────────────────────────────────────
 
   Future<void> _pickImage() async {
@@ -517,24 +577,25 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
                     }
                   },
                 ),
-                ListTile(
-                  leading:
-                      Icon(PhosphorIcons.camera, color: DesignTokens.primary),
-                  title: const Text('Take a Photo'),
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    final XFile? image =
-                        await _picker.pickImage(source: ImageSource.camera);
-                    if (image != null) {
-                      final PickedMedia media =
-                          await PickedMedia.fromXFile(image);
-                      setState(() {
-                        _imageFile = media;
-                        _session.avatarUrl = image.path;
-                      });
-                    }
-                  },
-                ),
+                if (PlatformService.supportsCamera)
+                  ListTile(
+                    leading:
+                        Icon(PhosphorIcons.camera, color: DesignTokens.primary),
+                    title: const Text('Take a Photo'),
+                    onTap: () async {
+                      Navigator.pop(ctx);
+                      final XFile? image =
+                          await _picker.pickImage(source: ImageSource.camera);
+                      if (image != null) {
+                        final PickedMedia media =
+                            await PickedMedia.fromXFile(image);
+                        setState(() {
+                          _imageFile = media;
+                          _session.avatarUrl = image.path;
+                        });
+                      }
+                    },
+                  ),
                 if (_imageFile != null) ...<Widget>[
                   const Divider(),
                   ListTile(
@@ -751,13 +812,19 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   Widget _buildPhotoLocationPageWrapper() {
+    final User? authUser = Supabase.instance.client.auth.currentUser;
+    final bool isGoogleUser = authUser?.appMetadata['provider'] == 'google' ||
+        (authUser?.identities?.any((id) => id.provider == 'google') ?? false);
+
     return PhotoLocationPage(
       session: _session,
       imageFile: _imageFile,
       locationController: _locationController,
+      phoneController: _phoneController,
       isLoadingLocation: _isLoadingLocation,
       onPickImage: _pickImage,
       onAutoDetectLocation: _autoDetectLocation,
+      isGoogleUser: isGoogleUser,
     );
   }
 

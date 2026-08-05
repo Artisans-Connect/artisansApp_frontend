@@ -1,9 +1,13 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../../../core/location/device_location_service.dart';
 import '../../../../core/errors/error_messages.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/services/notification_service.dart';
 import '../models/worker_job.dart';
+import '../models/worker_stats.dart';
 import '../state/worker_session_state.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/skeleton_box.dart';
@@ -14,94 +18,31 @@ import '../../../../shared/widgets/category_icon_badge.dart';
 import 'job_request_detail_screen.dart';
 import 'worker_application_detail_screen.dart';
 import 'worker_booking_history_screen.dart';
+import 'worker_earnings_screen.dart';
+import 'worker_gallery_screen.dart';
+import 'worker_reviews_screen.dart';
 import '../utils/worker_application_navigation.dart';
+import '../../../../core/session/app_user_session.dart';
 import '../../../../core/theme/design_tokens.dart';
- 
- 
-// ─────────────────────────────────────────────────────────────────────────────
-// Local reusable widgets
-// ─────────────────────────────────────────────────────────────────────────────
- 
-/// Pulsing dot indicator — shows as green when online, muted grey when offline.
-class _PulseDot extends StatefulWidget {
+import '../../../../shared/utils/greeting_utils.dart';
+class _PulseDot extends StatelessWidget {
   const _PulseDot({required this.online});
+
   final bool online;
- 
-  @override
-  State<_PulseDot> createState() => _PulseDotState();
-}
- 
-class _PulseDotState extends State<_PulseDot>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _scale;
- 
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
-    _scale = Tween<double>(begin: 1, end: 1.7).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeOut),
-    );
-    if (widget.online) _ctrl.repeat(reverse: true);
-  }
- 
-  @override
-  void didUpdateWidget(_PulseDot old) {
-    super.didUpdateWidget(old);
-    if (widget.online && !_ctrl.isAnimating) {
-      _ctrl.repeat(reverse: true);
-    } else if (!widget.online) {
-      _ctrl.stop();
-      _ctrl.reset();
-    }
-  }
- 
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
- 
+
   @override
   Widget build(BuildContext context) {
-    final Color dotColor =
-        widget.online ? DesignTokens.successGreen : DesignTokens.offlineSurface;
-    return SizedBox(
-      width: 14,
-      height: 14,
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          if (widget.online)
-            ScaleTransition(
-              scale: _scale,
-              child: Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: DesignTokens.successGreen.withAlpha((0.25 * 255).round()),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: dotColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ],
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: 10,
+      height: 10,
+      decoration: BoxDecoration(
+        color: online ? DesignTokens.successGreen : DesignTokens.textMuted,
+        shape: BoxShape.circle,
       ),
     );
   }
 }
- 
 /// Premium availability toggle card.
 class _AvailabilityCard extends StatelessWidget {
   const _AvailabilityCard({
@@ -213,17 +154,7 @@ class _AvailabilityCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (isSilentRefreshing)
-                const SizedBox(
-                  width: 12,
-                  height: 12,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 1.5,
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(DesignTokens.primary),
-                  ),
-                )
-              else if (lastCheckedAt != null)
+              if (lastCheckedAt != null)
                 Text(
                   _checkedLabel,
                   style: const TextStyle(
@@ -239,6 +170,8 @@ class _AvailabilityCard extends StatelessWidget {
     );
   }
 }
+
+
  
 /// Section header row with optional count badge.
 class _SectionHeader extends StatelessWidget {
@@ -320,303 +253,1237 @@ class _JobTag extends StatelessWidget {
 class _RequestJobCard extends StatelessWidget {
   const _RequestJobCard({
     required this.job,
+    required this.onTap,
     required this.onViewDetails,
     required this.onAccept,
+    required this.isSelected,
   });
  
   final WorkerJob job;
+  final VoidCallback onTap;
   final VoidCallback onViewDetails;
   final VoidCallback onAccept;
+  final bool isSelected;
  
-  /// Relative time from a DateTime.
-  String _relativeTime(DateTime? dt) {
-    if (dt == null) return '';
-    final Duration age = DateTime.now().difference(dt);
-    if (age.inSeconds < 60) return '${age.inSeconds}s ago';
-    if (age.inMinutes < 60) return '${age.inMinutes}m ago';
-    return '${age.inHours}h ago';
+  double? _parseAmount(String value) {
+    final RegExp match = RegExp(r'[0-9]+(?:[.,][0-9]+)?');
+    final RegExpMatch? result = match.firstMatch(value.replaceAll(' ', ''));
+    if (result == null) return null;
+    return double.tryParse(result.group(0)!.replaceAll(',', '.'));
   }
  
   @override
   Widget build(BuildContext context) {
-    final double? totalQuote = job.applicationTotalQuote;
-    return Container(
-      decoration: BoxDecoration(
-        color: DesignTokens.surfaceCard,
+    final double? quote = job.applicationTotalQuote;
+    final double? estimate = _parseAmount(job.estimateDisplay);
+    final double? difference = (estimate != null && quote != null) ? estimate - quote : null;
+    final bool isUnderEstimate = difference != null && difference > 0;
+    final Color diffColor = isUnderEstimate ? DesignTokens.successGreen : DesignTokens.textSecondary;
+
+    return Material(
+      color: isSelected ? DesignTokens.surfaceHighlight : DesignTokens.surfaceCard,
+      borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+      child: InkWell(
         borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
-        border: Border.all(color: DesignTokens.borderSubtle),
-      ),
-      child: Column(
-        children: <Widget>[
-          // ── Top: avatar + name + description + time ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                CategoryIconBadge(
-                  iconName: job.categoryIconName,
-                  colorHex: job.categoryColorHex,
-                  size: 46,
-                ),
-                const SizedBox(width: 12),
-                // Name + description
-                Expanded(
-                  child: Column(
+        onTap: onTap,
+        child: Column(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(
-                        job.clientName,
-                        style: const TextStyle(
+                      CategoryIconBadge(
+                        iconName: job.categoryIconName,
+                        colorHex: job.categoryColorHex,
+                        size: 48,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Text(
+                                    job.clientName,
+                                    style: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: DesignTokens.textPrimary,
+                                    ),
+                                  ),
+                                ),
+                                if (isSelected)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 10,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: DesignTokens.primary.withValues(alpha: 0.18),
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: const Text(
+                                      'Selected',
+                                      style: TextStyle(
+                                        fontFamily: 'Satoshi',
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: DesignTokens.primary,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: <Widget>[
+                                const Icon(Icons.star, size: 14, color: DesignTokens.accentGold),
+                                const SizedBox(width: 4),
+                                Text(
+                                  job.clientRating.toStringAsFixed(1),
+                                  style: const TextStyle(
+                                    fontFamily: 'Satoshi',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: DesignTokens.textPrimary,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  '(${job.reviewCount} jobs)',
+                                  style: const TextStyle(
+                                    fontFamily: 'Satoshi',
+                                    fontSize: 12,
+                                    color: DesignTokens.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: <Widget>[
+                      _RequestBadge(label: job.urgencyLabel, isAccent: job.urgency == JobUrgency.asap || job.isUrgent),
+                      const SizedBox(width: 8),
+                      _RequestBadge(label: job.category, isAccent: false),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      const Icon(
+                        Icons.location_on_rounded,
+                        size: 16,
+                        color: DesignTokens.textSecondary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          job.locationLine,
+                          style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontSize: 13,
+                            color: DesignTokens.textSecondary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: DesignTokens.background,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: DesignTokens.borderSubtle),
+                    ),
+                    child: Column(
+                      children: <Widget>[
+                        Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  const Text(
+                                    'Client estimate',
+                                    style: TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontSize: 12,
+                                      color: DesignTokens.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    job.estimateDisplay,
+                                    style: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: DesignTokens.textPrimary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  const Text(
+                                    'Your quote',
+                                    style: TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontSize: 12,
+                                      color: DesignTokens.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    quote != null ? 'GHS ${quote.toStringAsFixed(2)}' : '—',
+                                    style: const TextStyle(
+                                      fontFamily: 'Satoshi',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800,
+                                      color: DesignTokens.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        if (difference != null) ...<Widget>[
+                          const SizedBox(height: 12),
+                          Row(
+                            children: <Widget>[
+                              Text(
+                                isUnderEstimate ? '+GHS ${difference.toStringAsFixed(2)}' : 'GHS ${difference.abs().toStringAsFixed(2)}',
+                                style: TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: diffColor,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                isUnderEstimate ? 'saved for you' : 'above estimate',
+                                style: const TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 12,
+                                  color: DesignTokens.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: onAccept,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                          child: const Text(
+                            'Accept Job',
+                            style: TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: onViewDetails,
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        side: BorderSide(color: DesignTokens.borderSubtle),
+                      ),
+                      child: const Text(
+                        'View details',
+                        style: TextStyle(
                           fontFamily: 'Satoshi',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: DesignTokens.textPrimary,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        job.description,
-                        style: const TextStyle(
-                          fontFamily: 'Satoshi',
-                          fontSize: 12,
-                          color: DesignTokens.textSecondary,
-                          height: 1.4,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // Relative timestamp
-                Text(
-                  _relativeTime(job.createdAt),
-                  style: const TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 11,
-                    color: DesignTokens.textMuted,
-                  ),
-                ),
-              ],
-            ),
-          ),
- 
-          // ── Tags row ──
-          if (_tagsFor(job).isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: _tagsFor(job),
-              ),
-            ),
-          if (totalQuote != null) ...<Widget>[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: Row(
-                children: <Widget>[
-                  const Icon(
-                    Icons.payments_rounded,
-                    size: 16,
-                    color: DesignTokens.primary,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Quote: ${_formatGhs(totalQuote)}',
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: DesignTokens.primary,
                     ),
                   ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RequestBadge extends StatelessWidget {
+  const _RequestBadge({required this.label, required this.isAccent});
+
+  final String label;
+  final bool isAccent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: isAccent ? DesignTokens.primary.withValues(alpha: 0.14) : DesignTokens.background,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: DesignTokens.borderSubtle),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontFamily: 'Satoshi',
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: isAccent ? DesignTokens.primary : DesignTokens.textSecondary,
+        ),
+      ),
+    );
+  }
+}
+
+class _DashboardHeader extends StatelessWidget {
+  const _DashboardHeader();
+
+  String _firstName() {
+    final String fullName = AppUserSession.instance.currentUser?.fullName ?? '';
+    final List<String> parts = fullName.trim().split(' ');
+    return parts.isNotEmpty && parts.first.isNotEmpty ? parts.first : '';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final String firstName = _firstName();
+    final String greeting = GreetingUtils.getGreeting();
+    final String subtitle = GreetingUtils.getWorkerSubtitle();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          firstName.isNotEmpty ? '$greeting, $firstName' : greeting,
+          style: const TextStyle(
+            fontFamily: 'Satoshi',
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: DesignTokens.textPrimary,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          subtitle,
+          style: const TextStyle(
+            fontFamily: 'Satoshi',
+            fontSize: 14,
+            color: DesignTokens.textSecondary,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
  
-          // ── Divider ──
-          const Divider(height: 1, thickness: 0.5, color: DesignTokens.borderSubtle),
+class _QuickAccessSection extends StatelessWidget {
+  const _QuickAccessSection({
+    required this.onOpenEarnings,
+    required this.onOpenReviews,
+    required this.onOpenGallery,
+    required this.onOpenHistory,
+  });
  
-          // ── Actions row ──
-          IntrinsicHeight(
+  final VoidCallback onOpenEarnings;
+  final VoidCallback onOpenReviews;
+  final VoidCallback onOpenGallery;
+  final VoidCallback onOpenHistory;
+ 
+  @override
+  Widget build(BuildContext context) {
+    final double itemWidth =
+        (MediaQuery.of(context).size.width - DesignTokens.gutter * 2 - DesignTokens.md) /
+            2;
+
+    return Wrap(
+      spacing: DesignTokens.md,
+      runSpacing: DesignTokens.md,
+      children: <Widget>[
+        _QuickAccessTile(
+          icon: Icons.payments_rounded,
+          label: 'Earnings',
+          width: itemWidth,
+          onTap: onOpenEarnings,
+        ),
+        _QuickAccessTile(
+          icon: Icons.rate_review,
+          label: 'Reviews',
+          width: itemWidth,
+          onTap: onOpenReviews,
+        ),
+        _QuickAccessTile(
+          icon: Icons.photo_library,
+          label: 'Gallery',
+          width: itemWidth,
+          onTap: onOpenGallery,
+        ),
+        _QuickAccessTile(
+          icon: Icons.history,
+          label: 'History',
+          width: itemWidth,
+          onTap: onOpenHistory,
+        ),
+      ],
+    );
+  }
+}
+ 
+class _QuickAccessTile extends StatelessWidget {
+  const _QuickAccessTile({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    required this.width,
+  });
+ 
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final double width;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: width,
+      child: Material(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Expanded(
-                  child: TextButton(
-                    onPressed: onViewDetails,
-                    style: TextButton.styleFrom(
-                      foregroundColor: DesignTokens.textSecondary,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          bottomLeft: Radius.circular(DesignTokens.radiusXl),
-                        ),
-                      ),
-                    ),
-                    child: const Text(
-                      'View details',
-                      style: TextStyle(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      label,
+                      style: const TextStyle(
                         fontFamily: 'Satoshi',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: DesignTokens.textPrimary,
                       ),
                     ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'Open',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        color: DesignTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: DesignTokens.primary.withAlpha(24),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: DesignTokens.primary),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+ 
+class _PerformanceOverviewCard extends StatelessWidget {
+  const _PerformanceOverviewCard({
+    required this.stats,
+    required this.totalEarnings,
+    required this.isLoading,
+  });
+
+  final WorkerStats? stats;
+  final double? totalEarnings;
+  final bool isLoading;
+
+  String _formatCurrency(double? amount) {
+    if (amount == null) return 'GH₵ 0.00';
+    return 'GH₵ ${amount.toStringAsFixed(2)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final double rating = stats?.rating ?? 0.0;
+    final int reviewCount = stats?.reviewCount ?? 0;
+    final int totalJobs = stats?.totalJobs ?? 0;
+    final String responseLabel = stats?.responseLabel ?? '--';
+    final String earningsText = _formatCurrency(totalEarnings);
+
+    return Container(
+      padding: const EdgeInsets.all(DesignTokens.lg),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        border: Border.all(color: DesignTokens.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            'Performance Overview',
+            style: TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: DesignTokens.textPrimary,
+            ),
+          ),
+
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _CleanStatTile(
+                  label: 'Total Earnings',
+                  value: earningsText,
+                  icon: Icons.payments_outlined,
+                ),
+              ),
+              const SizedBox(width: DesignTokens.md),
+              Expanded(
+                child: _CleanStatTile(
+                  label: 'Jobs Completed',
+                  value: '$totalJobs',
+                  icon: Icons.work_outline_rounded,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: DesignTokens.md),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: _CleanStatTile(
+                  label: 'Average Rating',
+                  value: rating > 0 ? '${rating.toStringAsFixed(1)} ★' : '--',
+                  subtitle: reviewCount > 0 ? '$reviewCount reviews' : null,
+                  icon: Icons.star_outline_rounded,
+                ),
+              ),
+              const SizedBox(width: DesignTokens.md),
+              Expanded(
+                child: _CleanStatTile(
+                  label: 'Response Time',
+                  value: responseLabel,
+                  icon: Icons.schedule_rounded,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CleanStatTile extends StatelessWidget {
+  const _CleanStatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.subtitle,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceBase,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: DesignTokens.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(icon, size: 16, color: DesignTokens.textSecondary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: DesignTokens.textSecondary,
                   ),
                 ),
-                const VerticalDivider(
-                  width: 0.5,
-                  thickness: 0.5,
-                  color: DesignTokens.borderSubtle,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: DesignTokens.textPrimary,
+            ),
+          ),
+          if (subtitle != null) ...<Widget>[
+            const SizedBox(height: 2),
+            Text(
+              subtitle!,
+              style: const TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: 11,
+                color: DesignTokens.textMuted,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+ 
+class _NearbyJobsSection extends StatelessWidget {
+  const _NearbyJobsSection({
+    required this.isOnline,
+    required this.isSearching,
+    required this.jobs,
+    required this.selectedJobId,
+    required this.lastCheckedAt,
+    required this.onGoOnline,
+    required this.onStartMatching,
+    required this.onSelectJob,
+    required this.onOpenJob,
+    required this.onViewDetails,
+    required this.onAccept,
+  });
+
+  final bool isOnline;
+  final bool isSearching;
+  final List<WorkerJob> jobs;
+  final String? selectedJobId;
+  final DateTime? lastCheckedAt;
+  final VoidCallback onGoOnline;
+  final VoidCallback onStartMatching;
+  final ValueChanged<String> onSelectJob;
+  final ValueChanged<WorkerJob> onOpenJob;
+  final ValueChanged<WorkerJob> onViewDetails;
+  final ValueChanged<WorkerJob> onAccept;
+
+  String get _checkedLabel {
+    if (lastCheckedAt == null) return '';
+    final Duration age = DateTime.now().difference(lastCheckedAt!);
+    if (age.inSeconds < 5) return 'Just now';
+    if (age.inSeconds < 60) return '${age.inSeconds}s ago';
+    return '${age.inMinutes}m ago';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            const Expanded(
+              child: Text(
+                'Nearby Requests',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: DesignTokens.textPrimary,
                 ),
-                Expanded(
-                  child: TextButton(
-                    onPressed: onAccept,
-                    style: TextButton.styleFrom(
-                      foregroundColor: DesignTokens.primary,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.only(
-                          bottomRight: Radius.circular(DesignTokens.radiusXl),
-                        ),
-                      ),
-                    ),
-                    child: const Text(
-                      'Accept →',
-                      style: TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+              ),
+            ),
+            if (jobs.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: DesignTokens.primary.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Text(
+                  '${jobs.length} active',
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: DesignTokens.primary,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: DesignTokens.sm),
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: _buildState(context),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildState(BuildContext context) {
+    if (!isOnline) {
+      return _MinimalisticStatusCard(
+        key: const ValueKey('offline'),
+        title: 'Offline',
+        subtitle: 'Turn on availability to receive nearby job requests.',
+        isOnline: false,
+        isLoading: false,
+        actionLabel: 'Go online',
+        onAction: onGoOnline,
+      );
+    }
+
+    if (isSearching) {
+      return const _MinimalisticStatusCard(
+        key: ValueKey('searching'),
+        title: 'Searching nearby...',
+        subtitle: 'Checking for client requests close to your location.',
+        isOnline: true,
+        isLoading: true,
+      );
+    }
+
+    if (jobs.isEmpty) {
+      return _MinimalisticStatusCard(
+        key: const ValueKey('empty'),
+        title: 'Listening for requests',
+        subtitle: _checkedLabel.isNotEmpty
+            ? 'Last checked: $_checkedLabel'
+            : 'No active requests nearby right now.',
+        isOnline: true,
+        isLoading: false,
+        actionLabel: 'Refresh',
+        onAction: onStartMatching,
+      );
+    }
+
+    final String selectedId = selectedJobId ?? jobs.first.id;
+    return Column(
+      key: const ValueKey('has_jobs'),
+      children: <Widget>[
+        JobRequestsMapPreview(
+          jobs: jobs,
+          selectedJobId: selectedId,
+          onSelectJob: onSelectJob,
+          onOpenJob: onOpenJob,
+          height: 145,
+        ),
+        const SizedBox(height: DesignTokens.md),
+        ...jobs.map(
+          (WorkerJob job) => Padding(
+            padding: const EdgeInsets.only(bottom: DesignTokens.md),
+            child: _RequestJobCard(
+              job: job,
+              isSelected: job.id == selectedId,
+              onTap: () => onSelectJob(job.id),
+              onAccept: () => onAccept(job),
+              onViewDetails: () => onViewDetails(job),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _MinimalisticStatusCard extends StatelessWidget {
+  const _MinimalisticStatusCard({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.isOnline,
+    required this.isLoading,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool isOnline;
+  final bool isLoading;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        border: Border.all(color: DesignTokens.borderSubtle),
+      ),
+      child: Row(
+        children: <Widget>[
+          _PulseDot(online: isOnline),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: DesignTokens.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontFamily: 'Satoshi',
+                    fontSize: 12,
+                    color: DesignTokens.textSecondary,
                   ),
                 ),
               ],
+            ),
+          ),
+          if (actionLabel != null && onAction != null)
+            TextButton(
+              onPressed: onAction,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                foregroundColor: DesignTokens.primary,
+              ),
+              child: Text(
+                actionLabel!,
+                style: const TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+ 
+class _NearbyJobRequestFoundCard extends StatelessWidget {
+  const _NearbyJobRequestFoundCard({
+    required Key key,
+    required this.job,
+    required this.onAccept,
+    required this.onDecline,
+  }) : super(key: key);
+ 
+  final WorkerJob job;
+  final VoidCallback onAccept;
+  final VoidCallback onDecline;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: DesignTokens.background,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: DesignTokens.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              CategoryIconBadge(
+                iconName: job.categoryIconName,
+                colorHex: job.categoryColorHex,
+                size: 46,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      job.clientName,
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: DesignTokens.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      job.title,
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 13,
+                        color: DesignTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: <Widget>[
+              _JobTag(label: job.category),
+              if (job.distanceKm != null) _JobTag(label: job.distanceText, isDistance: true),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Text(
+            job.description,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 13,
+              color: DesignTokens.textSecondary,
+              height: 1.55,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: <Widget>[
+              _Badge(label: 'Budget', value: job.estimateDisplay),
+              const SizedBox(width: 10),
+              _Badge(label: 'Arrival', value: job.urgencyLabel),
+            ],
+          ),
+          const SizedBox(height: 18),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onDecline,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text('Decline Job'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: onAccept,
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: const Text('Accept Job'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+ 
+class _Badge extends StatelessWidget {
+  const _Badge({required this.label, required this.value});
+ 
+  final String label;
+  final String value;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: DesignTokens.background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: DesignTokens.borderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            value,
+            style: const TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: DesignTokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 11,
+              color: DesignTokens.textSecondary,
             ),
           ),
         ],
       ),
     );
   }
- 
-  List<Widget> _tagsFor(WorkerJob job) {
-    final List<Widget> tags = <Widget>[];
-    if (job.trade != null) tags.add(_JobTag(label: job.trade!));
-    if (job.distanceKm != null) {
-      tags.add(_JobTag(
-        label: '${job.distanceKm!.toStringAsFixed(1)} km',
-        isDistance: true,
-      ));
-    }
-    if (job.area != null) tags.add(_JobTag(label: job.area!));
-    return tags;
-  }
-
-  String _formatGhs(double amount) => 'GHS ${amount.toStringAsFixed(2)}';
 }
  
-/// Empty state — used for both online-but-no-jobs and offline states.
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({
-    required this.isOnline,
-    required this.onRefresh,
-    this.lastCheckedAt,
+class _RecentReviewsSection extends StatelessWidget {
+  const _RecentReviewsSection({
+    required this.reviews,
+    required this.onSeeAll,
   });
  
-  final bool isOnline;
-  final VoidCallback onRefresh;
-  final DateTime? lastCheckedAt;
+  final List<WorkerReviewSummary> reviews;
+  final VoidCallback onSeeAll;
  
-  String get _checkedLabel {
-    if (lastCheckedAt == null) return '';
-    final Duration age = DateTime.now().difference(lastCheckedAt!);
-    if (age.inSeconds < 5) return 'just now';
-    if (age.inSeconds < 60) return '${age.inSeconds}s ago';
-    return '${age.inMinutes}m ago';
+  String _formatDate(DateTime? date) {
+    if (date == null) return '';
+    return '${date.day}/${date.month}/${date.year}';
   }
  
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 48),
+    return Container(
+      padding: const EdgeInsets.all(DesignTokens.lg),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: DesignTokens.shadowMid,
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          // Icon ring
-          Container(
-            width: 68,
-            height: 68,
-            decoration: BoxDecoration(
-              color: DesignTokens.warmTint,
-              shape: BoxShape.circle,
-              border: Border.all(color: DesignTokens.warmBorder, width: 1.5),
-            ),
-            child: Icon(
-              isOnline ? Icons.radar_rounded : Icons.power_settings_new,
-              color: isOnline ? DesignTokens.primary : DesignTokens.textMuted,
-              size: 30,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            isOnline ? 'No open requests yet' : 'You\'re offline',
-            style: const TextStyle(
-              fontFamily: 'Satoshi',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: DesignTokens.textPrimary,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              isOnline
-                  ? 'We keep checking every few seconds — you\'ll be notified the moment one arrives.'
-                  : 'Toggle availability above to start receiving nearby job requests.',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 13,
-                color: DesignTokens.textSecondary,
-                height: 1.55,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: <Widget>[
+              const Text(
+                'Recent Reviews',
+                style: TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: DesignTokens.textPrimary,
+                ),
               ),
-            ),
-          ),
-          if (isOnline && lastCheckedAt != null) ...<Widget>[
-            const SizedBox(height: 8),
-            Text(
-              'Last checked $_checkedLabel',
-              style: const TextStyle(
-                fontFamily: 'Satoshi',
-                fontSize: 12,
-                color: DesignTokens.textMuted,
+              TextButton(
+                onPressed: onSeeAll,
+                child: const Text('See All →'),
               ),
-            ),
-          ],
-          if (isOnline) ...<Widget>[
-            const SizedBox(height: 20),
-            OutlinedButton(
-              onPressed: onRefresh,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: DesignTokens.primary,
-                side: const BorderSide(color: DesignTokens.primary, width: 1.5),
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 24, vertical: 10),
-                shape: const StadiumBorder(),
+            ],
+          ),
+          const SizedBox(height: DesignTokens.md),
+          if (reviews.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: DesignTokens.background,
+                borderRadius: BorderRadius.circular(16),
               ),
               child: const Text(
-                'Refresh now',
+                'No recent reviews yet. Complete jobs to receive feedback from clients.',
                 style: TextStyle(
                   fontFamily: 'Satoshi',
                   fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: DesignTokens.textSecondary,
+                  height: 1.5,
+                ),
+              ),
+            )
+          else
+            ...reviews.map(
+              (WorkerReviewSummary review) => Padding(
+                padding: const EdgeInsets.only(bottom: DesignTokens.md),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: DesignTokens.background,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Row(
+                        children: <Widget>[
+                          Icon(Icons.star, size: 16, color: DesignTokens.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            review.rating.toStringAsFixed(1),
+                            style: const TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: DesignTokens.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            review.reviewerName,
+                            style: const TextStyle(
+                              fontFamily: 'Satoshi',
+                              fontSize: 13,
+                              color: DesignTokens.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (review.comment != null && review.comment!.isNotEmpty) ...<Widget>[
+                        const SizedBox(height: 8),
+                        Text(
+                          review.comment!,
+                          style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontSize: 13,
+                            color: DesignTokens.textPrimary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                      if (review.createdAt != null) ...<Widget>[
+                        const SizedBox(height: 10),
+                        Text(
+                          _formatDate(review.createdAt),
+                          style: const TextStyle(
+                            fontFamily: 'Satoshi',
+                            fontSize: 11,
+                            color: DesignTokens.textMuted,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
             ),
-          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TipsCard extends StatelessWidget {
+  const _TipsCard({required this.tip});
+ 
+  final String tip;
+ 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(DesignTokens.lg),
+      decoration: BoxDecoration(
+        color: DesignTokens.surfaceCard,
+        borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+        boxShadow: const <BoxShadow>[
+          BoxShadow(
+            color: DesignTokens.shadowMid,
+            blurRadius: 14,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            'Tips for Better Visibility',
+            style: TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              color: DesignTokens.textPrimary,
+            ),
+          ),
+          const SizedBox(height: DesignTokens.sm),
+          Text(
+            tip,
+            style: const TextStyle(
+              fontFamily: 'Satoshi',
+              fontSize: 13,
+              color: DesignTokens.textSecondary,
+              height: 1.7,
+            ),
+          ),
         ],
       ),
     );
@@ -643,6 +1510,8 @@ class _PendingApplicationCard extends StatelessWidget {
     final String status = (application['status'] ?? 'pending').toString();
     final bool accepted = status == 'accepted';
     final Object? budget = job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
+    final Object? clientEstimate = job['client_estimate'] ??
+        job['budget_fixed'] ?? job['budget_min'] ?? job['budget_max'];
     final double? totalQuote = (application['total_quote'] as num?)?.toDouble() ??
         (application['proposed_rate'] as num?)?.toDouble();
 
@@ -657,74 +1526,75 @@ class _PendingApplicationCard extends StatelessWidget {
           border: Border.all(color: DesignTokens.borderSubtle),
         ),
         child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          CategoryIconBadge(
-            iconName: category is Map ? category['icon_name']?.toString() : null,
-            colorHex: category is Map ? category['color_hex']?.toString() : null,
-            size: 42,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                Text(
-                  (job['title'] ?? 'Job application').toString(),
-                  style: const TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: DesignTokens.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  '$categoryName · ${job['address_label'] ?? 'Location pending'}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 12,
-                    color: DesignTokens.textSecondary,
-                  ),
-                ),
-                if (budget != null) ...<Widget>[
-                  const SizedBox(height: 6),
-                  Text(
-                    'Budget: GHS $budget',
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: DesignTokens.primary,
-                    ),
-                  ),
-                ],
-                if (totalQuote != null) ...<Widget>[
-                  const SizedBox(height: 6),
-                  Text(
-                    'Your quote: GHS ${totalQuote.toStringAsFixed(2)}',
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: DesignTokens.primary,
-                    ),
-                  ),
-                ],
-              ],
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            CategoryIconBadge(
+              iconName: category is Map ? category['icon_name']?.toString() : null,
+              colorHex: category is Map ? category['color_hex']?.toString() : null,
+              size: 42,
             ),
-          ),
-          const SizedBox(width: 8),
-          _JobTag(label: accepted ? 'Accepted' : 'Pending'),
-        ],
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text(
+                    (job['title'] ?? 'Job application').toString(),
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: DesignTokens.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$categoryName · ${job['address_label'] ?? 'Location pending'}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 12,
+                      color: DesignTokens.textSecondary,
+                    ),
+                  ),
+
+                  if (clientEstimate != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Client estimate: GHS $clientEstimate',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: DesignTokens.textSecondary,
+                      ),
+                    ),
+                  ],
+                  if (totalQuote != null) ...<Widget>[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Your quote: GHS ${totalQuote.toStringAsFixed(2)}',
+                      style: const TextStyle(
+                        fontFamily: 'Satoshi',
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: DesignTokens.primary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            _JobTag(label: accepted ? 'Accepted' : 'Pending'),
+          ],
         ),
       ),
     );
   }
 }
- 
+
 // ─────────────────────────────────────────────────────────────────────────────
 // View state
 // ─────────────────────────────────────────────────────────────────────────────
@@ -744,25 +1614,40 @@ class WorkerRequestsScreen extends StatefulWidget {
 class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     with WidgetsBindingObserver {
   final WorkersService _workersService = WorkersService();
- 
+  final NotificationService _notificationService = NotificationService.instance;
+  int _unreadNotifications = 0;
+
   RequestsViewState _viewState = RequestsViewState.loading;
   List<WorkerJob> _jobs = <WorkerJob>[];
+  String? _selectedJobId;
   List<Map<String, dynamic>> _applications = <Map<String, dynamic>>[];
   String? _errorMessage;
   Timer? _refreshTimer;
   bool _isLoadingRequests = false;
   bool _isSilentRefreshing = false;
   DateTime? _lastCheckedAt;
+  WorkerStats? _stats;
+  double? _totalEarnings;
+  bool _isLoadingOverview = true;
+  final List<String> _tips = <String>[
+    'Keep your availability ON during busy hours.',
+    'Respond quickly to improve your response rate.',
+    'Upload more portfolio photos.',
+    'Complete jobs promptly to increase your recommendation score.',
+    'Maintain a high customer rating.',
+  ];
+  late final String _tipOfTheDay;
  
   // ── Lifecycle ──────────────────────────────────────────────────────────────
  
   @override
   void initState() {
     super.initState();
+    _tipOfTheDay = _tips[Random().nextInt(_tips.length)];
     WidgetsBinding.instance.addObserver(this);
     _load();
     _refreshTimer = Timer.periodic(
-      const Duration(seconds: 8),
+      const Duration(seconds: 30),
       (_) => _load(silent: true),
     );
   }
@@ -815,6 +1700,11 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
             .map((dynamic item) =>
                 workerJobFromApi(item as Map<String, dynamic>))
             .toList();
+        _selectedJobId = _jobs.isNotEmpty
+            ? (_selectedJobId != null && _jobs.any((job) => job.id == _selectedJobId)
+                ? _selectedJobId
+                : _jobs.first.id)
+            : null;
         _applications = applications
             .whereType<Map<dynamic, dynamic>>()
             .map((Map<dynamic, dynamic> item) => Map<String, dynamic>.from(item))
@@ -839,11 +1729,66 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     } finally {
       _isLoadingRequests = false;
     }
+
+    if (!silent) {
+      await Future.wait<dynamic>([
+        _loadOverview(),
+        _loadUnreadNotifications(),
+      ]);
+    } else {
+      unawaited(_loadOverview(silent: true));
+      unawaited(_loadUnreadNotifications());
+    }
+  }
+
+  Future<void> _loadUnreadNotifications() async {
+    try {
+      final int count = await _notificationService.getUnreadCount();
+      if (!mounted) return;
+      setState(() => _unreadNotifications = count);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _unreadNotifications = 0);
+    }
+  }
+
+  Future<void> _loadOverview({bool silent = false}) async {
+    if (!silent && mounted) {
+      setState(() {
+        _isLoadingOverview = true;
+      });
+    }
+
+    try {
+      final List<dynamic> results = await Future.wait<dynamic>([
+        _workersService.getStats(),
+        _workersService.getEarnings(),
+      ]);
+      final Map<String, dynamic> statsData =
+          Map<String, dynamic>.from(results[0] as Map);
+      final Map<String, dynamic> earningsData =
+          Map<String, dynamic>.from(results[1] as Map);
+
+      if (!mounted) return;
+      setState(() {
+        _stats = WorkerStats.fromMap(statsData);
+        _totalEarnings = (earningsData['total_earned'] as num?)?.toDouble();
+      });
+    } catch (_) {
+      // Keep the dashboard visible even if overview data fails.
+    } finally {
+      if (!silent && mounted) {
+        setState(() {
+          _isLoadingOverview = false;
+        });
+      }
+    }
   }
  
   // ── Navigation ─────────────────────────────────────────────────────────────
  
   void _openDetail(WorkerJob job) {
+    _selectJob(job.id);
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => JobRequestDetailScreen(
@@ -857,6 +1802,52 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
         ),
       ),
     );
+  }
+
+  Future<void> _handleQuickAccept(WorkerJob job) async {
+    _selectJob(job.id);
+    final String budgetStr = job.rateLabel ?? job.estimatedBudgetLabel ?? 'this job';
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('Apply for ${job.title}?'),
+        content: Text(
+          'Do you want to send an application to client ${job.clientName} ($budgetStr)?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: DesignTokens.primary),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Submit Application'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await _workersService.applyToJob(job.id);
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Application submitted successfully.');
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(context, e, fallback: 'Could not submit application.');
+    }
+  }
+
+  void _selectJob(String jobId) {
+    if (!mounted) return;
+    setState(() {
+      if (_jobs.any((job) => job.id == jobId)) {
+        _selectedJobId = jobId;
+      }
+    });
   }
 
   Future<void> _openApplication(Map<String, dynamic> application) async {
@@ -882,13 +1873,31 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     }
 
     if (!mounted) return;
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
+    final dynamic updated = await Navigator.of(context).push(
+      MaterialPageRoute<dynamic>(
         builder: (_) => WorkerApplicationDetailScreen(
           application: application,
         ),
       ),
     );
+    if (updated == true && mounted) {
+      _load();
+    }
+  }
+
+  Future<void> _declineJob(WorkerJob job) async {
+    try {
+      await _workersService.declineJob(job.id);
+      if (!mounted) return;
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      AppToast.showError(
+        context,
+        e,
+        fallback: 'Could not decline the job request.',
+      );
+    }
   }
  
   // ── Build ──────────────────────────────────────────────────────────────────
@@ -944,30 +1953,101 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           letterSpacing: 0.01,
         ),
       ),
+      actions: <Widget>[
+        GestureDetector(
+          onTap: () async {
+            await Navigator.pushNamed(context, AppRoutes.notifications);
+            if (mounted) unawaited(_loadUnreadNotifications());
+          },
+          child: Container(
+            margin: const EdgeInsets.only(right: DesignTokens.gutter),
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: DesignTokens.surfaceCard,
+              shape: BoxShape.circle,
+              border: Border.all(color: DesignTokens.borderSubtle),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                  color: DesignTokens.shadow,
+                  blurRadius: 10,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: <Widget>[
+                const Icon(
+                  Icons.notifications_outlined,
+                  color: DesignTokens.textPrimary,
+                  size: 20,
+                ),
+                if (_unreadNotifications > 0)
+                  Positioned(
+                    top: 5,
+                    right: 4,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 17,
+                        minHeight: 17,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      decoration: BoxDecoration(
+                        color: DesignTokens.primary,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: DesignTokens.surfaceCard,
+                          width: 1.5,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        _unreadNotifications > 99
+                            ? '99+'
+                            : '$_unreadNotifications',
+                        style: const TextStyle(
+                          fontFamily: 'Satoshi',
+                          fontSize: 8,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
  
   // ── Body ───────────────────────────────────────────────────────────────────
  
   Widget _buildBody(WorkerSessionState session) {
-    // Loading skeleton
     if (_viewState == RequestsViewState.loading) {
       return ListView(
         padding: const EdgeInsets.all(DesignTokens.gutter),
         children: const <Widget>[
           SkeletonBox(height: 112),
           SizedBox(height: DesignTokens.md),
-          SkeletonBox(height: 170),
+          SkeletonBox(height: 145),
           SizedBox(height: DesignTokens.md),
           SkeletonBox(height: 170),
         ],
       );
     }
- 
-    // Error state
+
     if (_viewState == RequestsViewState.error) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(
+          DesignTokens.gutter,
+          DesignTokens.md,
+          DesignTokens.gutter,
+          DesignTokens.gutter,
+        ),
         children: <Widget>[
           ErrorStateView(
             message: _errorMessage!,
@@ -977,8 +2057,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
         ],
       );
     }
- 
-    // Loaded + empty
+
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
@@ -988,7 +2067,8 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
         DesignTokens.gutter,
       ),
       children: <Widget>[
-        // ── Availability card ──────────────────────────────────
+        const _DashboardHeader(),
+        const SizedBox(height: DesignTokens.md),
         _AvailabilityCard(
           isAvailable: session.isAvailable,
           isAvailabilityLoading: session.isAvailabilityLoading,
@@ -1013,62 +2093,105 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
             }
           },
         ),
- 
         const SizedBox(height: DesignTokens.lg),
- 
-        // ── Empty state ────────────────────────────────────────
-        if (_viewState == RequestsViewState.empty)
-          _EmptyState(
-            isOnline: session.isAvailable,
-            onRefresh: _load,
-            lastCheckedAt: _lastCheckedAt,
-          ),
- 
-        // ── Section header ─────────────────────────────────────
-        if (_viewState == RequestsViewState.loaded) ...<Widget>[
-          if (_applications.isNotEmpty) ...<Widget>[
-            _SectionHeader(
-              label: 'Pending applications',
-              count: _applications.length,
-            ),
-            const SizedBox(height: DesignTokens.md),
-            ..._applications.map(
-              (Map<String, dynamic> application) => Padding(
-                padding: const EdgeInsets.only(bottom: DesignTokens.md),
-                child: _PendingApplicationCard(
-                  application: application,
-                  onTap: () => _openApplication(application),
-                ),
-              ),
-            ),
-            const SizedBox(height: DesignTokens.sm),
-          ],
-          if (_jobs.isNotEmpty) ...<Widget>[
+        _NearbyJobsSection(
+          isOnline: session.isAvailable,
+          isSearching: _isLoadingRequests,
+          jobs: _jobs,
+          selectedJobId: _selectedJobId,
+          lastCheckedAt: _lastCheckedAt,
+          onGoOnline: () async {
+            if (await DeviceLocationService.requestPermissionInteractive(context)) {
+              final bool ok = await session.setAvailable(true);
+              if (ok && mounted) {
+                await _load();
+              }
+              if (!ok && mounted) {
+                AppToast.showError(
+                  context,
+                  Exception('Could not update availability.'),
+                  fallback: 'Could not update availability.',
+                );
+              }
+            }
+          },
+          onStartMatching: _load,
+          onSelectJob: _selectJob,
+          onOpenJob: _openDetail,
+          onViewDetails: _openDetail,
+          onAccept: _handleQuickAccept,
+        ),
+        const SizedBox(height: DesignTokens.lg),
+        if (_applications.isNotEmpty) ...<Widget>[
           _SectionHeader(
-            label: 'Open requests',
-            count: _jobs.length,
+            label: 'Pending applications',
+            count: _applications.length,
           ),
           const SizedBox(height: DesignTokens.md),
- 
-          // ── Job cards ────────────────────────────────────────
-          JobRequestsMapPreview(
-            jobs: _jobs,
-            onOpenJob: _openDetail,
-          ),
-          const SizedBox(height: DesignTokens.md),
-          ..._jobs.map(
-            (WorkerJob job) => Padding(
+          ..._applications.map(
+            (Map<String, dynamic> application) => Padding(
               padding: const EdgeInsets.only(bottom: DesignTokens.md),
-              child: _RequestJobCard(
-                job: job,
-                onViewDetails: () => _openDetail(job),
-                onAccept: () => _openDetail(job),
+              child: _PendingApplicationCard(
+                application: application,
+                onTap: () => _openApplication(application),
               ),
             ),
           ),
-          ],
+          const SizedBox(height: DesignTokens.sm),
         ],
+        _QuickAccessSection(
+          onOpenEarnings: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const WorkerEarningsScreen(),
+              ),
+            );
+          },
+          onOpenReviews: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const WorkerReviewsScreen(),
+              ),
+            );
+          },
+          onOpenGallery: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const WorkerGalleryScreen(),
+              ),
+            );
+          },
+          onOpenHistory: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const WorkerBookingHistoryScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: DesignTokens.lg),
+        _PerformanceOverviewCard(
+          stats: _stats,
+          totalEarnings: _totalEarnings,
+          isLoading: _isLoadingOverview,
+        ),
+
+
+        const SizedBox(height: DesignTokens.lg),
+        _RecentReviewsSection(
+          reviews: _stats?.recentReviews ?? const <WorkerReviewSummary>[],
+          onSeeAll: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const WorkerReviewsScreen(),
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: DesignTokens.lg),
+        _TipsCard(tip: _tipOfTheDay),
       ],
     );
   }
 }
+

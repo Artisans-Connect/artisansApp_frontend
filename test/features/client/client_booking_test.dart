@@ -44,6 +44,25 @@ void main() {
     expect(active.isTrackable, isTrue);
   });
 
+  test('picks scheduled confirmed jobs as active trackable jobs', () {
+    final active = ClientBooking.pickActiveTrackable(<Map<String, dynamic>>[
+      <String, dynamic>{
+        'id': 'job-scheduled-confirmed',
+        'title': 'Install ceiling fan',
+        'status': 'scheduled_confirmed',
+        'worker_id': 'worker-1',
+        'job_mode': 'scheduled',
+        'scheduled_for': '2026-07-01T09:00:00Z',
+      },
+    ]);
+
+    expect(active, isNotNull);
+    expect(active!.backendStatus, 'scheduled_confirmed');
+    expect(active.status, ClientBookingStatus.accepted);
+    expect(active.isClientCancellable, isTrue);
+    expect(active.isTrackable, isTrue);
+  });
+
   test('picks worker-cancelled jobs as recoverable active jobs', () {
     final active = ClientBooking.pickActiveTrackable(<Map<String, dynamic>>[
       <String, dynamic>{

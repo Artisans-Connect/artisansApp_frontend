@@ -50,6 +50,17 @@ class UserProfileScreen extends StatefulWidget {
 }
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
+  bool _hasRequestedOwnProfileRefresh = false;
+
+  Future<void> _refreshOwnProfile() async {
+    try {
+      await ProfileService.instance.getMyProfile(forceRefresh: true);
+      if (mounted) setState(() {});
+    } catch (_) {
+      // Keep the cached/session profile visible if refresh is unavailable.
+    }
+  }
+
   Future<void> _openVerificationPortal() async {
     try {
       await VerificationService.instance.openPortalAndRefreshProfile();
@@ -86,6 +97,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final Object? rawArgs = ModalRoute.of(context)?.settings.arguments;
     final ProfileArgs? args = rawArgs is ProfileArgs ? rawArgs : null;
     final bool isOwnProfile = SharedUserContext.isOwnProfile(args?.userId);
+    if (isOwnProfile && !_hasRequestedOwnProfileRefresh) {
+      _hasRequestedOwnProfileRefresh = true;
+      unawaited(_refreshOwnProfile());
+    }
     if (!isOwnProfile && args?.profileData == null && args?.userId.isNotEmpty == true) {
       return _RemoteProfileScaffold(userId: args!.userId);
     }
@@ -244,62 +259,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ),
                   ),
                 ],
-                if (isOwnProfile &&
-                    (widget.onOpenWorkerEarnings != null ||
-                        widget.onOpenWorkerStats != null ||
-                        widget.onOpenWorkerHistory != null ||
-                        widget.onOpenWorkerReviews != null ||
-                        widget.onOpenWorkerGallery != null)) ...<Widget>[
-                  const SizedBox(height: 14),
-                  ProfileSectionCard(
-                    title: 'Worker dashboard',
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: <Widget>[
-                        if (widget.onOpenWorkerEarnings != null)
-                          OutlinedButton.icon(
-                            onPressed: widget.onOpenWorkerEarnings,
-                            icon: Icon(PhosphorIcons.wallet),
-                            label: const Text('Earnings'),
-                          ),
-                        if (widget.onOpenWorkerStats != null)
-                          OutlinedButton.icon(
-                            onPressed: widget.onOpenWorkerStats,
-                            icon: Icon(PhosphorIcons.chartLineUp),
-                            label: const Text('Stats'),
-                          ),
-                        if (widget.onOpenWorkerHistory != null)
-                          OutlinedButton.icon(
-                            onPressed: widget.onOpenWorkerHistory,
-                            icon: Icon(PhosphorIcons.clockCounterClockwise),
-                            label: const Text('History'),
-                          ),
-                        if (widget.onOpenWorkerReviews != null)
-                          OutlinedButton.icon(
-                            onPressed: widget.onOpenWorkerReviews,
-                            icon: Icon(PhosphorIcons.star),
-                            label: const Text('Reviews'),
-                          ),
-                        if (widget.onOpenWorkerGallery != null)
-                          OutlinedButton.icon(
-                            onPressed: widget.onOpenWorkerGallery,
-                            icon: Icon(PhosphorIcons.images),
-                            label: const Text('Gallery'),
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ] else if (profile.totalJobs != null) ...<Widget>[
-                const SizedBox(height: 14),
-                ProfileSectionCard(
-                  title: 'Activity',
-                  child: _StatBlock(
-                    label: 'Jobs posted',
-                    value: '${profile.totalJobs}',
-                  ),
-                ),
               ],
               const SizedBox(height: 24),
               if (isOwnProfile) ...<Widget>[

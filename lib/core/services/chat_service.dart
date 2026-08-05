@@ -19,8 +19,8 @@ class ChatService {
     );
   }
 
-  Future<dynamic> getMessages(String conversationId) async {
-    return await _api.get('/chat/$conversationId/messages');
+  Future<dynamic> getMessages(String conversationId, {int limit = 30, int offset = 0}) async {
+    return await _api.get('/chat/$conversationId/messages?limit=$limit&offset=$offset');
   }
 
   Future<dynamic> createDirectConversation(String workerId) async {
@@ -49,5 +49,10 @@ class ChatService {
     });
     await CacheStore.instance.remove(CacheKeys.chatConversations);
     return result;
+  }
+
+  Future<void> deleteConversation(String conversationId) async {
+    await _api.delete('/chat/$conversationId');
+    await CacheStore.instance.remove(CacheKeys.chatConversations);
   }
 }

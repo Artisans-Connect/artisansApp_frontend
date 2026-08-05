@@ -9,6 +9,7 @@ class DesignTokens {
   static const Color background = AppColors.background;
   static const Color surfaceBase = AppColors.surface;
   static const Color surfaceCard = AppColors.surfaceContainerLowest;
+  static const Color surfaceHighlight = Color(0xFFF8F2E8);
   static const Color primary = AppColors.primary;
   static const Color primaryDark = AppColors.primaryContainer;
   static const Color accentGold = AppColors.accentGold;

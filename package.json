@@ -1,0 +1,13 @@
+{
+  "name": "artisans-app-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo \"Skipping build, using pre-built output\"",
+    "docs:wiki:init": "node scripts/openwiki-runner.cjs --init",
+    "docs:wiki:update": "node scripts/openwiki-runner.cjs --update --print"
+  },
+  "devDependencies": {
+    "openwiki": "^0.2.4"
+  }
+}

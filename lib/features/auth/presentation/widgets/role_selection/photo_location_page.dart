@@ -15,17 +15,21 @@ class PhotoLocationPage extends StatelessWidget {
     required this.session,
     required this.imageFile,
     required this.locationController,
+    required this.phoneController,
     required this.isLoadingLocation,
     required this.onPickImage,
     required this.onAutoDetectLocation,
+    required this.isGoogleUser,
   });
 
   final OnboardingSession session;
   final PickedMedia? imageFile;
   final TextEditingController locationController;
+  final TextEditingController phoneController;
   final bool isLoadingLocation;
   final VoidCallback onPickImage;
   final VoidCallback onAutoDetectLocation;
+  final bool isGoogleUser;
 
   @override
   Widget build(BuildContext context) {
@@ -205,6 +209,21 @@ class PhotoLocationPage extends StatelessWidget {
                           onPressed: onAutoDetectLocation,
                         ),
                 ),
+
+                if (isGoogleUser ||
+                    session.phone == null ||
+                    session.phone!.trim().length < 8 ||
+                    session.phone!.trim() == '0000000000') ...<Widget>[
+                  const SizedBox(height: 22),
+                  // Contact input
+                  const SectionLabel('Contact Number'),
+                  AppInput(
+                    controller: phoneController,
+                    hint: 'e.g., +233 24 123 4567',
+                    prefixIcon: PhosphorIcons.phone,
+                    keyboardType: TextInputType.phone,
+                  ),
+                ],
               ],
             ),
           ),

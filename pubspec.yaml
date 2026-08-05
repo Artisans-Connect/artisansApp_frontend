@@ -59,26 +59,24 @@ dev_dependencies:
     sdk: flutter
   flutter_launcher_icons: ^0.13.1
   flutter_lints: ^2.0.0
-  
+
+dependency_overrides:
+  path_provider_foundation: 2.3.2
+
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/ArtisanConnect Logo - 1.png"
-  adaptive_icon_background: "#F8F4EC"
-  adaptive_icon_foreground: "assets/ArtisanConnect Logo - 1.png"
-  adaptive_icon_foreground_inset: 28
+  image_path: "assets/launcher_icon_foreground.png"
+  remove_alpha_ios: true
+  bg_color_ios: "#FFF8F0"
+  adaptive_icon_background: "#FFF8F0"
+  adaptive_icon_foreground: "assets/launcher_icon_foreground.png"
   min_sdk_android: 21
   web:
     generate: true
-    image_path: "assets/ArtisanConnect Logo - 1.png"
-    background_color: "#4A79E6"
-    theme_color: "#4A79E6"
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
+    image_path: "assets/launcher_icon_foreground.png"
+    background_color: "#FFF8F0"
+    theme_color: "#C15A3D"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -391,10 +391,17 @@ class _MapboxJobLocationMapState extends State<MapboxJobLocationMap> {
   @override
   Widget build(BuildContext context) {
     if (kIsWeb || AppConstants.mapboxAccessToken.isEmpty) {
+      if (AppConstants.googleMapsApiKey.isNotEmpty) {
+        return _GoogleJobLocationFallback(
+          initial: widget.initial,
+          height: widget.height,
+          onPositionChanged: widget.onPositionChanged,
+        );
+      }
       return _MapboxUnavailable(
         height: widget.height,
         message:
-            'Configure MAPBOX_ACCESS_TOKEN to use the Mapbox location picker.',
+            'Configure MAPBOX_ACCESS_TOKEN or GOOGLE_MAPS_API_KEY to use the location picker.',
       );
     }
 
@@ -529,6 +536,80 @@ class _MapboxUnavailable extends StatelessWidget {
           color: AppColors.textSecondary,
         ),
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+}
+
+class _GoogleJobLocationFallback extends StatefulWidget {
+  const _GoogleJobLocationFallback({
+    required this.initial,
+    required this.height,
+    this.onPositionChanged,
+  });
+
+  final google.LatLng initial;
+  final double height;
+  final ValueChanged<google.LatLng>? onPositionChanged;
+
+  @override
+  State<_GoogleJobLocationFallback> createState() =>
+      _GoogleJobLocationFallbackState();
+}
+
+class _GoogleJobLocationFallbackState
+    extends State<_GoogleJobLocationFallback> {
+  late google.LatLng _center;
+
+  @override
+  void initState() {
+    super.initState();
+    _center = widget.initial;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: widget.height,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
+        child: Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            google.GoogleMap(
+              initialCameraPosition: google.CameraPosition(
+                target: widget.initial,
+                zoom: 15,
+              ),
+              onCameraMove: (google.CameraPosition position) {
+                _center = position.target;
+              },
+              onCameraIdle: () {
+                widget.onPositionChanged?.call(_center);
+              },
+              myLocationEnabled: true,
+              myLocationButtonEnabled: true,
+              zoomControlsEnabled: false,
+            ),
+            IgnorePointer(
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(color: Colors.black26, blurRadius: 6),
+                  ],
+                ),
+                child: Icon(
+                  Icons.location_on,
+                  color: AppColors.primary,
+                  size: 28,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

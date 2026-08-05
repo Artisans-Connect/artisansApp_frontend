@@ -71,18 +71,28 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Skip the splash when we already have a cached profile for this session.
   Future<bool> _tryFastBootFromCache() async {
     final session = Supabase.instance.client.auth.currentSession;
+    debugPrint('[SplashScreen] _tryFastBootFromCache triggered. Session exists: ${session != null}');
     if (session == null) return false;
 
     final user = await AuthService.instance.loadCachedUser();
+    debugPrint('[SplashScreen] Cached user loaded: ${user?.email}');
     if (user == null || !mounted) return false;
 
-    await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    final targetRoute = shellRouteForUser(user);
+    debugPrint('[SplashScreen] Fast booting to cached user route: $targetRoute');
+    await Navigator.pushReplacementNamed(context, targetRoute);
     unawaited(AuthService.instance.getCurrentUser(forceRefresh: true));
     return true;
   }
 
   Future<bool> _routeCachedUserIfAvailable() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      debugPrint('[SplashScreen] Cannot route to cached user: No active session');
+      return false;
+    }
     final user = await AuthService.instance.loadCachedUser();
+    debugPrint('[SplashScreen] Routing cached user if available. Found: ${user?.email}');
     if (user == null || !mounted) return false;
     await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
     return true;
@@ -90,22 +100,31 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _routeAfterAuth() async {
     final session = Supabase.instance.client.auth.currentSession;
+    debugPrint('[SplashScreen] _routeAfterAuth triggered. Session exists: ${session != null}');
     if (session != null) {
       try {
         final user = await AuthService.instance.getCurrentUser();
+        debugPrint('[SplashScreen] Current user fetched: ${user.email}, mode: ${user.lastActiveMode}');
         if (!mounted) return;
-        await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+        final targetRoute = shellRouteForUser(user);
+        debugPrint('[SplashScreen] Redirecting to target route: $targetRoute');
+        await Navigator.pushReplacementNamed(context, targetRoute);
       } on AuthFailure catch (e) {
+        debugPrint('[SplashScreen] AuthFailure: ${e.code} - ${e.message}');
         if (!mounted) return;
         if (e.code == AuthFailureCode.profileNotFound) {
+          debugPrint('[SplashScreen] Profile not found, redirecting to RoleSelectionScreen');
           await Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
         } else {
+          debugPrint('[SplashScreen] Redirecting to SignInScreen');
           await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
         }
       } on NetworkException {
+        debugPrint('[SplashScreen] NetworkException during _routeAfterAuth');
         if (!mounted) return;
         if (await _routeCachedUserIfAvailable()) return;
         if (!mounted) return;
+        debugPrint('[SplashScreen] Redirecting to SignInScreen (offline & no cache)');
         await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
       } on ApiException catch (e) {
         if (!mounted) return;
@@ -153,48 +172,69 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final double screenHeight = MediaQuery.of(context).size.height;
+    // Circle is 160x160 centered at screenHeight / 2.
+    // Bottom edge of circle is (screenHeight / 2) + 80.
+    // Positioning content starting 100px below screen center places it 20px directly below the circle.
+    final double contentTop = (screenHeight / 2) + 100;
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          color: AppColors.primary,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        color: AppColors.primary,
+        child: Stack(
           children: <Widget>[
-            Container(
-              width: 172,
-              height: 172,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFFFF6ED),
-                boxShadow: <BoxShadow>[
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.12),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
+            // 1. Warm white circle pinned at exact 2D screen center (matches native splash 1:1)
+            Center(
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFFF6ED),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.14),
+                      blurRadius: 24,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                alignment: Alignment.center,
+                child: Image.asset(
+                  'assets/ArtisanConnect Logo - 1.png',
+                  width: 108,
+                  height: 108,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
+            // 2. App title & progress spinner placed directly underneath the centered circle
+            Positioned(
+              top: contentTop,
+              left: 0,
+              right: 0,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'CraftMatch',
+                    style: AppTypography.displayMedium.copyWith(
+                      color: Colors.white,
+                      fontSize: 38,
+                      letterSpacing: -0.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  const CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3.0,
                   ),
                 ],
               ),
-              alignment: Alignment.center,
-              child: Image.asset(
-                'assets/ArtisanConnect Logo - 1.png',
-                width: 120,
-                height: 120,
-                fit: BoxFit.contain,
-              ),
             ),
-            const SizedBox(height: 24),
-            Text(
-              'CraftMatch',
-              style: AppTypography.displayMedium.copyWith(
-                color: Colors.white,
-                fontSize: 42,
-              ),
-            ),
-            const SizedBox(height: 32),
-            const CircularProgressIndicator(color: Colors.white),
           ],
         ),
       ),

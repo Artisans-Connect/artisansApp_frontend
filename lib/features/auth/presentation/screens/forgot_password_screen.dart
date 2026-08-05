@@ -10,6 +10,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_input.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/gradient_button.dart';
+import '../../models/password_strength.dart';
+import '../../widgets/password_strength_meter.dart';
 import 'sign_in_screen.dart';
 
 class ForgotPasswordScreenArgs {
@@ -59,15 +61,21 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     super.initState();
     _emailController = TextEditingController(text: widget.initialEmail);
     _isRecoveryFlow = widget.isRecoveryFlow;
+    _newPasswordController.addListener(_handlePasswordChanged);
   }
 
   @override
   void dispose() {
+    _newPasswordController.removeListener(_handlePasswordChanged);
     _emailController.dispose();
     _newPasswordController.dispose();
     _confirmPasswordController.dispose();
     _cooldownTimer?.cancel();
     super.dispose();
+  }
+
+  void _handlePasswordChanged() {
+    setState(() {});
   }
 
   void _startCooldown() {
@@ -278,10 +286,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               });
                             },
                           ),
-                          validator: (String? v) =>
-                              (v == null || v.length < 6)
-                                  ? 'Enter at least 6 characters.'
-                                  : null,
+                          validator: PasswordPolicy.validate,
+                        ),
+                        const SizedBox(height: 10),
+                        PasswordStrengthMeter(
+                          password: _newPasswordController.text,
                         ),
                         const SizedBox(height: 14),
                         Text(
@@ -311,7 +320,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                             },
                           ),
                           validator: (String? v) {
-                            if (v == null || v.length < 6) {
+                            if (v == null || v.isEmpty) {
                               return 'Confirm your new password.';
                             }
                             if (v != _newPasswordController.text) {

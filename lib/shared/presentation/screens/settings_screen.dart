@@ -10,11 +10,11 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../../features/auth/presentation/screens/sign_in_screen.dart';
+import '../../../features/client/presentation/navigation/client_navigation.dart';
 import '../navigation/legal_navigation.dart';
 import '../../utils/shared_user_context.dart';
 import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../widgets/settings_group_tile.dart';
 import 'edit_profile_screen.dart';
 
@@ -100,7 +100,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     'All your profile data, jobs, reviews, messages, and uploaded files will be permanently deleted.',
                   ),
                   const SizedBox(height: 16),
-                  const Text(
+                  const SelectableText(
                     'To confirm, please type "delete my account" below:',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -221,13 +221,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _openHelpCenter() async {
-    final Uri url = Uri(scheme: 'tel', path: '0257243106');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url);
-    } else {
-      if (!mounted) return;
-      AppToast.showError(context, Exception('Could not launch phone dialer.'), fallback: 'Could not launch phone dialer.');
-    }
+    await ClientNavigation.callPhone(context, '0257243106');
   }
 
   void _openNotificationPrefs() {

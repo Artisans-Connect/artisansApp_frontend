@@ -10,37 +10,83 @@ import '../widgets/history_job_card.dart';
 import '../widgets/segment_toggle.dart';
 import 'worker_booking_detail_screen.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
+
 class WorkerBookingHistoryScreen extends StatefulWidget {
   const WorkerBookingHistoryScreen({super.key});
+
   @override
   State<WorkerBookingHistoryScreen> createState() =>
       _WorkerBookingHistoryScreenState();
 }
-class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen> {
+
+class _WorkerBookingHistoryScreenState
+    extends State<WorkerBookingHistoryScreen> {
   final WorkersService _workersService = WorkersService();
+  final ScrollController _scrollController = ScrollController();
+
   bool _isLoading = true;
+  bool _isLoadingMore = false;
   String? _loadError;
   bool _showCompleted = true;
-  List<WorkerJob> _allJobs = [];
+  List<WorkerJob> _allJobs = <WorkerJob>[];
+
+  int _limit = 10;
+  int _offset = 0;
+  bool _hasMore = true;
+
   @override
   void initState() {
     super.initState();
-    _loadHistory();
+    _scrollController.addListener(_onScroll);
+    _loadHistory(reset: true);
   }
-  Future<void> _loadHistory() async {
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      _loadMoreHistory();
+    }
+  }
+
+  Future<void> _loadHistory({bool reset = false}) async {
+    if (!mounted) return;
     setState(() {
       _isLoading = true;
       _loadError = null;
+      if (reset) {
+        _offset = 0;
+        _hasMore = true;
+        _allJobs = <WorkerJob>[];
+      }
     });
     try {
-      final dynamic response = await _workersService.getHistory();
+      final dynamic response = await _workersService.getHistory(
+        limit: _limit,
+        offset: _offset,
+      );
       if (!mounted) return;
       final List<dynamic> data = response as List<dynamic>;
+      final List<WorkerJob> newJobs = data
+          .map((dynamic item) =>
+              workerHistoryJobFromApi(item as Map<String, dynamic>))
+          .toList();
+
       setState(() {
-        _allJobs = data
-            .map((dynamic item) =>
-                workerHistoryJobFromApi(item as Map<String, dynamic>))
-            .toList();
+        if (reset) {
+          _allJobs = newJobs;
+        } else {
+          _allJobs.addAll(newJobs);
+        }
+        _offset += _limit;
+        if (newJobs.length < _limit) {
+          _hasMore = false;
+        }
         _isLoading = false;
       });
     } catch (e) {
@@ -51,12 +97,46 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
       });
     }
   }
+
+  Future<void> _loadMoreHistory() async {
+    if (_isLoadingMore || !_hasMore || _isLoading) return;
+    setState(() {
+      _isLoadingMore = true;
+    });
+    try {
+      final dynamic response = await _workersService.getHistory(
+        limit: _limit,
+        offset: _offset,
+      );
+      if (!mounted) return;
+      final List<dynamic> data = response as List<dynamic>;
+      final List<WorkerJob> newJobs = data
+          .map((dynamic item) =>
+              workerHistoryJobFromApi(item as Map<String, dynamic>))
+          .toList();
+
+      setState(() {
+        _allJobs.addAll(newJobs);
+        _offset += _limit;
+        if (newJobs.length < _limit) {
+          _hasMore = false;
+        }
+        _isLoadingMore = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingMore = false;
+      });
+    }
+  }
+
   List<WorkerJob> get _filtered => _allJobs
-      .where((WorkerJob j) =>
-          _showCompleted
-              ? j.historyStatus == HistoryStatus.completed
-              : j.historyStatus == HistoryStatus.cancelled)
+      .where((WorkerJob j) => _showCompleted
+          ? j.historyStatus == HistoryStatus.completed
+          : j.historyStatus == HistoryStatus.cancelled)
       .toList();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,7 +158,7 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
           style: AppTypography.titleLarge.copyWith(color: AppColors.onSurface),
         ),
         centerTitle: true,
-        actions: [
+        actions: <Widget>[
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.md),
             child: Text(
@@ -92,14 +172,17 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
         ],
       ),
       body: Column(
-        children: [
+        children: <Widget>[
           Padding(
             padding: const EdgeInsets.all(AppSpacing.gutter),
             child: SegmentToggle(
               leftLabel: 'Completed',
               rightLabel: 'Cancelled',
               isLeftSelected: _showCompleted,
-              onChanged: (v) => setState(() => _showCompleted = v),
+              onChanged: (bool v) {
+                setState(() => _showCompleted = v);
+                _loadHistory(reset: true);
+              },
             ),
           ),
           Expanded(
@@ -109,31 +192,45 @@ class _WorkerBookingHistoryScreenState extends State<WorkerBookingHistoryScreen>
                     ? ErrorStateView(
                         message: _loadError!,
                         title: 'Could not load history',
-                        onRetry: _loadHistory,
+                        onRetry: () => _loadHistory(reset: true),
                       )
-                : _filtered.isEmpty
-                    ? Center(
-                        child: Text(
-                          'No history available',
-                          style: AppTypography.bodyLarge,
-                        ),
-                      )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.gutter),
-                        itemCount: _filtered.length,
-                        itemBuilder: (_, int i) => HistoryJobCard(
-                          job: _filtered[i],
-                          onViewDetails: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => WorkerBookingDetailScreen(
-                                  job: _filtered[i],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
+                    : _filtered.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No history available',
+                              style: AppTypography.bodyLarge,
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.gutter),
+                            itemCount: _filtered.length +
+                                (_isLoadingMore ? 1 : 0),
+                            itemBuilder: (_, int i) {
+                              if (i == _filtered.length) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 16.0),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              }
+                              return HistoryJobCard(
+                                job: _filtered[i],
+                                onViewDetails: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => WorkerBookingDetailScreen(
+                                        job: _filtered[i],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                          ),
           ),
         ],
       ),

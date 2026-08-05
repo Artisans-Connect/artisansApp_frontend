@@ -82,6 +82,8 @@ WorkerJob workerJobFromApi(Map<String, dynamic> json) {
     grossAmount: (completion['gross_amount'] as num?)?.toDouble(),
     platformFee: (completion['platform_fee'] as num?)?.toDouble(),
     artisanPayout: (completion['artisan_payout'] as num?)?.toDouble(),
+    earnedAmount: (completion['artisan_payout'] as num?)?.toDouble() ??
+        (completion['gross_amount'] as num?)?.toDouble(),
     applicationDistanceKm:
         (applicationQuote['distance_km'] as num?)?.toDouble(),
     applicationDistanceCost:
@@ -157,6 +159,8 @@ WorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     grossAmount: (completion['gross_amount'] as num?)?.toDouble(),
     platformFee: (completion['platform_fee'] as num?)?.toDouble(),
     artisanPayout: (completion['artisan_payout'] as num?)?.toDouble(),
+    earnedAmount: (completion['artisan_payout'] as num?)?.toDouble() ??
+        (completion['gross_amount'] as num?)?.toDouble(),
   );
 }
 

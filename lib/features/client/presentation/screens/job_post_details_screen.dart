@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/navigation/app_routes.dart';
+import '../../../../core/services/platform_service.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
@@ -38,11 +39,21 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
   final int _maxDescriptionLength = 2000;
 
   List<String> get _suggestions {
+    final String subcat = _draft.displaySubcategory;
     final String cat = _draft.displayCategory;
+
+    if (subcat.isNotEmpty) {
+      return <String>[
+        'Fix $subcat',
+        'Install or replace $subcat',
+        'Emergency $subcat repair',
+      ];
+    }
+
     return <String>[
-      '$cat repair at my home',
-      'Urgent $cat fix needed',
-      'Scheduled $cat service',
+      'General $cat repair',
+      'Emergency $cat service',
+      'Standard $cat maintenance',
     ];
   }
 
@@ -153,15 +164,16 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
                   _pickPhoto(ImageSource.gallery);
                 },
               ),
-              ListTile(
-                leading:
-                    Icon(PhosphorIcons.camera, color: AppColors.primary),
-                title: const Text('Take a Photo'),
-                onTap: () {
-                  Navigator.pop(ctx);
-                  _pickPhoto(ImageSource.camera);
-                },
-              ),
+              if (PlatformService.supportsCamera)
+                ListTile(
+                  leading:
+                      Icon(PhosphorIcons.camera, color: AppColors.primary),
+                  title: const Text('Take a Photo'),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    _pickPhoto(ImageSource.camera);
+                  },
+                ),
             ],
           ),
         ),
@@ -254,6 +266,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
                 borderRadius:
                     BorderRadius.circular(AppSpacing.radiusMedium),
               ),
+              counterText: '',
             ),
             onChanged: (_) => setState(() {}),
           ),
@@ -262,7 +275,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
               Expanded(
                 child: Text(
                   _descriptionLength < _minDescriptionLength
-                      ? 'Add at least 20 characters so artisans understand the work.'
+                      ? 'Add at least $_minDescriptionLength characters so artisans understand the work.'
                       : 'Description length looks good.',
                   style: AppTypography.bodySmall.copyWith(
                     color: _descriptionLength < _minDescriptionLength
@@ -273,7 +286,7 @@ class _JobPostDetailsScreenState extends State<JobPostDetailsScreen> {
               ),
               const SizedBox(width: AppSpacing.md),
               Text(
-                '$_descriptionLength/$_minDescriptionLength characters minimum',
+                '$_descriptionLength/$_maxDescriptionLength',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                 ),

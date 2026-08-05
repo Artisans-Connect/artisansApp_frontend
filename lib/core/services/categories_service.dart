@@ -250,6 +250,29 @@ class CategoriesService {
     return <dynamic>[];
   }
 
+  static const Set<String> _legacyFlatSlugs = <String>{
+    'plumbing',
+    'electrical',
+    'carpentry',
+    'masonry',
+    'welding',
+    'construction',
+    'automotive',
+    'painting',
+    'tiling',
+    'roofing',
+    'hvac',
+    'appliance_repair',
+    'cleaning',
+    'landscaping',
+    'fashion',
+    'beauty',
+    'catering',
+    'upholstery',
+    'security',
+    'ict_support',
+  };
+
   List<Map<String, dynamic>> _normalizeCategories(List<dynamic> raw) {
     final List<Map<String, dynamic>> categories = raw
         .whereType<Map<dynamic, dynamic>>()
@@ -281,7 +304,12 @@ class CategoriesService {
           return category;
         })
         .where((Map<String, dynamic> category) =>
-            (category['id'] as String).isNotEmpty)
+            (category['id'] as String).isNotEmpty &&
+            !_legacyFlatSlugs.contains(
+              (category['slug'] ?? '').toString().trim().toLowerCase(),
+            ) &&
+            category['subcategories'] is List &&
+            (category['subcategories'] as List).isNotEmpty)
         .toList();
 
     categories.sort(_compareSortOrder);
@@ -321,6 +349,9 @@ class CategoriesService {
           subcategory['name'] = (subcategory['name'] ?? 'Service type').toString();
           subcategory['slug'] = (subcategory['slug'] ?? subcategory['id']).toString();
           subcategory['description'] = subcategory['description']?.toString();
+          if (subcategory['base_fee'] != null) {
+            subcategory['base_fee'] = (subcategory['base_fee'] as num).toInt();
+          }
           return subcategory;
         })
         .where((Map<String, dynamic> subcategory) =>

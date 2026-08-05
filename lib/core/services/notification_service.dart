@@ -8,11 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/worker/presentation/worker_shell.dart';
+import '../constants/app_constants.dart';
 import '../navigation/app_routes.dart';
 import '../network/api_client.dart';
 import '../notifications/notification_metadata.dart';
 import '../../shared/presentation/navigation/shared_route_args.dart';
 import '../../shared/presentation/screens/chat_detail_screen.dart';
+import '../session/app_user_session.dart';
+import 'auth_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}
@@ -54,7 +57,9 @@ class NotificationService {
     try {
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(alert: true, badge: true, sound: true);
-      final token = await messaging.getToken();
+      final token = kIsWeb && AppConstants.firebaseVapidKey.isNotEmpty
+          ? await messaging.getToken(vapidKey: AppConstants.firebaseVapidKey)
+          : await messaging.getToken();
       if (token == null || token.isEmpty) return;
 
       await _registerToken(token);
@@ -71,7 +76,10 @@ class NotificationService {
     String? tokenHash = _lastTokenHash;
     if (tokenHash == null) {
       try {
-        final token = await FirebaseMessaging.instance.getToken();
+        final messaging = FirebaseMessaging.instance;
+        final token = kIsWeb && AppConstants.firebaseVapidKey.isNotEmpty
+            ? await messaging.getToken(vapidKey: AppConstants.firebaseVapidKey)
+            : await messaging.getToken();
         if (token != null && token.isNotEmpty) {
           tokenHash = _hashToken(token);
         }
@@ -194,6 +202,10 @@ class NotificationService {
       return;
     }
 
+    unawaited(AuthService.instance
+        .updateActiveMode('worker')
+        .catchError((_) => AppUserSession.instance.updateActiveMode('worker')));
+
     navigator.pushNamedAndRemoveUntil(
       WorkerShell.routeName,
       (_) => false,
@@ -255,6 +267,10 @@ class NotificationService {
       return;
     }
 
+    unawaited(AuthService.instance
+        .updateActiveMode('worker')
+        .catchError((_) => AppUserSession.instance.updateActiveMode('worker')));
+
     navigator.pushNamedAndRemoveUntil(
       WorkerShell.routeName,
       (_) => false,
@@ -302,8 +318,9 @@ class NotificationService {
   // ── Notification API methods ──────────────────────────────────────
 
   /// Fetches the current user's notifications from the backend.
-  Future<List<dynamic>> getNotifications({int limit = 50}) async {
-    final dynamic result = await _api.get('/notifications?limit=$limit');
+  Future<List<dynamic>> getNotifications({int limit = 20, int offset = 0}) async {
+    final dynamic result =
+        await _api.get('/notifications?limit=$limit&offset=$offset');
     if (result is List) return result;
     return <dynamic>[];
   }
@@ -326,5 +343,10 @@ class NotificationService {
   /// Marks all unread notifications as read.
   Future<void> markAllAsRead() async {
     await _api.patch('/notifications/read-all');
+  }
+
+  /// Deletes a single notification.
+  Future<void> deleteNotification(String notificationId) async {
+    await _api.delete('/notifications/$notificationId');
   }
 }

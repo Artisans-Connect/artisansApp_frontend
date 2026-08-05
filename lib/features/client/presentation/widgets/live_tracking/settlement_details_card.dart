@@ -13,10 +13,19 @@ class SettlementDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final double? baseRate = (job['base_rate'] as num?)?.toDouble();
-    final double? distanceCost = (job['distance_cost'] as num?)?.toDouble();
-    final double? urgencyPremium = (job['urgency_premium'] as num?)?.toDouble();
-    final double? grossAmount = (job['gross_amount'] as num?)?.toDouble();
+    final Map<String, dynamic> comp =
+        (job['completion_details'] as Map<String, dynamic>?) ??
+            (job['completionDetails'] as Map<String, dynamic>?) ??
+            job;
+    final double? baseRate = (comp['base_rate'] as num?)?.toDouble() ??
+        (job['base_rate'] as num?)?.toDouble();
+    final double? distanceCost = (comp['distance_cost'] as num?)?.toDouble() ??
+        (job['distance_cost'] as num?)?.toDouble();
+    final double? urgencyPremium =
+        (comp['urgency_premium'] as num?)?.toDouble() ??
+            (job['urgency_premium'] as num?)?.toDouble();
+    final double? grossAmount = (comp['gross_amount'] as num?)?.toDouble() ??
+        (job['gross_amount'] as num?)?.toDouble();
 
     if (grossAmount == null || grossAmount == 0) {
       return const SizedBox.shrink();

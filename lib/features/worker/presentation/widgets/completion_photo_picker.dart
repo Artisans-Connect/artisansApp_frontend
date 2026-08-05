@@ -20,29 +20,60 @@ class CompletionPhotoPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final int slotCount = photos.length < 4 ? photos.length + 1 : photos.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('ADD PHOTOS', style: AppTypography.labelCaps),
-        const SizedBox(height: AppSpacing.sm),
         Row(
-          children: List.generate(slotCount.clamp(1, 4).toInt(), (int index) {
-            final bool hasPhoto = index < photos.length;
-            return Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  right: index == slotCount - 1 ? 0 : AppSpacing.sm,
-                ),
-                child: _PhotoSlot(
-                  file: hasPhoto ? photos[index] : null,
-                  add: !hasPhoto,
-                  isBusy: isBusy,
-                  onTap: hasPhoto ? () => onRemove(index) : onAdd,
-                ),
+          children: [
+            Expanded(
+              child: Text('WORK PHOTOS', style: AppTypography.labelCaps),
+            ),
+            Text(
+              '${photos.length}/4',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textSecondary,
               ),
-            );
-          }),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'Add clear photos of the finished work or materials used.',
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        if (photos.isNotEmpty) ...[
+          SizedBox(
+            height: 92,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: photos.length,
+              separatorBuilder: (_, __) => const SizedBox(width: AppSpacing.sm),
+              itemBuilder: (BuildContext context, int index) => _PhotoThumb(
+                file: photos[index],
+                isBusy: isBusy,
+                onRemove: () => onRemove(index),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        OutlinedButton.icon(
+          onPressed: isBusy || photos.length >= 4 ? null : onAdd,
+          icon: Icon(PhosphorIcons.cameraPlus),
+          label: Text(
+            photos.isEmpty ? 'Add work photos' : 'Add another photo',
+          ),
+          style: OutlinedButton.styleFrom(
+            minimumSize: const Size.fromHeight(52),
+            foregroundColor: AppColors.primary,
+            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.45)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.sm),
         Row(
@@ -64,74 +95,50 @@ class CompletionPhotoPicker extends StatelessWidget {
   }
 }
 
-class _PhotoSlot extends StatelessWidget {
-  const _PhotoSlot({
-    this.add = false,
-    this.file,
-    this.onTap,
+class _PhotoThumb extends StatelessWidget {
+  const _PhotoThumb({
+    required this.file,
+    required this.onRemove,
     this.isBusy = false,
   });
 
-  final bool add;
-  final PickedMedia? file;
-  final VoidCallback? onTap;
+  final PickedMedia file;
+  final VoidCallback onRemove;
   final bool isBusy;
 
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: 1,
-      child: InkWell(
-        onTap: isBusy ? null : onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Ink(
-          decoration: BoxDecoration(
-            color: add
-                ? AppColors.primary
-                : file != null
-                    ? AppColors.surfaceContainer
-                    : AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
-            border: file == null && !add
-                ? Border.all(
-                    color: AppColors.outlineVariant,
-                    style: BorderStyle.solid,
-                    width: 1.5,
-                  )
-                : null,
+    return SizedBox(
+      width: 92,
+      height: 92,
+      child: Stack(
+        fit: StackFit.expand,
+        children: <Widget>[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: PickedMediaImage(media: file, fit: BoxFit.cover),
           ),
-          child: file != null
-              ? Stack(
-                  fit: StackFit.expand,
-                  children: <Widget>[
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: PickedMediaImage(media: file!, fit: BoxFit.cover),
-                    ),
-                    Positioned(
-                      right: 4,
-                      top: 4,
-                      child: CircleAvatar(
-                        radius: 12,
-                        backgroundColor:
-                            Colors.black.withValues(alpha: 0.55),
-                        child: Icon(
-                          PhosphorIcons.x,
-                          color: Colors.white,
-                          size: 14,
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Icon(
-                  add ? PhosphorIcons.plus : PhosphorIcons.image,
-                  color: add
-                      ? AppColors.onPrimary
-                      : AppColors.outline.withValues(alpha: 0.5),
-                  size: add ? 28 : 24,
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Material(
+              color: Colors.black.withValues(alpha: 0.58),
+              shape: const CircleBorder(),
+              child: InkWell(
+                onTap: isBusy ? null : onRemove,
+                customBorder: const CircleBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.all(6),
+                  child: Icon(
+                    PhosphorIcons.x,
+                    color: Colors.white,
+                    size: 14,
+                  ),
                 ),
-        ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

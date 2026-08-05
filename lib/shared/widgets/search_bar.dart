@@ -8,16 +8,20 @@ class CustomSearchBar extends StatefulWidget {
   final String hintText;
   final ValueChanged<String>? onChanged;
   final VoidCallback? onSearch;
+  final VoidCallback? onAiTap;
   final TextEditingController? controller;
   final bool isLoading;
+  final bool showAiButton;
 
   const CustomSearchBar({
     Key? key,
     this.hintText = 'Search artisans...',
     this.onChanged,
     this.onSearch,
+    this.onAiTap,
     this.controller,
     this.isLoading = false,
+    this.showAiButton = false,
   }) : super(key: key);
 
   @override
@@ -82,19 +86,39 @@ class _SearchBarState extends State<CustomSearchBar> {
                     ),
                   ),
                 )
-              : _controller.text.isNotEmpty
-                  ? GestureDetector(
-                      onTap: () {
-                        _controller.clear();
-                        widget.onChanged?.call('');
-                      },
-                      child: Icon(
-                        PhosphorIcons.x,
-                        color: AppColors.outlineVariant,
-                        size: AppSpacing.iconSmall,
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    if (_controller.text.isNotEmpty)
+                      GestureDetector(
+                        onTap: () {
+                          _controller.clear();
+                          widget.onChanged?.call('');
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Icon(
+                            PhosphorIcons.x,
+                            color: AppColors.outlineVariant,
+                            size: AppSpacing.iconSmall,
+                          ),
+                        ),
                       ),
-                    )
-                  : null,
+                    if (widget.showAiButton || widget.onAiTap != null)
+                      IconButton(
+                        tooltip: 'Smart AI Search',
+                        icon: const Icon(
+                          PhosphorIcons.sparkle,
+                          color: AppColors.primary,
+                          size: 18,
+                        ),
+                        onPressed: widget.onAiTap ?? widget.onSearch,
+                        padding: const EdgeInsets.all(4),
+                        constraints: const BoxConstraints(),
+                      ),
+                    const SizedBox(width: 8),
+                  ],
+                ),
           filled: true,
           fillColor: Colors.white,
           contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),

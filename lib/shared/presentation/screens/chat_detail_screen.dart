@@ -10,11 +10,12 @@ import '../../../core/errors/error_messages.dart';
 import '../../../core/navigation/app_routes.dart';
 import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
+import '../../../core/services/platform_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_toast.dart';
-import '../../models/picked_media.dart';
 import '../../widgets/error_state_view.dart';
+import '../../models/picked_media.dart';
 import '../../../core/theme/app_typography.dart';
 import '../../../features/client/presentation/navigation/client_navigation.dart';
 import '../../utils/shared_user_context.dart';
@@ -48,6 +49,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   RealtimeChannel? _realtimeChannel;
   Timer? _pollTimer;
   String? _activeConversationId;
+
+  int _offset = 0;
+  bool _hasMore = true;
+  bool _isFetchingMore = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels <= 50 &&
+        !_isFetchingMore &&
+        _hasMore &&
+        !_isLoading &&
+        _activeConversationId != null) {
+      _loadMoreMessages(_activeConversationId!);
+    }
+  }
 
   @override
   void didChangeDependencies() {
@@ -133,10 +154,16 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       setState(() {
         _isLoading = true;
         _loadError = null;
+        _offset = 0;
+        _hasMore = true;
       });
     }
     try {
-      final dynamic response = await _chatService.getMessages(conversationId);
+      final dynamic response = await _chatService.getMessages(
+        conversationId,
+        limit: 30,
+        offset: 0,
+      );
       if (!mounted) return;
 
       final List<dynamic> data = response as List<dynamic>;
@@ -146,6 +173,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           return ChatMessage.fromJson(json, CurrentUser.id ?? '');
         }).toList();
         _isLoading = false;
+        _offset = _messages.length;
+        if (data.length < 30) {
+          _hasMore = false;
+        }
       });
       if (!silent) _scrollToBottom();
     } catch (e) {
@@ -156,6 +187,51 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           _loadError = userMessageFor(e, fallback: 'Failed to load messages.');
         });
       }
+    }
+  }
+
+  Future<void> _loadMoreMessages(String conversationId) async {
+    if (_isFetchingMore || !_hasMore) return;
+    setState(() {
+      _isFetchingMore = true;
+    });
+    try {
+      final double previousMaxScroll = _scrollController.position.maxScrollExtent;
+
+      final dynamic response = await _chatService.getMessages(
+        conversationId,
+        limit: 30,
+        offset: _offset,
+      );
+      if (!mounted) return;
+
+      final List<dynamic> data = response as List<dynamic>;
+      final List<ChatMessage> olderMessages = data.map((dynamic item) {
+        final Map<String, dynamic> json = item as Map<String, dynamic>;
+        return ChatMessage.fromJson(json, CurrentUser.id ?? '');
+      }).toList();
+
+      setState(() {
+        _messages.insertAll(0, olderMessages);
+        _offset = _messages.length;
+        _isFetchingMore = false;
+        if (data.length < 30) {
+          _hasMore = false;
+        }
+      });
+
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (_scrollController.hasClients) {
+          final double newMaxScroll = _scrollController.position.maxScrollExtent;
+          _scrollController.jumpTo(newMaxScroll - previousMaxScroll);
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isFetchingMore = false;
+      });
+      AppToast.showError(context, e, fallback: 'Could not load older messages.');
     }
   }
 
@@ -496,9 +572,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                 controller: _scrollController,
                                 padding:
                                     const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                                itemCount: _messages.length + 1,
+                                itemCount: _messages.length + 1 + (_isFetchingMore ? 1 : 0),
                                 itemBuilder: (BuildContext context, int index) {
-                                  if (index == 0) {
+                                  if (_isFetchingMore && index == 0) {
+                                    return const Padding(
+                                      padding: EdgeInsets.symmetric(vertical: 12),
+                                      child: Center(
+                                        child: SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation<Color>(
+                                                AppColors.primary),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final int adjustedIndex = _isFetchingMore ? index - 1 : index;
+                                  if (adjustedIndex == 0) {
                                     // Date separator
                                     return Center(
                                       child: Container(
@@ -523,7 +616,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                                     );
                                   }
                                   return ChatBubble(
-                                      message: _messages[index - 1]);
+                                      message: _messages[adjustedIndex - 1]);
                                 },
                               ),
               ),
@@ -566,13 +659,14 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
             icon: Icon(PhosphorIcons.video, color: AppColors.primary),
             tooltip: 'Video',
           ),
-          IconButton(
-            onPressed: _isUploadingMedia
-                ? null
-                : () => _pickAndUploadAttachment(ImageSource.camera),
-            icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
-            tooltip: 'Camera',
-          ),
+          if (PlatformService.supportsCamera)
+            IconButton(
+              onPressed: _isUploadingMedia
+                  ? null
+                  : () => _pickAndUploadAttachment(ImageSource.camera),
+              icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
+              tooltip: 'Camera',
+            ),
           IconButton(
             onPressed: _isUploadingMedia
                 ? null

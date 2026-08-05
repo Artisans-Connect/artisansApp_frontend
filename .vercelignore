@@ -1,0 +1,30 @@
+# Ignore native platforms
+android/
+ios/
+windows/
+linux/
+macos/
+
+# Ignore Dart/Flutter tooling and dependencies
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+pubspec.lock
+
+# Ignore source files and tests as the build is already completed
+lib/
+test/
+assets/
+web/
+.git/
+.github/
+.agents/
+.gemini/
+.system_generated/
+
+# Keep the deployment output and configuration
+!build/
+!vercel.json

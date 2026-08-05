@@ -3,4 +3,9 @@
     <item>
         <color android:color="#C15A3D" />
     </item>
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@drawable/launch_logo" />
+    </item>
 </layer-list>

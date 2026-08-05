@@ -22,6 +22,7 @@ migrate_working_dir/
 #.vscode/
 
 # Flutter/Dart/Pub related
+node_modules/
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
@@ -74,3 +75,4 @@ AGENTS.md
 CLAUDE.md
 GEMINI.md
 CHAT.md
+.vercel

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/workers_service.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
 
-class WorkerApplicationDetailScreen extends StatelessWidget {
+class WorkerApplicationDetailScreen extends StatefulWidget {
   const WorkerApplicationDetailScreen({
     super.key,
     required this.application,
@@ -13,13 +15,67 @@ class WorkerApplicationDetailScreen extends StatelessWidget {
   final Map<String, dynamic> application;
 
   @override
+  State<WorkerApplicationDetailScreen> createState() => _WorkerApplicationDetailScreenState();
+}
+
+class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailScreen> {
+  final WorkersService _workersService = WorkersService();
+  bool _isWithdrawing = false;
+
+  Future<void> _confirmWithdraw(BuildContext context) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        title: const Text('Withdraw application?'),
+        content: const Text(
+          'Are you sure you want to withdraw your application? This request will no longer be available to you.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Withdraw',
+              style: TextStyle(color: DesignTokens.error),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+    setState(() => _isWithdrawing = true);
+
+    try {
+      final Map<String, dynamic> job =
+          Map<String, dynamic>.from(widget.application['job'] as Map? ?? const {});
+      final String jobId = (job['id'] ?? '').toString();
+
+      await _workersService.withdrawApplication(jobId);
+
+      if (!mounted) return;
+      AppToast.showInfo(context, 'Application withdrawn successfully.');
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not withdraw application.');
+      }
+    } finally {
+      if (mounted) setState(() => _isWithdrawing = false);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> job =
-        Map<String, dynamic>.from(application['job'] as Map? ?? const {});
+        Map<String, dynamic>.from(widget.application['job'] as Map? ?? const {});
     final Map<String, dynamic> category =
         Map<String, dynamic>.from(job['categories'] as Map? ?? const {});
     final String applicationStatus =
-        (application['status'] ?? 'pending').toString().toLowerCase();
+        (widget.application['status'] ?? 'pending').toString().toLowerCase();
     final String jobStatus = (job['status'] ?? '').toString().toLowerCase();
 
     return Scaffold(
@@ -90,16 +146,21 @@ class WorkerApplicationDetailScreen extends StatelessWidget {
                   label: 'Location',
                   value: (job['address_label'] ?? 'Location pending').toString(),
                 ),
-                _DetailRow(label: 'Budget', value: _budgetLabel(job)),
-                if ((application['message'] ?? '').toString().trim().isNotEmpty)
+                _DetailRow(label: 'Client estimate', value: _budgetLabel(job)),
+                if (widget.application['total_quote'] != null)
+                  _DetailRow(
+                    label: 'Your quote shown to client',
+                    value: 'GHS ${widget.application['total_quote']}',
+                  ),
+                if ((widget.application['message'] ?? '').toString().trim().isNotEmpty)
                   _DetailRow(
                     label: 'Your message',
-                    value: application['message'].toString(),
+                    value: widget.application['message'].toString(),
                   ),
-                if (application['proposed_rate'] != null)
+                if (widget.application['proposed_rate'] != null)
                   _DetailRow(
-                    label: 'Your proposed rate',
-                    value: 'GHS ${application['proposed_rate']}',
+                    label: 'Custom amount you entered',
+                    value: 'GHS ${widget.application['proposed_rate']}',
                   ),
               ],
             ),
@@ -116,6 +177,29 @@ class WorkerApplicationDetailScreen extends StatelessWidget {
               color: DesignTokens.textSecondary,
             ),
           ),
+          if (applicationStatus == 'pending') ...[
+            const SizedBox(height: DesignTokens.lg),
+            ElevatedButton(
+              onPressed: _isWithdrawing ? null : () => _confirmWithdraw(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: DesignTokens.error,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                _isWithdrawing ? 'Withdrawing...' : 'Withdraw Application',
+                style: const TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

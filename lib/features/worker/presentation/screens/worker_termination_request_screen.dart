@@ -45,6 +45,7 @@ class _WorkerTerminationRequestScreenState
         AppToast.showSuccess(
             context, 'Termination declined. Continue the job.');
       }
+      Navigator.of(context).maybePop();
     } catch (e) {
       if (mounted) {
         AppToast.showError(

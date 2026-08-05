@@ -66,6 +66,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
 
       final estimate = await _pricingService.estimateFee(
         categoryId: categoryId,
+        subcategoryId: _draft.subcategoryId,
         locationLat: lat,
         locationLng: lng,
         jobMode: jobMode,
@@ -216,6 +217,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
       onPrimary: _postJob,
       secondaryLabel: 'Save draft',
       onSecondary: _saveDraft,
+      onBack: () => Navigator.pop(context),
       showDiscardOnBack: _draft.hasAnyData,
       onDiscard: () => ClientNavigation.popToShell(context),
       child: Column(
@@ -299,9 +301,21 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             label: 'Verified client bonus',
                             amount: _estimate!.verificationPremium,
                           ),
+                        if (_estimate!.verifiedWorkerMarketPremium > 0)
+                          _PriceBreakdownRow(
+                            label: 'Verified artisan premium',
+                            amount: _estimate!.verifiedWorkerMarketPremium,
+                          ),
                         const Divider(height: 20),
                         Text(
                           'Travel cost is calculated separately for each artisan when they apply.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          'This amount is only an estimate. The final price may change after the artisan reviews the job scope, materials, and travel needs.',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.textSecondary,
                           ),
@@ -353,7 +367,10 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('TOTAL', style: AppTypography.labelLarge),
+                          Text(
+                            'ESTIMATED TOTAL',
+                            style: AppTypography.labelLarge,
+                          ),
                           Text(
                             ClientJobDraft.formatGhs(totalFee),
                             style: AppTypography.displaySmall.copyWith(

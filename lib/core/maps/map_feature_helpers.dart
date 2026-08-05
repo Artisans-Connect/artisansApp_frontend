@@ -1,6 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../utils/haversine.dart' as distance_utils;
 
@@ -17,7 +19,7 @@ class AppMapCoordinate {
   LatLng toGoogleLatLng() => LatLng(latitude, longitude);
 }
 
-enum MapRouteEstimateSource { haversine, googleRoutes }
+enum MapRouteEstimateSource { haversine, googleRoutes, postgis }
 
 enum MapMarkerKind {
   client,
@@ -66,6 +68,45 @@ class HaversineRouteProvider extends RouteProvider {
   }
 }
 
+class SupabasePostGISRouteProvider extends RouteProvider {
+  const SupabasePostGISRouteProvider({this.speedKmh = 25});
+
+  final double speedKmh;
+
+  @override
+  Future<MapRouteEstimate> estimate({
+    required LatLng origin,
+    required LatLng destination,
+  }) async {
+    try {
+      final dynamic response = await Supabase.instance.client.rpc(
+        'calculate_distance_km',
+        params: <String, dynamic>{
+          'lat1': origin.latitude,
+          'lng1': origin.longitude,
+          'lat2': destination.latitude,
+          'lng2': destination.longitude,
+        },
+      );
+      if (response != null && response is num) {
+        final double distanceKm = response.toDouble();
+        return MapRouteEstimate(
+          distanceKm: distanceKm,
+          etaMinutes: distance_utils.etaMinutes(distanceKm, speedKmh: speedKmh),
+          source: MapRouteEstimateSource.postgis,
+        );
+      }
+    } catch (e) {
+      debugPrint('Supabase PostGIS RPC distance calculation failed, falling back to local: $e');
+    }
+    return MapRouteEstimate.between(
+      origin: origin,
+      destination: destination,
+      speedKmh: speedKmh,
+    );
+  }
+}
+
 class MapRouteEstimate {
   const MapRouteEstimate({
     required this.distanceKm,
@@ -100,7 +141,10 @@ class MapRouteEstimate {
     return '${distanceKm.toStringAsFixed(1)} km';
   }
 
-  String get etaLabel => '~$etaMinutes min';
+  String get etaLabel {
+    if (distanceKm < 0.2 || etaMinutes <= 1) return 'Arriving now';
+    return '~$etaMinutes min';
+  }
 }
 
 enum MapPointRole { client, worker, job, currentUser }
@@ -183,7 +227,7 @@ class MapFeatureHelpers {
   static const Duration locationFreshnessWindow = Duration(minutes: 15);
   static const LatLng knustDefault = LatLng(6.674, -1.570);
 
-  static const RouteProvider defaultRouteProvider = HaversineRouteProvider();
+  static const RouteProvider defaultRouteProvider = SupabasePostGISRouteProvider();
 
   static double markerHueFor(MapMarkerKind kind) {
     return switch (kind) {

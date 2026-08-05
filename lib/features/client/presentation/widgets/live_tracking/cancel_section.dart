@@ -53,7 +53,10 @@ class CancelSection extends StatelessWidget {
       );
     }
 
-    final bool showCancel = status == 'matched' || status == 'on_the_way' || status == 'arrived';
+    final bool showCancel = status == 'matched' ||
+        status == 'scheduled_confirmed' ||
+        status == 'on_the_way' ||
+        status == 'arrived';
     final bool showTermination = status == 'in_progress';
 
     if (!showCancel && !showTermination) return const SizedBox.shrink();

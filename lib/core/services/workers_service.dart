@@ -53,6 +53,10 @@ class WorkersService {
     );
   }
 
+  Future<dynamic> withdrawApplication(String jobId) async {
+    return await _api.post('/workers/applications/$jobId/withdraw');
+  }
+
   Future<dynamic> respondToTermination(
     String jobId, {
     required bool accept,
@@ -63,8 +67,15 @@ class WorkersService {
     );
   }
 
-  Future<dynamic> getHistory() async {
-    return await _api.get('/workers/me/history');
+  Future<dynamic> getHistory({int? limit, int? offset}) async {
+    String endpoint = '/workers/me/history';
+    final List<String> params = <String>[];
+    if (limit != null) params.add('limit=$limit');
+    if (offset != null) params.add('offset=$offset');
+    if (params.isNotEmpty) {
+      endpoint += '?${params.join('&')}';
+    }
+    return await _api.get(endpoint);
   }
 
   Future<List<dynamic>> getJobRequests() async {
@@ -93,12 +104,18 @@ class WorkersService {
     return response as List<dynamic>;
   }
 
-  Future<dynamic> applyToJob(String jobId, {String? message}) async {
+  Future<dynamic> applyToJob(
+    dynamic jobId, {
+    String? message,
+    double? proposedRate,
+  }) async {
     return await _api.post(
       '/workers/accept/$jobId',
       body: <String, dynamic>{
         if (message != null && message.trim().isNotEmpty)
           'message': message.trim(),
+        if (proposedRate != null && proposedRate > 0)
+          'proposed_rate': proposedRate,
       },
     );
   }

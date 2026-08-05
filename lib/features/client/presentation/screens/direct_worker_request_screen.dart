@@ -86,7 +86,21 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   String get _name =>
       (_artisan['name'] ?? _profile['full_name'] ?? 'Artisan').toString();
 
-  String get _profession => (_artisan['profession'] ?? 'Artisan').toString();
+  String get _profession {
+    final dynamic rawProfession = _artisan['profession'] ?? _profile['profession'];
+    if (rawProfession != null && rawProfession.toString().trim().isNotEmpty) {
+      return rawProfession.toString().trim();
+    }
+
+    final dynamic rawSkills = _artisan['skills'] ??
+        (_artisan['worker'] as Map?)?['skills'] ??
+        _profile['skills'];
+    if (rawSkills is List && rawSkills.isNotEmpty) {
+      return rawSkills.first.toString();
+    }
+
+    return 'Artisan';
+  }
 
   String get _imageUrl =>
       (_artisan['imageUrl'] ?? _profile['avatar_url'] ?? '').toString();
@@ -161,22 +175,60 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     }
   }
 
+  static const Map<String, List<String>> _categoryAliases = <String, List<String>>{
+    'construction_building': <String>["construction", "building", "builder", "mason", "carpenter", "tiler", "painter", "welder", "steel bender", "ceiling", "glass", "roof", "paver", "masonry", "blockwork", "roofing", "woodwork", "metal", "fabricator"],
+    'electrical_power': <String>["electrical", "electrician", "wiring", "lighting", "socket", "outlet", "generator", "inverter", "solar", "battery", "cctv", "security", "intercom", "power", "appliance"],
+    'plumbing_water': <String>["plumbing", "plumber", "pipe", "pipes", "leak", "borehole", "pump", "drainage", "sanitary", "sink", "toilet", "shower", "water"],
+    'auto_mechanical': <String>["auto", "mechanic", "car", "vehicle", "vulcanizer", "sprayer", "motorcycle", "heavy equipment", "excavator", "truck", "tyre", "wheel", "engine"],
+    'home_repairs': <String>["home", "repairs", "handyman", "furniture", "door", "window", "pest", "cleaner", "gardener", "lock", "hinge", "fumigation", "cleaning", "maintenance"],
+    'beauty_fashion': <String>["beauty", "fashion", "hairdresser", "barber", "makeup", "tailor", "dressmaker", "shoemaker", "cobbler", "bead", "milliner", "hair", "wig", "uniform", "sandal", "jeweller"],
+    'electronics_it': <String>["electronics", "phones", "it", "phone", "laptop", "tv", "sound", "printer", "computer", "desktop", "screen", "keyboard", "copier", "ict", "device", "support"],
+    'hospitality_events': <String>["hospitality", "events", "caterer", "baker", "decorator", "photographer", "videographer", "dj", "canopy", "chair", "food", "cake", "balloon", "tent", "music"],
+    'arts_crafts': <String>["arts", "craft", "potter", "weaver", "wood carver", "drum", "goldsmith", "jeweller", "brass smith", "signwriter", "clay", "pot", "kente", "basket", "carving", "sticker", "signboard"],
+  };
+
   List<Map<String, dynamic>> _resolveWorkerCategories(
       List<dynamic> categories) {
-    final String text = <String>[
-      _profession,
+    final List<String> rawTerms = <String>[
+      _profession.toLowerCase(),
       ...(_artisan['skills'] is List
-          ? (_artisan['skills'] as List).map((dynamic item) => item.toString())
+          ? (_artisan['skills'] as List).map((dynamic item) => item.toString().toLowerCase())
           : <String>[]),
-    ].join(' ').toLowerCase();
+    ];
+
+    final List<String> workerTerms = <String>[];
+    for (final String term in rawTerms) {
+      if (term.trim().isEmpty) continue;
+      workerTerms.add(term);
+      // Split into words to match tokens (e.g. "ICT", "Device", "Support" from "ICT & Device Support")
+      final List<String> words = term
+          .split(RegExp(r'[^a-zA-Z0-9]+'))
+          .map((String w) => w.trim().toLowerCase())
+          .where((String w) => w.length > 1)
+          .toList();
+      workerTerms.addAll(words);
+    }
+
     final List<Map<String, dynamic>> matches = <Map<String, dynamic>>[];
     for (final dynamic item in categories) {
       final Map<String, dynamic> category =
           Map<String, dynamic>.from(item as Map);
       final String name = (category['name'] ?? '').toString().toLowerCase();
       final String slug = (category['slug'] ?? '').toString().toLowerCase();
-      if ((name.isNotEmpty && text.contains(name)) ||
-          (slug.isNotEmpty && text.contains(slug))) {
+
+      bool isMatch = workerTerms.any((term) =>
+          name.contains(term) ||
+          term.contains(name) ||
+          slug.contains(term) ||
+          term.contains(slug));
+
+      if (!isMatch) {
+        final List<String> aliases = _categoryAliases[slug] ?? <String>[];
+        isMatch = workerTerms.any((term) =>
+            aliases.any((alias) => term.contains(alias) || alias.contains(term)));
+      }
+
+      if (isMatch) {
         matches.add(category);
       }
     }
@@ -356,23 +408,13 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     }
 
     try {
-      final dynamic created = await _jobsService.createJob(
+      await _jobsService.createJob(
         payload,
         idempotencyKey: idempotencyKey,
       );
       if (!mounted) return;
-      final Map<String, dynamic> jobData =
-          Map<String, dynamic>.from(created as Map);
       AppToast.showSuccess(context, 'Request sent to $_name.');
-      if (_urgency == 'scheduled') {
-        ClientNavigation.goToBookingsTab(context);
-      } else {
-        ClientNavigation.startFindingArtisan(
-          context,
-          jobData: jobData,
-          artisan: _artisan,
-        );
-      }
+      ClientNavigation.goToBookingsTab(context);
     } catch (e) {
       final bool offline = e is NetworkException;
       if (offline) {
@@ -571,6 +613,11 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
   }
 
   Widget _buildWorkerServiceSelector() {
+    if (!_usingFallbackCategories) {
+      // Category successfully resolved under the hood. No need to show the section.
+      return const SizedBox.shrink();
+    }
+
     if (_workerCategories.isEmpty) {
       return Container(
         width: double.infinity,
@@ -588,35 +635,13 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
       );
     }
 
-    if (_workerCategories.length == 1) {
-      final Map<String, dynamic> category = _workerCategories.first;
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          if (_usingFallbackCategories) ...<Widget>[
-            _buildServiceFallbackNotice(),
-            const SizedBox(height: AppSpacing.sm),
-          ],
-          InputDecorator(
-            decoration: InputDecoration(
-              labelText:
-                  _usingFallbackCategories ? 'Service category' : 'Worker service',
-            ),
-            child: Text((category['name'] ?? 'Service').toString()),
-          ),
-        ],
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        if (_usingFallbackCategories) ...<Widget>[
-          _buildServiceFallbackNotice(),
-          const SizedBox(height: AppSpacing.sm),
-        ],
+        _buildServiceFallbackNotice(),
+        const SizedBox(height: AppSpacing.sm),
         Text(
-          _usingFallbackCategories ? 'Service category' : 'Worker service',
+          'Service category',
           style: AppTypography.labelLarge,
         ),
         const SizedBox(height: AppSpacing.sm),

@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart'
+    show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -31,12 +33,18 @@ class AuthService {
   Future<SignUpOutcome> signUp({
     required String email,
     required String password,
+    String? phone,
+    String? fullName,
   }) async {
     try {
       final AuthResponse response = await _supabaseAuth.signUp(
         email: email,
         password: password,
         emailRedirectTo: AppConstants.supabaseRedirectUrl,
+        data: <String, dynamic>{
+          if (phone != null) 'phone': phone,
+          if (fullName != null) 'full_name': fullName,
+        },
       );
 
       if (response.user == null) {
@@ -105,16 +113,36 @@ class AuthService {
     GoogleAuthFlow flow = GoogleAuthFlow.signIn,
   }) async {
     try {
-      await _ensureGoogleSignInInitialized();
-      await _googleSignIn.signOut();
+      if (kIsWeb) {
+        // On Web, use Supabase OAuth redirection. This is 100% reliable,
+        // bypasses browser popup blockers, and avoids client-side GIS SDK issues.
+        //
+        // 'prompt: select_account' forces Google to always show the account
+        // picker even when only one account is signed in.
+        await _supabaseAuth.signInWithOAuth(
+          OAuthProvider.google,
+          redirectTo: Uri.base.origin,
+          queryParams: <String, String>{
+            'prompt': 'select_account',
+          },
+        );
+        // Return a future that never completes because the page is redirecting
+        return Completer<AppUser>().future;
+      }
 
-      final GoogleSignInAccount googleUser = await _googleSignIn.authenticate();
+      await _ensureGoogleSignInInitialized();
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+
+      final GoogleSignInAccount googleUser =
+          await _googleSignIn.authenticate();
       final String? idToken = googleUser.authentication.idToken;
 
       if (idToken == null) {
         throw const AuthFailure(
           AuthFailureCode.unknown,
-          'Google sign in failed. No ID token received.',
+          'Google sign in failed. No ID token received from Google.',
         );
       }
 
@@ -342,55 +370,94 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    if (_session.activeMode == 'worker') {
-      try {
-        await _apiClient.put('/workers/availability', body: {'is_available': false});
-      } catch (_) {}
-    }
-    try {
-      await NotificationService.instance.unregisterCurrentDevice();
-    } catch (_) {
-      // Ignore notification errors to ensure auth state still clears.
-    }
+    // Capture mode before clearing so we know if worker cleanup is needed.
+    final String activeMode = _session.activeMode;
 
-    try {
-      await _supabaseAuth.signOut();
-      await _googleSignIn.signOut();
-    } catch (_) {
-      // Ignore remote auth errors to ensure local session always clears.
-    } finally {
-      await WorkerLocationService.instance.stop();
-      _session.clear();
-      await CacheStore.instance.clearOnSignOut();
-    }
+    // ── 1. Clear local state FIRST so the UI responds instantly ──────────
+    await WorkerLocationService.instance.stop();
+    _session.clear();
+    await CacheStore.instance.clearOnSignOut();
+
+    // ── 2. Fire remote cleanup with a short timeout ─────────────────────
+    //    These are best-effort; the user is already signed out locally.
+    const Duration remoteTimeout = Duration(seconds: 5);
+
+    await Future.wait<void>(<Future<void>>[
+      // Mark worker offline
+      if (activeMode == 'worker')
+        _apiClient
+            .put('/workers/availability', body: {'is_available': false})
+            .timeout(remoteTimeout)
+            .catchError((_) {}),
+
+      // Unregister push token
+      NotificationService.instance
+          .unregisterCurrentDevice()
+          .timeout(remoteTimeout)
+          .catchError((_) {}),
+
+      // Remote auth sign-out (Supabase + Google)
+      Future<void>(() async {
+        try {
+          await _supabaseAuth.signOut().timeout(remoteTimeout);
+        } catch (_) {}
+        try {
+          await _googleSignIn.signOut().timeout(remoteTimeout);
+        } catch (_) {}
+      }),
+    ]);
   }
 
   Future<void> deleteAccount() async {
+    const Duration remoteTimeout = Duration(seconds: 10);
+
+    // ── 1. Best-effort: mark worker offline ─────────────────────────────
     if (_session.activeMode == 'worker') {
       try {
-        await _apiClient.put('/workers/availability', body: {'is_available': false});
+        await _apiClient
+            .put('/workers/availability', body: {'is_available': false})
+            .timeout(remoteTimeout);
       } catch (_) {}
     }
+
+    // ── 2. Best-effort: delete profile on backend ───────────────────────
     try {
-      await _apiClient.delete('/profiles/me');
-    } finally {
-      await WorkerLocationService.instance.stop();
-      _session.clear();
-      await CacheStore.instance.clearOnSignOut();
-      try {
-        await _supabaseAuth.signOut();
-        await _googleSignIn.signOut();
-      } catch (_) {}
+      await _apiClient.delete('/profiles/me').timeout(remoteTimeout);
+    } catch (_) {
+      // If the backend is sleeping or unreachable, still clear locally.
+      // The backend can clean up orphaned auth users separately.
     }
+
+    // ── 3. Always clear local state ─────────────────────────────────────
+    await WorkerLocationService.instance.stop();
+    _session.clear();
+    await CacheStore.instance.clearOnSignOut();
+
+    // ── 4. Best-effort: remote auth sign-out ────────────────────────────
+    try {
+      await _supabaseAuth.signOut().timeout(remoteTimeout);
+    } catch (_) {}
+    try {
+      await _googleSignIn.signOut().timeout(remoteTimeout);
+    } catch (_) {}
   }
 
   Future<void> _ensureGoogleSignInInitialized() {
     return _googleSignInInit ??= _googleSignIn.initialize(
-      clientId:
-          '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com',
+      clientId: kIsWeb || defaultTargetPlatform == TargetPlatform.iOS
+          ? '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com'
+          : null,
       serverClientId:
           '35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com',
     );
+  }
+
+  Future<void> preInitializeGoogleSignIn() async {
+    try {
+      await _ensureGoogleSignInInitialized();
+    } catch (e) {
+      CacheLogger.error('Failed to pre-initialize Google Sign-In', e);
+    }
   }
 
   AppUser _appUserFromProfile(Map<String, dynamic> json) {

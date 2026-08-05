@@ -16,7 +16,9 @@ import '../../../../shared/widgets/gradient_button.dart';
 import '../../../../shared/widgets/legal_agreement_text.dart';
 import '../../../../shared/widgets/secondary_button.dart';
 import '../../models/onboarding_session.dart';
+import '../../models/password_strength.dart';
 import '../../widgets/auth_error_banner.dart';
+import '../../widgets/password_strength_meter.dart';
 import 'role_selection_screen.dart';
 import 'verify_email_screen.dart';
 
@@ -45,13 +47,24 @@ class _SignUpScreenState extends State<SignUpScreen> {
   String? _errorMessage;
 
   @override
+  void initState() {
+    super.initState();
+    _passwordController.addListener(_handlePasswordChanged);
+  }
+
+  @override
   void dispose() {
+    _passwordController.removeListener(_handlePasswordChanged);
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _handlePasswordChanged() {
+    setState(() {});
   }
 
   Future<void> _submit() async {
@@ -63,13 +76,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final String email = _emailController.text.trim();
     final onboarding = OnboardingSession.instance;
-    onboarding.fullName = _nameController.text.trim();
-    onboarding.phone = _phoneController.text.trim();
+    final String fullName = _nameController.text.trim();
+    final String phone = _phoneController.text.trim();
+    onboarding.fullName = fullName;
+    onboarding.phone = phone;
 
     try {
       final outcome = await AuthService.instance.signUp(
         email: email,
         password: _passwordController.text,
+        phone: phone,
+        fullName: fullName,
       );
 
       if (!mounted) return;
@@ -118,12 +135,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
           String? name;
           String? phone;
           if (metaRaw is Map<String, dynamic>) {
-            name = (metaRaw['full_name'] ?? metaRaw['name'])?.toString();
-            phone = metaRaw['phone']?.toString();
+            name = (metaRaw['full_name'] ??
+                    metaRaw['name'] ??
+                    metaRaw['user_name'] ??
+                    metaRaw['preferred_username'])
+                ?.toString();
+            phone = (metaRaw['phone'] ?? metaRaw['phone_number'])?.toString();
           }
           final onboarding = OnboardingSession.instance;
           onboarding.fullName = name ?? supUser.email;
-          onboarding.phone = phone ?? '';
+          onboarding.phone = phone ?? supUser.phone ?? '';
           onboarding.avatarUrl = (metaRaw is Map<String, dynamic>
                   ? metaRaw['avatar_url'] ?? metaRaw['picture']
                   : null)
@@ -279,10 +300,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             });
                           },
                         ),
-                        validator: (String? v) => (v == null || v.length < 6)
-                            ? 'Enter at least 6 characters.'
-                            : null,
+                        validator: PasswordPolicy.validate,
                       ),
+                      const SizedBox(height: 10),
+                      PasswordStrengthMeter(password: _passwordController.text),
                       const SizedBox(height: 14),
                       Text('Confirm Password',
                           style: AppTypography.bodyLarge.copyWith(
