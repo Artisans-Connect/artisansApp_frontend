@@ -139,7 +139,6 @@ class _WorkerShellState extends State<WorkerShell> {
       },
       onClosed: (String jobId) {
         _shownRequestIds.remove(jobId);
-        _declinedModalJobIds.remove(jobId);
       },
     );
   }

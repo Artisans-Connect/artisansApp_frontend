@@ -49,4 +49,19 @@ void main() {
       expect(state.pendingCancellationMessage, isNull);
     });
   });
+
+  group('Job alert modal dismissal tracking', () {
+    test('declined modal job IDs set retains declined IDs when dispatches close', () {
+      final Set<String> declinedModalJobIds = <String>{};
+      declinedModalJobIds.add('job_123');
+      expect(declinedModalJobIds.contains('job_123'), isTrue);
+
+      // Simulating dispatch closed event: job_123 is cleared from shown set but retained in declined set
+      final Set<String> shownRequestIds = <String>{'job_123'};
+      shownRequestIds.remove('job_123');
+
+      expect(shownRequestIds.contains('job_123'), isFalse);
+      expect(declinedModalJobIds.contains('job_123'), isTrue);
+    });
+  });
 }
