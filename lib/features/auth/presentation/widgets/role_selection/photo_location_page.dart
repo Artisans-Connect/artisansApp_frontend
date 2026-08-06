@@ -185,7 +185,7 @@ class PhotoLocationPage extends StatelessWidget {
                 const SectionLabel('Location'),
                 AppInput(
                   controller: locationController,
-                  hint: 'e.g., East Legon, Accra',
+                  hint: 'e.g., KNUST, Kumasi',
                   prefixIcon: PhosphorIcons.mapPin,
                   suffixIcon: isLoadingLocation
                       ? const Padding(

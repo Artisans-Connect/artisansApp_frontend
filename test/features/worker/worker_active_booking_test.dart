@@ -32,4 +32,21 @@ void main() {
       expect(find.text('In Progress'), findsOneWidget);
     });
   });
+
+  group('WorkerSessionState', () {
+    test('initial state has no pending cancellation message and phase is none', () {
+      final state = WorkerSessionState();
+      expect(state.pendingCancellationMessage, isNull);
+      expect(state.jobPhase, WorkerJobPhase.none);
+    });
+
+    test('clearCancellationMessage clears pending message', () {
+      final state = WorkerSessionState();
+      state.pendingCancellationMessage = 'Test cancellation message';
+      expect(state.pendingCancellationMessage, equals('Test cancellation message'));
+
+      state.clearCancellationMessage();
+      expect(state.pendingCancellationMessage, isNull);
+    });
+  });
 }

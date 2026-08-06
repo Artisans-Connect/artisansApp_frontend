@@ -64,7 +64,7 @@ class ServiceAreasPage extends StatelessWidget {
                 const SectionLabel('Service areas'),
                 AppInput(
                   controller: areaSearchController,
-                  hint: "Search area (e.g. East Legon, Accra)",
+                  hint: "Search area (e.g. KNUST, Kumasi)",
                   prefixIcon: PhosphorIcons.mapPin,
                   textInputAction: TextInputAction.done,
                   onFieldSubmitted: (String val) => onAreaSelected(val),
