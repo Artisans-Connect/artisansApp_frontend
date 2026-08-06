@@ -114,5 +114,17 @@ class PaymentService {
     );
     return Map<String, dynamic>.from(response as Map);
   }
+
+  /// Calculates final settlement amounts for a completed job
+  Future<Map<String, dynamic>> calculateSettlement(String jobId) async {
+    final dynamic response = await _api.get('/payments/settlement/$jobId');
+    return Map<String, dynamic>.from(response as Map);
+  }
+
+  /// Initializes final settlement checkout session or releases escrow
+  Future<Map<String, dynamic>> checkoutSettlement(String jobId) async {
+    final dynamic response = await _api.post('/payments/settlement/$jobId/checkout');
+    return Map<String, dynamic>.from(response as Map);
+  }
 }
 

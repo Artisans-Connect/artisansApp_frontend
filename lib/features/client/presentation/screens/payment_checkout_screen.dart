@@ -154,7 +154,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               ),
               const SizedBox(height: 24),
               Text(
-                'Booking Deposit Payment',
+                'Escrow Booking Payment',
                 textAlign: TextAlign.center,
                 style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
               ),
@@ -178,14 +178,14 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                 const Center(child: CircularProgressIndicator()),
                 const SizedBox(height: 16),
                 const Text(
-                  'Preparing payment checkout page...',
+                  'Preparing secure checkout gateway...',
                   textAlign: TextAlign.center,
                 ),
               ] else if (_isVerifying) ...[
                 const Center(child: CircularProgressIndicator()),
                 const SizedBox(height: 16),
                 const Text(
-                  'Verifying payment with Paystack...',
+                  'Verifying payment...',
                   textAlign: TextAlign.center,
                 ),
               ] else ...[

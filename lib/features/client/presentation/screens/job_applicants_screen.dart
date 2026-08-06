@@ -5,13 +5,16 @@ import '../../../../core/errors/error_messages.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/services/applications_service.dart';
 import '../../../../core/services/jobs_service.dart';
+import '../../../../core/services/negotiation_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/error_state_view.dart';
+import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../models/client_booking.dart';
 import 'payment_checkout_screen.dart';
@@ -112,9 +115,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
       if (!mounted) return;
 
-      // Step 2: Navigate to payment checkout
+      // Step 2: Navigate to payment checkout (100% upfront payment)
       final double totalQuote = double.tryParse((application['total_quote'] ?? '').toString()) ?? 100.00;
-      final double deposit = totalQuote * 0.20;
 
       final bool? paid = await Navigator.push<bool>(
         context,
@@ -122,7 +124,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
           builder: (BuildContext context) => PaymentCheckoutScreen(
             jobId: _jobId,
             applicationId: applicationId,
-            amount: deposit,
+            amount: totalQuote,
           ),
         ),
       );
@@ -154,91 +156,50 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
     }
   }
 
-  /// Show dialog for client to propose a counter-offer
+  /// Show bottom sheet for client to propose/negotiate a counter-offer
   Future<void> _counterOffer(Map<String, dynamic> application) async {
     final String applicationId = (application['id'] ?? '').toString();
     if (applicationId.isEmpty) return;
 
-    final double? currentQuote = double.tryParse(
-      (application['total_quote'] ?? application['proposed_rate'] ?? '').toString(),
-    );
-
-    final double? counterRate = await showDialog<double>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        final TextEditingController controller = TextEditingController(
-          text: currentQuote != null ? currentQuote.toStringAsFixed(0) : '',
-        );
-        return AlertDialog(
-          title: const Text('Counter Offer'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (currentQuote != null)
-                Text(
-                  'Artisan quoted: GHS ${currentQuote.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                ),
-              if (currentQuote != null) const SizedBox(height: 12),
-              const Text(
-                'Enter your proposed amount:',
-                style: TextStyle(fontSize: 14),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                autofocus: true,
-                decoration: InputDecoration(
-                  prefixText: 'GHS ',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  hintText: '0.00',
-                ),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final double? val = double.tryParse(controller.text.trim());
-                if (val != null && val > 0) {
-                  Navigator.pop(dialogContext, val);
-                }
-              },
-              child: const Text('Send Counter'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (counterRate == null || !mounted) return;
-
+    setState(() => _isLoading = true);
     try {
-      await _applicationsService.counterApplication(
-        jobId: _jobId,
-        applicationId: applicationId,
-        counterRate: counterRate,
+      // 1. Fetch negotiations for this job
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(_jobId);
+      
+      // 2. Find if there is a negotiation for this application
+      Negotiation? targetNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.applicationId == applicationId && n?.type == NegotiationType.quote,
+        orElse: () => null,
       );
+
+      // 3. If not, create one
+      if (targetNeg == null) {
+        final double totalQuote = double.tryParse((application['total_quote'] ?? '').toString()) ?? 0.0;
+        targetNeg = await NegotiationService.instance.createNegotiation(
+          jobId: _jobId,
+          applicationId: applicationId,
+          type: 'quote',
+          initialAmount: totalQuote,
+          description: 'Job bidding initiated',
+        );
+      }
+
+      setState(() => _isLoading = false);
+
       if (!mounted) return;
-      AppToast.showSuccess(
+
+      // 4. Open the sheet
+      NegotiationChatSheet.show(
         context,
-        'Counter-offer of GHS ${counterRate.toStringAsFixed(2)} sent.',
+        negotiation: targetNeg,
+        onStatusChanged: () {
+          _loadApplications();
+        },
       );
-      _loadApplications(); // Refresh the list
     } catch (e) {
+      setState(() => _isLoading = false);
       if (mounted) {
-        AppToast.showError(context, e, fallback: 'Could not send counter-offer.');
+        AppToast.show(context, message: 'Could not open bargaining: $e', isError: true);
       }
     }
   }

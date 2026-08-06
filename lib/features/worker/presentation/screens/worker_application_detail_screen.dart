@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/applications_service.dart';
+import '../../../../core/services/negotiation_service.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
+import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 
 class WorkerApplicationDetailScreen extends StatefulWidget {
   const WorkerApplicationDetailScreen({
@@ -71,102 +74,52 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
     }
   }
 
-  Future<void> _acceptCounterOffer() async {
+  Future<void> _openBargainingSheet() async {
     final String applicationId = (widget.application['id'] ?? '').toString();
-    if (applicationId.isEmpty) return;
-
-    setState(() => _isAcceptingCounter = true);
-    try {
-      await _applicationsService.acceptCounterOffer(applicationId: applicationId);
-      if (!mounted) return;
-      AppToast.showSuccess(context, 'Counter-offer accepted! Waiting for client payment.');
-      Navigator.of(context).pop(true);
-    } catch (e) {
-      if (mounted) {
-        AppToast.showError(context, e, fallback: 'Could not accept counter-offer.');
-      }
-    } finally {
-      if (mounted) setState(() => _isAcceptingCounter = false);
-    }
-  }
-
-  Future<void> _sendCounterOffer() async {
     final Map<String, dynamic> job =
         Map<String, dynamic>.from(widget.application['job'] as Map? ?? const {});
     final String jobId = (job['id'] ?? '').toString();
-    final String applicationId = (widget.application['id'] ?? '').toString();
-    if (jobId.isEmpty || applicationId.isEmpty) return;
+    if (applicationId.isEmpty || jobId.isEmpty) return;
 
-    final double? currentQuote = double.tryParse(
-      (widget.application['counter_rate'] ?? widget.application['total_quote'] ?? '').toString(),
-    );
-
-    final double? counterRate = await showDialog<double>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        final TextEditingController controller = TextEditingController(
-          text: currentQuote != null ? currentQuote.toStringAsFixed(0) : '',
-        );
-        return AlertDialog(
-          title: const Text('Your Counter Offer'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              if (currentQuote != null)
-                Text(
-                  'Current amount: GHS ${currentQuote.toStringAsFixed(2)}',
-                  style: const TextStyle(color: DesignTokens.textSecondary, fontSize: 13),
-                ),
-              if (currentQuote != null) const SizedBox(height: 12),
-              const Text('Enter your proposed amount:', style: TextStyle(fontSize: 14)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: controller,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                autofocus: true,
-                decoration: InputDecoration(
-                  prefixText: 'GHS ',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                  hintText: '0.00',
-                ),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                final double? val = double.tryParse(controller.text.trim());
-                if (val != null && val > 0) Navigator.pop(dialogContext, val);
-              },
-              child: const Text('Send Counter'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (counterRate == null || !mounted) return;
-
+    setState(() => _isAcceptingCounter = true);
     try {
-      await _applicationsService.counterApplication(
-        jobId: jobId,
-        applicationId: applicationId,
-        counterRate: counterRate,
+      // 1. Fetch negotiations for this job
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(jobId);
+      
+      // 2. Find if there is a negotiation for this application
+      Negotiation? targetNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.applicationId == applicationId && n?.type == NegotiationType.quote,
+        orElse: () => null,
       );
+
+      // 3. If not, create one
+      if (targetNeg == null) {
+        final double totalQuote = double.tryParse((widget.application['total_quote'] ?? '').toString()) ?? 0.0;
+        targetNeg = await NegotiationService.instance.createNegotiation(
+          jobId: jobId,
+          applicationId: applicationId,
+          type: 'quote',
+          initialAmount: totalQuote,
+          description: 'Job bidding initiated',
+        );
+      }
+
+      setState(() => _isAcceptingCounter = false);
+
       if (!mounted) return;
-      AppToast.showSuccess(
+
+      // 4. Open the sheet
+      NegotiationChatSheet.show(
         context,
-        'Counter-offer of GHS ${counterRate.toStringAsFixed(2)} sent to client.',
+        negotiation: targetNeg,
+        onStatusChanged: () {
+          Navigator.of(context).pop(true);
+        },
       );
-      Navigator.of(context).pop(true);
     } catch (e) {
+      setState(() => _isAcceptingCounter = false);
       if (mounted) {
-        AppToast.showError(context, e, fallback: 'Could not send counter-offer.');
+        AppToast.show(context, message: 'Could not open bargaining: $e', isError: true);
       }
     }
   }
@@ -355,11 +308,11 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
               ),
             ),
 
-          // Accept counter-offer button (prominent, when client proposed)
-          if (canAcceptCounter) ...[
+          // Negotiate price button (always available when pending)
+          if (canCounter) ...[
             const SizedBox(height: DesignTokens.md),
             ElevatedButton(
-              onPressed: _isAcceptingCounter ? null : _acceptCounterOffer,
+              onPressed: _openBargainingSheet,
               style: ElevatedButton.styleFrom(
                 backgroundColor: DesignTokens.primary,
                 foregroundColor: Colors.white,
@@ -370,32 +323,8 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
                 elevation: 0,
               ),
               child: Text(
-                _isAcceptingCounter
-                    ? 'Accepting...'
-                    : 'Accept Counter (GHS ${counterRate?.toStringAsFixed(2) ?? '\u2014'})',
+                _isAcceptingCounter ? 'Loading...' : 'Negotiate Price',
                 style: const TextStyle(
-                  fontFamily: 'Satoshi',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
-
-          // Send counter-offer button (always available when pending)
-          if (canCounter) ...[
-            const SizedBox(height: DesignTokens.sm),
-            OutlinedButton(
-              onPressed: _sendCounterOffer,
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
-                ),
-              ),
-              child: const Text(
-                'Send My Counter Offer',
-                style: TextStyle(
                   fontFamily: 'Satoshi',
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
