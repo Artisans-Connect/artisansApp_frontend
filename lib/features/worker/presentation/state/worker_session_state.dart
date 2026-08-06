@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../../core/location/worker_location_service.dart';
+import '../../../../core/services/jobs_service.dart';
 import '../../../../core/services/workers_service.dart';
 import '../models/worker_job.dart';
 import '../models/worker_ui_contracts.dart';
@@ -23,6 +24,7 @@ enum WorkerProfilePage { earnings, stats, history }
 
 class WorkerSessionState extends ChangeNotifier {
   final WorkersService _workersService = WorkersService();
+  final JobsService _jobsService = JobsService();
   final JobRealtimeService _realtimeService = JobRealtimeService();
 
   WorkerNavTab currentTab = WorkerNavTab.explore;
@@ -90,7 +92,18 @@ class WorkerSessionState extends ChangeNotifier {
       final dynamic data = await _workersService.getActiveJob();
       if (data is! Map<String, dynamic>) {
         if (activeJob != null) {
-          pendingCancellationMessage = 'The client has cancelled this booking.';
+          final String previousJobId = activeJob!.id;
+          try {
+            final dynamic jobData = await _jobsService.getJobById(previousJobId);
+            if (jobData is Map<String, dynamic>) {
+              final String status = (jobData['status'] as String? ?? '').toLowerCase();
+              if (status == 'cancelled' || status == 'client_cancelled') {
+                pendingCancellationMessage = 'The client has cancelled this booking.';
+              }
+            }
+          } catch (_) {
+            // Avoid false cancellation notification if status check fails
+          }
         }
         _realtimeService.unsubscribe();
         activeJob = null;
@@ -212,6 +225,8 @@ class WorkerSessionState extends ChangeNotifier {
       // (becomes matched) near the scheduled time. Showing on-the-way/arrive
       // actions before then would be wrong.
       'scheduled_confirmed' => WorkerJobPhase.none,
+      'completed' => WorkerJobPhase.none,
+      'cancelled' => WorkerJobPhase.none,
       _ => WorkerJobPhase.accepted,
     };
   }
