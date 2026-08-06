@@ -281,6 +281,16 @@ class ClientBookingCard extends StatelessWidget {
           actionLabel: 'Track Live',
         );
 
+      case ClientBookingStatus.awaitingPayment:
+        return const _StatusConfig(
+          label: 'Awaiting Payment',
+          icon: PhosphorIcons.creditCard,
+          backgroundColor: Color(0xFFFFFBEB),
+          borderColor: Color(0xFFFDE68A),
+          foregroundColor: Color(0xFFD97706),
+          actionLabel: 'Pay Deposit',
+        );
+
       case ClientBookingStatus.accepted:
         return const _StatusConfig(
           label: 'Accepted',

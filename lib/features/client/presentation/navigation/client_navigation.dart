@@ -320,6 +320,8 @@ class ClientNavigation {
         } else {
           showBookingSummaryModal(context, booking);
         }
+      case ClientBookingStatus.awaitingPayment:
+        await pushFlow(context, AppRoutes.jobApplicants, arguments: booking.toMap());
       case ClientBookingStatus.requested:
         if (booking.backendStatus == 'draft') {
           await Navigator.push<dynamic>(

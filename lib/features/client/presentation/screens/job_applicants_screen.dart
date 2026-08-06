@@ -101,11 +101,14 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
     setState(() => _isAccepting = true);
     try {
-      // Step 1: Accept the application (backend sets status to awaiting_payment)
-      await _applicationsService.acceptApplication(
-        jobId: _jobId,
-        applicationId: applicationId,
-      );
+      // Step 1: Accept the application if it's not already accepted (backend sets status to awaiting_payment)
+      final String appStatus = (application['status'] ?? '').toString().toLowerCase();
+      if (appStatus != 'accepted') {
+        await _applicationsService.acceptApplication(
+          jobId: _jobId,
+          applicationId: applicationId,
+        );
+      }
 
       if (!mounted) return;
 
@@ -373,6 +376,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                             onCounter: () => _counterOffer(application),
                             onViewProfile: () =>
                                 _openApplicantProfile(application),
+                            isAwaitingPayment: (widget.job?['backendStatus'] ?? widget.job?['status'] ?? '').toString().toLowerCase() == 'awaiting_payment',
                           ),
                         ),
                     ],
@@ -389,6 +393,7 @@ class _ApplicantCard extends StatelessWidget {
     required this.onAccept,
     required this.onCounter,
     required this.onViewProfile,
+    required this.isAwaitingPayment,
   });
 
   final Map<String, dynamic> application;
@@ -396,6 +401,7 @@ class _ApplicantCard extends StatelessWidget {
   final VoidCallback onAccept;
   final VoidCallback onCounter;
   final VoidCallback onViewProfile;
+  final bool isAwaitingPayment;
 
   @override
   Widget build(BuildContext context) {
@@ -426,7 +432,7 @@ class _ApplicantCard extends StatelessWidget {
     final String lastProposedBy = (application['last_proposed_by'] ?? '').toString();
     final double? counterRate = (application['counter_rate'] as num?)?.toDouble();
     final bool hasActiveCounter = lastProposedBy.isNotEmpty;
-    final bool canAccept = status == 'pending' && !isAccepting;
+    final bool canAccept = (status == 'pending' || (status == 'accepted' && isAwaitingPayment)) && !isAccepting;
     final bool canCounter = status == 'pending' && !isAccepting;
 
     return Card(
@@ -561,8 +567,10 @@ class _ApplicantCard extends StatelessWidget {
                   const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: PrimaryButton(
-                      label: status == 'accepted' ? 'Accepted' : 'Accept',
-                      isLoading: isAccepting && status == 'pending',
+                      label: (status == 'accepted' && isAwaitingPayment)
+                          ? 'Pay Deposit'
+                          : (status == 'accepted' ? 'Accepted' : 'Accept'),
+                      isLoading: isAccepting && (status == 'pending' || status == 'accepted'),
                       isEnabled: canAccept,
                       onPressed: onAccept,
                     ),

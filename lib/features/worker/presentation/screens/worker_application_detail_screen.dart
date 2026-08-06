@@ -301,7 +301,7 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
                         size: 20,
                         color: clientProposed
                             ? const Color(0xFFFF8F00)
-                            : DesignTokens.primaryBlue,
+                            : DesignTokens.primary,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -361,7 +361,7 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
             ElevatedButton(
               onPressed: _isAcceptingCounter ? null : _acceptCounterOffer,
               style: ElevatedButton.styleFrom(
-                backgroundColor: DesignTokens.primaryBlue,
+                backgroundColor: DesignTokens.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
