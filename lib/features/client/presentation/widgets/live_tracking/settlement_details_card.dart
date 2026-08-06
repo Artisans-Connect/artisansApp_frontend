@@ -63,14 +63,14 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
     try {
       final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(jobId);
       Negotiation? targetNeg = negs.cast<Negotiation?>().firstWhere(
-        (n) => n?.type == NegotiationType.finalSettlement,
+        (n) => n?.type == NegotiationType.completionAdjustment,
         orElse: () => null,
       );
 
       if (targetNeg == null) {
         targetNeg = await NegotiationService.instance.createNegotiation(
           jobId: jobId,
-          type: 'final_settlement',
+          type: 'completion_adjustment',
           initialAmount: _grossAmount,
           description: 'Final completion settlement bargaining',
         );
@@ -90,7 +90,7 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
     } catch (e) {
       setState(() => _loading = false);
       if (mounted) {
-        AppToast.show(context, message: 'Could not start negotiation: $e', isError: true);
+        AppToast.showError(context, e, fallback: 'Could not start negotiation.');
       }
     }
   }

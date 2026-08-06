@@ -119,7 +119,7 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
     } catch (e) {
       setState(() => _isAcceptingCounter = false);
       if (mounted) {
-        AppToast.show(context, message: 'Could not open bargaining: $e', isError: true);
+        AppToast.showError(context, e, fallback: 'Could not open bargaining.');
       }
     }
   }

@@ -80,7 +80,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
       });
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted) AppToast.show(context, message: 'Failed to refresh: $e', isError: true);
+      if (mounted) AppToast.showError(context, e, fallback: 'Failed to refresh.');
     }
   }
 
@@ -93,13 +93,13 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
         _isLoading = false;
       });
       if (mounted) {
-        AppToast.show(context, message: 'Offer accepted successfully!', isError: false);
+        AppToast.showSuccess(context, 'Offer accepted successfully!');
         widget.onStatusChanged?.call();
         Navigator.pop(context);
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted) AppToast.show(context, message: 'Failed to accept: $e', isError: true);
+      if (mounted) AppToast.showError(context, e, fallback: 'Failed to accept offer.');
     }
   }
 
@@ -118,25 +118,25 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
         _isLoading = false;
       });
       if (mounted) {
-        AppToast.show(context, message: 'Offer rejected/cancelled.', isError: false);
+        AppToast.showSuccess(context, 'Offer rejected/cancelled.');
         widget.onStatusChanged?.call();
         Navigator.pop(context);
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted) AppToast.show(context, message: 'Failed to reject: $e', isError: true);
+      if (mounted) AppToast.showError(context, e, fallback: 'Failed to reject offer.');
     }
   }
 
   Future<void> _counter() async {
     final String amountStr = _amountController.text.trim();
     if (amountStr.isEmpty) {
-      AppToast.show(context, message: 'Please enter counter amount', isError: true);
+      AppToast.showInfo(context, 'Please enter counter amount');
       return;
     }
     final double? amount = double.tryParse(amountStr);
     if (amount == null || amount <= 0) {
-      AppToast.show(context, message: 'Please enter a valid positive amount', isError: true);
+      AppToast.showInfo(context, 'Please enter a valid positive amount');
       return;
     }
 
@@ -156,12 +156,12 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
       _amountController.clear();
       _noteController.clear();
       if (mounted) {
-        AppToast.show(context, message: 'Counter-offer sent!', isError: false);
+        AppToast.showSuccess(context, 'Counter-offer sent!');
         widget.onStatusChanged?.call();
       }
     } catch (e) {
       setState(() => _isLoading = false);
-      if (mounted) AppToast.show(context, message: 'Failed to send counter-offer: $e', isError: true);
+      if (mounted) AppToast.showError(context, e, fallback: 'Failed to send counter-offer.');
     }
   }
 
@@ -178,7 +178,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
             const SizedBox(height: 12),
             AppInput(
               controller: controller,
-              placeholder: 'Reason (optional)',
+              hint: 'Reason (optional)',
               maxLines: 2,
             ),
           ],
@@ -223,7 +223,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
                   children: <Widget>[
                     Text(
                       _getNegotiationTitle(_currentNegotiation.type),
-                      style: AppTypography.h4.copyWith(color: AppColors.textPrimary),
+                      style: AppTypography.titleLarge.copyWith(color: AppColors.textPrimary),
                     ),
                     const SizedBox(height: 4),
                     Row(
@@ -371,7 +371,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
                 children: <Widget>[
                   Text(
                     'GHS ${round.proposedAmount.toStringAsFixed(2)}',
-                    style: AppTypography.h4.copyWith(
+                    style: AppTypography.titleLarge.copyWith(
                       color: isMine ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
@@ -472,7 +472,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
     return Column(
       children: <Widget>[
         GradientButton(
-          text: 'Accept GHS ${amountToAccept.toStringAsFixed(2)}',
+          label: 'Accept GHS ${amountToAccept.toStringAsFixed(2)}',
           onPressed: _accept,
         ),
         const SizedBox(height: 10),
@@ -480,14 +480,14 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
           children: <Widget>[
             Expanded(
               child: SecondaryButton(
-                text: 'Counter Offer',
+                label: 'Counter Offer',
                 onPressed: () => setState(() => _isCountering = true),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: SecondaryButton(
-                text: 'Decline',
+                label: 'Decline',
                 onPressed: _reject,
               ),
             ),
@@ -512,12 +512,9 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
               flex: 2,
               child: AppInput(
                 controller: _amountController,
-                placeholder: '0.00',
+                hint: '0.00',
                 keyboardType: TextInputType.number,
-                prefixIcon: const Padding(
-                  padding: EdgeInsets.only(left: 12, right: 8),
-                  child: Text('GHS', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                ),
+                prefixIcon: Icons.payments_outlined,
               ),
             ),
             const SizedBox(width: 12),
@@ -525,7 +522,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
               flex: 3,
               child: AppInput(
                 controller: _noteController,
-                placeholder: 'Add note (optional)',
+                hint: 'Add note (optional)',
               ),
             ),
           ],
@@ -535,14 +532,14 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
           children: <Widget>[
             Expanded(
               child: SecondaryButton(
-                text: 'Cancel',
+                label: 'Cancel',
                 onPressed: () => setState(() => _isCountering = false),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: GradientButton(
-                text: 'Send Proposal',
+                label: 'Send Proposal',
                 onPressed: _counter,
               ),
             ),

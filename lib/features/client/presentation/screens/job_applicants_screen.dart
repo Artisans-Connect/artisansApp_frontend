@@ -199,7 +199,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        AppToast.show(context, message: 'Could not open bargaining: $e', isError: true);
+        AppToast.showError(context, e, fallback: 'Could not open bargaining.');
       }
     }
   }

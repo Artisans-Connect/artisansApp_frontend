@@ -31,7 +31,7 @@ class NegotiationService {
         'initialAmount': initialAmount,
         if (description != null) 'description': description,
       },
-      headers: headers,
+      extraHeaders: headers,
     );
 
     await CacheStore.instance.invalidatePrefix(CacheKeys.jobsMinePrefix);
