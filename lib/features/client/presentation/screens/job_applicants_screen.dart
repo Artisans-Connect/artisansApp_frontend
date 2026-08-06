@@ -93,6 +93,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
     }
   }
 
+  /// Accept the application at the quoted price → backend moves job to awaiting_payment → client pays
   Future<void> _accept(Map<String, dynamic> application) async {
     if (_isAccepting) return;
     final String applicationId = (application['id'] ?? '').toString();
@@ -100,8 +101,17 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
     setState(() => _isAccepting = true);
     try {
+      // Step 1: Accept the application (backend sets status to awaiting_payment)
+      await _applicationsService.acceptApplication(
+        jobId: _jobId,
+        applicationId: applicationId,
+      );
+
+      if (!mounted) return;
+
+      // Step 2: Navigate to payment checkout
       final double totalQuote = double.tryParse((application['total_quote'] ?? '').toString()) ?? 100.00;
-      final double deposit = totalQuote * 0.20; // Escrow deposit is 20%
+      final double deposit = totalQuote * 0.20;
 
       final bool? paid = await Navigator.push<bool>(
         context,
@@ -138,6 +148,95 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
       }
     } finally {
       if (mounted) setState(() => _isAccepting = false);
+    }
+  }
+
+  /// Show dialog for client to propose a counter-offer
+  Future<void> _counterOffer(Map<String, dynamic> application) async {
+    final String applicationId = (application['id'] ?? '').toString();
+    if (applicationId.isEmpty) return;
+
+    final double? currentQuote = double.tryParse(
+      (application['total_quote'] ?? application['proposed_rate'] ?? '').toString(),
+    );
+
+    final double? counterRate = await showDialog<double>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        final TextEditingController controller = TextEditingController(
+          text: currentQuote != null ? currentQuote.toStringAsFixed(0) : '',
+        );
+        return AlertDialog(
+          title: const Text('Counter Offer'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              if (currentQuote != null)
+                Text(
+                  'Artisan quoted: GHS ${currentQuote.toStringAsFixed(2)}',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              if (currentQuote != null) const SizedBox(height: 12),
+              const Text(
+                'Enter your proposed amount:',
+                style: TextStyle(fontSize: 14),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: controller,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                autofocus: true,
+                decoration: InputDecoration(
+                  prefixText: 'GHS ',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  hintText: '0.00',
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                final double? val = double.tryParse(controller.text.trim());
+                if (val != null && val > 0) {
+                  Navigator.pop(dialogContext, val);
+                }
+              },
+              child: const Text('Send Counter'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (counterRate == null || !mounted) return;
+
+    try {
+      await _applicationsService.counterApplication(
+        jobId: _jobId,
+        applicationId: applicationId,
+        counterRate: counterRate,
+      );
+      if (!mounted) return;
+      AppToast.showSuccess(
+        context,
+        'Counter-offer of GHS ${counterRate.toStringAsFixed(2)} sent.',
+      );
+      _loadApplications(); // Refresh the list
+    } catch (e) {
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not send counter-offer.');
+      }
     }
   }
 
@@ -271,6 +370,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                             application: application,
                             isAccepting: _isAccepting,
                             onAccept: () => _accept(application),
+                            onCounter: () => _counterOffer(application),
                             onViewProfile: () =>
                                 _openApplicantProfile(application),
                           ),
@@ -287,12 +387,14 @@ class _ApplicantCard extends StatelessWidget {
     required this.application,
     required this.isAccepting,
     required this.onAccept,
+    required this.onCounter,
     required this.onViewProfile,
   });
 
   final Map<String, dynamic> application;
   final bool isAccepting;
   final VoidCallback onAccept;
+  final VoidCallback onCounter;
   final VoidCallback onViewProfile;
 
   @override
@@ -321,7 +423,11 @@ class _ApplicantCard extends StatelessWidget {
     final double? urgencyPremium =
         (application['urgency_premium'] as num?)?.toDouble();
     final String message = (application['message'] ?? '').toString();
+    final String lastProposedBy = (application['last_proposed_by'] ?? '').toString();
+    final double? counterRate = (application['counter_rate'] as num?)?.toDouble();
+    final bool hasActiveCounter = lastProposedBy.isNotEmpty;
     final bool canAccept = status == 'pending' && !isAccepting;
+    final bool canCounter = status == 'pending' && !isAccepting;
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -389,17 +495,70 @@ class _ApplicantCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(message, style: AppTypography.bodyMedium),
               ],
+              // Negotiation status banner
+              if (hasActiveCounter) ...<Widget>[
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: lastProposedBy == 'client'
+                        ? AppColors.primary.withValues(alpha: 0.08)
+                        : AppColors.accentGold.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        PhosphorIcons.arrowsLeftRight,
+                        size: 16,
+                        color: lastProposedBy == 'client'
+                            ? AppColors.primary
+                            : AppColors.accentGold,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          lastProposedBy == 'client'
+                              ? 'You offered GHS ${counterRate?.toStringAsFixed(2) ?? '—'} · Waiting for artisan'
+                              : 'Artisan countered with GHS ${counterRate?.toStringAsFixed(2) ?? '—'}',
+                          style: AppTypography.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: lastProposedBy == 'client'
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
+              // Action buttons: View Profile, Counter, Accept
               Row(
                 children: <Widget>[
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: onViewProfile,
                       icon: Icon(PhosphorIcons.userCircle),
-                      label: const Text('View profile'),
+                      label: const Text('Profile'),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  if (canCounter) ...<Widget>[
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onCounter,
+                        icon: Icon(PhosphorIcons.arrowsLeftRight),
+                        label: const Text('Counter'),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: PrimaryButton(
                       label: status == 'accepted' ? 'Accepted' : 'Accept',
