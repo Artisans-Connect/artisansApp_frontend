@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -80,7 +81,17 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     if (_checkoutUrl == null) return;
     try {
       final uri = Uri.parse(_checkoutUrl!);
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (kIsWeb) {
+        await launchUrl(uri, mode: LaunchMode.platformDefault);
+      } else {
+        final bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.inAppBrowserView,
+        );
+        if (!launched) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      }
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -88,6 +99,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       });
     }
   }
+
 
   Future<void> _verifyPayment() async {
     if (_reference == null) return;
