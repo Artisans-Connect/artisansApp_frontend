@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/services/payment_service.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
@@ -30,6 +32,280 @@ class _WorkerActiveInProgressScreenState
     extends State<WorkerActiveInProgressScreen> {
   final WorkersService _workersService = WorkersService();
   bool _isCancelling = false;
+
+  Map<String, dynamic>? _activeExtraCharge;
+  bool _loadingExtraCharge = true;
+  RealtimeChannel? _extraChargeChannel;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchExtraCharge();
+    _subscribeExtraCharge();
+  }
+
+  @override
+  void dispose() {
+    _extraChargeChannel?.unsubscribe();
+    super.dispose();
+  }
+
+  Future<void> _fetchExtraCharge() async {
+    try {
+      final dynamic response = await Supabase.instance.client
+          .from('job_extra_charges')
+          .select()
+          .eq('job_id', widget.job.id)
+          .inFilter('status', <String>['pending', 'countered', 'accepted', 'paid'])
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+      if (mounted) {
+        setState(() {
+          _activeExtraCharge = response != null ? Map<String, dynamic>.from(response as Map) : null;
+          _loadingExtraCharge = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingExtraCharge = false);
+      }
+    }
+  }
+
+  void _subscribeExtraCharge() {
+    _extraChargeChannel = Supabase.instance.client
+        .channel('extra-charge-worker-${widget.job.id}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'job_extra_charges',
+          callback: (PostgresChangePayload payload) {
+            _fetchExtraCharge();
+          },
+        )
+        .subscribe();
+  }
+
+  Future<void> _showExtraChargeDialog() async {
+    final TextEditingController amountController = TextEditingController();
+    final TextEditingController descController = TextEditingController();
+    bool submitting = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: const Text('Request Extra Charge'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  TextField(
+                    controller: amountController,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Amount (GHS)',
+                      hintText: '0.00',
+                      prefixText: 'GHS ',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: descController,
+                    decoration: const InputDecoration(
+                      labelText: 'Description / Reason',
+                      hintText: 'e.g. Extra plumbing materials',
+                    ),
+                  ),
+                ],
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: submitting
+                      ? null
+                      : () async {
+                          final double? amount = double.tryParse(amountController.text);
+                          if (amount == null || amount <= 0) {
+                            AppToast.showInfo(context, 'Please enter a valid amount.');
+                            return;
+                          }
+                          setModalState(() => submitting = true);
+                          try {
+                            await PaymentService.instance.proposeExtraCharge(
+                              jobId: widget.job.id,
+                              amount: amount,
+                              description: descController.text,
+                              proposedBy: 'worker',
+                            );
+                            if (ctx.mounted) Navigator.pop(ctx);
+                            _fetchExtraCharge();
+                          } catch (e) {
+                            if (ctx.mounted) {
+                              AppToast.showError(context, e, fallback: 'Failed to request extra charge.');
+                            }
+                          } finally {
+                            setModalState(() => submitting = false);
+                          }
+                        },
+                  child: submitting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Submit'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildExtraChargeWidget() {
+    if (_loadingExtraCharge) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 8.0),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_activeExtraCharge == null) {
+      return OutlinedButton.icon(
+        onPressed: _showExtraChargeDialog,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          side: const BorderSide(color: DesignTokens.primary),
+        ),
+        icon: const Icon(PhosphorIcons.plusCircle, size: 20, color: DesignTokens.primary),
+        label: const Text(
+          'Request Extra Charge',
+          style: TextStyle(
+            fontFamily: AppTypography.fontFamily,
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: DesignTokens.primary,
+          ),
+        ),
+      );
+    }
+
+    final double amount = double.tryParse(_activeExtraCharge!['requested_amount'].toString()) ?? 0.0;
+    final String status = _activeExtraCharge!['status'].toString();
+    final String desc = _activeExtraCharge!['description']?.toString() ?? '';
+
+    Color cardColor = DesignTokens.warmSurface;
+    Color borderColor = DesignTokens.warmBorder;
+    Widget statusContent;
+
+    if (status == 'pending') {
+      statusContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Extra Charge Requested: GHS ${amount.toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.textPrimary),
+          ),
+          if (desc.isNotEmpty) Text('Reason: $desc', style: const TextStyle(fontSize: 12, color: DesignTokens.textMuted)),
+          const SizedBox(height: 8),
+          const Text('Awaiting client approval or counter-offer...', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+        ],
+      );
+    } else if (status == 'countered') {
+      statusContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Client Counter-Offer: GHS ${amount.toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.primary),
+          ),
+          if (desc.isNotEmpty) Text('Reason: $desc', style: const TextStyle(fontSize: 12, color: DesignTokens.textMuted)),
+          const SizedBox(height: 12),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await PaymentService.instance.acceptExtraCharge(extraChargeId: _activeExtraCharge!['id'].toString());
+                      AppToast.showInfo(context, 'Counter-offer accepted! Awaiting payment.');
+                      _fetchExtraCharge();
+                    } catch (e) {
+                      AppToast.showError(context, e, fallback: 'Failed to accept counter-offer.');
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: DesignTokens.successGreen),
+                  child: const Text('Accept'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    try {
+                      await Supabase.instance.client
+                          .from('job_extra_charges')
+                          .update(<String, dynamic>{'status': 'rejected'})
+                          .eq('id', _activeExtraCharge!['id'].toString());
+                      AppToast.showInfo(context, 'Counter-offer declined.');
+                      _fetchExtraCharge();
+                    } catch (e) {
+                      AppToast.showError(context, e, fallback: 'Failed to decline counter-offer.');
+                    }
+                  },
+                  child: const Text('Decline'),
+                ),
+              ),
+            ],
+          )
+        ],
+      );
+    } else if (status == 'accepted') {
+      statusContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Accepted: GHS ${amount.toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.successGreen),
+          ),
+          const SizedBox(height: 4),
+          const Text('Awaiting client payment completion...', style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+        ],
+      );
+    } else if (status == 'paid') {
+      statusContent = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Extra Charge Paid: GHS ${amount.toStringAsFixed(2)}',
+            style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.successGreen),
+          ),
+          const Text('Funds have been secured in escrow and will release on job completion.', style: TextStyle(fontSize: 12)),
+        ],
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: statusContent,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -256,6 +532,10 @@ class _WorkerActiveInProgressScreenState
                         );
                       },
                     ),
+
+                    const SizedBox(height: DesignTokens.sm),
+
+                    _buildExtraChargeWidget(),
 
                     const SizedBox(height: DesignTokens.sm),
 

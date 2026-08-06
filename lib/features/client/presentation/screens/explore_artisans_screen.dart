@@ -456,7 +456,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                   child: Row(
                     children: [
                       Icon(
-                        PhosphorIcons.sparkle,
+                        PhosphorIcons.lightning,
                         color: AppColors.primary,
                         size: 20,
                       ),

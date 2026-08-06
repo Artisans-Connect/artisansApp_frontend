@@ -54,4 +54,65 @@ class PaymentService {
       return null;
     }
   }
+
+  /// Proposes a new extra charge or a counter-offer
+  Future<Map<String, dynamic>> proposeExtraCharge({
+    required String jobId,
+    required double amount,
+    required String description,
+    required String proposedBy,
+  }) async {
+    final dynamic response = await _api.post(
+      '/payments/extra-charge/propose',
+      body: <String, dynamic>{
+        'jobId': jobId,
+        'amount': amount,
+        'description': description,
+        'proposedBy': proposedBy,
+      },
+    );
+    return Map<String, dynamic>.from(response as Map);
+  }
+
+  /// Accepts an extra charge proposal or counter-offer
+  Future<Map<String, dynamic>> acceptExtraCharge({
+    required String extraChargeId,
+  }) async {
+    final dynamic response = await _api.post(
+      '/payments/extra-charge/accept',
+      body: <String, dynamic>{
+        'extraChargeId': extraChargeId,
+      },
+    );
+    return Map<String, dynamic>.from(response as Map);
+  }
+
+  /// Initializes Paystack checkout payment for an extra charge
+  Future<Map<String, dynamic>> initializeExtraChargePayment({
+    required String extraChargeId,
+  }) async {
+    final dynamic response = await _api.post(
+      '/payments/extra-charge/initialize',
+      body: <String, dynamic>{
+        'extraChargeId': extraChargeId,
+      },
+    );
+    return Map<String, dynamic>.from(response as Map);
+  }
+
+  /// Counters an extra charge request with a new amount
+  Future<Map<String, dynamic>> counterExtraCharge({
+    required String extraChargeId,
+    required double amount,
+  }) async {
+    final dynamic response = await _api.post(
+      '/payments/extra-charge/counter',
+      body: <String, dynamic>{
+        'extraChargeId': extraChargeId,
+        'amount': amount,
+      },
+    );
+    return Map<String, dynamic>.from(response as Map);
+  }
 }
+
