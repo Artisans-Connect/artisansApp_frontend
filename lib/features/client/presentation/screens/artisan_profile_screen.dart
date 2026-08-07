@@ -10,8 +10,10 @@ import '../../../../shared/widgets/custom_back_button.dart';
 import '../widgets/artisan_profile/profile_atoms.dart';
 import '../widgets/artisan_profile/review_components.dart';
 import '../widgets/artisan_profile/gallery_components.dart';
-import '../widgets/artisan_profile/profile_tab_bar.dart';
 import '../../../../core/services/profile_service.dart';
+import '../../../../shared/widgets/app_toast.dart';
+import '../../../trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import '../../../trust_safety/services/reports_service.dart';
 
  
 // ─────────────────────────────────────────────────────────────────────────────
@@ -210,6 +212,95 @@ class _ArtisanProfileScreenState extends State<ArtisanProfileScreen> {
                     padding: EdgeInsets.all(8),
                     child: CustomBackButton(),
                   ),
+                  actions: [
+                    PopupMenuButton<String>(
+                      icon: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.35),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(PhosphorIcons.dotsThreeVertical, color: Colors.white),
+                      ),
+                      onSelected: (value) async {
+                        if (value == 'report') {
+                          ReportSubmissionBottomSheet.show(
+                            context,
+                            reportedId: _workerId,
+                            reportedName: _name,
+                          );
+                        } else if (value == 'block') {
+                          final confirm = await showDialog<bool>(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text('Block $_name?'),
+                              content: Text(
+                                'Blocking will prevent $_name from contacting or booking with you. You can unblock them anytime from Settings.',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(ctx, false),
+                                  child: const Text('Cancel'),
+                                ),
+                                FilledButton(
+                                  onPressed: () => Navigator.pop(ctx, true),
+                                  style: FilledButton.styleFrom(backgroundColor: DesignTokens.brandPrimary),
+                                  child: const Text('Block Worker'),
+                                ),
+                              ],
+                            ),
+                          );
+                          if (confirm == true && _workerId.isNotEmpty) {
+                            try {
+                              await ReportsService.instance.blockUser(
+                                blockedId: _workerId,
+                                reason: 'Blocked from artisan profile',
+                              );
+                              if (!mounted) return;
+                              AppToast.showSuccess(context, 'Worker blocked.');
+                            } catch (e) {
+                              if (!mounted) return;
+                              AppToast.showError(context, e, fallback: 'Could not block worker.');
+                            }
+                          }
+                        } else if (value == 'share') {
+                          AppToast.showSuccess(context, 'Artisan profile link copied.');
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'share',
+                          child: Row(
+                            children: [
+                              Icon(PhosphorIcons.shareNetwork, size: 18),
+                              SizedBox(width: 10),
+                              Text('Share Profile'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'report',
+                          child: Row(
+                            children: [
+                              Icon(PhosphorIcons.warningCircle, size: 18, color: Colors.orange),
+                              SizedBox(width: 10),
+                              Text('Report Worker'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'block',
+                          child: Row(
+                            children: [
+                              Icon(PhosphorIcons.userMinus, size: 18, color: Colors.red),
+                              SizedBox(width: 10),
+                              Text('Block Worker', style: TextStyle(color: Colors.red)),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   flexibleSpace: FlexibleSpaceBar(
                     background: _imageUrl.isNotEmpty
                         ? Image.network(

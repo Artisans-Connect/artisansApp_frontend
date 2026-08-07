@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../models/worker_job.dart';
 import '../widgets/job_detail_card.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
+import '../../../trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
 
 class WorkerBookingDetailScreen extends StatelessWidget {
   const WorkerBookingDetailScreen({super.key, required this.job});
@@ -119,6 +120,23 @@ class WorkerBookingDetailScreen extends StatelessWidget {
                 ),
               ],
             ],
+            const SizedBox(height: AppSpacing.lg),
+            OutlinedButton.icon(
+              onPressed: () {
+                ReportSubmissionBottomSheet.show(
+                  context,
+                  bookingId: job.id,
+                  reportedId: job.clientId,
+                  reportedName: job.clientName,
+                );
+              },
+              icon: const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+              label: const Text('Report Concern / Issue', style: TextStyle(color: AppColors.error)),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: AppColors.error.withValues(alpha: 0.5)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
           ],
         ),
       ),

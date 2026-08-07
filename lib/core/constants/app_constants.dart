@@ -60,6 +60,7 @@ class AppConstants {
   static const String jobPhotosBucket = 'job-photos';
   static const String chatMediaBucket = 'chat-media';
   static const String completionPhotosBucket = 'completion-photos';
+  static const String reportEvidenceBucket = 'report-evidence';
 
   /// Set GOOGLE_MAPS_API_KEY in .env; also configure native Android/iOS manifests.
   static String get googleMapsApiKey => _env('GOOGLE_MAPS_API_KEY') ?? '';

@@ -16,6 +16,7 @@ import '../widgets/elapsed_timer_card.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/worker_phase_stepper.dart';
 import 'worker_completion_form_screen.dart';
+import '../../../trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
 
 class WorkerActiveInProgressScreen extends StatefulWidget {
   const WorkerActiveInProgressScreen({super.key, required this.job});
@@ -76,6 +77,21 @@ class _WorkerActiveInProgressScreenState
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shield_outlined, color: DesignTokens.primary),
+            tooltip: 'Safety & Support',
+            onPressed: () {
+              SafetyHelpBottomSheet.show(
+                context,
+                bookingId: job.id,
+                otherUserId: job.clientId,
+                otherUserName: job.clientName,
+                jobTitle: job.title,
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

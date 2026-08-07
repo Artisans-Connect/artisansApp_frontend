@@ -24,6 +24,8 @@ import '../../widgets/chat_bubble.dart';
 import '../navigation/shared_route_args.dart';
 import 'user_profile_screen.dart';
 import '../../widgets/custom_back_button.dart';
+import '../../../features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import '../../../features/trust_safety/services/reports_service.dart';
 
 class ChatDetailScreen extends StatefulWidget {
   const ChatDetailScreen({super.key});
@@ -421,7 +423,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     );
   }
 
-  void _handleMoreAction(String action, ChatDetailArgs args) {
+  void _handleMoreAction(String action, ChatDetailArgs args) async {
     switch (action) {
       case 'profile':
         _openProfile(args);
@@ -433,6 +435,50 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         _loadMessages(
           _activeConversationId ?? args.jobId ?? args.conversationId,
         );
+        break;
+      case 'report':
+        ReportSubmissionBottomSheet.show(
+          context,
+          reportedId: args.counterpartUserId,
+          reportedName: args.counterpartName,
+          bookingId: args.jobId,
+          chatId: args.conversationId,
+        );
+        break;
+      case 'block':
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('Block ${args.counterpartName}?'),
+            content: Text(
+              'Blocking will prevent ${args.counterpartName} from contacting or booking with you. You can unblock them anytime from Settings.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                child: const Text('Block User'),
+              ),
+            ],
+          ),
+        );
+        if (confirm == true && args.counterpartUserId.isNotEmpty) {
+          try {
+            await ReportsService.instance.blockUser(
+              blockedId: args.counterpartUserId,
+              reason: 'Blocked from chat',
+            );
+            if (!mounted) return;
+            AppToast.showSuccess(context, 'User blocked.');
+          } catch (e) {
+            if (!mounted) return;
+            AppToast.showError(context, e, fallback: 'Could not block user.');
+          }
+        }
         break;
       case 'dismiss':
         setState(() => _showAttachmentMenu = false);
@@ -533,6 +579,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
               const PopupMenuItem<String>(
                 value: 'refresh',
                 child: Text('Refresh chat'),
+              ),
+              const PopupMenuItem<String>(
+                value: 'report',
+                child: Row(
+                  children: [
+                    Icon(PhosphorIcons.warningCircle, size: 18, color: Colors.orange),
+                    SizedBox(width: 10),
+                    Text('Report User'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem<String>(
+                value: 'block',
+                child: Row(
+                  children: [
+                    Icon(PhosphorIcons.userMinus, size: 18, color: Colors.red),
+                    SizedBox(width: 10),
+                    Text('Block User', style: TextStyle(color: Colors.red)),
+                  ],
+                ),
               ),
               if (_showAttachmentMenu)
                 const PopupMenuItem<String>(

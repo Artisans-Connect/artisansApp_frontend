@@ -31,6 +31,10 @@ class StorageService {
     return _uploadMedia(media, AppConstants.completionPhotosBucket);
   }
 
+  Future<String?> uploadReportEvidence(PickedMedia media) async {
+    return _uploadMedia(media, AppConstants.reportEvidenceBucket);
+  }
+
   Future<String?> _uploadMedia(PickedMedia media, String bucketName) async {
     try {
       final String userId = _supabase.auth.currentUser?.id ?? 'anonymous';

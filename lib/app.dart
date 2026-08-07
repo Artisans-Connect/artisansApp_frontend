@@ -21,6 +21,8 @@ import 'shared/presentation/screens/messages_list_screen.dart';
 import 'shared/presentation/screens/settings_screen.dart';
 import 'shared/presentation/screens/user_profile_screen.dart';
 import 'core/services/notification_service.dart';
+import 'features/trust_safety/presentation/screens/my_reports_screen.dart';
+import 'features/trust_safety/presentation/screens/blocked_users_screen.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -95,6 +97,8 @@ class _MyAppState extends State<MyApp> {
         SettingsScreen.routeName: (_) => const SettingsScreen(),
         EditProfileScreen.routeName: (_) => const EditProfileScreen(),
         JobReceiptScreen.routeName: (_) => const JobReceiptScreen(),
+        MyReportsScreen.routeName: (_) => const MyReportsScreen(),
+        BlockedUsersScreen.routeName: (_) => const BlockedUsersScreen(),
         WorkerShell.routeName: (BuildContext context) {
           final Object? args = ModalRoute.of(context)?.settings.arguments;
           final String? jobId = args is Map

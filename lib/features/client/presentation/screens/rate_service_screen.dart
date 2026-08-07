@@ -8,6 +8,7 @@ import '../navigation/client_navigation.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../../core/services/reviews_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
 
 class RateServiceScreen extends StatefulWidget {
   final Map<String, dynamic>? service;
@@ -140,16 +141,47 @@ class _RateServiceScreenState extends State<RateServiceScreen> {
                       if (comment.isNotEmpty) 'comment': comment,
                     });
                     
-                    if (!context.mounted) return;
-                    AppToast.showSuccess(context, 'Rating submitted successfully!');
-
-                    ClientNavigation.replaceWithBookingsTab(context);
+                    if (!mounted) return;
+                    AppToast.showSuccess(context, 'Thank you for your review!');
+                    ClientNavigation.goToBookingHistory(context);
                   } catch (e) {
-                    if (!context.mounted) return;
-                    AppToast.showError(context, e, fallback: 'Could not submit rating.');
-                    setState(() => _isSubmitting = false);
+                    if (!mounted) return;
+                    AppToast.showError(context, e, fallback: 'Could not submit review.');
+                  } finally {
+                    if (mounted) setState(() => _isSubmitting = false);
                   }
                 },
+              ),
+              const SizedBox(height: AppSpacing.md),
+
+              // Report a Problem Link
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {
+                    final String? jobId = widget.service?['job_id'] as String? ??
+                        widget.service?['jobId'] as String? ??
+                        widget.service?['id'] as String?;
+                    final String? workerId = widget.service?['worker_id'] as String? ??
+                        widget.service?['workerId'] as String?;
+                    final String? workerName = widget.service?['artisan'] as String? ??
+                        widget.service?['worker_name'] as String?;
+
+                    ReportSubmissionBottomSheet.show(
+                      context,
+                      bookingId: jobId,
+                      reportedId: workerId,
+                      reportedName: workerName,
+                    );
+                  },
+                  icon: const Icon(PhosphorIcons.warningCircle, color: AppColors.error, size: 18),
+                  label: Text(
+                    'Report a Problem / Safety Concern',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: AppSpacing.xl),
 

@@ -22,6 +22,8 @@ import '../../utils/shared_user_context.dart';
 import '../../models/user_profile_view.dart';
 import 'edit_profile_screen.dart';
 import 'settings_screen.dart';
+import '../../../features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import '../../../features/trust_safety/services/reports_service.dart';
 
 /// Shared profile for clients and workers. Same route; sections vary by [UserProfileViewData.role].
 class UserProfileScreen extends StatefulWidget {
@@ -131,6 +133,75 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 }),
               ),
               icon: Icon(PhosphorIcons.pencilSimple, color: AppColors.primary),
+            )
+          else
+            PopupMenuButton<String>(
+              icon: Icon(PhosphorIcons.dotsThreeVertical, color: AppColors.textPrimary),
+              onSelected: (value) async {
+                if (value == 'report') {
+                  ReportSubmissionBottomSheet.show(
+                    context,
+                    reportedId: profile.id,
+                    reportedName: profile.fullName,
+                  );
+                } else if (value == 'block') {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Text('Block ${profile.fullName}?'),
+                      content: Text(
+                        'Blocking will prevent ${profile.fullName} from contacting or booking with you. You can unblock them anytime from Settings.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+                          child: const Text('Block User'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true && profile.id.isNotEmpty) {
+                    try {
+                      await ReportsService.instance.blockUser(
+                        blockedId: profile.id,
+                        reason: 'Blocked from profile screen',
+                      );
+                      if (!mounted) return;
+                      AppToast.showSuccess(context, 'User blocked.');
+                    } catch (e) {
+                      if (!mounted) return;
+                      AppToast.showError(context, e, fallback: 'Could not block user.');
+                    }
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'report',
+                  child: Row(
+                    children: [
+                      Icon(PhosphorIcons.warningCircle, size: 18, color: Colors.orange),
+                      const SizedBox(width: 10),
+                      Text('Report ${profile.isWorker ? "Worker" : "Client"}'),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'block',
+                  child: Row(
+                    children: [
+                      Icon(PhosphorIcons.userMinus, size: 18, color: Colors.red),
+                      const SizedBox(width: 10),
+                      Text('Block ${profile.isWorker ? "Worker" : "Client"}', style: const TextStyle(color: Colors.red)),
+                    ],
+                  ),
+                ),
+              ],
             ),
           const SizedBox(width: 8),
         ],

@@ -22,6 +22,7 @@ import '../widgets/live_tracking/artisan_detail_card.dart';
 import '../widgets/live_tracking/settlement_details_card.dart';
 import '../widgets/live_tracking/cancel_section.dart';
 import '../widgets/live_tracking/completion_actions.dart';
+import '../../../trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
 
 // ---------------------------------------------------------------------------
 // Main screen
@@ -949,6 +950,20 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.shield_outlined, color: DesignTokens.primary),
+                  tooltip: 'Safety & Support',
+                  onPressed: () {
+                    final jobData = _job ?? widget.job;
+                    SafetyHelpBottomSheet.show(
+                      context,
+                      bookingId: _currentJobId,
+                      otherUserId: jobData?['worker_id'] as String?,
+                      otherUserName: jobData?['artisan'] as String?,
+                      jobTitle: jobData?['title'] as String?,
+                    );
+                  },
                 ),
               ],
             ),

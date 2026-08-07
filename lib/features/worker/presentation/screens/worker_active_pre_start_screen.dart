@@ -16,6 +16,7 @@ import '../state/worker_session_state.dart';
 import '../widgets/client_contact_row.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/worker_phase_stepper.dart';
+import '../../../trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
 
 class WorkerActivePreStartScreen extends StatefulWidget {
   const WorkerActivePreStartScreen({
@@ -98,6 +99,21 @@ class _WorkerActivePreStartScreenState
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.shield_outlined, color: DesignTokens.primary),
+            tooltip: 'Safety & Support',
+            onPressed: () {
+              SafetyHelpBottomSheet.show(
+                context,
+                bookingId: job.id,
+                otherUserId: job.clientId,
+                otherUserName: job.clientName,
+                jobTitle: job.title,
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(

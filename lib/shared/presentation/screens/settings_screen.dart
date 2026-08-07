@@ -17,6 +17,8 @@ import '../../widgets/app_toast.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../widgets/settings_group_tile.dart';
 import 'edit_profile_screen.dart';
+import '../../../features/trust_safety/presentation/screens/my_reports_screen.dart';
+import '../../../features/trust_safety/presentation/screens/blocked_users_screen.dart';
 
 /// Shared settings — client layout (53) vs worker layout (65) on same route.
 class SettingsScreen extends StatefulWidget {
@@ -434,6 +436,18 @@ class _LegalAndSupportGroup extends StatelessWidget {
           ),
           child: Column(
             children: <Widget>[
+              SettingsTile(
+                icon: PhosphorIcons.shieldWarning,
+                title: 'Safety Reports',
+                subtitle: 'View submitted trust & safety reports',
+                onTap: () => Navigator.pushNamed(context, MyReportsScreen.routeName),
+              ),
+              SettingsTile(
+                icon: PhosphorIcons.userMinus,
+                title: 'Blocked Accounts',
+                subtitle: 'Manage blocked profiles',
+                onTap: () => Navigator.pushNamed(context, BlockedUsersScreen.routeName),
+              ),
               SettingsTile(
                 icon: PhosphorIcons.shieldCheck,
                 title: 'Privacy Policy',
