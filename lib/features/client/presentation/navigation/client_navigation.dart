@@ -19,6 +19,7 @@ import '../models/client_booking.dart';
 import '../models/client_job_draft.dart';
 import '../models/job_post_wizard_step.dart';
 import 'client_shell_scope.dart';
+import '../screens/payment_checkout_screen.dart';
 
 /// Client-side navigation helpers (shell-safe).
 class ClientNavigation {
@@ -303,38 +304,50 @@ class ClientNavigation {
     );
   }
 
-  static void handleBookingTap(BuildContext context, ClientBooking booking) {
+  static Future<void> handleBookingTap(BuildContext context, ClientBooking booking) async {
     if (booking.isLocalDraft) {
       openJobDraft(context, booking);
       return;
     }
     switch (booking.status) {
       case ClientBookingStatus.inProgress:
-        pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
+        await pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.pendingApproval:
-        pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
+        await pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.completed:
         if (booking.canRate) {
-          pushFlow(context, AppRoutes.rateService, arguments: booking.toMap());
+          await pushFlow(context, AppRoutes.rateService, arguments: booking.toMap());
         } else {
           showBookingSummaryModal(context, booking);
         }
+      case ClientBookingStatus.awaitingPayment:
+        await pushFlow(context, AppRoutes.jobApplicants, arguments: booking.toMap());
       case ClientBookingStatus.requested:
-        if (booking.backendStatus == 'draft' &&
+        if (booking.backendStatus == 'draft') {
+          await Navigator.push<dynamic>(
+            context,
+            MaterialPageRoute<dynamic>(
+              builder: (BuildContext context) => PaymentCheckoutScreen(
+                jobId: booking.id,
+                amount: double.tryParse(booking.amount.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 20.00,
+              ),
+            ),
+          );
+        } else if (booking.backendStatus == 'draft' &&
             booking.jobMode == 'scheduled') {
           AppToast.showInfo(
             context,
             'This scheduled job will start matching before the appointment.',
           );
         } else {
-          pushFlow(context, AppRoutes.jobApplicants,
+          await pushFlow(context, AppRoutes.jobApplicants,
               arguments: booking.toMap());
         }
       case ClientBookingStatus.accepted:
-        pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
+        await pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
       case ClientBookingStatus.cancelled:
         if (booking.isRecoverableServiceInterruption) {
-          pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
+          await pushFlow(context, AppRoutes.liveTracking, arguments: booking.toMap());
         } else {
           showBookingSummaryModal(context, booking);
         }

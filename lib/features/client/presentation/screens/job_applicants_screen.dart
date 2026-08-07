@@ -5,15 +5,19 @@ import '../../../../core/errors/error_messages.dart';
 import '../../../../core/navigation/app_routes.dart';
 import '../../../../core/services/applications_service.dart';
 import '../../../../core/services/jobs_service.dart';
+import '../../../../core/services/negotiation_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/error_state_view.dart';
+import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../models/client_booking.dart';
+import 'payment_checkout_screen.dart';
 
 class JobApplicantsScreen extends StatefulWidget {
   const JobApplicantsScreen({super.key, this.job});
@@ -92,6 +96,7 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
     }
   }
 
+  /// Accept the application at the quoted price → backend moves job to awaiting_payment → client pays
   Future<void> _accept(Map<String, dynamic> application) async {
     if (_isAccepting) return;
     final String applicationId = (application['id'] ?? '').toString();
@@ -99,24 +104,103 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
     setState(() => _isAccepting = true);
     try {
-      final dynamic job = await _applicationsService.acceptApplication(
-        jobId: _jobId,
-        applicationId: applicationId,
-      );
+      // Step 1: Accept the application if it's not already accepted (backend sets status to awaiting_payment)
+      final String appStatus = (application['status'] ?? '').toString().toLowerCase();
+      if (appStatus != 'accepted') {
+        await _applicationsService.acceptApplication(
+          jobId: _jobId,
+          applicationId: applicationId,
+        );
+      }
+
       if (!mounted) return;
-      AppToast.showSuccess(context, 'Artisan selected for this job.');
-      final Map<String, dynamic> jobMap = Map<String, dynamic>.from(job as Map);
-      Navigator.pushNamed(
+
+      // Step 2: Navigate to payment checkout (100% upfront payment)
+      final double totalQuote = double.tryParse((application['total_quote'] ?? '').toString()) ?? 100.00;
+
+      final bool? paid = await Navigator.push<bool>(
         context,
-        AppRoutes.liveTracking,
-        arguments: ClientBooking.fromApiJob(jobMap).toTrackingMap(),
+        MaterialPageRoute<bool>(
+          builder: (BuildContext context) => PaymentCheckoutScreen(
+            jobId: _jobId,
+            applicationId: applicationId,
+            amount: totalQuote,
+          ),
+        ),
       );
+
+      if (!mounted) return;
+      if (paid == true) {
+        final List<dynamic> jobs = await JobsService().getMyJobs(forceRefresh: true);
+        final Iterable<Map<String, dynamic>> matches = jobs
+            .whereType<Map<String, dynamic>>()
+            .where((j) => j['id'].toString() == _jobId);
+        final Map<String, dynamic>? updatedJob = matches.isNotEmpty ? matches.first : null;
+
+        if (updatedJob != null && mounted) {
+          Navigator.pushNamed(
+            context,
+            AppRoutes.liveTracking,
+            arguments: ClientBooking.fromApiJob(updatedJob).toTrackingMap(),
+          );
+        } else if (mounted) {
+          Navigator.pop(context, true);
+        }
+      }
     } catch (e) {
       if (mounted) {
         AppToast.showError(context, e, fallback: 'Could not accept artisan.');
       }
     } finally {
       if (mounted) setState(() => _isAccepting = false);
+    }
+  }
+
+  /// Show bottom sheet for client to propose/negotiate a counter-offer
+  Future<void> _counterOffer(Map<String, dynamic> application) async {
+    final String applicationId = (application['id'] ?? '').toString();
+    if (applicationId.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      // 1. Fetch negotiations for this job
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(_jobId);
+      
+      // 2. Find if there is a negotiation for this application
+      Negotiation? targetNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.applicationId == applicationId && n?.type == NegotiationType.quote,
+        orElse: () => null,
+      );
+
+      // 3. If not, create one
+      if (targetNeg == null) {
+        final double totalQuote = double.tryParse((application['total_quote'] ?? '').toString()) ?? 0.0;
+        targetNeg = await NegotiationService.instance.createNegotiation(
+          jobId: _jobId,
+          applicationId: applicationId,
+          type: 'quote',
+          initialAmount: totalQuote,
+          description: 'Job bidding initiated',
+        );
+      }
+
+      setState(() => _isLoading = false);
+
+      if (!mounted) return;
+
+      // 4. Open the sheet
+      NegotiationChatSheet.show(
+        context,
+        negotiation: targetNeg,
+        onStatusChanged: () {
+          _loadApplications();
+        },
+      );
+    } catch (e) {
+      setState(() => _isLoading = false);
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not open bargaining.');
+      }
     }
   }
 
@@ -250,8 +334,10 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
                             application: application,
                             isAccepting: _isAccepting,
                             onAccept: () => _accept(application),
+                            onCounter: () => _counterOffer(application),
                             onViewProfile: () =>
                                 _openApplicantProfile(application),
+                            isAwaitingPayment: (widget.job?['backendStatus'] ?? widget.job?['status'] ?? '').toString().toLowerCase() == 'awaiting_payment',
                           ),
                         ),
                     ],
@@ -266,13 +352,17 @@ class _ApplicantCard extends StatelessWidget {
     required this.application,
     required this.isAccepting,
     required this.onAccept,
+    required this.onCounter,
     required this.onViewProfile,
+    required this.isAwaitingPayment,
   });
 
   final Map<String, dynamic> application;
   final bool isAccepting;
   final VoidCallback onAccept;
+  final VoidCallback onCounter;
   final VoidCallback onViewProfile;
+  final bool isAwaitingPayment;
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +390,11 @@ class _ApplicantCard extends StatelessWidget {
     final double? urgencyPremium =
         (application['urgency_premium'] as num?)?.toDouble();
     final String message = (application['message'] ?? '').toString();
-    final bool canAccept = status == 'pending' && !isAccepting;
+    final String lastProposedBy = (application['last_proposed_by'] ?? '').toString();
+    final double? counterRate = (application['counter_rate'] as num?)?.toDouble();
+    final bool hasActiveCounter = lastProposedBy.isNotEmpty;
+    final bool canAccept = (status == 'pending' || (status == 'accepted' && isAwaitingPayment)) && !isAccepting;
+    final bool canCounter = status == 'pending' && !isAccepting;
 
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -368,21 +462,76 @@ class _ApplicantCard extends StatelessWidget {
                 const SizedBox(height: AppSpacing.sm),
                 Text(message, style: AppTypography.bodyMedium),
               ],
+              // Negotiation status banner
+              if (hasActiveCounter) ...<Widget>[
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  decoration: BoxDecoration(
+                    color: lastProposedBy == 'client'
+                        ? AppColors.primary.withValues(alpha: 0.08)
+                        : AppColors.accentGold.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: <Widget>[
+                      Icon(
+                        PhosphorIcons.arrowsLeftRight,
+                        size: 16,
+                        color: lastProposedBy == 'client'
+                            ? AppColors.primary
+                            : AppColors.accentGold,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          lastProposedBy == 'client'
+                              ? 'You offered GHS ${counterRate?.toStringAsFixed(2) ?? '—'} · Waiting for artisan'
+                              : 'Artisan countered with GHS ${counterRate?.toStringAsFixed(2) ?? '—'}',
+                          style: AppTypography.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: lastProposedBy == 'client'
+                                ? AppColors.primary
+                                : AppColors.textPrimary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: AppSpacing.md),
+              // Action buttons: View Profile, Counter, Accept
               Row(
                 children: <Widget>[
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: onViewProfile,
                       icon: Icon(PhosphorIcons.userCircle),
-                      label: const Text('View profile'),
+                      label: const Text('Profile'),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  if (canCounter) ...<Widget>[
+                    const SizedBox(width: AppSpacing.xs),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onCounter,
+                        icon: Icon(PhosphorIcons.arrowsLeftRight),
+                        label: const Text('Counter'),
+                      ),
+                    ),
+                  ],
+                  const SizedBox(width: AppSpacing.xs),
                   Expanded(
                     child: PrimaryButton(
-                      label: status == 'accepted' ? 'Accepted' : 'Accept',
-                      isLoading: isAccepting && status == 'pending',
+                      label: (status == 'accepted' && isAwaitingPayment)
+                          ? 'Pay Deposit'
+                          : (status == 'accepted' ? 'Accepted' : 'Accept'),
+                      isLoading: isAccepting && (status == 'pending' || status == 'accepted'),
                       isEnabled: canAccept,
                       onPressed: onAccept,
                     ),

@@ -19,4 +19,30 @@ class ApplicationsService {
     await CacheStore.instance.invalidatePrefix(CacheKeys.jobsMinePrefix);
     return result;
   }
+
+  Future<dynamic> counterApplication({
+    required String jobId,
+    required String applicationId,
+    required double counterRate,
+  }) async {
+    final dynamic result = await _api.post(
+      '/jobs/$jobId/applications/$applicationId/counter',
+      body: <String, dynamic>{
+        'counterRate': counterRate,
+      },
+    );
+    await CacheStore.instance.invalidatePrefix(CacheKeys.jobsMinePrefix);
+    return result;
+  }
+
+  Future<dynamic> acceptCounterOffer({
+    required String applicationId,
+  }) async {
+    final dynamic result = await _api.post(
+      '/workers/applications/$applicationId/accept-counter',
+    );
+    await CacheStore.instance.invalidatePrefix(CacheKeys.jobsMinePrefix);
+    return result;
+  }
 }
+

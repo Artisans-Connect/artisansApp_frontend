@@ -463,11 +463,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                                 },
                                 child: ClientBookingCard(
                                   booking: booking,
-                                  onTap: () =>
-                                      ClientNavigation.handleBookingTap(
-                                    context,
-                                    booking,
-                                  ),
+                                  onTap: () async {
+                                    await ClientNavigation.handleBookingTap(
+                                      context,
+                                      booking,
+                                    );
+                                    _loadCountsAndBookings();
+                                  },
                                 ),
                               ),
                             ),

@@ -5,6 +5,8 @@ import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../state/worker_session_state.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
 import '../../../../core/services/workers_service.dart';
+import '../../../../core/services/payment_service.dart';
+import '../../../../shared/widgets/app_toast.dart';
 
 class WorkerEarningsScreen extends StatefulWidget {
   const WorkerEarningsScreen({super.key});
@@ -15,10 +17,13 @@ class WorkerEarningsScreen extends StatefulWidget {
 
 class _WorkerEarningsScreenState extends State<WorkerEarningsScreen> {
   final WorkersService _workersService = WorkersService();
+  final PaymentService _paymentService = PaymentService.instance;
+  
   bool _isLoading = true;
   String? _error;
   double _totalEarned = 0.0;
   List<dynamic> _history = [];
+  Map<String, dynamic>? _payoutDetails;
 
   @override
   void initState() {
@@ -33,10 +38,12 @@ class _WorkerEarningsScreenState extends State<WorkerEarningsScreen> {
     });
     try {
       final res = await _workersService.getEarnings();
+      final payout = await _paymentService.getPayoutDetails();
       if (mounted) {
         setState(() {
           _totalEarned = (res['total_earned'] as num?)?.toDouble() ?? 0.0;
           _history = res['history'] as List<dynamic>? ?? [];
+          _payoutDetails = payout;
           _isLoading = false;
         });
       }
@@ -48,6 +55,136 @@ class _WorkerEarningsScreenState extends State<WorkerEarningsScreen> {
         });
       }
     }
+  }
+
+  void _showPayoutSetupSheet() {
+    final String initialNetwork = _payoutDetails?['network'] as String? ?? 'MTN';
+    final accountController = TextEditingController(text: _payoutDetails?['account_number'] as String? ?? '');
+    final nameController = TextEditingController(text: _payoutDetails?['account_name'] as String? ?? '');
+    String selectedNetwork = initialNetwork;
+    
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext sheetCtx) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                left: 24,
+                right: 24,
+                top: 24,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Setup Payout Account',
+                    style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Enter your Mobile Money details to receive automated payouts after jobs are completed.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey, fontSize: 13),
+                  ),
+                  const SizedBox(height: 24),
+                  const Text('Network Provider', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    initialValue: selectedNetwork,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'MTN', child: Text('MTN Mobile Money')),
+                      DropdownMenuItem(value: 'Vodafone', child: Text('Telecel Cash (Vodafone)')),
+                      DropdownMenuItem(value: 'AirtelTigo', child: Text('AirtelTigo Money')),
+                    ],
+                    onChanged: (String? val) {
+                      if (val != null) {
+                        setSheetState(() => selectedNetwork = val);
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Mobile Money Number', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: accountController,
+                    keyboardType: TextInputType.phone,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. 0244123456',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text('Account Holder Name', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: 'e.g. John Doe',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () async {
+                      final net = selectedNetwork;
+                      final num = accountController.text.trim();
+                      final name = nameController.text.trim();
+                      
+                      if (num.isEmpty || name.isEmpty) {
+                        AppToast.showError(context, Exception('Please fill in all fields.'));
+                        return;
+                      }
+                      
+                      Navigator.pop(sheetCtx);
+                      
+                      setState(() => _isLoading = true);
+                      try {
+                        await _paymentService.savePayoutDetails(
+                          network: net,
+                          accountNumber: num,
+                          accountName: name,
+                        );
+                        await _fetchEarnings();
+                        if (mounted) {
+                          AppToast.showSuccess(context, 'Payout details updated successfully!');
+                        }
+                      } catch (e) {
+                        setState(() => _isLoading = false);
+                        if (mounted) {
+                          AppToast.showError(context, e, fallback: 'Failed to update payout details.');
+                        }
+                      }
+                    },
+                    child: Text(
+                      'Save & Verify',
+                      style: AppTypography.labelLarge.copyWith(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -327,13 +464,74 @@ class _WorkerEarningsScreenState extends State<WorkerEarningsScreen> {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'Payment integration coming in a future update. We\'re working on making secure in-app payments available on CraftMatch soon.',
-                          style: AppTypography.bodyMedium.copyWith(
-                            fontStyle: FontStyle.italic,
-                            fontSize: 12,
+                        Card(
+                          margin: EdgeInsets.zero,
+                          color: AppColors.primaryContainer.withValues(alpha: 0.1),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(color: AppColors.primary.withValues(alpha: 0.2)),
                           ),
-                          textAlign: TextAlign.center,
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(PhosphorIcons.wallet, color: AppColors.primary),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'Payout Destination',
+                                      style: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                if (_payoutDetails != null) ...[
+                                  Text(
+                                    'Network: ${_payoutDetails!['network']}',
+                                    style: AppTypography.bodyMedium,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'MoMo Number: ${_payoutDetails!['account_number']}',
+                                    style: AppTypography.bodyMedium,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Account Holder: ${_payoutDetails!['account_name']}',
+                                    style: AppTypography.bodyMedium,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  OutlinedButton(
+                                    onPressed: _showPayoutSetupSheet,
+                                    style: OutlinedButton.styleFrom(
+                                      side: BorderSide(color: AppColors.primary),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                    child: Text(
+                                      'Change Payout Account',
+                                      style: TextStyle(color: AppColors.primary),
+                                    ),
+                                  ),
+                                ] else ...[
+                                  const Text(
+                                    'Setup your Mobile Money account details below to receive automatic payouts instantly upon job completions.',
+                                    style: TextStyle(fontSize: 13, color: Colors.grey, height: 1.4),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: _showPayoutSetupSheet,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.primary,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                    ),
+                                    child: const Text('Setup Payout Account', style: TextStyle(color: Colors.white)),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),

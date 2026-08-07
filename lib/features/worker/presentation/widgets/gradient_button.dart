@@ -70,34 +70,63 @@ class OutlineButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
+    this.isLoading = false,
+    this.enabled = true,
     this.haptic = true,
+    this.textColor,
+    this.borderColor,
   });
+
   final String label;
   final VoidCallback? onPressed;
+  final bool isLoading;
+  final bool enabled;
   final bool haptic;
+  final Color? textColor;
+  final Color? borderColor;
+
   @override
   Widget build(BuildContext context) {
+    final effectiveOnPressed = enabled && !isLoading ? onPressed : null;
     return OutlinedButton(
-      onPressed: onPressed == null
+      onPressed: effectiveOnPressed == null
           ? null
           : () {
               if (haptic) HapticFeedback.lightImpact();
-              onPressed!();
+              effectiveOnPressed();
             },
       style: OutlinedButton.styleFrom(
         minimumSize: const Size.fromHeight(52),
-        side: const BorderSide(color: AppColors.outline),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        side: BorderSide(
+          color: effectiveOnPressed == null
+              ? AppColors.outlineVariant
+              : (borderColor ?? AppColors.outline),
+        ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
         ),
       ),
-      child: Text(
-        label,
-        style: AppTypography.bodyLarge.copyWith(
-          color: AppColors.onSurface,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      child: isLoading
+          ? SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: textColor ?? AppColors.onSurface,
+              ),
+            )
+          : Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodyLarge.copyWith(
+                color: effectiveOnPressed == null
+                    ? AppColors.onSurfaceVariant
+                    : (textColor ?? AppColors.onSurface),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
     );
   }
 }

@@ -1,37 +1,121 @@
 import 'package:flutter/material.dart';
-
+import '../../../../../core/services/payment_service.dart';
+import '../../../../../core/services/negotiation_service.dart';
+import '../../../../../shared/models/negotiation.dart';
+import '../../../../../shared/widgets/negotiation_chat_sheet.dart';
+import '../../../../../shared/widgets/app_toast.dart';
 import '../../../../../core/theme/design_tokens.dart';
 
-// ---------------------------------------------------------------------------
-// SettlementDetailsCard – cost breakdown shown for pending-approval jobs
-// ---------------------------------------------------------------------------
-
-class SettlementDetailsCard extends StatelessWidget {
+class SettlementDetailsCard extends StatefulWidget {
   final Map<String, dynamic> job;
+  final VoidCallback? onSettled;
 
-  const SettlementDetailsCard({super.key, required this.job});
+  const SettlementDetailsCard({super.key, required this.job, this.onSettled});
+
+  @override
+  State<SettlementDetailsCard> createState() => _SettlementDetailsCardState();
+}
+
+class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
+  bool _loading = true;
+  String? _error;
+  double _escrowHeld = 0.0;
+  double _grossAmount = 0.0;
+  double _outstandingBalance = 0.0;
+  double _platformFee = 0.0;
+  double _workerPayout = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSettlementDetails();
+  }
+
+  Future<void> _fetchSettlementDetails() async {
+    final String jobId = widget.job['id']?.toString() ?? '';
+    if (jobId.isEmpty) return;
+
+    try {
+      final res = await PaymentService.instance.calculateSettlement(jobId);
+      if (!mounted) return;
+      setState(() {
+        _escrowHeld = double.tryParse(res['escrow_held']?.toString() ?? '0') ?? 0.0;
+        _grossAmount = double.tryParse(res['gross_amount']?.toString() ?? '0') ?? 0.0;
+        _outstandingBalance = double.tryParse(res['outstanding_balance']?.toString() ?? '0') ?? 0.0;
+        _platformFee = double.tryParse(res['platform_fee']?.toString() ?? '0') ?? 0.0;
+        _workerPayout = double.tryParse(res['worker_payout']?.toString() ?? '0') ?? 0.0;
+        _loading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Failed to load settlement calculations.';
+        _loading = false;
+      });
+    }
+  }
+
+  Future<void> _negotiateFinalPrice() async {
+    final String jobId = widget.job['id']?.toString() ?? '';
+    if (jobId.isEmpty) return;
+
+    setState(() => _loading = true);
+    try {
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(jobId);
+      Negotiation? targetNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.type == NegotiationType.completionAdjustment,
+        orElse: () => null,
+      );
+
+      if (targetNeg == null) {
+        targetNeg = await NegotiationService.instance.createNegotiation(
+          jobId: jobId,
+          type: 'completion_adjustment',
+          initialAmount: _grossAmount,
+          description: 'Final completion settlement bargaining',
+        );
+      }
+
+      setState(() => _loading = false);
+      if (!mounted) return;
+
+      NegotiationChatSheet.show(
+        context,
+        negotiation: targetNeg,
+        onStatusChanged: () {
+          _fetchSettlementDetails();
+          if (widget.onSettled != null) widget.onSettled!();
+        },
+      );
+    } catch (e) {
+      setState(() => _loading = false);
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not start negotiation.');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, dynamic> comp =
-        (job['completion_details'] as Map<String, dynamic>?) ??
-            (job['completionDetails'] as Map<String, dynamic>?) ??
-            job;
-    final double? baseRate = (comp['base_rate'] as num?)?.toDouble() ??
-        (job['base_rate'] as num?)?.toDouble();
-    final double? distanceCost = (comp['distance_cost'] as num?)?.toDouble() ??
-        (job['distance_cost'] as num?)?.toDouble();
-    final double? urgencyPremium =
-        (comp['urgency_premium'] as num?)?.toDouble() ??
-            (job['urgency_premium'] as num?)?.toDouble();
-    final double? grossAmount = (comp['gross_amount'] as num?)?.toDouble() ??
-        (job['gross_amount'] as num?)?.toDouble();
-
-    if (grossAmount == null || grossAmount == 0) {
-      return const SizedBox.shrink();
+    if (_loading) {
+      return const Card(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
     }
 
-    Widget rowItem(String label, double amount, {bool isTotal = false}) {
+    if (_error != null) {
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(_error!, style: const TextStyle(color: DesignTokens.error)),
+        ),
+      );
+    }
+
+    Widget rowItem(String label, double amount, {bool isTotal = false, bool isDeduction = false}) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
@@ -41,18 +125,22 @@ class SettlementDetailsCard extends StatelessWidget {
               label,
               style: TextStyle(
                 fontFamily: 'Satoshi',
-                fontSize: isTotal ? 16 : 14,
+                fontSize: isTotal ? 15 : 13,
                 fontWeight: isTotal ? FontWeight.w800 : FontWeight.w500,
                 color: isTotal ? DesignTokens.textPrimary : DesignTokens.textSecondary,
               ),
             ),
             Text(
-              'GHS ${amount.toStringAsFixed(2)}',
+              '${isDeduction ? "-" : ""} GHS ${amount.toStringAsFixed(2)}',
               style: TextStyle(
                 fontFamily: 'Satoshi',
-                fontSize: isTotal ? 16 : 14,
+                fontSize: isTotal ? 15 : 13,
                 fontWeight: isTotal ? FontWeight.w800 : FontWeight.w700,
-                color: isTotal ? DesignTokens.primary : DesignTokens.textPrimary,
+                color: isDeduction 
+                    ? Colors.red 
+                    : isTotal 
+                        ? DesignTokens.primary 
+                        : DesignTokens.textPrimary,
               ),
             ),
           ],
@@ -67,23 +155,16 @@ class SettlementDetailsCard extends StatelessWidget {
         color: DesignTokens.surfaceCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: DesignTokens.borderSubtle),
-        boxShadow: const [
-          BoxShadow(
-            color: DesignTokens.shadowMid,
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(Icons.receipt_long_rounded, color: DesignTokens.primary, size: 20),
-              const SizedBox(width: 8),
-              const Text(
-                'Settlement Summary',
+              SizedBox(width: 8),
+              Text(
+                'Settlement Details',
                 style: TextStyle(
                   fontFamily: 'Satoshi',
                   fontSize: 16,
@@ -96,51 +177,28 @@ class SettlementDetailsCard extends StatelessWidget {
           const SizedBox(height: 12),
           const Divider(color: DesignTokens.borderSubtle, height: 1),
           const SizedBox(height: 8),
-          if (baseRate != null && baseRate > 0)
-            rowItem('Base Service Fee', baseRate),
-          if (distanceCost != null && distanceCost > 0)
-            rowItem('Travel Cost', distanceCost),
-          if (urgencyPremium != null && urgencyPremium > 0)
-            rowItem('Urgency Premium', urgencyPremium),
+          rowItem('Gross Total Work Value', _grossAmount),
+          if (_escrowHeld > 0)
+            rowItem('Upfront Escrow Deposit Paid', _escrowHeld, isDeduction: true),
           const SizedBox(height: 8),
           const Divider(color: DesignTokens.borderSubtle, height: 1),
           const SizedBox(height: 8),
-          rowItem(
-            job['status'] == 'pending_client_approval' ? 'Final Proposed Charge' : 'Total Estimate',
-            grossAmount,
-            isTotal: true,
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: DesignTokens.primary.withAlpha((0.05 * 255).round()),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.info_outline_rounded,
-                  color: DesignTokens.primary,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    job['status'] == 'pending_client_approval'
-                        ? 'Please review and accept this final charge proposed by the artisan.'
-                        : '*Estimate only. Final price settled directly.',
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: DesignTokens.primary,
-                    ),
+          rowItem('Outstanding Balance to Pay', _outstandingBalance, isTotal: true),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _negotiateFinalPrice,
+                  icon: const Icon(Icons.swap_horiz, size: 16),
+                  label: const Text('Bargain Final Price'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       ),

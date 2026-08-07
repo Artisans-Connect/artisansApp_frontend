@@ -4,6 +4,7 @@ import 'client_job_draft.dart';
 enum ClientBookingStatus {
   draft,
   requested,
+  awaitingPayment,
   accepted,
   inProgress,
   pendingApproval,
@@ -18,6 +19,8 @@ extension ClientBookingStatusX on ClientBookingStatus {
         return 'Draft';
       case ClientBookingStatus.requested:
         return 'Requested';
+      case ClientBookingStatus.awaitingPayment:
+        return 'Awaiting Payment';
       case ClientBookingStatus.accepted:
         return 'Accepted';
       case ClientBookingStatus.inProgress:
@@ -143,7 +146,8 @@ class ClientBooking {
 
   bool get isTrackable {
     final String raw = (backendStatus ?? '').toLowerCase();
-    return raw == 'matched' ||
+    return raw == 'awaiting_payment' ||
+        raw == 'matched' ||
         raw == 'scheduled_confirmed' ||
         raw == 'on_the_way' ||
         raw == 'arrived' ||
@@ -283,6 +287,7 @@ class ClientBooking {
     final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
     final String jobMode = (json['job_mode'] as String? ?? '').toLowerCase();
     final ClientBookingStatus status = switch (statusRaw) {
+      'awaiting_payment' => ClientBookingStatus.awaitingPayment,
       'matched' => ClientBookingStatus.accepted,
       // Worker confirmed for a future scheduled slot; activates near the time.
       'scheduled_confirmed' => ClientBookingStatus.accepted,
@@ -369,7 +374,8 @@ class ClientBooking {
       Iterable<Map<String, dynamic>> jobs) {
     for (final Map<String, dynamic> json in jobs) {
       final String statusRaw = (json['status'] as String? ?? '').toLowerCase();
-      if (statusRaw == 'matched' ||
+      if (statusRaw == 'awaiting_payment' ||
+          statusRaw == 'matched' ||
           statusRaw == 'scheduled_confirmed' ||
           statusRaw == 'on_the_way' ||
           statusRaw == 'arrived' ||

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/applications_service.dart';
+import '../../../../core/services/negotiation_service.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../core/theme/design_tokens.dart';
+import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
+import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 
 class WorkerApplicationDetailScreen extends StatefulWidget {
   const WorkerApplicationDetailScreen({
@@ -20,7 +24,9 @@ class WorkerApplicationDetailScreen extends StatefulWidget {
 
 class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailScreen> {
   final WorkersService _workersService = WorkersService();
+  final ApplicationsService _applicationsService = ApplicationsService();
   bool _isWithdrawing = false;
+  bool _isAcceptingCounter = false;
 
   Future<void> _confirmWithdraw(BuildContext context) async {
     final bool? confirmed = await showDialog<bool>(
@@ -68,6 +74,56 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
     }
   }
 
+  Future<void> _openBargainingSheet() async {
+    final String applicationId = (widget.application['id'] ?? '').toString();
+    final Map<String, dynamic> job =
+        Map<String, dynamic>.from(widget.application['job'] as Map? ?? const {});
+    final String jobId = (job['id'] ?? '').toString();
+    if (applicationId.isEmpty || jobId.isEmpty) return;
+
+    setState(() => _isAcceptingCounter = true);
+    try {
+      // 1. Fetch negotiations for this job
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(jobId);
+      
+      // 2. Find if there is a negotiation for this application
+      Negotiation? targetNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.applicationId == applicationId && n?.type == NegotiationType.quote,
+        orElse: () => null,
+      );
+
+      // 3. If not, create one
+      if (targetNeg == null) {
+        final double totalQuote = double.tryParse((widget.application['total_quote'] ?? '').toString()) ?? 0.0;
+        targetNeg = await NegotiationService.instance.createNegotiation(
+          jobId: jobId,
+          applicationId: applicationId,
+          type: 'quote',
+          initialAmount: totalQuote,
+          description: 'Job bidding initiated',
+        );
+      }
+
+      setState(() => _isAcceptingCounter = false);
+
+      if (!mounted) return;
+
+      // 4. Open the sheet
+      NegotiationChatSheet.show(
+        context,
+        negotiation: targetNeg,
+        onStatusChanged: () {
+          Navigator.of(context).pop(true);
+        },
+      );
+    } catch (e) {
+      setState(() => _isAcceptingCounter = false);
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not open bargaining.');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final Map<String, dynamic> job =
@@ -77,6 +133,12 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
     final String applicationStatus =
         (widget.application['status'] ?? 'pending').toString().toLowerCase();
     final String jobStatus = (job['status'] ?? '').toString().toLowerCase();
+    final String lastProposedBy = (widget.application['last_proposed_by'] ?? '').toString();
+    final double? counterRate = (widget.application['counter_rate'] as num?)?.toDouble();
+    final bool clientProposed = lastProposedBy == 'client';
+    final bool workerProposed = lastProposedBy == 'worker';
+    final bool canAcceptCounter = clientProposed && applicationStatus == 'pending';
+    final bool canCounter = applicationStatus == 'pending';
 
     return Scaffold(
       backgroundColor: DesignTokens.surfaceBase,
@@ -165,18 +227,112 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
               ],
             ),
           ),
-          const SizedBox(height: DesignTokens.md),
-          Text(
-            applicationStatus == 'pending'
-                ? 'The client is reviewing applications. We will update this card when a decision is made.'
-                : 'This application reflects the latest job status available.',
-            style: const TextStyle(
-              fontFamily: 'Satoshi',
-              fontSize: 13,
-              height: 1.5,
-              color: DesignTokens.textSecondary,
+
+          // Negotiation status card
+          if (counterRate != null || lastProposedBy.isNotEmpty) ...[
+            const SizedBox(height: DesignTokens.md),
+            Container(
+              padding: const EdgeInsets.all(DesignTokens.lg),
+              decoration: BoxDecoration(
+                color: clientProposed
+                    ? const Color(0xFFFFF8E1)
+                    : DesignTokens.surfaceCard,
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                border: Border.all(
+                  color: clientProposed
+                      ? const Color(0xFFFFD54F)
+                      : DesignTokens.borderSubtle,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.swap_horiz_rounded,
+                        size: 20,
+                        color: clientProposed
+                            ? const Color(0xFFFF8F00)
+                            : DesignTokens.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Negotiation',
+                        style: TextStyle(
+                          fontFamily: 'Satoshi',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: clientProposed
+                              ? const Color(0xFFFF8F00)
+                              : DesignTokens.textPrimary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  if (counterRate != null)
+                    _DetailRow(
+                      label: clientProposed ? 'Client offers' : 'You proposed',
+                      value: 'GHS ${counterRate.toStringAsFixed(2)}',
+                    ),
+                  Text(
+                    clientProposed
+                        ? 'The client has proposed a different rate. You can accept this offer or send your own counter.'
+                        : workerProposed
+                            ? 'You sent a counter-offer. Waiting for the client to respond.'
+                            : 'A negotiation is in progress.',
+                    style: const TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 13,
+                      height: 1.5,
+                      color: DesignTokens.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
+
+          const SizedBox(height: DesignTokens.md),
+          if (counterRate == null && lastProposedBy.isEmpty)
+            Text(
+              applicationStatus == 'pending'
+                  ? 'The client is reviewing applications. We will update this card when a decision is made.'
+                  : 'This application reflects the latest job status available.',
+              style: const TextStyle(
+                fontFamily: 'Satoshi',
+                fontSize: 13,
+                height: 1.5,
+                color: DesignTokens.textSecondary,
+              ),
+            ),
+
+          // Negotiate price button (always available when pending)
+          if (canCounter) ...[
+            const SizedBox(height: DesignTokens.md),
+            ElevatedButton(
+              onPressed: _openBargainingSheet,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: DesignTokens.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(DesignTokens.radiusMd),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                _isAcceptingCounter ? 'Loading...' : 'Negotiate Price',
+                style: const TextStyle(
+                  fontFamily: 'Satoshi',
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+
           if (applicationStatus == 'pending') ...[
             const SizedBox(height: DesignTokens.lg),
             ElevatedButton(

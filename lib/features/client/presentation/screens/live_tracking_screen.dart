@@ -1,4 +1,11 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/services/negotiation_service.dart';
+import '../../../../core/services/payment_service.dart';
+import '../../../../shared/models/negotiation.dart';
+import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 import 'dart:async';
+import 'payment_checkout_screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -46,6 +53,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   final JobRealtimeService _realtime = JobRealtimeService();
 
   Map<String, dynamic>? _job;
+  Map<String, dynamic>? _activeExtraCharge;
+  bool _loadingExtraCharge = true;
+  RealtimeChannel? _extraChargeChannel;
   bool _loading = true;
   bool _requestingAnotherWorker = false;
   bool _isReopeningCompletion = false;
@@ -102,6 +112,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     final String? jobId = _currentJobId;
     if (jobId != null && jobId.isNotEmpty) {
       _realtime.subscribeToJob(jobId, onUpdate: _handleJobUpdate);
+      _fetchExtraCharge(jobId);
+      _subscribeExtraCharge(jobId);
     }
   }
 
@@ -216,6 +228,148 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     };
   }
 
+  Future<void> _fetchExtraCharge(String jobId) async {
+    try {
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(jobId);
+      final Negotiation? activeNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.type == NegotiationType.extraCharge && (n?.status == NegotiationStatus.open || n?.status == NegotiationStatus.accepted || n?.status == NegotiationStatus.paid),
+        orElse: () => null,
+      );
+
+      if (mounted) {
+        setState(() {
+          _activeExtraCharge = activeNeg != null ? {
+            'id': activeNeg.id,
+            'status': activeNeg.status.name,
+            'requested_amount': activeNeg.agreedAmount ?? activeNeg.initialAmount,
+            'description': activeNeg.description,
+            'negotiation': activeNeg,
+          } : null;
+          _loadingExtraCharge = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingExtraCharge = false);
+      }
+    }
+  }
+
+  void _subscribeExtraCharge(String jobId) {
+    _extraChargeChannel = Supabase.instance.client
+        .channel('extra-charge-client-$jobId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'negotiations',
+          callback: (PostgresChangePayload payload) {
+            _fetchExtraCharge(jobId);
+          },
+        )
+        .subscribe();
+  }
+
+  Widget _buildExtraChargeWidget() {
+    if (_loadingExtraCharge || _activeExtraCharge == null) {
+      return const SizedBox.shrink();
+    }
+
+    final double amount = double.tryParse(_activeExtraCharge!['requested_amount'].toString()) ?? 0.0;
+    final String status = _activeExtraCharge!['status'].toString();
+    final String desc = _activeExtraCharge!['description']?.toString() ?? '';
+    final String jobId = _currentJobId ?? '';
+    final Negotiation negotiation = _activeExtraCharge!['negotiation'] as Negotiation;
+
+    Widget content;
+    if (status == 'open') {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: DesignTokens.accentWarm, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Extra Charge Proposal',
+                style: TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.textPrimary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Artisan proposed GHS ${amount.toStringAsFixed(2)}',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          if (desc.isNotEmpty) Text('Reason: $desc', style: const TextStyle(fontSize: 12, color: DesignTokens.textMuted)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () {
+              NegotiationChatSheet.show(
+                context,
+                negotiation: negotiation,
+                onStatusChanged: () {
+                  _fetchExtraCharge(jobId);
+                },
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: DesignTokens.primary),
+            child: const Text('Review Proposal'),
+          ),
+        ],
+      );
+    } else if (status == 'accepted') {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: [
+              const Icon(Icons.check_circle_outline_rounded, color: DesignTokens.successGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Extra Charge Approved: GHS ${amount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.successGreen),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Approved adjustments will be collected in the final completion settlement.',
+            style: TextStyle(fontSize: 12, color: DesignTokens.textMuted),
+          ),
+        ],
+      );
+    } else if (status == 'paid') {
+      content = Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: [
+              const Icon(Icons.verified_user_outlined, color: DesignTokens.successGreen, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Extra Charge Settled: GHS ${amount.toStringAsFixed(2)}',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.successGreen),
+              ),
+            ],
+          ),
+        ],
+      );
+    } else {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: DesignTokens.warmSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: DesignTokens.warmBorder),
+      ),
+      child: content,
+    );
+  }
+
   void _applyStepFromStatus(String? statusRaw) {
     if (!mounted) return;
     final int newStep = _stepForStatus(statusRaw);
@@ -229,6 +383,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   void dispose() {
     _stepPulse.dispose();
     _realtime.unsubscribe();
+    _extraChargeChannel?.unsubscribe();
     super.dispose();
   }
 
@@ -668,6 +823,57 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     }
   }
 
+  Future<void> _handleApproveAndSettlement() async {
+    final String? jobId = _currentJobId;
+    if (jobId == null || jobId.isEmpty) return;
+
+    setState(() => _loading = true);
+    try {
+      final res = await PaymentService.instance.calculateSettlement(jobId);
+      final double outstanding = double.tryParse(res['outstanding_balance']?.toString() ?? '0') ?? 0.0;
+
+      setState(() => _loading = false);
+      if (!mounted) return;
+
+      if (outstanding > 0) {
+        // Must pay outstanding balance first
+        final bool? paid = await Navigator.push<bool>(
+          context,
+          MaterialPageRoute(
+            builder: (context) => PaymentCheckoutScreen(
+              jobId: jobId,
+              amount: outstanding,
+            ),
+          ),
+        );
+        if (paid == true && mounted) {
+          unawaited(Navigator.pushNamed(
+            context,
+            AppRoutes.rateService,
+            arguments: _ratingPayload(),
+          ));
+        }
+      } else {
+        // No outstanding balance, release escrow directly
+        setState(() => _loading = true);
+        await PaymentService.instance.checkoutSettlement(jobId);
+        setState(() => _loading = false);
+        if (!mounted) return;
+        AppToast.showSuccess(context, 'Escrow funds released to artisan!');
+        unawaited(Navigator.pushNamed(
+          context,
+          AppRoutes.rateService,
+          arguments: _ratingPayload(),
+        ));
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      if (mounted) {
+        AppToast.showError(context, e, fallback: 'Could not complete settlement.');
+      }
+    }
+  }
+
   // ---------------------------------------------------------------------------
   // Build
   // ---------------------------------------------------------------------------
@@ -775,6 +981,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     const SizedBox(height: 16),
                     TrackingJobInfoCard(job: job, etaLabel: _etaLabel),
                     const SizedBox(height: 20),
+                    _buildExtraChargeWidget(),
                     if (workerId != null && jobLat != null && jobLng != null)
                       TrackingMapCard(
                         workerId: workerId,
@@ -827,16 +1034,15 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       ),
                     ],
                     const SizedBox(height: 16),
-                    if (pendingApproval) SettlementDetailsCard(job: job),
+                    if (pendingApproval) SettlementDetailsCard(
+                      job: job,
+                      onSettled: _loadJobDetails,
+                    ),
                     CompletionActions(
                       canRate: canRate,
                       pendingApproval: pendingApproval,
                       isReopeningCompletion: _isReopeningCompletion,
-                      onRate: () => Navigator.pushNamed(
-                        context,
-                        AppRoutes.rateService,
-                        arguments: _ratingPayload(),
-                      ),
+                      onRate: _handleApproveAndSettlement,
                       onReopen: _reopenCompletion,
                     ),
                     const SizedBox(height: 12),

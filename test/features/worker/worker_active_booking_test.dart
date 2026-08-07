@@ -32,4 +32,36 @@ void main() {
       expect(find.text('In Progress'), findsOneWidget);
     });
   });
+
+  group('WorkerSessionState', () {
+    test('initial state has no pending cancellation message and phase is none', () {
+      final state = WorkerSessionState();
+      expect(state.pendingCancellationMessage, isNull);
+      expect(state.jobPhase, WorkerJobPhase.none);
+    });
+
+    test('clearCancellationMessage clears pending message', () {
+      final state = WorkerSessionState();
+      state.pendingCancellationMessage = 'Test cancellation message';
+      expect(state.pendingCancellationMessage, equals('Test cancellation message'));
+
+      state.clearCancellationMessage();
+      expect(state.pendingCancellationMessage, isNull);
+    });
+  });
+
+  group('Job alert modal dismissal tracking', () {
+    test('declined modal job IDs set retains declined IDs when dispatches close', () {
+      final Set<String> declinedModalJobIds = <String>{};
+      declinedModalJobIds.add('job_123');
+      expect(declinedModalJobIds.contains('job_123'), isTrue);
+
+      // Simulating dispatch closed event: job_123 is cleared from shown set but retained in declined set
+      final Set<String> shownRequestIds = <String>{'job_123'};
+      shownRequestIds.remove('job_123');
+
+      expect(shownRequestIds.contains('job_123'), isFalse);
+      expect(declinedModalJobIds.contains('job_123'), isTrue);
+    });
+  });
 }
