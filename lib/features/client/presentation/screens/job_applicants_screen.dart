@@ -52,7 +52,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
         (status.isEmpty ||
             status == 'requested' ||
             status == 'searching' ||
-            status == 'matching');
+            status == 'matching' ||
+            status == 'awaiting_payment');
   }
 
   @override

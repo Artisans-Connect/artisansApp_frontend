@@ -47,10 +47,20 @@ class AppConstants {
     return '$portalUrl/update-password';
   }
 
-  /// Override in `.env` as `EXPRESS_API_BASE_URL` (e.g. `https://artisansapp-backend.onrender.com/api`).
-  static String get expressApiBaseUrl =>
-      _env('EXPRESS_API_BASE_URL') ??
-      'https://artisansapp-backend.onrender.com/api';
+  /// Resolves local backend for development testing across Android emulator (10.0.2.2) and Web/Desktop (localhost).
+  static String get expressApiBaseUrl {
+    final String? configured = _env('EXPRESS_API_BASE_URL');
+    if (configured != null && configured.isNotEmpty) {
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android && configured.contains('localhost')) {
+        return configured.replaceAll('localhost', '10.0.2.2');
+      }
+      return configured;
+    }
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:3000/api';
+    }
+    return 'http://localhost:3000/api';
+  }
 
   static String get verificationPortalUrl =>
       _env('VERIFICATION_PORTAL_URL') ??

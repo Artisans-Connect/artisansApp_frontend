@@ -7,6 +7,7 @@ import '../../../../core/errors/auth_failure.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/navigation/auth_navigation.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/theme/index.dart';
 import 'onboarding_screen.dart';
 import 'role_selection_screen.dart';
@@ -81,7 +82,31 @@ class _SplashScreenState extends State<SplashScreen> {
     final targetRoute = shellRouteForUser(user);
     debugPrint('[SplashScreen] Fast booting to cached user route: $targetRoute');
     await Navigator.pushReplacementNamed(context, targetRoute);
-    unawaited(AuthService.instance.getCurrentUser(forceRefresh: true));
+    
+    // Verify user profile in background and handle session invalidation cleanly
+    AuthService.instance.getCurrentUser(forceRefresh: true).then((_) {
+      debugPrint('[SplashScreen] Fast boot background verification succeeded.');
+    }).catchError((Object error) async {
+      debugPrint('[SplashScreen] Fast boot background verification failed: $error');
+      
+      // Ignore network/offline errors so the user can continue using the cached session offline
+      if (error is NetworkException || (error is AuthFailure && error.code == AuthFailureCode.network)) {
+        debugPrint('[SplashScreen] Network error during background refresh. Keeping cached session.');
+        return;
+      }
+
+      // For auth invalidations (unauthorized, suspended, profile not found, etc.), sign out and redirect
+      await AuthService.instance.signOut();
+      
+      final navigator = NotificationService.instance.navigatorKey.currentState;
+      if (navigator != null) {
+        if (error is AuthFailure && error.code == AuthFailureCode.profileNotFound) {
+          navigator.pushNamedAndRemoveUntil(RoleSelectionScreen.routeName, (_) => false);
+        } else {
+          navigator.pushNamedAndRemoveUntil(SignInScreen.routeName, (_) => false);
+        }
+      }
+    });
     return true;
   }
 

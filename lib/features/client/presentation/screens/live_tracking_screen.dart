@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/services/negotiation_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../shared/models/negotiation.dart';

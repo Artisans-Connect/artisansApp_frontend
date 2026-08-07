@@ -22,8 +22,6 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
   double _escrowHeld = 0.0;
   double _grossAmount = 0.0;
   double _outstandingBalance = 0.0;
-  double _platformFee = 0.0;
-  double _workerPayout = 0.0;
 
   @override
   void initState() {
@@ -42,8 +40,6 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
         _escrowHeld = double.tryParse(res['escrow_held']?.toString() ?? '0') ?? 0.0;
         _grossAmount = double.tryParse(res['gross_amount']?.toString() ?? '0') ?? 0.0;
         _outstandingBalance = double.tryParse(res['outstanding_balance']?.toString() ?? '0') ?? 0.0;
-        _platformFee = double.tryParse(res['platform_fee']?.toString() ?? '0') ?? 0.0;
-        _workerPayout = double.tryParse(res['worker_payout']?.toString() ?? '0') ?? 0.0;
         _loading = false;
       });
     } catch (e) {

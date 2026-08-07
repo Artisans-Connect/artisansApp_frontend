@@ -333,7 +333,7 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
             ),
           ],
 
-          if (applicationStatus == 'pending') ...[
+          if (applicationStatus == 'pending' || (applicationStatus == 'accepted' && jobStatus == 'awaiting_payment')) ...[
             const SizedBox(height: DesignTokens.lg),
             ElevatedButton(
               onPressed: _isWithdrawing ? null : () => _confirmWithdraw(context),

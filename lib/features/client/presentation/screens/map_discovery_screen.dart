@@ -13,7 +13,8 @@ import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../../../../shared/widgets/mapbox_client_map.dart';
 import '../../services/explore_service.dart';
-
+import '../widgets/artisan_detail_sheet.dart';
+import '../widgets/map_search_bar.dart';
 class MapDiscoveryScreen extends StatefulWidget {
   const MapDiscoveryScreen({Key? key}) : super(key: key);
 
@@ -246,156 +247,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     }
   }
 
-  Widget _buildMapContextPill() {
-    String categoryLabel = 'All services';
-    if (_selectedCategoryId != null) {
-      for (final category in _categories) {
-        if (category['id'].toString() == _selectedCategoryId) {
-          categoryLabel = category['name'].toString();
-          break;
-        }
-      }
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.md,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        border: Border.all(color: AppColors.warmBorder),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.warmShadow,
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(PhosphorIcons.crosshair, color: AppColors.primary, size: 18),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              _locationUnavailable
-                  ? 'Enable location to find nearby artisans'
-                  : '$categoryLabel within ${_radiusKm.toStringAsFixed(0)} km',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildMapOverlayControls() {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.sm),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXLarge),
-        border: Border.all(color: AppColors.warmBorder),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.warmShadow,
-            blurRadius: 24,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryTint08,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  PhosphorIcons.magnifyingGlass,
-                  size: 17,
-                  color: AppColors.primary,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: Text(
-                  _selectedCategoryId == null
-                      ? 'Search services nearby'
-                      : _selectedCategoryName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.labelMedium.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          SizedBox(
-            height: 34,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                _MapControlChip(
-                  label: 'All',
-                  icon: Icons.more_horiz_rounded,
-                  selected: _selectedCategoryId == null,
-                  onTap: () => _applyCategory(null),
-                ),
-                ..._categories.map(
-                  (category) {
-                    final id = category['id'].toString();
-                    return _MapControlChip(
-                      label: category['name'].toString(),
-                      icon: TradeTypeX.fromString(
-                        category['name'].toString(),
-                      ).icon,
-                      selected: _selectedCategoryId == id,
-                      onTap: () => _applyCategory(id),
-                    );
-                  },
-                ),
-                if (_loadingCategories)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                    child: Center(
-                      child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Wrap(
-            spacing: AppSpacing.xs,
-            children: <double>[5, 10, 15].map((radius) {
-              return _MapControlChip(
-                label: '${radius.toStringAsFixed(0)} km',
-                icon: PhosphorIcons.crosshair,
-                selected: _radiusKm == radius,
-                dense: true,
-                onTap: () => _applyRadius(radius),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
 
   String get _selectedCategoryName {
     if (_selectedCategoryId == null) return 'All services';
@@ -444,178 +296,7 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
     );
   }
 
-  Widget _buildSelectedWorkerPreview() {
-    final worker = _selectedWorker;
-    if (worker == null) return const SizedBox.shrink();
-    final double? rating = worker['rating'] as double?;
-    final bool isVerified = worker['verified'] == true;
-    final bool isFresh = worker['hasFreshLocation'] == true;
-    final bool hasMapLocation = worker['hasMapLocation'] == true;
-    final TradeType tradeType =
-        worker['tradeType'] as TradeType? ?? TradeType.other;
-    final status = _statusFor(worker);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.md),
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.35)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              ArtisanLogoAvatar(
-                imageUrl: worker['imageUrl'] as String?,
-                size: 54,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      worker['name'].toString(),
-                      style: AppTypography.labelLarge,
-                    ),
-                    const SizedBox(height: 3),
-                    Row(
-                      children: [
-                        Icon(
-                          tradeType.icon,
-                          size: 14,
-                          color: AppColors.primary,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: Text(
-                            worker['profession'].toString(),
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              _TrustBadge(
-                label: status.label,
-                icon: status.icon,
-                color: status.color,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              _TrustBadge(
-                label: worker['distance'].toString(),
-                icon: PhosphorIcons.mapPin,
-                color: AppColors.primary,
-              ),
-              if (rating != null)
-                _TrustBadge(
-                  label: rating.toStringAsFixed(1),
-                  icon: PhosphorIcons.star,
-                  color: AppColors.accentGold,
-                ),
-              if (isVerified)
-                _TrustBadge(
-                  label: 'Verified',
-                  icon: PhosphorIcons.sealCheck,
-                  color: AppColors.success,
-                ),
-              _TrustBadge(
-                label: !hasMapLocation
-                    ? 'Location not shared'
-                    : isFresh
-                        ? 'Fresh location'
-                        : 'Stale location',
-                icon: PhosphorIcons.mapPin,
-                color: hasMapLocation && isFresh
-                    ? AppColors.success
-                    : AppColors.textSecondary,
-              ),
-            ],
-          ),
-          if (!hasMapLocation) ...[
-            const SizedBox(height: AppSpacing.md),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                color: AppColors.outlineVariant.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    PhosphorIcons.wifiSlash,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: Text(
-                      'This artisan is offline and not sharing live location. '
-                      'Open their profile to view details and reach out.',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              if (hasMapLocation) ...[
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: () => _openWorkerProfile(worker),
-                    icon: Icon(PhosphorIcons.user),
-                    label: const Text('Profile'),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => _requestWorker(worker),
-                    icon: Icon(PhosphorIcons.paperPlaneTilt),
-                    label: const Text('Request'),
-                  ),
-                ),
-              ] else
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => _openWorkerProfile(worker),
-                    icon: Icon(PhosphorIcons.user),
-                    label: const Text('View profile & contact'),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildLocationUnavailableState() {
     return Container(
@@ -800,10 +481,23 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
             child: SafeArea(
               child: Column(
                 children: [
-                  _buildMapContextPill(),
+                  MapContextPill(
+                    selectedCategoryId: _selectedCategoryId,
+                    categories: _categories,
+                    locationUnavailable: _locationUnavailable,
+                    radiusKm: _radiusKm,
+                  ),
                   if (!_locationUnavailable) ...[
                     const SizedBox(height: AppSpacing.sm),
-                    _buildMapOverlayControls(),
+                    MapOverlayControls(
+                      selectedCategoryId: _selectedCategoryId,
+                      selectedCategoryName: _selectedCategoryName,
+                      categories: _categories,
+                      loadingCategories: _loadingCategories,
+                      radiusKm: _radiusKm,
+                      onCategorySelected: _applyCategory,
+                      onRadiusSelected: _applyRadius,
+                    ),
                   ],
                 ],
               ),
@@ -861,7 +555,15 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
                           style: AppTypography.displaySmall,
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        if (!_locationUnavailable) _buildSelectedWorkerPreview(),
+                        if (!_locationUnavailable && _selectedWorker != null)
+                          SelectedWorkerPreview(
+                            worker: _selectedWorker!,
+                            statusLabel: _statusFor(_selectedWorker!).label,
+                            statusColor: _statusFor(_selectedWorker!).color,
+                            statusIcon: _statusFor(_selectedWorker!).icon,
+                            onOpenProfile: () => _openWorkerProfile(_selectedWorker!),
+                            onRequestWorker: () => _requestWorker(_selectedWorker!),
+                          ),
 
                         // Workers List
                         if (_isLoading)
@@ -1071,135 +773,3 @@ class _MapDiscoveryScreenState extends State<MapDiscoveryScreen> {
   }
 }
 
-class _MapControlChip extends StatelessWidget {
-  const _MapControlChip({
-    required this.label,
-    required this.icon,
-    required this.selected,
-    required this.onTap,
-    this.dense = false,
-  });
-
-  final String label;
-  final IconData icon;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool dense;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(right: dense ? AppSpacing.xs : AppSpacing.sm),
-      child: ChoiceChip(
-        avatar: Icon(
-          icon,
-          size: 15,
-          color: selected ? AppColors.onPrimary : AppColors.textSecondary,
-        ),
-        label: Text(label),
-        selected: selected,
-        onSelected: (_) => onTap(),
-        labelStyle: AppTypography.labelSmall.copyWith(
-          color: selected ? AppColors.onPrimary : AppColors.textSecondary,
-        ),
-        selectedColor: AppColors.primary,
-        backgroundColor: AppColors.surfaceContainerLowest,
-        side: BorderSide(
-          color: selected
-              ? AppColors.primary
-              : AppColors.borderSubtle,
-        ),
-        visualDensity: dense ? VisualDensity.compact : VisualDensity.standard,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
-}
-
-enum TradeType { electrician, plumber, carpenter, mason, painter, welder, other }
-
-extension TradeTypeX on TradeType {
-  String get label {
-    switch (this) {
-      case TradeType.electrician:
-        return 'Electrician';
-      case TradeType.plumber:
-        return 'Plumber';
-      case TradeType.carpenter:
-        return 'Carpenter';
-      case TradeType.mason:
-        return 'Mason';
-      case TradeType.painter:
-        return 'Painter';
-      case TradeType.welder:
-        return 'Welder';
-      case TradeType.other:
-        return 'Other';
-    }
-  }
-
-  IconData get icon {
-    switch (this) {
-      case TradeType.electrician:
-        return Icons.bolt_rounded;
-      case TradeType.plumber:
-        return Icons.water_drop_rounded;
-      case TradeType.carpenter:
-        return Icons.handyman_rounded;
-      case TradeType.mason:
-        return Icons.foundation_rounded;
-      case TradeType.painter:
-        return Icons.format_paint_rounded;
-      case TradeType.welder:
-        return Icons.local_fire_department_rounded;
-      case TradeType.other:
-        return Icons.more_horiz_rounded;
-    }
-  }
-
-  static TradeType fromString(String raw) {
-    final String value = raw.toLowerCase();
-    if (value.contains('electric')) return TradeType.electrician;
-    if (value.contains('plumb')) return TradeType.plumber;
-    if (value.contains('carpent')) return TradeType.carpenter;
-    if (value.contains('mason')) return TradeType.mason;
-    if (value.contains('paint')) return TradeType.painter;
-    if (value.contains('weld')) return TradeType.welder;
-    return TradeType.other;
-  }
-}
-
-class _TrustBadge extends StatelessWidget {
-  const _TrustBadge({
-    required this.label,
-    required this.icon,
-    required this.color,
-  });
-
-  final String label;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: color.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppTypography.labelSmall.copyWith(color: color),
-          ),
-        ],
-      ),
-    );
-  }
-}

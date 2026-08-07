@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../core/session/app_user_session.dart';
 import '../../core/services/negotiation_service.dart';
+import '../../core/services/negotiation_realtime_service.dart';
 import '../../core/theme/index.dart';
 import '../models/negotiation.dart';
 import 'app_input.dart';
@@ -57,14 +58,23 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
   bool _isLoading = false;
   bool _isCountering = false;
 
+  final NegotiationRealtimeService _realtimeService = NegotiationRealtimeService();
+
   @override
   void initState() {
     super.initState();
     _currentNegotiation = widget.negotiation;
+    _realtimeService.subscribeToNegotiation(
+      _currentNegotiation.id,
+      onUpdate: () {
+        _refreshSilent();
+      },
+    );
   }
 
   @override
   void dispose() {
+    _realtimeService.unsubscribe();
     _amountController.dispose();
     _noteController.dispose();
     super.dispose();
@@ -82,6 +92,16 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
       setState(() => _isLoading = false);
       if (mounted) AppToast.showError(context, e, fallback: 'Failed to refresh.');
     }
+  }
+
+  Future<void> _refreshSilent() async {
+    try {
+      final Negotiation updated = await NegotiationService.instance.getNegotiation(_currentNegotiation.id);
+      if (!mounted) return;
+      setState(() {
+        _currentNegotiation = updated;
+      });
+    } catch (_) {}
   }
 
   Future<void> _accept() async {
