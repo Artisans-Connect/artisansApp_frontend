@@ -106,7 +106,17 @@ class _WorkerActiveInProgressScreenState
           builder: (BuildContext context, StateSetter setModalState) {
             return AlertDialog(
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: const Text('Request Extra Charge'),
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Request Additional Extra Charge', style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 18, fontWeight: FontWeight.bold, color: DesignTokens.textPrimary)),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Enter an additional amount needed for extra materials or expanded scope. This will be added on top of your original job escrow upon client approval.',
+                    style: TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 12, color: DesignTokens.textMuted),
+                  ),
+                ],
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: <Widget>[
@@ -114,17 +124,17 @@ class _WorkerActiveInProgressScreenState
                     controller: amountController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: const InputDecoration(
-                      labelText: 'Amount (GHS)',
+                      labelText: 'Additional Amount (GHS)',
                       hintText: '0.00',
-                      prefixText: 'GHS ',
+                      prefixText: '+ GHS ',
                     ),
                   ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: descController,
                     decoration: const InputDecoration(
-                      labelText: 'Description / Reason',
-                      hintText: 'e.g. Extra plumbing materials',
+                      labelText: 'Reason for Extra Charge',
+                      hintText: 'e.g. Bought extra 5m copper cable and junction box',
                     ),
                   ),
                 ],
@@ -135,6 +145,12 @@ class _WorkerActiveInProgressScreenState
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: DesignTokens.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                   onPressed: submitting
                       ? null
                       : () async {
@@ -165,9 +181,17 @@ class _WorkerActiveInProgressScreenState
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                         )
-                      : const Text('Submit'),
+                      : const Text(
+                          'Submit Extra Charge',
+                          style: TextStyle(
+                            fontFamily: AppTypography.fontFamily,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
                 ),
               ],
             );

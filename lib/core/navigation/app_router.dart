@@ -20,6 +20,7 @@ import '../theme/app_typography.dart';
 import 'app_routes.dart';
 import 'auth_navigation.dart';
 import '../../shared/presentation/screens/notifications_screen.dart';
+import '../../features/wallet/presentation/screens/wallet_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -172,6 +173,12 @@ class AppRouter {
       case AppRoutes.notifications:
         return MaterialPageRoute(
           builder: (_) => const NotificationsScreen(),
+        );
+
+      case AppRoutes.wallet:
+        final bool isWorker = settings.arguments == true;
+        return MaterialPageRoute(
+          builder: (_) => WalletScreen(isWorker: isWorker),
         );
 
       default:

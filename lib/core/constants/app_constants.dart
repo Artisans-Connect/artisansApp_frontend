@@ -62,9 +62,14 @@ class AppConstants {
     return 'http://localhost:3000/api';
   }
 
-  static String get verificationPortalUrl =>
-      _env('VERIFICATION_PORTAL_URL') ??
-      'https://craft-match-verification-portal.vercel.app/';
+  /// Resolves local verification portal for development testing across Android emulator (10.0.2.2) and Web/Desktop (localhost).
+  static String get verificationPortalUrl {
+    final String configured = _env('VERIFICATION_PORTAL_URL') ?? 'http://localhost:5173/';
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android && configured.contains('localhost')) {
+      return configured.replaceAll('localhost', '10.0.2.2');
+    }
+    return configured;
+  }
 
   static const String avatarsBucket = 'avatars';
   static const String jobPhotosBucket = 'job-photos';

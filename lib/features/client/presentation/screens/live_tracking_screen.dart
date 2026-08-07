@@ -1003,14 +1003,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     ArtisanDetailCard(job: job),
                     const SizedBox(height: 20),
                     _buildActionRow(job, jobUuid, workerId),
-                    const SizedBox(height: 12),
-                    CancelSection(
-                      status: status,
-                      isCancelling: _isCancelling,
-                      isRequestingTermination: _isRequestingTermination,
-                      onCancelJob: _handleCancelJob,
-                      onRequestTermination: _handleRequestTermination,
-                    ),
+                    if (status != 'pending_client_approval' && job['work_ended_at'] == null)
+                      CancelSection(
+                        status: status,
+                        isCancelling: _isCancelling,
+                        isRequestingTermination: _isRequestingTermination,
+                        onCancelJob: _handleCancelJob,
+                        onRequestTermination: _handleRequestTermination,
+                      ),
                     if (status == 'in_progress' &&
                         job['work_ended_at'] == null) ...<Widget>[
                       const SizedBox(height: 12),
