@@ -12,6 +12,7 @@ import '../state/worker_session_state.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/skeleton_box.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/error_state_view.dart';
 
 import 'job_request_detail_screen.dart';
@@ -368,22 +369,9 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
   }
  
   PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      automaticallyImplyLeading: false,
-      backgroundColor: DesignTokens.surfaceBase,
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      centerTitle: true,
-      title: const Text(
-        'Job Requests',
-        style: TextStyle(
-          fontFamily: 'Satoshi',
-          fontSize: 17,
-          fontWeight: FontWeight.w800,
-          color: DesignTokens.primary,
-          letterSpacing: 0.01,
-        ),
-      ),
+    return CustomAppBar(
+      title: 'Job Requests',
+      showBackButton: false,
       actions: <Widget>[
         GestureDetector(
           onTap: () async {

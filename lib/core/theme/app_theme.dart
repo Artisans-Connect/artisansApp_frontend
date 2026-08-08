@@ -38,6 +38,21 @@ ThemeData buildAppTheme() {
       surface: AppColors.surface,
       brightness: Brightness.light,
     ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.surface,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      centerTitle: false,
+      iconTheme: IconThemeData(color: AppColors.textPrimary),
+      actionsIconTheme: IconThemeData(color: AppColors.primary),
+      titleTextStyle: TextStyle(
+        fontFamily: AppTypography.displayFontFamily,
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surface,

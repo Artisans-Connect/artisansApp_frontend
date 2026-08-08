@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import '../../../../shared/presentation/screens/user_profile_screen.dart';
 import '../state/worker_session_state.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../core/services/payment_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
@@ -191,17 +191,9 @@ class _WorkerEarningsScreenState extends State<WorkerEarningsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: Navigator.of(context).canPop()
-            ? const CustomBackButton()
-            : null,
-        title: Text(
-          'Earnings',
-          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
-        ),
-        centerTitle: true,
+      appBar: CustomAppBar(
+        title: 'Earnings',
+        showBackButton: Navigator.of(context).canPop(),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: AppSpacing.md),

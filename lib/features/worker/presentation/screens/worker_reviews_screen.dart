@@ -5,7 +5,7 @@ import '../../../../core/services/reviews_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/design_tokens.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../client/presentation/widgets/artisan_profile/review_components.dart';
 import '../../../client/presentation/widgets/artisan_profile/profile_atoms.dart';
 
@@ -87,17 +87,9 @@ class _WorkerReviewsScreenState extends State<WorkerReviewsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: Navigator.of(context).canPop()
-            ? const CustomBackButton()
-            : null,
-        title: Text(
-          'Customer Reviews',
-          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
-        ),
-        centerTitle: true,
+      appBar: CustomAppBar(
+        title: 'Customer Reviews',
+        showBackButton: Navigator.of(context).canPop(),
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

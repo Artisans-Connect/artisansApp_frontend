@@ -3,6 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../domain/models/report_model.dart';
 import '../../services/reports_service.dart';
 
@@ -68,9 +69,8 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('My Safety Reports'),
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: 'My Safety Reports',
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

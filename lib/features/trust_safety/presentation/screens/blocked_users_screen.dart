@@ -5,6 +5,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../services/reports_service.dart';
 
+import '../../../../shared/widgets/custom_app_bar.dart';
+
 class BlockedUsersScreen extends StatefulWidget {
   const BlockedUsersScreen({super.key});
 
@@ -88,9 +90,8 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Blocked Accounts'),
-        elevation: 0,
+      appBar: const CustomAppBar(
+        title: 'Blocked Accounts',
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())

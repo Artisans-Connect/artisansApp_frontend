@@ -6,7 +6,7 @@ import '../../../../core/theme/design_tokens.dart';
 import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/category_icon_badge.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
+import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 
 class WorkerApplicationDetailScreen extends StatefulWidget {
@@ -139,11 +139,8 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
 
     return Scaffold(
       backgroundColor: DesignTokens.surfaceBase,
-      appBar: AppBar(
-        backgroundColor: DesignTokens.surfaceBase,
-        elevation: 0,
-        leading: const CustomBackButton(),
-        title: const Text('Application details'),
+      appBar: const CustomAppBar(
+        title: 'Application details',
       ),
       body: ListView(
         padding: const EdgeInsets.all(DesignTokens.gutter),
