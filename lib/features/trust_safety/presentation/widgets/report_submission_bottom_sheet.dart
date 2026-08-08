@@ -244,7 +244,7 @@ class _ReportSubmissionBottomSheetState
     final charLength = _descriptionController.text.trim().length;
 
     return Container(
-      maxHeight: mediaQuery.size.height * 0.9,
+      constraints: BoxConstraints(maxHeight: mediaQuery.size.height * 0.9),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -409,7 +409,7 @@ class _ReportSubmissionBottomSheetState
               Text(
                 _selectedCategory!.description,
                 style: AppTypography.caption
-                    .copyWith(color: AppColors.textSecondary, italic: true),
+                    .copyWith(color: AppColors.textSecondary, fontStyle: FontStyle.italic),
               ),
             ],
 
@@ -512,7 +512,7 @@ class _ReportSubmissionBottomSheetState
                             child: Container(
                               padding: const EdgeInsets.all(2),
                               decoration: const BoxDecoration(
-                                color: Colors.black70,
+                                color: Color(0xB3000000),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.close,

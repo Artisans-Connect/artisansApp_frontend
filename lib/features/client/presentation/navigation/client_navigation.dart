@@ -136,6 +136,10 @@ class ClientNavigation {
     popToShellAndSelectTab(context, ClientNavTab.bookings);
   }
 
+  static void goToBookingHistory(BuildContext context) {
+    goToBookingsTab(context);
+  }
+
   static void replaceWithBookingsTab(BuildContext context) {
     Navigator.pushNamedAndRemoveUntil(
       context,

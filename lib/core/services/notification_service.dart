@@ -207,15 +207,21 @@ class NotificationService {
       return;
     }
 
-    unawaited(AuthService.instance
-        .updateActiveMode('worker')
-        .catchError((_) => AppUserSession.instance.updateActiveMode('worker')));
+    unawaited(_switchToWorkerMode());
 
     navigator.pushNamedAndRemoveUntil(
       WorkerShell.routeName,
       (_) => false,
       arguments: <String, dynamic>{'openJobRequestId': jobId},
     );
+  }
+
+  Future<void> _switchToWorkerMode() async {
+    try {
+      await AuthService.instance.updateActiveMode('worker');
+    } catch (_) {
+      AppUserSession.instance.updateActiveMode('worker');
+    }
   }
 
   void _openClientJob(String jobId) {
@@ -272,9 +278,7 @@ class NotificationService {
       return;
     }
 
-    unawaited(AuthService.instance
-        .updateActiveMode('worker')
-        .catchError((_) => AppUserSession.instance.updateActiveMode('worker')));
+    unawaited(_switchToWorkerMode());
 
     navigator.pushNamedAndRemoveUntil(
       WorkerShell.routeName,

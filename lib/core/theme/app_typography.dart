@@ -97,6 +97,39 @@ class AppTypography {
     color: AppColors.textSecondary,
   );
 
+  // Additional Styles
+  static const TextStyle titleMedium = TextStyle(
+    fontFamily: displayFontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+    height: 1.3,
+  );
+
+  static const TextStyle titleSmall = TextStyle(
+    fontFamily: displayFontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w700,
+    color: AppColors.textPrimary,
+    height: 1.3,
+  );
+
+  static const TextStyle caption = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 12,
+    fontWeight: FontWeight.w400,
+    color: AppColors.textSecondary,
+    height: 1.4,
+  );
+
+  static const TextStyle button = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 14,
+    fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
+    height: 1.0,
+  );
+
   // Special Styles
   static const TextStyle priceTag = TextStyle(
     fontFamily: displayFontFamily,

@@ -15,7 +15,6 @@ import '../../../../shared/widgets/secondary_button.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
-import '../client_shell.dart';
 
 class FindingArtisanScreen extends StatefulWidget {
   const FindingArtisanScreen({

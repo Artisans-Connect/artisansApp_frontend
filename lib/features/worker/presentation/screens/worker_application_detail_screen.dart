@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/services/applications_service.dart';
 import '../../../../core/services/negotiation_service.dart';
 import '../../../../core/services/workers_service.dart';
 import '../../../../core/theme/design_tokens.dart';
@@ -24,7 +23,6 @@ class WorkerApplicationDetailScreen extends StatefulWidget {
 
 class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailScreen> {
   final WorkersService _workersService = WorkersService();
-  final ApplicationsService _applicationsService = ApplicationsService();
   bool _isWithdrawing = false;
   bool _isAcceptingCounter = false;
 
@@ -137,7 +135,6 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
     final double? counterRate = (widget.application['counter_rate'] as num?)?.toDouble();
     final bool clientProposed = lastProposedBy == 'client';
     final bool workerProposed = lastProposedBy == 'worker';
-    final bool canAcceptCounter = clientProposed && applicationStatus == 'pending';
     final bool canCounter = applicationStatus == 'pending';
 
     return Scaffold(

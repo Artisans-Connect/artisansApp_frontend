@@ -12,6 +12,7 @@ import '../widgets/artisan_profile/review_components.dart';
 import '../widgets/artisan_profile/gallery_components.dart';
 import '../../../../core/services/profile_service.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../widgets/artisan_profile/profile_tab_bar.dart';
 import '../../../trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
 import '../../../trust_safety/services/reports_service.dart';
 

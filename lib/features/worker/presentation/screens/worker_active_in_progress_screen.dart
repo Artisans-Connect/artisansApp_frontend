@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/negotiation_service.dart';
-import '../../../../core/services/payment_service.dart';
 import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 import 'dart:async';

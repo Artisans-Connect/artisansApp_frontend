@@ -63,6 +63,7 @@ class AppColors {
   static const Color warmShadow = Color(0x1F2C2418);
 
   // Background
+  static const Color border = Color(0xFFE8D5CB);
   static const Color background = Color(0xFFFFF8F0);
   static const Color onBackground = Color(0xFF2C2418);
 }

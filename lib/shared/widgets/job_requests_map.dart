@@ -227,18 +227,6 @@ class _JobRequestsMapPreviewState extends State<JobRequestsMapPreview> {
     return markers;
   }
 
-  void _openExpandedMap() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => JobRequestsMapScreen(
-          jobs: widget.jobs,
-          onOpenJob: widget.onOpenJob,
-          initialWorkerPosition: _workerPosition,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final jobs = _jobsWithLocation;
@@ -521,43 +509,6 @@ class _JobRequestsMapScreenState extends State<JobRequestsMapScreen> {
       myLocationButtonEnabled: true,
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
-    );
-  }
-}
-
-class _MapHeader extends StatelessWidget {
-  const _MapHeader({
-    required this.title,
-    required this.actionLabel,
-    required this.onAction,
-  });
-
-  final String title;
-  final String actionLabel;
-  final VoidCallback onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.94),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(title, style: AppTypography.labelMedium),
-            ),
-            TextButton(
-              onPressed: onAction,
-              child: Text(actionLabel),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
