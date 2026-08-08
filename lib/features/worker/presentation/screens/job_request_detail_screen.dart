@@ -20,10 +20,12 @@ class JobRequestDetailScreen extends StatefulWidget {
     required this.job,
     required this.onAcceptRequest,
     this.onAcceptResponse,
+    this.onDeclineRequest,
   });
   final WorkerJob job;
   final ValueChanged<WorkerJob> onAcceptRequest;
   final ValueChanged<Map<String, dynamic>>? onAcceptResponse;
+  final VoidCallback? onDeclineRequest;
   @override
   State<JobRequestDetailScreen> createState() =>
       _JobRequestDetailScreenState();
@@ -81,6 +83,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
     await HapticFeedback.lightImpact();
     try {
       await _workersService.declineJob(widget.job.id);
+      widget.onDeclineRequest?.call();
     } catch (e) {
       if (mounted) {
         AppToast.showError(context, e, fallback: 'Could not decline request.');
@@ -332,8 +335,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     child: GradientButton(
                       label: 'Apply for Job',
                       isLoading: _isApplying,
-                      enabled: !_applyLocked && !_isApplying,
-                      onPressed: _applyLocked ? null : _onApply,
+                      onPressed: _applyLocked || _isApplying ? null : _onApply,
                     ),
                   ),
                 ],

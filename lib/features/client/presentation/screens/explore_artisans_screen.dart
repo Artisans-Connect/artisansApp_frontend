@@ -7,11 +7,12 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/filter_chip.dart';
 import '../../../../shared/widgets/search_bar.dart';
-import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../navigation/client_navigation.dart';
 import '../../services/explore_service.dart';
+import '../widgets/explore/artisan_list_item.dart';
+import '../widgets/explore/explore_empty_state.dart';
+import '../widgets/explore/explore_filter_bar.dart';
 import '../../../../core/services/smart_search_service.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
@@ -418,7 +419,7 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
                 },
               ),
               const SizedBox(height: AppSpacing.md),
-              _ExploreFilterBar(
+              ExploreFilterBar(
                 selectedCategory: _selectedCategory,
                 selectedDistance: _selectedDistance,
                 selectedRating: _selectedRating,
@@ -539,145 +540,22 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
               if (!_isLoading)
                 const SizedBox(height: AppSpacing.md),
               if (!_isLoading && artisans.isEmpty)
-                _ExploreEmptyState(
+                ExploreEmptyState(
                   hasCategory: _selectedCategory.isNotEmpty,
                   onClearFilters: _clearFilters,
                   onShowAll: _showAllArtisans,
                 ),
               if (!_isLoading)
                 ...artisans.map((Map<String, dynamic> artisan) {
-                  final String name = artisan['name'] as String;
                   final String workerId = (artisan['id'] ?? artisan['userId'] ?? '').toString();
                   final bool openingChat = _openingChatWorkerIds.contains(workerId);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.surfaceContainerLowest,
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusLarge),
-                      border: Border.all(color: AppColors.borderSubtle),
-                    ),
-                    child: Row(
-                      children: <Widget>[
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              AppRoutes.artisanProfile,
-                              arguments: artisan,
-                            );
-                          },
-                          child: SizedBox(
-                            width: 100,
-                            height: 100,
-                            child: ArtisanLogoPanel(
-                              imageUrl: artisan['imageUrl'] as String?,
-                              height: 100,
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.artisanProfile,
-                                arguments: artisan,
-                              );
-                            },
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppSpacing.md),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    name,
-                                    style: AppTypography.labelLarge,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  Text(
-                                    (artisan['profession'] ?? 'Professional').toString(),
-                                    style: AppTypography.bodySmall,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Wrap(
-                                    spacing: AppSpacing.xs,
-                                    runSpacing: AppSpacing.xs,
-                                    children: <Widget>[
-                                      if (artisan['isVerified'] == true)
-                                        _MiniBadge(
-                                          icon: PhosphorIcons.sealCheck,
-                                          label: 'Verified',
-                                        ),
-                                      _MiniBadge(
-                                        icon: artisan['isAvailable'] == true
-                                            ? PhosphorIcons.circle
-                                            : PhosphorIcons.clock,
-                                        label: artisan['isAvailable'] == true
-                                            ? 'Available'
-                                            : 'Offline',
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSpacing.xs),
-                                  Row(
-                                    children: <Widget>[
-                                      Icon(
-                                        PhosphorIcons.star,
-                                        size: 14,
-                                        color: Color(0xFFFFC107),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${artisan['rating']}',
-                                        style: AppTypography.labelMedium,
-                                      ),
-                                      const Spacer(),
-                                      Text(
-                                        (artisan['distance'] ?? '0 km').toString(),
-                                        style: AppTypography.bodySmall
-                                            .copyWith(
-                                          color: AppColors.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            IconButton(
-                              tooltip: 'Message',
-                              onPressed: openingChat ? null : () => _openChat(artisan),
-                              icon: openingChat
-                                  ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(strokeWidth: 2),
-                                    )
-                                  : Icon(
-                                      PhosphorIcons.chatCircle,
-                                      color: AppColors.primary,
-                                      size: 22,
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
+                  return ArtisanListItem(
+                    artisan: artisan,
+                    openingChat: openingChat,
+                    onOpenChat: () => _openChat(artisan),
+                  );
+                }),
+              ],
           ),
         ),
       ),
@@ -686,188 +564,4 @@ class _ExploreArtisansScreenState extends State<ExploreArtisansScreen> {
   }
 }
 
-class _ExploreFilterBar extends StatelessWidget {
-  const _ExploreFilterBar({
-    required this.selectedCategory,
-    required this.selectedDistance,
-    required this.selectedRating,
-    required this.onClearCategory,
-    required this.onDistanceSelected,
-    required this.onRatingSelected,
-    required this.onClearFilters,
-    required this.onShowAll,
-  });
 
-  final String selectedCategory;
-  final String selectedDistance;
-  final String selectedRating;
-  final VoidCallback onClearCategory;
-  final ValueChanged<String> onDistanceSelected;
-  final ValueChanged<String> onRatingSelected;
-  final VoidCallback onClearFilters;
-  final VoidCallback onShowAll;
-
-  bool get _hasFilters =>
-      selectedCategory.isNotEmpty ||
-      selectedDistance.isNotEmpty ||
-      selectedRating.isNotEmpty;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: <Widget>[
-        Row(
-          children: <Widget>[
-            Expanded(
-              child: Text(
-                'Refine results',
-                style: AppTypography.labelLarge,
-              ),
-            ),
-            if (_hasFilters)
-              TextButton.icon(
-                onPressed: onClearFilters,
-                icon: Icon(PhosphorIcons.x, size: 16),
-                label: const Text('Clear'),
-              ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Wrap(
-          spacing: AppSpacing.sm,
-          runSpacing: AppSpacing.sm,
-          children: <Widget>[
-            if (selectedCategory.isNotEmpty)
-              AppFilterChip(
-                label: selectedCategory,
-                isSelected: true,
-                icon: PhosphorIcons.funnel,
-                onTap: onClearCategory,
-              )
-            else
-              AppFilterChip(
-                label: 'All services',
-                isSelected: true,
-                icon: PhosphorIcons.squaresFour,
-                onTap: onShowAll,
-              ),
-            ...<String>['Nearby', '< 5 km', '< 10 km', '< 30 km', '< 50 km']
-                .map(
-              (String distance) => AppFilterChip(
-                label: distance,
-                isSelected: selectedDistance == distance,
-                icon: PhosphorIcons.mapPin,
-                onTap: () => onDistanceSelected(distance),
-              ),
-            ),
-            ...<String>['4.5+', '4.7+', '4.9+'].map(
-              (String rating) => AppFilterChip(
-                label: rating,
-                isSelected: selectedRating == rating,
-                icon: PhosphorIcons.star,
-                onTap: () => onRatingSelected(rating),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _ExploreEmptyState extends StatelessWidget {
-  const _ExploreEmptyState({
-    required this.hasCategory,
-    required this.onClearFilters,
-    required this.onShowAll,
-  });
-
-  final bool hasCategory;
-  final VoidCallback onClearFilters;
-  final VoidCallback onShowAll;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLarge),
-        border: Border.all(color: AppColors.borderSubtle),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Icon(PhosphorIcons.magnifyingGlass, color: AppColors.textSecondary),
-          const SizedBox(height: AppSpacing.sm),
-          Text('No matching artisans yet', style: AppTypography.labelLarge),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            hasCategory
-                ? 'Try clearing filters or browsing all artisans while more workers add this service.'
-                : 'Try clearing filters or refreshing the list.',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: <Widget>[
-              OutlinedButton.icon(
-                onPressed: onClearFilters,
-                icon: Icon(PhosphorIcons.x, size: 16),
-                label: const Text('Clear filters'),
-              ),
-              FilledButton.icon(
-                onPressed: onShowAll,
-                icon: Icon(PhosphorIcons.users, size: 16),
-                label: const Text('Show all'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniBadge extends StatelessWidget {
-  const _MiniBadge({
-    required this.icon,
-    required this.label,
-  });
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: 3,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusSmall),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(icon, size: 12, color: AppColors.textSecondary),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: AppTypography.labelSmall.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

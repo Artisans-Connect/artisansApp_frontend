@@ -20,11 +20,13 @@ import '../../../../core/theme/app_spacing.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/models/picked_media.dart';
-import '../../../../shared/widgets/artisan_logo_avatar.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
 import '../../../../shared/widgets/job_location_map.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../navigation/client_navigation.dart';
+import '../widgets/explore/fee_summary_card.dart';
+import '../widgets/explore/request_form_fields.dart';
+import '../widgets/explore/worker_preview_card.dart';
 
 class DirectWorkerRequestScreen extends StatefulWidget {
   const DirectWorkerRequestScreen({super.key, this.artisan});
@@ -456,46 +458,19 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      ArtisanLogoAvatar(imageUrl: _imageUrl, size: 56),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text(_name, style: AppTypography.labelLarge),
-                            Text(
-                              _profession,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                  WorkerPreviewCard(
+                    name: _name,
+                    profession: _profession,
+                    imageUrl: _imageUrl,
+                    isVerified: _isVerified,
                   ),
-                  if (!_isVerified) ...<Widget>[
-                    const SizedBox(height: AppSpacing.md),
-                    _buildUnverifiedNotice(),
-                  ],
                   const SizedBox(height: AppSpacing.lg),
                   _buildWorkerServiceSelector(),
                   const SizedBox(height: AppSpacing.md),
-                  TextField(
-                    controller: _titleController,
-                    decoration:
-                        const InputDecoration(labelText: 'Request title'),
-                    onChanged: (_) => setState(() {}),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  TextField(
-                    controller: _descriptionController,
-                    maxLines: 4,
-                    decoration: const InputDecoration(
-                        labelText: 'What do you need done?'),
-                    onChanged: (_) => setState(() {}),
+                  RequestFormFields(
+                    titleController: _titleController,
+                    descriptionController: _descriptionController,
+                    onChanged: () => setState(() {}),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   OutlinedButton.icon(
@@ -577,7 +552,11 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
                     },
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  _buildEstimateCard(),
+                  FeeSummaryCard(
+                    estimate: _estimate,
+                    estimating: _estimating,
+                    estimateFailed: _estimateFailed,
+                  ),
                   const SizedBox(height: AppSpacing.lg),
                   _buildPhotoPicker(),
                   const SizedBox(height: AppSpacing.xl),
@@ -665,95 +644,7 @@ class _DirectWorkerRequestScreenState extends State<DirectWorkerRequestScreen> {
     );
   }
 
-  Widget _buildEstimateCard() {
-    final FeeEstimate? estimate = _estimate;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(color: AppColors.outlineVariant),
-      ),
-      child: Row(
-        children: <Widget>[
-          Icon(PhosphorIcons.currencyCircleDollar,
-              color: AppColors.textSecondary),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: _estimating
-                ? Row(
-                    children: <Widget>[
-                      const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Calculating estimate...',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  )
-                : estimate != null
-                    ? Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Estimated minimum: ${estimate.formatGhs(estimate.minimumFee)}',
-                            style: AppTypography.labelLarge,
-                          ),
-                          Text(
-                            'Final price is confirmed by the artisan\'s quote.',
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      )
-                    : Text(
-                        _estimateFailed
-                            ? 'Could not load a fee estimate. A minimum budget will be used.'
-                            : 'Select a service to see the fee estimate.',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _buildUnverifiedNotice() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
-        border: Border.all(color: AppColors.outlineVariant),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Icon(PhosphorIcons.warningCircle, color: AppColors.textSecondary),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              'This worker has not been verified yet. You can still send the request.',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildServiceFallbackNotice() {
     return Text(

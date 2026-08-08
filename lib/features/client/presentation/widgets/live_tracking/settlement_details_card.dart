@@ -20,10 +20,11 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
   bool _loading = true;
   String? _error;
   double _escrowHeld = 0.0;
+  double _initialEscrow = 0.0;
+  double _totalExtraCharges = 0.0;
+  List<Map<String, dynamic>> _extraChargeList = <Map<String, dynamic>>[];
   double _grossAmount = 0.0;
   double _outstandingBalance = 0.0;
-  double _platformFee = 0.0;
-  double _workerPayout = 0.0;
 
   @override
   void initState() {
@@ -38,12 +39,16 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
     try {
       final res = await PaymentService.instance.calculateSettlement(jobId);
       if (!mounted) return;
+      final rawExtras = res['extra_charges'] as List?;
       setState(() {
         _escrowHeld = double.tryParse(res['escrow_held']?.toString() ?? '0') ?? 0.0;
+        _initialEscrow = double.tryParse(res['initial_escrow']?.toString() ?? '0') ?? 0.0;
+        _totalExtraCharges = double.tryParse(res['total_extra_charges']?.toString() ?? '0') ?? 0.0;
+        _extraChargeList = rawExtras != null
+            ? rawExtras.cast<Map<String, dynamic>>()
+            : <Map<String, dynamic>>[];
         _grossAmount = double.tryParse(res['gross_amount']?.toString() ?? '0') ?? 0.0;
         _outstandingBalance = double.tryParse(res['outstanding_balance']?.toString() ?? '0') ?? 0.0;
-        _platformFee = double.tryParse(res['platform_fee']?.toString() ?? '0') ?? 0.0;
-        _workerPayout = double.tryParse(res['worker_payout']?.toString() ?? '0') ?? 0.0;
         _loading = false;
       });
     } catch (e) {
@@ -177,7 +182,48 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
           const SizedBox(height: 12),
           const Divider(color: DesignTokens.borderSubtle, height: 1),
           const SizedBox(height: 8),
-          rowItem('Gross Total Work Value', _grossAmount),
+          rowItem('Original Agreed Escrow', _initialEscrow > 0 ? _initialEscrow : _grossAmount),
+          if (_totalExtraCharges > 0) ...<Widget>[
+            rowItem('Additional Extra Charges (+)', _totalExtraCharges),
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: DesignTokens.warmSurface,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: DesignTokens.warmBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  const Row(
+                    children: <Widget>[
+                      Icon(Icons.info_outline, size: 14, color: DesignTokens.accentWarm),
+                      SizedBox(width: 6),
+                      Text(
+                        'Extra Charge Reason(s)',
+                        style: TextStyle(fontFamily: 'Satoshi', fontSize: 11, fontWeight: FontWeight.bold, color: DesignTokens.accentWarm),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  if (_extraChargeList.isEmpty)
+                    const Text('Additional materials & labor requested during work', style: TextStyle(fontFamily: 'Satoshi', fontSize: 12, color: DesignTokens.textPrimary))
+                  else
+                    ..._extraChargeList.map(
+                      (extra) => Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text(
+                          '• ${extra['description']} (+GHS ${(double.tryParse(extra['amount']?.toString() ?? '0') ?? 0).toStringAsFixed(2)})',
+                          style: const TextStyle(fontFamily: 'Satoshi', fontSize: 12, color: DesignTokens.textPrimary, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ],
+          rowItem('Gross Total Work Value', _grossAmount, isTotal: true),
           if (_escrowHeld > 0)
             rowItem('Upfront Escrow Deposit Paid', _escrowHeld, isDeduction: true),
           const SizedBox(height: 8),

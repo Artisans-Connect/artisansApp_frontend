@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../../core/navigation/app_routes.dart';
 import '../../../core/navigation/auth_navigation.dart';
 import '../../../core/services/profile_service.dart';
 import '../../../core/services/auth_service.dart';
@@ -243,6 +244,81 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       .copyWith(color: AppColors.textPrimary),
                 ),
               ),
+              if (isOwnProfile) ...<Widget>[
+                const SizedBox(height: 14),
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => Navigator.pushNamed(
+                      context,
+                      AppRoutes.wallet,
+                      arguments: isWorkerView,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: <Color>[Color(0xFF0F172A), Color(0xFF1E293B)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.08),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: <Widget>[
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              PhosphorIcons.wallet,
+                              color: AppColors.primary,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: <Widget>[
+                                Text(
+                                  'My Wallet & Credits',
+                                  style: AppTypography.titleLarge.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  isWorkerView ? 'Manage balance & cash-out to MoMo' : 'View credits, refunds & transaction history',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.white70,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(
+                            PhosphorIcons.caretRight,
+                            color: Colors.white70,
+                            size: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
               if (isWorkerView) ...<Widget>[
                 if (isOwnProfile) ...<Widget>[
                   const SizedBox(height: 14),

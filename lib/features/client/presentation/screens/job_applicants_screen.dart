@@ -52,7 +52,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
         (status.isEmpty ||
             status == 'requested' ||
             status == 'searching' ||
-            status == 'matching');
+            status == 'matching' ||
+            status == 'awaiting_payment');
   }
 
   @override
@@ -131,11 +132,8 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
       if (!mounted) return;
       if (paid == true) {
-        final List<dynamic> jobs = await JobsService().getMyJobs(forceRefresh: true);
-        final Iterable<Map<String, dynamic>> matches = jobs
-            .whereType<Map<String, dynamic>>()
-            .where((j) => j['id'].toString() == _jobId);
-        final Map<String, dynamic>? updatedJob = matches.isNotEmpty ? matches.first : null;
+        final dynamic jobData = await JobsService().getJobById(_jobId);
+        final Map<String, dynamic>? updatedJob = jobData is Map<String, dynamic> ? jobData : null;
 
         if (updatedJob != null && mounted) {
           Navigator.pushNamed(

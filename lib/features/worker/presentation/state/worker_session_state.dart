@@ -35,6 +35,13 @@ class WorkerSessionState extends ChangeNotifier {
   int _availabilityChangeVersion = 0;
   WorkerJob? activeJob;
   WorkerJobPhase jobPhase = WorkerJobPhase.none;
+  final Set<String> declinedJobIds = <String>{};
+
+  void declineJobId(String id) {
+    if (declinedJobIds.add(id)) {
+      notifyListeners();
+    }
+  }
 
   bool get hasActiveJob => activeJob != null && jobPhase != WorkerJobPhase.none;
 

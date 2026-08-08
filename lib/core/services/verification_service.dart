@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../constants/app_constants.dart';
@@ -71,7 +72,15 @@ class VerificationService {
 
   Future<void> openPortalAndRefreshProfile() async {
     final uri = await createPortalUri();
-    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    bool launched = false;
+    if (kIsWeb) {
+      launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+    } else {
+      launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      if (!launched) {
+        launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      }
+    }
     if (!launched) {
       throw StateError('Could not open verification portal.');
     }

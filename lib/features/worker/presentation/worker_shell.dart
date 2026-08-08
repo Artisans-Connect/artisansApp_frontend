@@ -45,7 +45,6 @@ class _WorkerShellState extends State<WorkerShell> {
   final WorkerDispatchRealtimeService _dispatchRealtime =
       WorkerDispatchRealtimeService();
   final Set<String> _shownRequestIds = <String>{};
-  final Set<String> _declinedModalJobIds = <String>{};
   int _messagesRefreshSignal = 0;
 
   @override
@@ -149,7 +148,7 @@ class _WorkerShellState extends State<WorkerShell> {
   }) async {
     if (!mounted ||
         _shownRequestIds.contains(jobId) ||
-        _declinedModalJobIds.contains(jobId)) return;
+        _session.declinedJobIds.contains(jobId)) return;
     _shownRequestIds.add(jobId);
 
     try {
@@ -191,26 +190,27 @@ class _WorkerShellState extends State<WorkerShell> {
           job: workerJobFromApi(data),
           initialSeconds: secondsLeft,
           onAccepted: (Map<String, dynamic> application) {
-            _declinedModalJobIds.add(jobId);
+            _session.declineJobId(jobId);
             _shownRequestIds.remove(application['job_id']?.toString() ?? jobId);
           },
           onDeclined: () {
-            _declinedModalJobIds.add(jobId);
+            _session.declineJobId(jobId);
           },
           onViewDetails: (job) {
-            _declinedModalJobIds.add(jobId);
+            _session.declineJobId(jobId);
             Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => JobRequestDetailScreen(
                   job: job,
                   onAcceptRequest: (_) => _session.loadActiveJob(),
+                  onDeclineRequest: () => _session.declineJobId(jobId),
                 ),
               ),
             );
           },
         ),
       );
-      _declinedModalJobIds.add(jobId);
+      _session.declineJobId(jobId);
     } catch (_) {
       _shownRequestIds.remove(jobId);
     }

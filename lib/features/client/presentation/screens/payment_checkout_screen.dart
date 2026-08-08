@@ -36,6 +36,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   bool _isLoading = false;
   bool _isVerifying = false;
   String? _error;
+  Timer? _pollTimer;
 
   @override
   void initState() {
@@ -47,6 +48,38 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       _initializeCheckout();
     } else {
       _launchPaymentPage();
+      if (_reference != null) {
+        _startPolling();
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      _verifyPaymentSilent();
+    });
+  }
+
+  Future<void> _verifyPaymentSilent() async {
+    if (_reference == null || _isVerifying || !mounted) return;
+    try {
+      final res = await _paymentService.verifyPayment(_reference!);
+      final bool success = res['success'] as bool? ?? false;
+      if (!mounted) return;
+      if (success) {
+        _pollTimer?.cancel();
+        AppToast.showSuccess(context, 'Payment confirmed! Job is now in matching.');
+        Navigator.of(context).pop(true);
+      }
+    } catch (_) {
+      // Silent catch
     }
   }
 
@@ -68,6 +101,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         _isLoading = false;
       });
       _launchPaymentPage();
+      if (_reference != null) {
+        _startPolling();
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -108,6 +144,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       _error = null;
     });
     try {
+      _pollTimer?.cancel();
       final res = await _paymentService.verifyPayment(_reference!);
       final bool success = res['success'] as bool? ?? false;
       if (!mounted) return;
@@ -120,6 +157,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           _isVerifying = false;
           _error = 'Payment verification pending. Please complete it in your browser and try again.';
         });
+        _startPolling();
       }
     } catch (e) {
       if (!mounted) return;
@@ -127,6 +165,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         _isVerifying = false;
         _error = 'Verification failed. Please complete the payment first.';
       });
+      _startPolling();
     }
   }
 

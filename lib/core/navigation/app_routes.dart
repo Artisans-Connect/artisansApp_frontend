@@ -24,4 +24,5 @@ class AppRoutes {
 
   // Shared
   static const notifications = '/notifications';
+  static const wallet = '/wallet';
 }
