@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../core/errors/error_messages.dart';
-import '../../core/theme/app_colors.dart';
 
-enum AppToastType { error, success, info }
+enum AppToastType { error, success, info, payment, escrow }
 
-/// Styled snackbars for consistent feedback across the app.
+/// Premium styled toasts for payment, escrow, and transactional feedback across CraftMatch.
 class AppToast {
   AppToast._();
 
@@ -19,28 +18,49 @@ class AppToast {
   }) {
     final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
     messenger.hideCurrentSnackBar();
+
+    final Color primaryColor = _backgroundFor(type);
+    final Color badgeBg = _badgeColorFor(type);
+    final IconData icon = _iconFor(type);
+
     messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: <Widget>[
-            Icon(_iconFor(type), color: Colors.white, size: 20),
-            const SizedBox(width: 10),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: badgeBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: Colors.white, size: 20),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
                 style: const TextStyle(
+                  fontFamily: 'Satoshi',
                   color: Colors.white,
                   fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  height: 1.3,
                 ),
               ),
             ),
           ],
         ),
-        backgroundColor: _backgroundFor(type),
+        backgroundColor: primaryColor,
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        elevation: 6,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: Colors.white.withValues(alpha: 0.15),
+            width: 1,
+          ),
+        ),
         duration: duration,
         action: action,
       ),
@@ -63,25 +83,56 @@ class AppToast {
     show(context, message: message, type: AppToastType.info);
   }
 
+  static void showPayment(BuildContext context, String message) {
+    show(context, message: message, type: AppToastType.payment);
+  }
+
+  static void showEscrow(BuildContext context, String message) {
+    show(context, message: message, type: AppToastType.escrow);
+  }
+
   static IconData _iconFor(AppToastType type) {
     switch (type) {
       case AppToastType.error:
-        return PhosphorIcons.warningCircle;
+        return PhosphorIcons.warningCircleBold;
       case AppToastType.success:
-        return PhosphorIcons.checkCircle;
+        return PhosphorIcons.checkCircleBold;
       case AppToastType.info:
-        return PhosphorIcons.info;
+        return PhosphorIcons.infoBold;
+      case AppToastType.payment:
+        return PhosphorIcons.walletBold;
+      case AppToastType.escrow:
+        return PhosphorIcons.shieldCheckBold;
     }
   }
 
   static Color _backgroundFor(AppToastType type) {
     switch (type) {
       case AppToastType.error:
-        return AppColors.error;
+        return const Color(0xFF991B1B); // Deep Crimson
       case AppToastType.success:
-        return const Color(0xFF15803D);
+        return const Color(0xFF166534); // Forest Emerald
       case AppToastType.info:
-        return AppColors.primary;
+        return const Color(0xFF1E293B); // Slate Dark
+      case AppToastType.payment:
+        return const Color(0xFF047857); // Mint Emerald
+      case AppToastType.escrow:
+        return const Color(0xFF0F766E); // Deep Escrow Teal
+    }
+  }
+
+  static Color _badgeColorFor(AppToastType type) {
+    switch (type) {
+      case AppToastType.error:
+        return Colors.white.withValues(alpha: 0.2);
+      case AppToastType.success:
+        return Colors.white.withValues(alpha: 0.2);
+      case AppToastType.info:
+        return Colors.white.withValues(alpha: 0.15);
+      case AppToastType.payment:
+        return const Color(0xFF059669);
+      case AppToastType.escrow:
+        return const Color(0xFF14B8A6);
     }
   }
 }

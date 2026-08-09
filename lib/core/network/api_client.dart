@@ -18,7 +18,13 @@ class ApiClient {
   final String baseUrl = AppConstants.expressApiBaseUrl;
 
   Future<Map<String, String>> _getHeaders() async {
-    final session = Supabase.instance.client.auth.currentSession;
+    Session? session = Supabase.instance.client.auth.currentSession;
+    if (session != null && (session.isExpired || session.accessToken.isEmpty)) {
+      try {
+        final AuthResponse response = await Supabase.instance.client.auth.refreshSession();
+        session = response.session;
+      } catch (_) {}
+    }
     final headers = <String, String>{
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -83,8 +89,13 @@ class ApiClient {
 
   Future<dynamic> _request(Future<http.Response> Function() send) async {
     try {
-      final http.Response response =
-          await send().timeout(requestTimeout);
+      http.Response response = await send().timeout(requestTimeout);
+      if (response.statusCode == 401) {
+        try {
+          await Supabase.instance.client.auth.refreshSession();
+          response = await send().timeout(requestTimeout);
+        } catch (_) {}
+      }
       return _handleResponse(response);
     } on ApiException {
       rethrow;

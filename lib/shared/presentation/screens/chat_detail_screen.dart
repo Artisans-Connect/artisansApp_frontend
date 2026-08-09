@@ -10,7 +10,6 @@ import '../../../core/errors/error_messages.dart';
 import '../../../core/navigation/app_routes.dart';
 import '../../../core/utils/current_user.dart';
 import '../../../core/services/chat_service.dart';
-import '../../../core/services/platform_service.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../widgets/app_toast.dart';
@@ -21,6 +20,7 @@ import '../../../features/client/presentation/navigation/client_navigation.dart'
 import '../../utils/shared_user_context.dart';
 import '../../models/chat_message.dart';
 import '../../widgets/chat_bubble.dart';
+import '../../widgets/chat_composer.dart';
 import '../navigation/shared_route_args.dart';
 import 'user_profile_screen.dart';
 import '../../widgets/custom_back_button.dart';
@@ -43,7 +43,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final ScrollController _scrollController = ScrollController();
   List<ChatMessage> _messages = <ChatMessage>[];
   ChatDetailArgs? _args;
-  bool _showAttachmentMenu = false;
   bool _isLoading = false;
   bool _isSending = false;
   bool _isUploadingMedia = false;
@@ -261,7 +260,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   Future<void> _pickAndUploadAttachment(ImageSource source,
       {bool video = false}) async {
     if (_isUploadingMedia) return;
-    setState(() => _showAttachmentMenu = false);
 
     try {
       setState(() => _isUploadingMedia = true);
@@ -480,9 +478,6 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           }
         }
         break;
-      case 'dismiss':
-        setState(() => _showAttachmentMenu = false);
-        break;
     }
   }
 
@@ -600,248 +595,92 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                   ],
                 ),
               ),
-              if (_showAttachmentMenu)
-                const PopupMenuItem<String>(
-                  value: 'dismiss',
-                  child: Text('Close attachments'),
-                ),
             ],
           ),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: <Widget>[
-          Column(
-            children: <Widget>[
-              Expanded(
-                child: _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _loadError != null
-                        ? ErrorStateView(
-                            message: _loadError!,
-                            title: 'Could not load chat',
-                            compact: true,
-                            onRetry: () => _loadMessages(
-                              _activeConversationId ??
-                                  _args!.jobId ??
-                                  _args!.conversationId,
-                            ),
-                          )
-                        : _messages.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'Say hello to start the conversation.',
-                                  style: AppTypography.bodyLarge,
-                                ),
-                              )
-                            : ListView.builder(
-                                controller: _scrollController,
-                                padding:
-                                    const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                                itemCount: _messages.length + 1 + (_isFetchingMore ? 1 : 0),
-                                itemBuilder: (BuildContext context, int index) {
-                                  if (_isFetchingMore && index == 0) {
-                                    return const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 12),
-                                      child: Center(
-                                        child: SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation<Color>(
-                                                AppColors.primary),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  final int adjustedIndex = _isFetchingMore ? index - 1 : index;
-                                  if (adjustedIndex == 0) {
-                                    // Date separator
-                                    return Center(
-                                      child: Container(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 16),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 6),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.surfaceContainerHigh,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          'Today',
-                                          style:
-                                              AppTypography.bodyMedium.copyWith(
-                                            color: AppColors.textSecondary,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                  return ChatBubble(
-                                      message: _messages[adjustedIndex - 1]);
-                                },
-                              ),
-              ),
-              _buildComposer(),
-            ],
-          ),
-          if (_showAttachmentMenu)
-            Positioned(
-              bottom: 80,
-              left: 16,
-              child: _buildAttachmentMenu(),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAttachmentMenu() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          IconButton(
-            onPressed: _isUploadingMedia
-                ? null
-                : () =>
-                    _pickAndUploadAttachment(ImageSource.gallery, video: true),
-            icon: Icon(PhosphorIcons.video, color: AppColors.primary),
-            tooltip: 'Video',
-          ),
-          if (PlatformService.supportsCamera)
-            IconButton(
-              onPressed: _isUploadingMedia
-                  ? null
-                  : () => _pickAndUploadAttachment(ImageSource.camera),
-              icon: Icon(PhosphorIcons.camera, color: AppColors.primary),
-              tooltip: 'Camera',
-            ),
-          IconButton(
-            onPressed: _isUploadingMedia
-                ? null
-                : () => _pickAndUploadAttachment(ImageSource.gallery),
-            icon: Icon(PhosphorIcons.image, color: AppColors.primary),
-            tooltip: 'Gallery',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildComposer() {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        12,
-        10,
-        12,
-        10 + MediaQuery.paddingOf(context).bottom,
-      ),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          top: BorderSide(color: AppColors.outlineVariant, width: 0.5),
-        ),
-      ),
-      child: Row(
-        children: <Widget>[
-          // Attachment button
-          Material(
-            color: AppColors.surfaceDim,
-            borderRadius: BorderRadius.circular(99),
-            child: InkWell(
-              onTap: _isUploadingMedia
-                  ? null
-                  : () {
-                      setState(
-                          () => _showAttachmentMenu = !_showAttachmentMenu);
-                    },
-              borderRadius: BorderRadius.circular(99),
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Icon(PhosphorIcons.plus,
-                    color: AppColors.textSecondary, size: 22),
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Text field
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceDim,
-                borderRadius: BorderRadius.circular(24),
-              ),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    child: TextField(
-                      controller: _composerController,
-                      minLines: 1,
-                      maxLines: 4,
-                      decoration: InputDecoration(
-                        hintText: 'Type a message...',
-                        hintStyle: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.outline,
-                        ),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                      ),
-                      onSubmitted: (_) => _sendMessage(),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(
-                      PhosphorIcons.smiley,
-                      color: AppColors.outline,
-                      size: 22,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Send button
-          Material(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(99),
-            child: InkWell(
-              onTap: _isSending ? null : _sendMessage,
-              borderRadius: BorderRadius.circular(99),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: _isSending
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _loadError != null
+                    ? ErrorStateView(
+                        message: _loadError!,
+                        title: 'Could not load chat',
+                        compact: true,
+                        onRetry: () => _loadMessages(
+                          _activeConversationId ??
+                              _args!.jobId ??
+                              _args!.conversationId,
                         ),
                       )
-                    : Icon(PhosphorIcons.paperPlaneRight,
-                        color: Colors.white, size: 22),
-              ),
-            ),
+                    : _messages.isEmpty
+                        ? Center(
+                            child: Text(
+                              'Say hello to start the conversation.',
+                              style: AppTypography.bodyLarge,
+                            ),
+                          )
+                        : ListView.builder(
+                            controller: _scrollController,
+                            padding:
+                                const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                            itemCount: _messages.length + 1 + (_isFetchingMore ? 1 : 0),
+                            itemBuilder: (BuildContext context, int index) {
+                              if (_isFetchingMore && index == 0) {
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Center(
+                                    child: SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation<Color>(
+                                            AppColors.primary),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              final int adjustedIndex = _isFetchingMore ? index - 1 : index;
+                              if (adjustedIndex == 0) {
+                                // Date separator
+                                return Center(
+                                  child: Container(
+                                    margin:
+                                        const EdgeInsets.only(bottom: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surfaceContainerHigh,
+                                      borderRadius:
+                                          BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      'Today',
+                                      style:
+                                          AppTypography.bodyMedium.copyWith(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                              return ChatBubble(
+                                  message: _messages[adjustedIndex - 1]);
+                            },
+                          ),
+          ),
+          ChatComposer(
+            controller: _composerController,
+            isSending: _isSending,
+            isUploadingMedia: _isUploadingMedia,
+            onSend: _sendMessage,
+            onPickAttachment: (ImageSource source, bool video) =>
+                _pickAndUploadAttachment(source, video: video),
           ),
         ],
       ),

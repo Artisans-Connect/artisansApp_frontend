@@ -75,7 +75,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       if (!mounted) return;
       if (success) {
         _pollTimer?.cancel();
-        AppToast.showSuccess(context, 'Payment confirmed! Job is now in matching.');
+        AppToast.showEscrow(context, 'Payment Confirmed! Funds are securely held in Escrow.');
         Navigator.of(context).pop(true);
       }
     } catch (_) {
@@ -150,7 +150,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       if (!mounted) return;
       
       if (success) {
-        AppToast.showSuccess(context, 'Payment confirmed! Job is now in matching.');
+        AppToast.showEscrow(context, 'Payment Confirmed! Funds are securely held in Escrow.');
         Navigator.of(context).pop(true);
       } else {
         setState(() {

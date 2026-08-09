@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/negotiation_service.dart';
+import '../../../../core/services/negotiation_realtime_service.dart';
 import '../../../../core/services/payment_service.dart';
+import '../../../../core/session/app_user_session.dart';
 import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 import 'dart:async';
@@ -29,6 +31,13 @@ import '../widgets/live_tracking/settlement_details_card.dart';
 import '../widgets/live_tracking/cancel_section.dart';
 import '../widgets/live_tracking/completion_actions.dart';
 import '../../../trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
+import '../widgets/live_tracking/dialogs/reopen_completion_dialog.dart';
+import '../widgets/live_tracking/dialogs/confirm_work_done_dialog.dart';
+import '../widgets/live_tracking/dialogs/cancel_job_dialog.dart';
+import '../widgets/live_tracking/dialogs/request_termination_dialog.dart';
+import '../widgets/live_tracking/dialogs/extra_charge_alert_dialog.dart';
+import '../widgets/live_tracking/extra_charge_card.dart';
+import '../widgets/live_tracking/action_buttons_row.dart';
 
 // ---------------------------------------------------------------------------
 // Main screen
@@ -53,8 +62,9 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
   Map<String, dynamic>? _job;
   Map<String, dynamic>? _activeExtraCharge;
-  bool _loadingExtraCharge = true;
   RealtimeChannel? _extraChargeChannel;
+  String? _hasShownExtraChargeAlertId;
+  bool _isModalOpen = false;
   bool _loading = true;
   bool _requestingAnotherWorker = false;
   bool _isReopeningCompletion = false;
@@ -227,145 +237,122 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     };
   }
 
+  String? _hasOpenedLiveBargainingSheetKey;
+  final NegotiationRealtimeService _negotiationRealtime = NegotiationRealtimeService();
+
   Future<void> _fetchExtraCharge(String jobId) async {
     try {
       final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(jobId);
-      final Negotiation? activeNeg = negs.cast<Negotiation?>().firstWhere(
+      
+      // 1. Strictly look for extra charge negotiations for summary tracking
+      final Negotiation? extraChargeNeg = negs.cast<Negotiation?>().firstWhere(
         (n) => n?.type == NegotiationType.extraCharge && (n?.status == NegotiationStatus.open || n?.status == NegotiationStatus.accepted || n?.status == NegotiationStatus.paid),
+        orElse: () => null,
+      );
+
+      // 2. Look for ANY open negotiation (extra charge, completion adjustment, or quote) for live sync
+      final Negotiation? openNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.status == NegotiationStatus.open,
         orElse: () => null,
       );
 
       if (mounted) {
         setState(() {
-          _activeExtraCharge = activeNeg != null ? {
-            'id': activeNeg.id,
-            'status': activeNeg.status.name,
-            'requested_amount': activeNeg.agreedAmount ?? activeNeg.initialAmount,
-            'description': activeNeg.description,
-            'negotiation': activeNeg,
+          _activeExtraCharge = extraChargeNeg != null ? {
+            'id': extraChargeNeg.id,
+            'status': extraChargeNeg.status.name,
+            'requested_amount': extraChargeNeg.agreedAmount ?? extraChargeNeg.initialAmount,
+            'description': extraChargeNeg.description,
+            'negotiation': extraChargeNeg,
           } : null;
-          _loadingExtraCharge = false;
         });
+
+        // ONLY trigger extra charge alert modal if it's strictly an extra_charge proposal that is OPEN
+        if (extraChargeNeg != null && 
+            extraChargeNeg.type == NegotiationType.extraCharge && 
+            extraChargeNeg.status == NegotiationStatus.open && 
+            _hasShownExtraChargeAlertId != extraChargeNeg.id) {
+          _hasShownExtraChargeAlertId = extraChargeNeg.id;
+          final double amt = extraChargeNeg.agreedAmount ?? extraChargeNeg.initialAmount;
+          _showExtraChargeAlertModal(extraChargeNeg, amt, extraChargeNeg.description ?? '');
+        }
+        final String currentUserId = AppUserSession.instance.currentUser?.id ?? '';
+        final NegotiationRound? lastRound = openNeg?.rounds.isNotEmpty == true ? openNeg!.rounds.last : null;
+        final bool isCounterpartyTurnToRespond = lastRound != null && lastRound.proposedBy != currentUserId;
+
+        // Auto-popup live bargaining sheet when any negotiation is open or has a new round from counterparty
+        if (openNeg != null && openNeg.status == NegotiationStatus.open && isCounterpartyTurnToRespond) {
+          final String currentKey = '${openNeg.id}_${openNeg.rounds.length}';
+          if (_hasOpenedLiveBargainingSheetKey != currentKey) {
+            _hasOpenedLiveBargainingSheetKey = currentKey;
+            _showLiveBargainingSheet(openNeg);
+          }
+        }
       }
     } catch (_) {
-      if (mounted) {
-        setState(() => _loadingExtraCharge = false);
-      }
+      // Silent catch
     }
+  }
+
+  void _showLiveBargainingSheet(Negotiation negotiation) {
+    if (_isModalOpen) return;
+    setState(() => _isModalOpen = true);
+    NegotiationChatSheet.show(
+      context,
+      negotiation: negotiation,
+      onStatusChanged: () {
+        if (_currentJobId != null) _fetchExtraCharge(_currentJobId!);
+      },
+    );
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _isModalOpen = false);
+    });
+  }
+
+  void _showExtraChargeAlertModal(Negotiation negotiation, double amount, String desc) {
+    if (_isModalOpen) return;
+    setState(() => _isModalOpen = true);
+    showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      builder: (BuildContext ctx) {
+        return ExtraChargeAlertDialog(
+          amount: amount,
+          description: desc,
+        );
+      },
+    ).then((bool? bargain) async {
+      if (mounted) setState(() => _isModalOpen = false);
+      if (bargain == true && mounted) {
+        await Future.delayed(const Duration(milliseconds: 150));
+        if (mounted) {
+          NegotiationChatSheet.show(
+            context,
+            negotiation: negotiation,
+            onStatusChanged: () {
+              if (_currentJobId != null) _fetchExtraCharge(_currentJobId!);
+            },
+          );
+        }
+      }
+    });
   }
 
   void _subscribeExtraCharge(String jobId) {
-    _extraChargeChannel = Supabase.instance.client
-        .channel('extra-charge-client-$jobId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'negotiations',
-          callback: (PostgresChangePayload payload) {
-            _fetchExtraCharge(jobId);
-          },
-        )
-        .subscribe();
+    _negotiationRealtime.subscribeToJobNegotiations(
+      jobId,
+      onUpdate: () {
+        _fetchExtraCharge(jobId);
+      },
+    );
   }
 
   Widget _buildExtraChargeWidget() {
-    if (_loadingExtraCharge || _activeExtraCharge == null) {
-      return const SizedBox.shrink();
-    }
-
-    final double amount = double.tryParse(_activeExtraCharge!['requested_amount'].toString()) ?? 0.0;
-    final String status = _activeExtraCharge!['status'].toString();
-    final String desc = _activeExtraCharge!['description']?.toString() ?? '';
-    final String jobId = _currentJobId ?? '';
-    final Negotiation negotiation = _activeExtraCharge!['negotiation'] as Negotiation;
-
-    Widget content;
-    if (status == 'open') {
-      content = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Row(
-            children: [
-              Icon(Icons.warning_amber_rounded, color: DesignTokens.accentWarm, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Extra Charge Proposal',
-                style: TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.textPrimary),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Artisan proposed GHS ${amount.toStringAsFixed(2)}',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-          ),
-          if (desc.isNotEmpty) Text('Reason: $desc', style: const TextStyle(fontSize: 12, color: DesignTokens.textMuted)),
-          const SizedBox(height: 12),
-          ElevatedButton(
-            onPressed: () {
-              NegotiationChatSheet.show(
-                context,
-                negotiation: negotiation,
-                onStatusChanged: () {
-                  _fetchExtraCharge(jobId);
-                },
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: DesignTokens.primary),
-            child: const Text('Review Proposal'),
-          ),
-        ],
-      );
-    } else if (status == 'accepted') {
-      content = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: [
-              const Icon(Icons.check_circle_outline_rounded, color: DesignTokens.successGreen, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Extra Charge Approved: GHS ${amount.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.successGreen),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Approved adjustments will be collected in the final completion settlement.',
-            style: TextStyle(fontSize: 12, color: DesignTokens.textMuted),
-          ),
-        ],
-      );
-    } else if (status == 'paid') {
-      content = Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: [
-              const Icon(Icons.verified_user_outlined, color: DesignTokens.successGreen, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Extra Charge Settled: GHS ${amount.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.successGreen),
-              ),
-            ],
-          ),
-        ],
-      );
-    } else {
-      return const SizedBox.shrink();
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: DesignTokens.warmSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: DesignTokens.warmBorder),
-      ),
-      child: content,
+    if (_activeExtraCharge == null) return const SizedBox.shrink();
+    final Negotiation? neg = _activeExtraCharge!['negotiation'] as Negotiation?;
+    return ExtraChargeCard(
+      activeExtraCharge: _activeExtraCharge,
+      onNegotiate: neg != null ? () => _showLiveBargainingSheet(neg) : null,
     );
   }
 
@@ -382,6 +369,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
   void dispose() {
     _stepPulse.dispose();
     _realtime.unsubscribe();
+    _negotiationRealtime.unsubscribeJob();
     _extraChargeChannel?.unsubscribe();
     super.dispose();
   }
@@ -444,22 +432,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
     final bool? confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirm Work Finished?'),
-        content: const Text(
-          'Confirming that the artisan has completed the work will stop the work timer. The artisan will then submit the settlement breakdown.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Not Yet'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Yes, Confirm'),
-          ),
-        ],
-      ),
+      builder: (ctx) => const ConfirmWorkDoneDialog(),
     );
 
     if (confirmed != true || !mounted) return;
@@ -491,7 +464,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
     final String? note = await showDialog<String>(
       context: context,
-      builder: (_) => const _ReopenCompletionDialog(),
+      builder: (_) => const ReopenCompletionDialog(),
     );
     if (note == null || !mounted) return;
 
@@ -559,128 +532,25 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
       final String warningMessage =
           preview['warning_message'] as String? ?? 'Are you sure?';
 
-      final TextEditingController reasonCtrl = TextEditingController();
-      final bool? confirmed = await showDialog<bool>(
+      final String? reason = await showDialog<String>(
         context: context,
         builder: (BuildContext ctx) {
-          return AlertDialog(
-            scrollable: true,
-            title: Row(
-              children: [
-                Icon(
-                  fee > 0 ? Icons.warning_amber_rounded : Icons.cancel_outlined,
-                  color: fee > 0 ? DesignTokens.accentWarm : DesignTokens.error,
-                  size: 24,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    warningTitle,
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    warningMessage,
-                    style: const TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 14,
-                      color: DesignTokens.textSecondary,
-                    ),
-                  ),
-                  if (fee > 0) ...[
-                    const SizedBox(height: 14),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: DesignTokens.accentWarm.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color:
-                                DesignTokens.accentWarm.withValues(alpha: 0.2)),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.payments_rounded,
-                              color: DesignTokens.accentWarm, size: 20),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'GH\u20B5 ${fee.toStringAsFixed(2)}',
-                              style: const TextStyle(
-                                fontFamily: 'Satoshi',
-                                fontSize: 18,
-                                fontWeight: FontWeight.w800,
-                                color: DesignTokens.accentWarm,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Please pay this amount directly to the artisan.',
-                      style: TextStyle(
-                        fontFamily: 'Satoshi',
-                        fontSize: 12,
-                        color: DesignTokens.textSecondary.withValues(alpha: 0.8),
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: reasonCtrl,
-                    maxLines: 2,
-                    decoration: const InputDecoration(
-                      hintText: 'Reason for cancellation (optional)',
-                      border: OutlineInputBorder(),
-                      isDense: true,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Keep Job'),
-              ),
-              FilledButton(
-                style:
-                    FilledButton.styleFrom(backgroundColor: DesignTokens.error),
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Yes, Cancel'),
-              ),
-            ],
+          return CancelJobDialog(
+            fee: fee,
+            warningTitle: warningTitle,
+            warningMessage: warningMessage,
           );
         },
       );
 
-      if (confirmed != true || !mounted) {
-        reasonCtrl.dispose();
+      if (reason == null || !mounted) {
         setState(() => _isCancelling = false);
         return;
       }
 
-      final String reasonText = reasonCtrl.text.trim();
-      reasonCtrl.dispose();
-
       await _jobsService.cancelJobWithReason(
         jobUuid,
-        reason: reasonText.isNotEmpty ? reasonText : null,
+        reason: reason.isNotEmpty ? reason : null,
       );
       if (!mounted) return;
 
@@ -708,104 +578,22 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
     final String? jobUuid = _currentJobId;
     if (_isRequestingTermination || jobUuid == null || jobUuid.isEmpty) return;
 
-    final TextEditingController reasonCtrl = TextEditingController();
-    final bool? confirmed = await showDialog<bool>(
+    final String? reason = await showDialog<String>(
       context: context,
       builder: (BuildContext ctx) {
-        return AlertDialog(
-          title: Row(
-            children: [
-              Icon(
-                Icons.front_hand_rounded,
-                color: DesignTokens.accentWarm,
-                size: 24,
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Request Termination',
-                  style: TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Work has already started. Your artisan will be notified and can accept or decline the termination.',
-                  style: TextStyle(
-                    fontFamily: 'Satoshi',
-                    fontSize: 14,
-                    color: DesignTokens.textSecondary,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: DesignTokens.accentWarm.withValues(alpha: 0.06),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'Note: This is not an instant cancellation. The artisan must agree to stop work.',
-                    style: TextStyle(
-                      fontFamily: 'Satoshi',
-                      fontSize: 12,
-                      color: DesignTokens.textSecondary,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: reasonCtrl,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    hintText: 'Why do you want to terminate this job?',
-                    border: OutlineInputBorder(),
-                    isDense: true,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Keep Job'),
-            ),
-            FilledButton(
-              style: FilledButton.styleFrom(
-                  backgroundColor: DesignTokens.accentWarm),
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Request Termination'),
-            ),
-          ],
-        );
+        return const RequestTerminationDialog();
       },
     );
 
-    if (confirmed != true || !mounted) {
-      reasonCtrl.dispose();
+    if (reason == null || !mounted) {
       return;
     }
-
-    final String reasonText = reasonCtrl.text.trim();
-    reasonCtrl.dispose();
 
     setState(() => _isRequestingTermination = true);
     try {
       await _jobsService.requestTermination(
         jobUuid,
-        reason: reasonText.isNotEmpty ? reasonText : null,
+        reason: reason.isNotEmpty ? reason : null,
       );
       if (!mounted) return;
       AppToast.showSuccess(context, 'Termination request sent to the artisan.');
@@ -846,11 +634,24 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           ),
         );
         if (paid == true && mounted) {
-          unawaited(Navigator.pushNamed(
-            context,
-            AppRoutes.rateService,
-            arguments: _ratingPayload(),
-          ));
+          final String jobStatus = (_job?['status'] ?? '').toString();
+          final bool isFinalCompletion = jobStatus == 'pending_completion' || jobStatus == 'completed';
+
+          if (isFinalCompletion) {
+            setState(() => _loading = true);
+            await PaymentService.instance.checkoutSettlement(jobId);
+            setState(() => _loading = false);
+            if (!mounted) return;
+            AppToast.showEscrow(context, 'Escrow Funds Released! Payment completed & transferred to artisan.');
+            unawaited(Navigator.pushNamed(
+              context,
+              AppRoutes.rateService,
+              arguments: _ratingPayload(),
+            ));
+          } else {
+            AppToast.showEscrow(context, '⚡ Extra charge payment confirmed! Held safely in Escrow.');
+            await _loadJobDetails();
+          }
         }
       } else {
         // No outstanding balance, release escrow directly
@@ -858,7 +659,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         await PaymentService.instance.checkoutSettlement(jobId);
         setState(() => _loading = false);
         if (!mounted) return;
-        AppToast.showSuccess(context, 'Escrow funds released to artisan!');
+        AppToast.showEscrow(context, 'Escrow Funds Released! Payment completed & transferred to artisan.');
         unawaited(Navigator.pushNamed(
           context,
           AppRoutes.rateService,
@@ -982,11 +783,14 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                     const SizedBox(height: 20),
                     _buildExtraChargeWidget(),
                     if (workerId != null && jobLat != null && jobLng != null)
-                      TrackingMapCard(
-                        workerId: workerId,
-                        jobLat: jobLat,
-                        jobLng: jobLng,
-                        onEtaChanged: (eta) => setState(() => _etaLabel = eta),
+                      AbsorbPointer(
+                        absorbing: _isModalOpen,
+                        child: TrackingMapCard(
+                          workerId: workerId,
+                          jobLat: jobLat,
+                          jobLng: jobLng,
+                          onEtaChanged: (eta) => setState(() => _etaLabel = eta),
+                        ),
                       )
                     else
                       const TrackingMapPlaceholder(),
@@ -1041,6 +845,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                       canRate: canRate,
                       pendingApproval: pendingApproval,
                       isReopeningCompletion: _isReopeningCompletion,
+                      hasPendingAgreement: _activeExtraCharge != null && _activeExtraCharge!['status'] == 'open',
                       onRate: _handleApproveAndSettlement,
                       onReopen: _reopenCompletion,
                     ),
@@ -1233,87 +1038,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
   Widget _buildActionRow(
       Map<String, dynamic> job, String? jobUuid, String? workerId) {
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: ActionButton(
-            icon: Icons.phone_rounded,
-            label: 'Call',
-            isEnabled: job['phone'] != null,
-            onTap: job['phone'] != null
-                ? () =>
-                    ClientNavigation.callPhone(context, job['phone'] as String)
-                : null,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: ActionButton(
-            icon: Icons.chat_bubble_rounded,
-            label: 'Message',
-            isEnabled: jobUuid != null,
-            onTap: jobUuid != null
-                ? () => ClientNavigation.openChat(
-                      context,
-                      conversationId: jobUuid,
-                      counterpartUserId:
-                          job['counterpartUserId'] as String? ?? workerId ?? '',
-                      counterpartName: job['artisan'] as String? ?? 'Artisan',
-                      jobId: jobUuid,
-                      jobTitle: job['title'] as String?,
-                    )
-                : null,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ReopenCompletionDialog extends StatefulWidget {
-  const _ReopenCompletionDialog();
-
-  @override
-  State<_ReopenCompletionDialog> createState() =>
-      _ReopenCompletionDialogState();
-}
-
-class _ReopenCompletionDialogState extends State<_ReopenCompletionDialog> {
-  late final TextEditingController _noteController;
-
-  @override
-  void initState() {
-    super.initState();
-    _noteController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Job not done?'),
-      content: TextField(
-        controller: _noteController,
-        maxLines: 3,
-        decoration: const InputDecoration(
-          hintText: 'Tell the artisan what still needs attention.',
-        ),
-      ),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, _noteController.text.trim()),
-          child: const Text('Reopen job'),
-        ),
-      ],
+    return ActionButtonsRow(
+      job: job,
+      jobUuid: jobUuid,
+      workerId: workerId,
     );
   }
 }

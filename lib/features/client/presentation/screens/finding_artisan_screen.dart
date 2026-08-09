@@ -15,6 +15,7 @@ import '../../../../shared/widgets/secondary_button.dart';
 import '../../../../shared/widgets/app_toast.dart';
 import '../models/client_booking.dart';
 import '../navigation/client_navigation.dart';
+import 'job_applicants_screen.dart';
 
 class FindingArtisanScreen extends StatefulWidget {
   const FindingArtisanScreen({
@@ -170,7 +171,14 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
   void _openBookings() {
     _realtime.unsubscribe();
     _progressTimer?.cancel();
-    ClientNavigation.replaceWithBookingsTab(context);
+    Navigator.push<dynamic>(
+      context,
+      MaterialPageRoute<dynamic>(
+        builder: (BuildContext context) => JobApplicantsScreen(job: widget.jobData),
+      ),
+    ).then((_) {
+      if (mounted) _startWatching();
+    });
   }
 
   Future<void> _cancelSearch() async {

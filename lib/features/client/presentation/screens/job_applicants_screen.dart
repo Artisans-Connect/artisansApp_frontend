@@ -78,7 +78,14 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
     try {
       final List<dynamic> data = await _applicationsService.listForJob(_jobId);
+      final dynamic freshJob = await _jobsService.getJobById(_jobId);
       if (!mounted) return;
+
+      if (freshJob is Map<String, dynamic> && widget.job != null) {
+        widget.job!['status'] = freshJob['status'];
+        widget.job!['backendStatus'] = freshJob['status'];
+      }
+
       setState(() {
         _applications = data
             .whereType<Map<dynamic, dynamic>>()
@@ -146,8 +153,61 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
         }
       }
     } catch (e) {
+      if (!mounted) return;
+      // Network Interruption / Idempotency Recovery: check if backend actually accepted job despite network error
+      try {
+        final dynamic freshJobData = await JobsService().getJobById(_jobId);
+        final Map<String, dynamic>? freshJob = freshJobData is Map<String, dynamic> ? freshJobData : null;
+        final String currentStatus = (freshJob?['status'] ?? '').toString().toLowerCase();
+
+        final List<dynamic> freshAppsData = await _applicationsService.listForJob(_jobId);
+        final List<Map<String, dynamic>> freshApps = freshAppsData
+            .whereType<Map<dynamic, dynamic>>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList();
+
+        final Map<String, dynamic> targetApp = freshApps.firstWhere(
+          (app) => (app['id'] ?? '').toString() == applicationId,
+          orElse: () => <String, dynamic>{},
+        );
+        final String appStatus = (targetApp['status'] ?? '').toString().toLowerCase();
+
+        if (currentStatus == 'awaiting_payment' || currentStatus == 'matched' || appStatus == 'accepted') {
+          AppToast.showEscrow(context, 'Quote accepted! Directing to Escrow payment.');
+
+          final double totalQuote = double.tryParse((targetApp['total_quote'] ?? application['total_quote'] ?? '').toString()) ?? 100.00;
+
+          final bool? paid = await Navigator.push<bool>(
+            context,
+            MaterialPageRoute<bool>(
+              builder: (BuildContext context) => PaymentCheckoutScreen(
+                jobId: _jobId,
+                applicationId: applicationId,
+                amount: totalQuote,
+              ),
+            ),
+          );
+
+          if (!mounted) return;
+          if (paid == true) {
+            if (freshJob != null && mounted) {
+              Navigator.pushNamed(
+                context,
+                AppRoutes.liveTracking,
+                arguments: ClientBooking.fromApiJob(freshJob).toTrackingMap(),
+              );
+            } else if (mounted) {
+              Navigator.pop(context, true);
+            }
+          }
+          return;
+        }
+      } catch (_) {
+        // Fallthrough if check fails
+      }
+
       if (mounted) {
-        AppToast.showError(context, e, fallback: 'Could not accept artisan.');
+        AppToast.showError(context, e, fallback: 'Could not accept artisan. Pull down to refresh.');
       }
     } finally {
       if (mounted) setState(() => _isAccepting = false);
@@ -274,6 +334,11 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
         title: 'Interested Artisans',
         onBackPressed: () => Navigator.pop(context),
         actions: <Widget>[
+          IconButton(
+            onPressed: _isLoading ? null : _loadApplications,
+            icon: Icon(PhosphorIcons.arrowsClockwise),
+            tooltip: 'Refresh artisans',
+          ),
           if (_canCancelSearch)
             TextButton.icon(
               onPressed: _isCancelling ? null : _cancelSearch,

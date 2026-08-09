@@ -21,6 +21,7 @@ import 'app_routes.dart';
 import 'auth_navigation.dart';
 import '../../shared/presentation/screens/notifications_screen.dart';
 import '../../features/wallet/presentation/screens/wallet_screen.dart';
+import '../../features/auth/presentation/screens/sign_in_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -212,6 +213,13 @@ class _NotFoundScreenState extends State<_NotFoundScreen> {
     if (!mounted || _redirected) return;
     _redirected = true;
     final session = AppUserSession.instance;
+    
+    // If not authenticated, redirect to sign in instead of client shell
+    if (!session.isAuthenticated) {
+      Navigator.pushNamedAndRemoveUntil(context, SignInScreen.routeName, (_) => false);
+      return;
+    }
+
     final String route = shellRouteForMode(
       session.activeMode,
       session.isWorkerCapable,

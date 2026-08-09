@@ -84,16 +84,16 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
 
   Future<void> _decline() async {
     if (_accepting || _declining) return;
-    setState(() => _declining = true);
+    
+    // Instantly close the modal sheet to make the UI feel fast
+    widget.onDeclined();
+    if (mounted) Navigator.of(context).pop();
+
+    // Fire the decline API request in the background
     try {
       await _workersService.declineJob(widget.job.id);
-      widget.onDeclined();
-      if (mounted) Navigator.of(context).pop();
     } catch (e) {
-      if (!mounted) return;
-      AppToast.showError(context, e, fallback: 'Could not decline request.');
-    } finally {
-      if (mounted) setState(() => _declining = false);
+      debugPrint('[WorkerJobAlertSheet] Background decline failed: $e');
     }
   }
 

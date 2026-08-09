@@ -7,6 +7,7 @@ import '../../../shared/presentation/screens/user_profile_screen.dart';
 import 'navigation/client_shell_scope.dart';
 import 'screens/booking_history_screen.dart';
 import 'screens/client_home_screen.dart';
+import '../../../core/session/app_user_session.dart';
 
 enum ClientNavTab { home, bookings, messages, profile }
 
@@ -21,7 +22,7 @@ class ClientShell extends StatefulWidget {
   State<ClientShell> createState() => _ClientShellState();
 }
 
-class _ClientShellState extends State<ClientShell> {
+class _ClientShellState extends State<ClientShell> with WidgetsBindingObserver {
   late ClientNavTab _currentTab;
   int _homeRefreshSignal = 0;
   int _bookingsRefreshSignal = 0;
@@ -30,7 +31,26 @@ class _ClientShellState extends State<ClientShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _currentTab = widget.initialTab;
+    AppUserSession.instance.updateActiveMode('client');
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _homeRefreshSignal++;
+        _bookingsRefreshSignal++;
+        _messagesRefreshSignal++;
+      });
+    }
   }
 
   void _selectTab(ClientNavTab tab) {

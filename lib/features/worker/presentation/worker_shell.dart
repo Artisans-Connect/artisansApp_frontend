@@ -22,6 +22,7 @@ import 'state/worker_session_state.dart';
 import 'utils/worker_job_mapper.dart';
 import 'widgets/worker_bottom_nav.dart';
 import 'widgets/worker_job_alert_sheet.dart';
+import '../../../core/session/app_user_session.dart';
 
 class WorkerShell extends StatefulWidget {
   const WorkerShell({
@@ -39,7 +40,7 @@ class WorkerShell extends StatefulWidget {
   State<WorkerShell> createState() => _WorkerShellState();
 }
 
-class _WorkerShellState extends State<WorkerShell> {
+class _WorkerShellState extends State<WorkerShell> with WidgetsBindingObserver {
   late final WorkerSessionState _session;
   final WorkersService _workersService = WorkersService();
   final WorkerDispatchRealtimeService _dispatchRealtime =
@@ -50,11 +51,13 @@ class _WorkerShellState extends State<WorkerShell> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _session = WorkerSessionState();
     _session.currentTab = widget.initialTab;
     _session.addListener(_onSessionChanged);
     _session.loadAvailability();
     _session.loadActiveJob();
+    AppUserSession.instance.updateActiveMode('worker');
     _subscribeToDispatches();
     if (widget.initialJobRequestId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -65,10 +68,21 @@ class _WorkerShellState extends State<WorkerShell> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _dispatchRealtime.unsubscribe();
     _session.removeListener(_onSessionChanged);
     _session.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _session.loadActiveJob();
+      setState(() {
+        _messagesRefreshSignal++;
+      });
+    }
   }
 
   void _onSessionChanged() {

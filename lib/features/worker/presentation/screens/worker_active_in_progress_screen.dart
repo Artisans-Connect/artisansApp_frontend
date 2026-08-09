@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/services/negotiation_service.dart';
+import '../../../../core/services/negotiation_realtime_service.dart';
+import '../../../../core/session/app_user_session.dart';
 import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 import 'dart:async';
@@ -47,9 +49,13 @@ class _WorkerActiveInProgressScreenState
     _subscribeExtraCharge();
   }
 
+  String? _hasOpenedLiveBargainingSheetKey;
+  final NegotiationRealtimeService _negotiationRealtime = NegotiationRealtimeService();
+
   @override
   void dispose() {
     _extraChargeChannel?.unsubscribe();
+    _negotiationRealtime.unsubscribeJob();
     super.dispose();
   }
 
@@ -57,7 +63,12 @@ class _WorkerActiveInProgressScreenState
     try {
       final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(widget.job.id);
       final Negotiation? activeNeg = negs.cast<Negotiation?>().firstWhere(
-        (n) => n?.type == NegotiationType.extraCharge && (n?.status == NegotiationStatus.open || n?.status == NegotiationStatus.accepted || n?.status == NegotiationStatus.paid),
+        (n) => n != null && (n.status == NegotiationStatus.open || n.status == NegotiationStatus.accepted || n.status == NegotiationStatus.paid),
+        orElse: () => null,
+      );
+
+      final Negotiation? openNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n != null && n.status == NegotiationStatus.open,
         orElse: () => null,
       );
 
@@ -72,6 +83,24 @@ class _WorkerActiveInProgressScreenState
           } : null;
           _loadingExtraCharge = false;
         });
+
+        final String currentUserId = AppUserSession.instance.currentUser?.id ?? '';
+        final NegotiationRound? lastRound = openNeg?.rounds.isNotEmpty == true ? openNeg!.rounds.last : null;
+        final bool isCounterpartyTurnToRespond = lastRound != null && lastRound.proposedBy != currentUserId;
+
+        if (openNeg != null && openNeg.status == NegotiationStatus.open && isCounterpartyTurnToRespond) {
+          final String currentKey = '${openNeg.id}_${openNeg.rounds.length}';
+          if (_hasOpenedLiveBargainingSheetKey != currentKey) {
+            _hasOpenedLiveBargainingSheetKey = currentKey;
+            NegotiationChatSheet.show(
+              context,
+              negotiation: openNeg,
+              onStatusChanged: () {
+                _fetchExtraCharge();
+              },
+            );
+          }
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -81,17 +110,12 @@ class _WorkerActiveInProgressScreenState
   }
 
   void _subscribeExtraCharge() {
-    _extraChargeChannel = Supabase.instance.client
-        .channel('extra-charge-worker-${widget.job.id}')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'negotiations',
-          callback: (PostgresChangePayload payload) {
-            _fetchExtraCharge();
-          },
-        )
-        .subscribe();
+    _negotiationRealtime.subscribeToJobNegotiations(
+      widget.job.id,
+      onUpdate: () {
+        _fetchExtraCharge();
+      },
+    );
   }
 
   Future<void> _showExtraChargeDialog() async {
@@ -169,6 +193,9 @@ class _WorkerActiveInProgressScreenState
                             );
                             if (ctx.mounted) Navigator.pop(ctx);
                             _fetchExtraCharge();
+                            if (mounted) {
+                              AppToast.showPayment(context, '⚡ Extra charge request (+GHS ${amount.toStringAsFixed(2)}) sent to client!');
+                            }
                           } catch (e) {
                             if (ctx.mounted) {
                               AppToast.showError(context, e, fallback: 'Failed to request extra charge.');
@@ -243,13 +270,15 @@ class _WorkerActiveInProgressScreenState
       statusContent = Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Row(
+          Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: DesignTokens.accentWarm, size: 20),
-              SizedBox(width: 8),
+              const Icon(Icons.swap_horiz_rounded, color: DesignTokens.accentWarm, size: 20),
+              const SizedBox(width: 8),
               Text(
-                'Extra Charge Proposal',
-                style: TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.textPrimary),
+                negotiation.type == NegotiationType.completionAdjustment
+                    ? '⚡ Price Bargaining in Progress'
+                    : 'Extra Charge Proposal',
+                style: const TextStyle(fontWeight: FontWeight.bold, color: DesignTokens.textPrimary),
               ),
             ],
           ),
@@ -260,7 +289,7 @@ class _WorkerActiveInProgressScreenState
           ),
           if (desc.isNotEmpty) Text('Reason: $desc', style: const TextStyle(fontSize: 12, color: DesignTokens.textMuted)),
           const SizedBox(height: 12),
-          ElevatedButton(
+          ElevatedButton.icon(
             onPressed: () {
               NegotiationChatSheet.show(
                 context,
@@ -270,8 +299,19 @@ class _WorkerActiveInProgressScreenState
                 },
               );
             },
-            style: ElevatedButton.styleFrom(backgroundColor: DesignTokens.primary),
-            child: const Text('Review / Counter'),
+            icon: const Icon(Icons.chat_bubble_outline, size: 16, color: Colors.white),
+            label: Text(
+              negotiation.type == NegotiationType.completionAdjustment
+                  ? 'Open Live Bargaining Chat'
+                  : 'Review & Respond to Extra Charge',
+              style: const TextStyle(fontFamily: AppTypography.fontFamily, fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: DesignTokens.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
           ),
         ],
       );

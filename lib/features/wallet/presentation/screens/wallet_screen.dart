@@ -132,7 +132,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                 try {
                   await _walletService.topupWallet(amount: amt, reference: ref);
                   if (!mounted) return;
-                  AppToast.showSuccess(context, 'GHS ${amt.toStringAsFixed(2)} added to your wallet!');
+                  AppToast.showPayment(context, '💳 GH\u20B5 ${amt.toStringAsFixed(2)} added to your CraftMatch wallet!');
                   _loadWallet();
                 } catch (e) {
                   if (!mounted) return;

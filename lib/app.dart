@@ -23,6 +23,7 @@ import 'shared/presentation/screens/user_profile_screen.dart';
 import 'core/services/notification_service.dart';
 import 'features/trust_safety/presentation/screens/my_reports_screen.dart';
 import 'features/trust_safety/presentation/screens/blocked_users_screen.dart';
+import 'core/services/auth_service.dart';
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -37,6 +38,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
+    unawaited(AuthService.instance.loadCachedUser());
     WidgetsBinding.instance.addPostFrameCallback((_) {
       NotificationService.instance.drainPendingNavigation();
     });

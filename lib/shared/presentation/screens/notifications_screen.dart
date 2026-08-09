@@ -69,10 +69,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       final List<dynamic> raw = await _notificationService.getNotifications(limit: 20, offset: 0);
       if (!mounted) return;
       setState(() {
-        _notifications = raw
+        final List<NotificationItem> items = raw
             .whereType<Map<String, dynamic>>()
             .map(NotificationItem.fromJson)
             .toList();
+        final Set<String> seen = <String>{};
+        _notifications = items.where((NotificationItem n) => seen.add(n.id)).toList();
+        
         _isLoading = false;
         _offset = _notifications.length;
         if (raw.length < 20) {
@@ -105,7 +108,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           .map(NotificationItem.fromJson)
           .toList();
       setState(() {
-        _notifications.addAll(newItems);
+        final List<NotificationItem> combined = <NotificationItem>[..._notifications, ...newItems];
+        final Set<String> seen = <String>{};
+        _notifications = combined.where((NotificationItem n) => seen.add(n.id)).toList();
+        
         _offset = _notifications.length;
         _isFetchingMore = false;
         if (raw.length < 20) {

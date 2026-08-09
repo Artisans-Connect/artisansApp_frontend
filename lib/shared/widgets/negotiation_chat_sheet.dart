@@ -31,6 +31,7 @@ class NegotiationChatSheet extends StatefulWidget {
   }) {
     showModalBottomSheet<void>(
       context: context,
+      useRootNavigator: true,
       isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
@@ -113,7 +114,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
         _isLoading = false;
       });
       if (mounted) {
-        AppToast.showSuccess(context, 'Offer accepted successfully!');
+        AppToast.showPayment(context, '🤝 Offer Agreed! Price updated in job settlement.');
         widget.onStatusChanged?.call();
         Navigator.pop(context);
       }
@@ -138,7 +139,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
         _isLoading = false;
       });
       if (mounted) {
-        AppToast.showSuccess(context, 'Offer rejected/cancelled.');
+        AppToast.showInfo(context, 'Bargain offer declined.');
         widget.onStatusChanged?.call();
         Navigator.pop(context);
       }
@@ -176,7 +177,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
       _amountController.clear();
       _noteController.clear();
       if (mounted) {
-        AppToast.showSuccess(context, 'Counter-offer sent!');
+        AppToast.showPayment(context, '⚡ Counter-offer sent! Proposed: GH\u20B5 ${amount.toStringAsFixed(2)}');
         widget.onStatusChanged?.call();
       }
     } catch (e) {
@@ -356,8 +357,19 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
     );
   }
 
+  String _counterpartyLabel() {
+    final String mode = AppUserSession.instance.activeMode;
+    if (mode == 'worker') {
+      return 'Client';
+    } else if (mode == 'client') {
+      return 'Artisan';
+    }
+    return 'Artisan';
+  }
+
   Widget _buildRoundBubble(NegotiationRound round, bool isMine) {
     final Alignment alignment = isMine ? Alignment.centerRight : Alignment.centerLeft;
+    final bool isExtraCharge = _currentNegotiation.type == NegotiationType.extraCharge;
     return Align(
       alignment: alignment,
       child: Padding(
@@ -390,7 +402,9 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
                   Text(
-                    'GHS ${round.proposedAmount.toStringAsFixed(2)}',
+                    isExtraCharge
+                        ? '+GHS ${round.proposedAmount.toStringAsFixed(2)} (Extra Charge)'
+                        : 'GHS ${round.proposedAmount.toStringAsFixed(2)} (Quote)',
                     style: AppTypography.titleLarge.copyWith(
                       color: isMine ? Colors.white : AppColors.textPrimary,
                     ),
@@ -412,7 +426,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
             Padding(
               padding: const EdgeInsets.only(top: 4, left: 6, right: 6),
               child: Text(
-                '${isMine ? 'You' : 'Counter-party'} · ${_formatTime(round.createdAt)}',
+                '${isMine ? 'You' : _counterpartyLabel()} · ${_formatTime(round.createdAt)}',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textSecondary,
                   fontSize: 10,
@@ -428,10 +442,11 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
   Widget _buildActionBar(bool isOpen, bool isMyTurn, NegotiationRound? lastRound) {
     if (!isOpen) {
       final double finalAmount = _currentNegotiation.agreedAmount ?? _currentNegotiation.initialAmount;
+      final bool isExtraCharge = _currentNegotiation.type == NegotiationType.extraCharge;
       final String label = _currentNegotiation.status == NegotiationStatus.accepted
-          ? 'Agreed at GHS ${finalAmount.toStringAsFixed(2)} ✓'
+          ? (isExtraCharge ? 'Agreed Extra Charge +GHS ${finalAmount.toStringAsFixed(2)} ✓' : 'Agreed at GHS ${finalAmount.toStringAsFixed(2)} ✓')
           : _currentNegotiation.status == NegotiationStatus.paid
-              ? 'Paid GHS ${finalAmount.toStringAsFixed(2)} ✓'
+              ? (isExtraCharge ? 'Paid Extra Charge +GHS ${finalAmount.toStringAsFixed(2)} ✓' : 'Paid GHS ${finalAmount.toStringAsFixed(2)} ✓')
               : 'Bargaining Ended (Declined)';
       return Container(
         width: double.infinity,
@@ -475,7 +490,7 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Waiting for other party to respond...',
+                'Waiting for ${_counterpartyLabel().toLowerCase()} to respond...',
                 style: AppTypography.bodyMedium.copyWith(
                   color: Colors.blue[700],
                   fontWeight: FontWeight.w600,
@@ -489,10 +504,13 @@ class _NegotiationChatSheetState extends State<NegotiationChatSheet> {
 
     // Proposer turn actions
     final double amountToAccept = lastRound?.proposedAmount ?? _currentNegotiation.initialAmount;
+    final bool isExtraCharge = _currentNegotiation.type == NegotiationType.extraCharge;
     return Column(
       children: <Widget>[
         GradientButton(
-          label: 'Accept GHS ${amountToAccept.toStringAsFixed(2)}',
+          label: isExtraCharge
+              ? 'Accept Extra Charge (+GHS ${amountToAccept.toStringAsFixed(2)})'
+              : 'Accept GHS ${amountToAccept.toStringAsFixed(2)}',
           onPressed: _accept,
         ),
         const SizedBox(height: 10),

@@ -162,11 +162,12 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
 
       if (!mounted) return;
       setState(() {
-        if (_offset == 0) {
-          _bookings = <ClientBooking>[...localDrafts, ...newBookings];
-        } else {
-          _bookings.addAll(newBookings);
-        }
+        final List<ClientBooking> combined = _offset == 0
+            ? <ClientBooking>[...localDrafts, ...newBookings]
+            : <ClientBooking>[..._bookings, ...newBookings];
+        final Set<String> seen = <String>{};
+        _bookings = combined.where((ClientBooking b) => seen.add(b.id)).toList();
+
         _offset += _limit;
         if (newBookings.length < _limit) {
           _hasMore = false;
@@ -207,7 +208,10 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
 
       if (!mounted) return;
       setState(() {
-        _bookings.addAll(newBookings);
+        final List<ClientBooking> combined = <ClientBooking>[..._bookings, ...newBookings];
+        final Set<String> seen = <String>{};
+        _bookings = combined.where((ClientBooking b) => seen.add(b.id)).toList();
+
         _offset += _limit;
         if (newBookings.length < _limit) {
           _hasMore = false;

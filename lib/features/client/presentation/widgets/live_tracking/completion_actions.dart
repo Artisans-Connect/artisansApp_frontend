@@ -10,6 +10,7 @@ class CompletionActions extends StatelessWidget {
   final bool canRate;
   final bool pendingApproval;
   final bool isReopeningCompletion;
+  final bool hasPendingAgreement;
   final VoidCallback onRate;
   final VoidCallback onReopen;
 
@@ -18,6 +19,7 @@ class CompletionActions extends StatelessWidget {
     required this.canRate,
     required this.pendingApproval,
     required this.isReopeningCompletion,
+    this.hasPendingAgreement = false,
     required this.onRate,
     required this.onReopen,
   });
@@ -25,15 +27,38 @@ class CompletionActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (pendingApproval) {
+      final bool isApproveEnabled = !hasPendingAgreement;
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
           RateButton(
-            enabled: true,
-            label: 'Approve & Rate',
-            icon: Icons.star_rounded,
-            onTap: onRate,
+            enabled: isApproveEnabled,
+            label: isApproveEnabled ? 'Approve & Rate' : 'Resolve Open Agreement First',
+            icon: isApproveEnabled ? Icons.star_rounded : Icons.lock_clock_outlined,
+            onTap: isApproveEnabled ? onRate : null,
           ),
+          if (hasPendingAgreement) ...<Widget>[
+            const SizedBox(height: 6),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(Icons.info_outline, size: 14, color: DesignTokens.accentWarm),
+                SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    'Please resolve open extra charge or bargaining before approving completion.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 11,
+                      color: DesignTokens.accentWarm,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 10),
           OutlinedButton(
             onPressed: isReopeningCompletion ? null : onReopen,
@@ -45,10 +70,10 @@ class CompletionActions extends StatelessWidget {
     }
 
     return RateButton(
-      enabled: canRate,
+      enabled: canRate && !hasPendingAgreement,
       label: canRate ? 'Rate Your Experience' : 'Waiting for Completion',
       icon: canRate ? Icons.star_rounded : Icons.hourglass_top_rounded,
-      onTap: canRate ? onRate : null,
+      onTap: canRate && !hasPendingAgreement ? onRate : null,
     );
   }
 }

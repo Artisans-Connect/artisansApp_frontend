@@ -3,16 +3,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/services/jobs_service.dart';
+import '../../../../core/services/payment_service.dart';
+import '../../../../core/services/negotiation_service.dart';
 import '../../../../core/services/storage_service.dart';
+import '../../../../shared/models/negotiation.dart';
 import '../../../../shared/models/picked_media.dart';
 import '../../../../shared/widgets/app_toast.dart';
+import '../../../../shared/widgets/negotiation_chat_sheet.dart';
+import '../../../../shared/widgets/custom_back_button.dart';
 import '../models/worker_job.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/completion_photo_picker.dart';
 import '../widgets/gradient_button.dart';
 import '../widgets/job_detail_card.dart';
 import 'worker_completion_success_screen.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
 
 class WorkerCompletionFormScreen extends StatefulWidget {
   const WorkerCompletionFormScreen({
@@ -20,12 +24,15 @@ class WorkerCompletionFormScreen extends StatefulWidget {
     required this.job,
     required this.onCompletionSubmitted,
   });
+
   final WorkerJob job;
   final VoidCallback onCompletionSubmitted;
+
   @override
   State<WorkerCompletionFormScreen> createState() =>
       _WorkerCompletionFormScreenState();
 }
+
 class _WorkerCompletionFormScreenState
     extends State<WorkerCompletionFormScreen> {
   static const double _platformFeeRate = 0.10;
@@ -37,6 +44,12 @@ class _WorkerCompletionFormScreenState
   final List<PickedMedia> _photos = <PickedMedia>[];
   bool _isSubmitting = false;
   double? _previewAmount;
+
+  bool _loadingSettlement = true;
+  double _initialEscrow = 0.0;
+  double _acceptedExtraCharges = 0.0;
+  List<Map<String, dynamic>> _pendingExtraCharges = <Map<String, dynamic>>[];
+  Negotiation? _openNegotiation;
 
   @override
   void initState() {
@@ -55,6 +68,46 @@ class _WorkerCompletionFormScreenState
     if ((widget.job.completionNotes ?? '').isNotEmpty) {
       _notesController.text = widget.job.completionNotes!;
     }
+    _fetchSettlementAndNegotiations();
+  }
+
+  Future<void> _fetchSettlementAndNegotiations() async {
+    try {
+      final res = await PaymentService.instance.calculateSettlement(widget.job.id);
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(widget.job.id);
+      final Negotiation? openNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.status == NegotiationStatus.open,
+        orElse: () => null,
+      );
+
+      final double grossAmount = double.tryParse(res['gross_amount']?.toString() ?? '0') ?? 0.0;
+      final double initialEscrow = double.tryParse(res['initial_escrow']?.toString() ?? '0') ?? 0.0;
+      final double extraCharges = double.tryParse(res['total_extra_charges']?.toString() ?? '0') ?? 0.0;
+      final rawPending = res['pending_extra_charges'] as List?;
+      final List<Map<String, dynamic>> pendingList = rawPending != null
+          ? rawPending.cast<Map<String, dynamic>>()
+          : <Map<String, dynamic>>[];
+
+      if (mounted) {
+        setState(() {
+          _initialEscrow = initialEscrow;
+          _acceptedExtraCharges = extraCharges;
+          _pendingExtraCharges = pendingList;
+          _openNegotiation = openNeg;
+          _loadingSettlement = false;
+
+          // If grossAmount exists and includes extra charges, prefill text controller with gross total!
+          if (grossAmount > 0) {
+            _proposedAmountController.text = grossAmount.toStringAsFixed(2);
+            _previewAmount = grossAmount;
+          }
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingSettlement = false);
+      }
+    }
   }
 
   @override
@@ -65,6 +118,7 @@ class _WorkerCompletionFormScreenState
     _notesController.dispose();
     super.dispose();
   }
+
   Future<void> _submit() async {
     if (_isSubmitting) return;
     final double? proposedAmount =
@@ -112,6 +166,106 @@ class _WorkerCompletionFormScreenState
       AppToast.showError(context, e, fallback: 'Could not complete job.');
     }
   }
+
+  Widget _buildPendingAgreementBanner() {
+    if (_loadingSettlement || (_pendingExtraCharges.isEmpty && _openNegotiation == null)) {
+      return const SizedBox.shrink();
+    }
+
+    final double pendingAmt = _pendingExtraCharges.fold(
+      0.0,
+      (sum, item) => sum + (double.tryParse(item['amount']?.toString() ?? '0') ?? 0.0),
+    );
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.md),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFEF3C7),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0xFFF59E0B)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Icon(Icons.warning_amber_rounded, size: 20, color: Color(0xFFB45309)),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _pendingExtraCharges.isNotEmpty
+                      ? '⚡ Pending Extra Charge Proposal (+GHS ${pendingAmt.toStringAsFixed(2)})'
+                      : '⚡ Active Price Bargaining in Progress',
+                  style: const TextStyle(fontFamily: 'Satoshi', fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFFB45309)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _pendingExtraCharges.isNotEmpty
+                ? 'Your extra charge of GHS ${pendingAmt.toStringAsFixed(2)} is pending client acceptance. Click below to add it to your proposed total.'
+                : 'There is an open price bargaining negotiation on this job. Click below to review with the client.',
+            style: const TextStyle(fontFamily: 'Satoshi', fontSize: 12, color: DesignTokens.textPrimary),
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: <Widget>[
+              if (_pendingExtraCharges.isNotEmpty)
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      final double currentInput = double.tryParse(_proposedAmountController.text.trim()) ?? (_initialEscrow + _acceptedExtraCharges);
+                      final double newTotal = currentInput + pendingAmt;
+                      setState(() {
+                        _proposedAmountController.text = newTotal.toStringAsFixed(2);
+                        _previewAmount = newTotal;
+                      });
+                      AppToast.showPayment(context, '⚡ Added +GHS ${pendingAmt.toStringAsFixed(2)} extra charge to proposed total: GHS ${newTotal.toStringAsFixed(2)}');
+                    },
+                    icon: const Icon(Icons.add_circle_outline, size: 14, color: Colors.white),
+                    label: Text(
+                      'Include Extra (+GHS ${pendingAmt.toStringAsFixed(2)})',
+                      style: const TextStyle(fontFamily: 'Satoshi', fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFD97706),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ),
+              if (_pendingExtraCharges.isNotEmpty && _openNegotiation != null) const SizedBox(width: 8),
+              if (_openNegotiation != null)
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () {
+                      NegotiationChatSheet.show(
+                        context,
+                        negotiation: _openNegotiation!,
+                        onStatusChanged: _fetchSettlementAndNegotiations,
+                      );
+                    },
+                    icon: const Icon(Icons.chat_outlined, size: 14),
+                    label: const Text(
+                      'Review Chat',
+                      style: TextStyle(fontFamily: 'Satoshi', fontSize: 11, fontWeight: FontWeight.bold),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,6 +304,7 @@ class _WorkerCompletionFormScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
+            _buildPendingAgreementBanner(),
             Text('FINAL AMOUNT FOR CLIENT APPROVAL', style: AppTypography.labelCaps),
             const SizedBox(height: AppSpacing.sm),
             TextField(
@@ -163,7 +318,12 @@ class _WorkerCompletionFormScreenState
               style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSpacing.md),
-            _PayoutPreview(amount: _previewAmount, feeRate: _platformFeeRate),
+            _PayoutPreview(
+              amount: _previewAmount,
+              feeRate: _platformFeeRate,
+              initialEscrow: _initialEscrow,
+              acceptedExtraCharges: _acceptedExtraCharges,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text('MATERIALS USED (OPTIONAL)', style: AppTypography.labelCaps),
             const SizedBox(height: AppSpacing.sm),
@@ -214,6 +374,7 @@ class _WorkerCompletionFormScreenState
       ),
     );
   }
+
   InputDecoration _inputDecoration(String hint) {
     return InputDecoration(
       hintText: hint,
@@ -255,10 +416,14 @@ class _PayoutPreview extends StatelessWidget {
   const _PayoutPreview({
     required this.amount,
     required this.feeRate,
+    this.initialEscrow = 0.0,
+    this.acceptedExtraCharges = 0.0,
   });
 
   final double? amount;
   final double feeRate;
+  final double initialEscrow;
+  final double acceptedExtraCharges;
 
   @override
   Widget build(BuildContext context) {
@@ -286,8 +451,20 @@ class _PayoutPreview extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
+          if (initialEscrow > 0 && acceptedExtraCharges > 0) ...[
+            _PayoutRow(
+              label: 'Original Base Escrow',
+              value: _formatGhs(initialEscrow),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            _PayoutRow(
+              label: 'Approved Extra Charges (+)',
+              value: _formatGhs(acceptedExtraCharges),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+          ],
           _PayoutRow(
-            label: 'Amount sent to client',
+            label: 'Gross Amount sent to client',
             value: hasAmount ? _formatGhs(grossAmount) : '--',
           ),
           const SizedBox(height: AppSpacing.xs),
