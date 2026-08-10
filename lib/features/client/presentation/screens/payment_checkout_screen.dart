@@ -161,9 +161,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       }
     } catch (e) {
       if (!mounted) return;
+      final String msg = e.toString().replaceAll('Exception: ', '').replaceAll('ApiException: ', '');
       setState(() {
         _isVerifying = false;
-        _error = 'Verification failed. Please complete the payment first.';
+        _error = msg.isNotEmpty ? msg : 'Verification failed. Please complete the payment first.';
       });
       _startPolling();
     }
