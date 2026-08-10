@@ -12,6 +12,7 @@ import '../../../../shared/widgets/app_toast.dart';
 import '../../../../shared/widgets/negotiation_chat_sheet.dart';
 import '../../../../shared/widgets/custom_back_button.dart';
 import '../models/worker_job.dart';
+import '../state/worker_session_state.dart';
 import '../utils/worker_job_mapper.dart';
 import '../widgets/completion_photo_picker.dart';
 import '../widgets/gradient_button.dart';
@@ -152,6 +153,7 @@ class _WorkerCompletionFormScreenState
           ? workerJobFromApi(updated)
           : widget.job;
       setState(() => _isSubmitting = false);
+      await WorkerScope.read(context).setAvailable(true);
       await Navigator.of(context).pushReplacement(
         MaterialPageRoute<void>(
           builder: (_) => WorkerCompletionSuccessScreen(

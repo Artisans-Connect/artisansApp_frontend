@@ -111,6 +111,7 @@ class WorkerSessionState extends ChangeNotifier {
           } catch (_) {
             // Avoid false cancellation notification if status check fails
           }
+          await setAvailable(true);
         }
         _realtimeService.unsubscribe();
         activeJob = null;
@@ -127,6 +128,15 @@ class WorkerSessionState extends ChangeNotifier {
         _realtimeService.unsubscribe();
         activeJob = null;
         jobPhase = WorkerJobPhase.none;
+        notifyListeners();
+        return;
+      }
+
+      if (status == 'completed') {
+        _realtimeService.unsubscribe();
+        activeJob = null;
+        jobPhase = WorkerJobPhase.none;
+        await setAvailable(true);
         notifyListeners();
         return;
       }
@@ -212,6 +222,7 @@ class WorkerSessionState extends ChangeNotifier {
     if (activeJob == null) return;
     jobPhase = WorkerJobPhase.pendingApproval;
     currentTab = WorkerNavTab.bookings;
+    setAvailable(true);
     notifyListeners();
   }
 
