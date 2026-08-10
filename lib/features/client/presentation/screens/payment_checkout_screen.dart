@@ -70,7 +70,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   Future<void> _verifyPaymentSilent() async {
     if (_reference == null || _isVerifying || !mounted) return;
     try {
-      final res = await _paymentService.verifyPayment(_reference!);
+      final res = await _paymentService.verifyPayment(widget.jobId);
       final bool success = res['success'] as bool? ?? false;
       if (!mounted) return;
       if (success) {
@@ -145,7 +145,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     });
     try {
       _pollTimer?.cancel();
-      final res = await _paymentService.verifyPayment(_reference!);
+      final res = await _paymentService.verifyPayment(widget.jobId);
       final bool success = res['success'] as bool? ?? false;
       if (!mounted) return;
       
