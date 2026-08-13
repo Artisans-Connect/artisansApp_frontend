@@ -294,19 +294,15 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                           width: double.infinity,
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: widget.isWorker
-                                  ? <Color>[const Color(0xFF2C2418), const Color(0xFF4A3E2F)]
-                                  : <Color>[const Color(0xFF8B3A2A), const Color(0xFFC15A3D)],
+                            gradient: const LinearGradient(
+                              colors: <Color>[Color(0xFF2C2418), Color(0xFF4A3E2F)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: <BoxShadow>[
                               BoxShadow(
-                                color: widget.isWorker
-                                    ? AppColors.textPrimary.withOpacity(0.25)
-                                    : AppColors.primaryDark.withOpacity(0.25),
+                                color: AppColors.textPrimary.withOpacity(0.25),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               ),
@@ -360,9 +356,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                                       icon: const Icon(PhosphorIcons.plusCircle, size: 18),
                                       label: const Text('Top-Up'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: widget.isWorker
-                                            ? AppColors.primary
-                                            : AppColors.secondary,
+                                        backgroundColor: AppColors.secondary,
                                         foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                         shape: RoundedRectangleBorder(
@@ -378,12 +372,8 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                                       icon: const Icon(PhosphorIcons.arrowUpRight, size: 18),
                                       label: const Text('Cash Out'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: widget.isWorker
-                                            ? AppColors.secondary
-                                            : Colors.white.withOpacity(0.9),
-                                        foregroundColor: widget.isWorker
-                                            ? Colors.white
-                                            : AppColors.primary,
+                                        backgroundColor: Colors.white.withOpacity(0.9),
+                                        foregroundColor: AppColors.primary,
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(12),

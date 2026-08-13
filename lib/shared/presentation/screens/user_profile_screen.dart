@@ -258,19 +258,15 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: isWorkerView
-                              ? <Color>[const Color(0xFF2C2418), const Color(0xFF4A3E2F)]
-                              : <Color>[const Color(0xFF8B3A2A), const Color(0xFFC15A3D)],
+                        gradient: const LinearGradient(
+                          colors: <Color>[Color(0xFF2C2418), Color(0xFF4A3E2F)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color: isWorkerView
-                                ? AppColors.textPrimary.withOpacity(0.15)
-                                : AppColors.primaryDark.withOpacity(0.15),
+                            color: AppColors.textPrimary.withOpacity(0.15),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -281,12 +277,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: (isWorkerView ? AppColors.primary : AppColors.secondary).withOpacity(0.2),
+                              color: AppColors.secondary.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               PhosphorIcons.wallet,
-                              color: isWorkerView ? AppColors.primary : AppColors.secondary,
+                              color: AppColors.secondary,
                               size: 24,
                             ),
                           ),
