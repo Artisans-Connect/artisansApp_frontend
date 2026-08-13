@@ -258,15 +258,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: <Color>[Color(0xFF0F172A), Color(0xFF1E293B)],
+                        gradient: LinearGradient(
+                          colors: isWorkerView
+                              ? <Color>[const Color(0xFF0F172A), const Color(0xFF1E293B)]
+                              : <Color>[const Color(0xFF8B3A2A), const Color(0xFFC15A3D)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.08),
+                            color: isWorkerView
+                                ? Colors.black.withOpacity(0.08)
+                                : AppColors.primaryDark.withOpacity(0.15),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -277,12 +281,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: AppColors.primary.withOpacity(0.2),
+                              color: (isWorkerView ? AppColors.primary : AppColors.secondary).withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               PhosphorIcons.wallet,
-                              color: AppColors.primary,
+                              color: isWorkerView ? AppColors.primary : AppColors.secondary,
                               size: 24,
                             ),
                           ),
@@ -300,7 +304,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  isWorkerView ? 'Manage balance & cash-out to MoMo' : 'View credits, refunds & transaction history',
+                                  isWorkerView ? 'Manage balance & cash-out to MoMo' : 'Manage balance, refunds & cash-out to MoMo',
                                   style: AppTypography.bodySmall.copyWith(
                                     color: Colors.white70,
                                   ),

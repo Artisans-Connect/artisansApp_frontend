@@ -171,10 +171,15 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Text('Cash Out Earnings', style: AppTypography.titleLarge),
+              Text(
+                widget.isWorker ? 'Cash Out Earnings' : 'Cash Out Balance',
+                style: AppTypography.titleLarge,
+              ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Withdraw your available balance to your Mobile Money account.',
+                widget.isWorker
+                    ? 'Withdraw your available balance to your Mobile Money account.'
+                    : 'Withdraw your available credits or refunds to your Mobile Money account.',
                 style: AppTypography.bodySmall.copyWith(color: AppColors.textSecondary),
               ),
               const SizedBox(height: AppSpacing.md),
@@ -289,15 +294,19 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                           width: double.infinity,
                           padding: const EdgeInsets.all(AppSpacing.lg),
                           decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: <Color>[Color(0xFF0F172A), Color(0xFF1E293B)],
+                            gradient: LinearGradient(
+                              colors: widget.isWorker
+                                  ? <Color>[const Color(0xFF0F172A), const Color(0xFF1E293B)]
+                                  : <Color>[const Color(0xFF8B3A2A), const Color(0xFFC15A3D)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                             ),
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: <BoxShadow>[
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.15),
+                                color: widget.isWorker
+                                    ? Colors.black.withOpacity(0.15)
+                                    : AppColors.primaryDark.withOpacity(0.25),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
                               ),
@@ -351,7 +360,9 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                                       icon: const Icon(PhosphorIcons.plusCircle, size: 18),
                                       label: const Text('Top-Up'),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primary,
+                                        backgroundColor: widget.isWorker
+                                            ? AppColors.primary
+                                            : AppColors.secondary,
                                         foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                         shape: RoundedRectangleBorder(
@@ -360,24 +371,26 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                                       ),
                                     ),
                                   ),
-                                  if (widget.isWorker) ...<Widget>[
-                                    const SizedBox(width: AppSpacing.sm),
-                                    Expanded(
-                                      child: ElevatedButton.icon(
-                                        onPressed: _showCashoutModal,
-                                        icon: const Icon(PhosphorIcons.arrowUpRight, size: 18),
-                                        label: const Text('Cash Out'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF10B981),
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(vertical: 12),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
+                                  const SizedBox(width: AppSpacing.sm),
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      onPressed: _showCashoutModal,
+                                      icon: const Icon(PhosphorIcons.arrowUpRight, size: 18),
+                                      label: const Text('Cash Out'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: widget.isWorker
+                                            ? const Color(0xFF10B981)
+                                            : Colors.white.withOpacity(0.9),
+                                        foregroundColor: widget.isWorker
+                                            ? Colors.white
+                                            : AppColors.primary,
+                                        padding: const EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(12),
                                         ),
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ],
                               ),
                             ],
