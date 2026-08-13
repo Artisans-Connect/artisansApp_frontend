@@ -296,7 +296,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
                               colors: widget.isWorker
-                                  ? <Color>[const Color(0xFF0F172A), const Color(0xFF1E293B)]
+                                  ? <Color>[const Color(0xFF2C2418), const Color(0xFF4A3E2F)]
                                   : <Color>[const Color(0xFF8B3A2A), const Color(0xFFC15A3D)],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -305,7 +305,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                             boxShadow: <BoxShadow>[
                               BoxShadow(
                                 color: widget.isWorker
-                                    ? Colors.black.withOpacity(0.15)
+                                    ? AppColors.textPrimary.withOpacity(0.25)
                                     : AppColors.primaryDark.withOpacity(0.25),
                                 blurRadius: 16,
                                 offset: const Offset(0, 8),
@@ -379,7 +379,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                                       label: const Text('Cash Out'),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: widget.isWorker
-                                            ? const Color(0xFF10B981)
+                                            ? AppColors.secondary
                                             : Colors.white.withOpacity(0.9),
                                         foregroundColor: widget.isWorker
                                             ? Colors.white

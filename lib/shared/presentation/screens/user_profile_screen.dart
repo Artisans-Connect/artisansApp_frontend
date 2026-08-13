@@ -260,7 +260,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: isWorkerView
-                              ? <Color>[const Color(0xFF0F172A), const Color(0xFF1E293B)]
+                              ? <Color>[const Color(0xFF2C2418), const Color(0xFF4A3E2F)]
                               : <Color>[const Color(0xFF8B3A2A), const Color(0xFFC15A3D)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -269,7 +269,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         boxShadow: <BoxShadow>[
                           BoxShadow(
                             color: isWorkerView
-                                ? Colors.black.withOpacity(0.08)
+                                ? AppColors.textPrimary.withOpacity(0.15)
                                 : AppColors.primaryDark.withOpacity(0.15),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
