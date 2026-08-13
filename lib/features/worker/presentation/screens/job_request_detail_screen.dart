@@ -263,7 +263,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      hintText: 'System estimate: GH₵ ${(job.grossAmount ?? 0).round()}',
+                      labelText: 'Proposed Quote (System estimate: GH₵ ${(job.grossAmount ?? 0).round()})',
                       prefixText: 'GH₵ ',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
