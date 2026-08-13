@@ -28,19 +28,22 @@ class PaymentCheckoutScreen extends StatefulWidget {
   State<PaymentCheckoutScreen> createState() => _PaymentCheckoutScreenState();
 }
 
-class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
+class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> with WidgetsBindingObserver {
   final PaymentService _paymentService = PaymentService.instance;
   
   String? _checkoutUrl;
   String? _reference;
   bool _isLoading = false;
   bool _isVerifying = false;
+  bool _isVerifyingSilent = false;
+  bool _isCompleted = false;
   String? _error;
   Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkoutUrl = widget.initialCheckoutUrl;
     _reference = widget.initialReference;
     
@@ -56,8 +59,16 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pollTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && _reference != null && !_isVerifying && !_isVerifyingSilent && !_isCompleted && !_isLoading) {
+      _verifyPaymentSilent();
+    }
   }
 
   void _startPolling() {
@@ -68,18 +79,22 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   }
 
   Future<void> _verifyPaymentSilent() async {
-    if (_reference == null || _isVerifying || !mounted) return;
+    if (_reference == null || _isVerifying || _isVerifyingSilent || _isCompleted || !mounted) return;
+    _isVerifyingSilent = true;
     try {
       final res = await _paymentService.verifyPayment(widget.jobId);
       final bool success = res['success'] as bool? ?? false;
       if (!mounted) return;
-      if (success) {
+      if (success && !_isCompleted) {
+        _isCompleted = true;
         _pollTimer?.cancel();
         AppToast.showEscrow(context, 'Payment Confirmed! Funds are securely held in Escrow.');
         Navigator.of(context).pop(true);
       }
     } catch (_) {
       // Silent catch
+    } finally {
+      _isVerifyingSilent = false;
     }
   }
 
