@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../network/api_client.dart';
 
 class PaymentService {
@@ -15,6 +16,7 @@ class PaymentService {
       '/payments/initialize',
       body: <String, dynamic>{
         'jobId': jobId,
+        'platform': kIsWeb ? 'web' : 'mobile',
         if (applicationId != null) 'applicationId': applicationId,
       },
     );
@@ -123,7 +125,12 @@ class PaymentService {
 
   /// Initializes final settlement checkout session or releases escrow
   Future<Map<String, dynamic>> checkoutSettlement(String jobId) async {
-    final dynamic response = await _api.post('/payments/settlement/$jobId/checkout');
+    final dynamic response = await _api.post(
+      '/payments/settlement/$jobId/checkout',
+      body: <String, dynamic>{
+        'platform': kIsWeb ? 'web' : 'mobile',
+      },
+    );
     return Map<String, dynamic>.from(response as Map);
   }
 }
