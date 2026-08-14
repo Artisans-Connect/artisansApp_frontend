@@ -920,7 +920,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                         fontFamily: 'Satoshi',
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
-                        color: DesignTokens.textPrimary,
+                        color: DesignTokens.primary,
                       ),
                     ),
                   ),

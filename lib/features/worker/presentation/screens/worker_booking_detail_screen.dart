@@ -22,7 +22,7 @@ class WorkerBookingDetailScreen extends StatelessWidget {
         leading: const CustomBackButton(),
         title: Text(
           'Booking Details',
-          style: AppTypography.titleLarge.copyWith(color: AppColors.onSurface),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
       ),

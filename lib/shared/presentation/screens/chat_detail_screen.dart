@@ -535,7 +535,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                       Text(
                         args.counterpartName,
                         style: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.textPrimary,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,

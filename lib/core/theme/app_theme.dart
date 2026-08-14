@@ -50,7 +50,7 @@ ThemeData buildAppTheme() {
         fontFamily: AppTypography.displayFontFamily,
         fontSize: 20,
         fontWeight: FontWeight.w700,
-        color: AppColors.textPrimary,
+        color: AppColors.primary,
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(

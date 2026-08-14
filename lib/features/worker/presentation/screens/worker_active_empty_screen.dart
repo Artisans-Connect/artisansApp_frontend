@@ -26,7 +26,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
             fontFamily: AppTypography.displayFontFamily,
             fontSize: 18,
             fontWeight: FontWeight.w700,
-            color: DesignTokens.textPrimary,
+            color: DesignTokens.primary,
           ),
         ),
         actions: <Widget>[

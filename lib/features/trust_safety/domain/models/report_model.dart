@@ -48,10 +48,14 @@ class SafetyReport {
       isEmergency: json['is_emergency'] as bool? ?? false,
       actionTaken: json['action_taken'] as String? ?? 'NONE',
       resolutionReason: json['resolution_reason'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
-      updatedAt: DateTime.parse(json['updated_at'] as String),
-      resolvedAt: json['resolved_at'] != null
-          ? DateTime.parse(json['resolved_at'] as String)
+      createdAt: json['created_at'] != null && (json['created_at'] as String).isNotEmpty
+          ? DateTime.tryParse(json['created_at'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      updatedAt: json['updated_at'] != null && (json['updated_at'] as String).isNotEmpty
+          ? DateTime.tryParse(json['updated_at'] as String) ?? DateTime.now()
+          : DateTime.now(),
+      resolvedAt: json['resolved_at'] != null && (json['resolved_at'] as String).isNotEmpty
+          ? DateTime.tryParse(json['resolved_at'] as String)
           : null,
     );
   }

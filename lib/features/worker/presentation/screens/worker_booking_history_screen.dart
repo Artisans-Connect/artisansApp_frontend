@@ -155,7 +155,7 @@ class _WorkerBookingHistoryScreenState
         ),
         title: Text(
           'History',
-          style: AppTypography.titleLarge.copyWith(color: AppColors.onSurface),
+          style: AppTypography.titleLarge.copyWith(color: AppColors.primary),
         ),
         centerTitle: true,
         actions: <Widget>[

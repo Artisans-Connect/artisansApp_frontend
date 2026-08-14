@@ -474,7 +474,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
                   fontFamily: 'Satoshi',
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
-                  color: DesignTokens.textPrimary,
+                  color: DesignTokens.primary,
                 ),
               ),
             ],

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../../../core/errors/error_messages.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
@@ -41,7 +42,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString().replaceAll('Exception: ', '');
+        _error = userMessageFor(e);
         _isLoading = false;
       });
     }
@@ -158,7 +159,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
                                             horizontal: 10, vertical: 4),
                                         decoration: BoxDecoration(
                                           color: _statusColor(report.status)
-                                              .withOpacity(0.12),
+                                              .withValues(alpha: 0.12),
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),

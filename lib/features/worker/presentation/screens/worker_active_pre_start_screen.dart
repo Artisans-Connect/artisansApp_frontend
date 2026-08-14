@@ -94,7 +94,7 @@ class _WorkerActivePreStartScreenState
                 fontFamily: AppTypography.displayFontFamily,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: DesignTokens.textPrimary,
+                color: DesignTokens.primary,
               ),
             ),
           ],

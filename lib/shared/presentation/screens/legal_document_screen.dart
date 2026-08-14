@@ -61,7 +61,7 @@ class _LegalDocumentScreenState extends State<LegalDocumentScreen> {
           style: Theme.of(context)
               .textTheme
               .titleLarge
-              ?.copyWith(color: AppColors.textPrimary),
+              ?.copyWith(color: AppColors.primary),
         ),
       ),
       body: _isLoading

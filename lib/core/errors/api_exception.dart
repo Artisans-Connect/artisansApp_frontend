@@ -11,6 +11,9 @@ class ApiException implements Exception {
   bool get isNotFound => statusCode == 404;
   bool get isValidation => statusCode == 400;
   bool get isConflict => statusCode == 409;
+
+  @override
+  String toString() => message.isNotEmpty ? message : 'ApiException($statusCode)';
 }
 
 /// Thrown when the device cannot reach the API (offline, DNS, timeout).

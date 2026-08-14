@@ -73,7 +73,7 @@ class _WorkerDashboardTab extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text('Dashboard',
-            style: AppTypography.displayMedium.copyWith(fontSize: 22)),
+            style: AppTypography.displayMedium.copyWith(fontSize: 22, color: AppColors.primary)),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

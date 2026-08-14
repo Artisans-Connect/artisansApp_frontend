@@ -37,7 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveTitleColor = titleColor ?? AppColors.textPrimary;
+    final effectiveTitleColor = titleColor ?? AppColors.primary;
 
     return AppBar(
       title: subtitle != null && subtitle!.isNotEmpty

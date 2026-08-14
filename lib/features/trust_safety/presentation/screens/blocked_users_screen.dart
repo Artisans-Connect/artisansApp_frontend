@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import '../../../../core/errors/error_messages.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../services/reports_service.dart';
@@ -41,7 +42,7 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
       });
     } catch (e) {
       setState(() {
-        _error = e.toString().replaceAll('Exception: ', '');
+        _error = userMessageFor(e);
         _isLoading = false;
       });
     }
