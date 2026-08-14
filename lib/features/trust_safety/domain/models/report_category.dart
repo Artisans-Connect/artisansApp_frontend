@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 enum ReportCategory {
+  unfairTreatment(
+    key: 'UNFAIR_TREATMENT',
+    label: 'Unfair Treatment or Dispute',
+    description: 'Unjust demands, breach of contract, refusal to pay, or unfair behavior.',
+  ),
   harassment(
     key: 'HARASSMENT',
     label: 'Harassment or Bullying',
@@ -70,6 +75,8 @@ enum ReportCategory {
 
   IconData get icon {
     switch (this) {
+      case ReportCategory.unfairTreatment:
+        return PhosphorIcons.scales;
       case ReportCategory.harassment:
         return PhosphorIcons.chatTeardropText;
       case ReportCategory.scamFraud:
