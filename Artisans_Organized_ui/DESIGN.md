@@ -1,4 +1,12 @@
+# CraftMatch UI Design System & Component Architecture
+
+This document defines the visual design tokens and component architecture across all client and worker UI surfaces.
+
 ---
+
+## 1. Visual Design Tokens
+
+```yaml
 name: Artisans
 colors:
   surface-base: '#FFF8F0'        # warm off-white
@@ -14,7 +22,7 @@ colors:
   error: '#BA1A1A'
   on-error: '#FFFFFF'
 typography:
-  font-family: Satoshi           # or General Sans
+  font-family: Satoshi           # Modern grotesque with high legibility
   display-lg: '32px / 800 / #2C2418'
   body-lg: '16px / 500 / #5C5243'
   price-tag: '18px / 700 / #C15A3D'
@@ -53,4 +61,25 @@ spacing:
   xl: 40px
   gutter: 20px
   container-max: 1200px
+```
+
 ---
+
+## 2. Component Directory Topology
+
+### `auth/` — Authentication & Role Selection
+- Handles Supabase phone & email authentication, OTP verification, and onboarding.
+- Manages multi-step role selection (`photo_location_page.dart`, `service_areas_page.dart`) with default positioning centered on Kumasi / KNUST.
+
+### `client/` — Domestic Client Booking & Discovery Experience
+- **Map & Catalog Discovery:** Interactive map (`map_discovery_screen.dart`), category grids (`client_home_screen.dart`), and artisan profile inspection.
+- **5-Step Job Wizard:** Job category, subcategory, budget & scope, landmark address geocoding, and idempotent submission.
+- **Quote Negotiation & Live Tracking:** `NegotiationChatSheet` with contact masking, real-time Mapbox/Google Maps GPS streaming, and completion approval modals.
+
+### `worker/` — Artisan Dispatch & Workspace Execution
+- **Dispatch Queue:** Inbound job notifications (`worker_requests_screen.dart`) and quote submission.
+- **Active Execution Shell:** Pre-start navigation (`worker_active_pre_start_screen.dart`), in-progress tracking (`worker_active_in_progress_screen.dart`), and on-site extra charges.
+- **Completion & Wallet:** Photo proof upload (`worker_completion_form_screen.dart`), earnings dashboard, and review history.
+
+### `shared/` — Common Atomic Widgets & Overlays
+- Standard app buttons, input fields (`AppInput`), status badges (`_TrustBadge`), avatar pickers, and modal bottom sheets.
