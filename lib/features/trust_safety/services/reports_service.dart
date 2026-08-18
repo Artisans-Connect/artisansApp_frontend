@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../shared/models/picked_media.dart';
@@ -86,10 +87,71 @@ class ReportsService {
     return response != null;
   }
 
-  Future<List<Map<String, dynamic>>> getBlockedUsers() async {
-    final response = await _apiClient.get('/reports/blocks');
-    if (response is List) {
-      return response.cast<Map<String, dynamic>>();
+  Future<List<Map<String, dynamic>>> getBlockedUsers({String? role}) async {
+    try {
+      final queryParam = role != null && role.isNotEmpty ? '?role=$role' : '';
+      final response = await _apiClient.get('/reports/blocks$queryParam');
+      if (response is List) {
+        return response.cast<Map<String, dynamic>>();
+      }
+    } catch (_) {
+      // Direct Supabase fallback if API server is offline
+      try {
+        final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+        final List<Map<String, dynamic>> results = [];
+
+        if (currentUserId != null) {
+          try {
+            final dynamic userBlocks = await Supabase.instance.client
+                .from('user_blocks')
+                .select('id, blocked_id, reason, created_at')
+                .eq('blocker_id', currentUserId);
+            if (userBlocks is List) {
+              for (final dynamic b in userBlocks) {
+                final bMap = b as Map<String, dynamic>;
+                results.add({
+                  'id': bMap['id'],
+                  'blocked_id': bMap['blocked_id'],
+                  'reason': bMap['reason'] ?? 'Blocked by user',
+                  'created_at': bMap['created_at'],
+                  'is_personal_block': true,
+                });
+              }
+            }
+          } catch (_) {}
+        }
+
+        var query = Supabase.instance.client
+            .from('profiles')
+            .select('id, full_name, phone, avatar_url, signup_type, last_active_mode, account_status, suspended_at, suspension_reason, created_at, updated_at, workers(id, skills, rating, total_jobs, is_verified, service_areas)')
+            .inFilter('account_status', ['suspended', 'warned']);
+
+        if (role == 'worker') {
+          query = query.or('signup_type.eq.worker,last_active_mode.eq.worker');
+        } else if (role == 'client') {
+          query = query.or('signup_type.eq.client,last_active_mode.eq.client');
+        }
+
+        final dynamic suspended = await query;
+        if (suspended is List) {
+          final existingIds = results.map((r) => r['blocked_id']).toSet();
+          for (final dynamic p in suspended) {
+            final pMap = p as Map<String, dynamic>;
+            if (!existingIds.contains(pMap['id'])) {
+              results.add({
+                'id': 'platform-${pMap['id']}',
+                'blocked_id': pMap['id'],
+                'reason': pMap['suspension_reason'] ?? 'Suspended by platform safety & moderation policy',
+                'created_at': pMap['suspended_at'] ?? pMap['updated_at'] ?? pMap['created_at'],
+                'is_personal_block': false,
+                'blocked': pMap,
+              });
+            }
+          }
+        }
+
+        if (results.isNotEmpty) return results;
+      } catch (_) {}
     }
     return [];
   }
