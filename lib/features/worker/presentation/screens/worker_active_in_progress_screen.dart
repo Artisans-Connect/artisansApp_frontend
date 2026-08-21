@@ -399,16 +399,31 @@ class _WorkerActiveInProgressScreenState
               ),
             ),
             const SizedBox(height: 2),
-            Text(
-              job.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontFamily: AppTypography.displayFontFamily,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: DesignTokens.primary,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    job.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontFamily: AppTypography.displayFontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: DesignTokens.primary,
+                    ),
+                  ),
+                ),
+                if (job.urgency == JobUrgency.asap) ...[
+                  const SizedBox(width: 4),
+                  const Icon(
+                    Icons.flash_on,
+                    size: 14,
+                    color: DesignTokens.accentGold,
+                  ),
+                ],
+              ],
             ),
           ],
         ),

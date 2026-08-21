@@ -1,0 +1,159 @@
+name: Build & Publish Android Release APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release Version (e.g. 1.0.0)'
+        required: true
+        default: '1.0.0'
+      release_notes:
+        description: 'Release notes / Changelog'
+        required: false
+        default: 'CraftMatch Android Release'
+      release_type:
+        description: 'Build Type (release or debug)'
+        required: true
+        default: 'release'
+        type: choice
+        options:
+          - release
+          - debug
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Version
+        id: version_step
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            VERSION="1.0.0"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Create .env Configuration
+        run: |
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > .env
+          echo "SUPABASE_PUBLISHABLE_KEY=${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" >> .env
+          echo "SUPABASE_OAUTH_REDIRECT_URL=${{ secrets.SUPABASE_OAUTH_REDIRECT_URL || 'https://artisans-app-frontend.vercel.app/' }}" >> .env
+          echo "SUPABASE_PASSWORD_RESET_REDIRECT_URL=${{ secrets.SUPABASE_PASSWORD_RESET_REDIRECT_URL || 'https://craft-match-verification-portal.vercel.app/update-password' }}" >> .env
+          echo "EXPRESS_API_BASE_URL=${{ secrets.EXPRESS_API_BASE_URL || 'https://artisansapp-backend.onrender.com/api' }}" >> .env
+          echo "VERIFICATION_PORTAL_URL=${{ secrets.VERIFICATION_PORTAL_URL || 'https://craft-match-verification-portal.vercel.app/' }}" >> .env
+          echo "GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}" >> .env
+          echo "MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }}" >> .env
+          echo "FIREBASE_VAPID_KEY=${{ secrets.FIREBASE_VAPID_KEY }}" >> .env
+
+      - name: Install Flutter Dependencies
+        run: flutter pub get
+
+      - name: Build Android APK
+        run: |
+          BUILD_TYPE="${{ github.event.inputs.release_type || 'release' }}"
+          if [ "$BUILD_TYPE" = "debug" ]; then
+            flutter build apk --debug --build-name=${{ steps.version_step.outputs.VERSION }}
+            APK_PATH="build/app/outputs/flutter-apk/app-debug.apk"
+          else
+            flutter build apk --release --build-name=${{ steps.version_step.outputs.VERSION }}
+            APK_PATH="build/app/outputs/flutter-apk/app-release.apk"
+          fi
+          echo "APK_SRC=$APK_PATH" >> $GITHUB_ENV
+
+      - name: Package & Compute Checksum
+        id: metadata
+        run: |
+          VERSION="${{ steps.version_step.outputs.VERSION }}"
+          mkdir -p dist
+          VERSIONED_APK="dist/CraftMatch-v${VERSION}.apk"
+          LATEST_APK="dist/CraftMatch-latest.apk"
+          
+          cp "$APK_SRC" "$VERSIONED_APK"
+          cp "$APK_SRC" "$LATEST_APK"
+          
+          FILE_SIZE_BYTES=$(stat -c%s "$VERSIONED_APK")
+          FILE_SIZE_MB=$(awk "BEGIN {printf \"%.1f\", $FILE_SIZE_BYTES/1048576}")
+          SHA256_HASH=$(sha256sum "$VERSIONED_APK" | awk '{print $1}')
+          
+          echo "FILE_SIZE_BYTES=$FILE_SIZE_BYTES" >> $GITHUB_OUTPUT
+          echo "FILE_SIZE_MB=${FILE_SIZE_MB} MB" >> $GITHUB_OUTPUT
+          echo "SHA256=$SHA256_HASH" >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          tag_name: "v${{ steps.version_step.outputs.VERSION }}"
+          name: "CraftMatch Mobile v${{ steps.version_step.outputs.VERSION }}"
+          body: |
+            ## CraftMatch Android Release v${{ steps.version_step.outputs.VERSION }}
+            
+            ${{ github.event.inputs.release_notes || 'Official CraftMatch Android mobile build.' }}
+            
+            ### Package Details:
+            - **Filename:** `CraftMatch-v${{ steps.version_step.outputs.VERSION }}.apk`
+            - **Size:** ${{ steps.metadata.outputs.FILE_SIZE_MB }} (${{ steps.metadata.outputs.FILE_SIZE_BYTES }} bytes)
+            - **SHA-256 Checksum:** `${{ steps.metadata.outputs.SHA256 }}`
+            - **Min Requirement:** Android 8.0 (API level 26) or newer
+          files: |
+            dist/CraftMatch-v${{ steps.version_step.outputs.VERSION }}.apk
+            dist/CraftMatch-latest.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Backend Webhook (Sync Release Manifest)
+        if: always()
+        run: |
+          VERSION="${{ steps.version_step.outputs.VERSION }}"
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/CraftMatch-v${VERSION}.apk"
+          LATEST_URL="https://github.com/${{ github.repository }}/releases/latest/download/CraftMatch-latest.apk"
+          BACKEND_URL="${{ secrets.EXPRESS_API_BASE_URL || 'https://artisansapp-backend.onrender.com/api' }}"
+          WEBHOOK_KEY="${{ secrets.VERIFICATION_ADMIN_KEY }}"
+          
+          echo "Notifying backend at $BACKEND_URL/releases/webhook..."
+          
+          curl -s -X POST "$BACKEND_URL/releases/webhook" \
+            -H "Content-Type: application/json" \
+            -H "x-verification-admin-key: $WEBHOOK_KEY" \
+            -d "{
+              \"appName\": \"CraftMatch\",
+              \"latestVersion\": \"$VERSION\",
+              \"fileSize\": \"${{ steps.metadata.outputs.FILE_SIZE_MB }}\",
+              \"fileSizeBytes\": ${{ steps.metadata.outputs.FILE_SIZE_BYTES || 0 }},
+              \"sha256\": \"${{ steps.metadata.outputs.SHA256 }}\",
+              \"downloadUrl\": \"$LATEST_URL\",
+              \"versionedDownloadUrl\": \"$DOWNLOAD_URL\",
+              \"notes\": \"${{ github.event.inputs.release_notes || 'Automated cloud build release' }}\"
+            }" || echo "Webhook call completed or backend was temporarily unreachable"

@@ -229,6 +229,36 @@ class ClientBookingCard extends StatelessWidget {
                             fontSize: 12,
                           ),
                         ),
+                        if (booking.jobMode?.toLowerCase() == 'asap') ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.flash_on,
+                                  size: 10,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 2),
+                                Text(
+                                  'ASAP',
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: AppColors.primary,
+                                    fontSize: 8.5,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                     Row(

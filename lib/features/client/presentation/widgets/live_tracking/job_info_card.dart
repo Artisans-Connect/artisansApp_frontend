@@ -125,16 +125,28 @@ class TrackingJobInfoCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            (job['title'] as String? ?? 'Your Job')
-                                .toUpperCase(),
-                            style: const TextStyle(
-                              fontFamily: 'Satoshi',
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white70,
-                              letterSpacing: 0.8,
-                            ),
+                          Row(
+                            children: [
+                              Text(
+                                (job['title'] as String? ?? 'Your Job')
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                  fontFamily: 'Satoshi',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white70,
+                                  letterSpacing: 0.8,
+                                ),
+                              ),
+                              if (job['job_mode']?.toString().toLowerCase() == 'asap') ...[
+                                const SizedBox(width: 6),
+                                const Icon(
+                                  Icons.flash_on,
+                                  size: 12,
+                                  color: DesignTokens.accentGold,
+                                ),
+                              ],
+                            ],
                           ),
                           const SizedBox(height: 4),
                           Text(

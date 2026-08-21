@@ -60,9 +60,39 @@ class HistoryJobCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            'Client: ${job.clientName}',
-            style: AppTypography.bodyMedium,
+          Row(
+            children: [
+              if (job.urgency == JobUrgency.asap) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.flash_on, size: 11, color: AppColors.primary),
+                      const SizedBox(width: 2),
+                      Text(
+                        'ASAP',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.primary,
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              Text(
+                'Client: ${job.clientName}',
+                style: AppTypography.bodyMedium,
+              ),
+            ],
           ),
           if (job.historyRating != null) ...[
             const SizedBox(height: 8),
