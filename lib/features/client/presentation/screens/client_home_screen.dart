@@ -23,15 +23,10 @@ import 'package:artisans_app/core/services/smart_search_service.dart';
 import 'package:artisans_app/shared/utils/greeting_utils.dart';
 
 const Map<String, List<String>> _categoryAliases = <String, List<String>>{
-  'construction_building': <String>['builder', 'building', 'mason', 'carpenter', 'tiler', 'painter', 'steel bender', 'welder', 'fabricator', 'ceiling', 'glass', 'roofer', 'paver', 'construction'],
-  'electrical_power': <String>['electrician', 'wiring', 'lighting', 'generator', 'inverter', 'solar', 'cctv', 'security', 'appliance', 'fan', 'iron'],
   'plumbing_water': <String>['plumber', 'pipe', 'leak', 'borehole', 'pump', 'drainage', 'sanitary', 'sink', 'toilet', 'shower', 'water'],
+  'electrical_power': <String>['electrician', 'wiring', 'lighting', 'generator', 'inverter', 'solar', 'cctv', 'security', 'appliance', 'fan', 'iron'],
   'auto_mechanical': <String>['mechanic', 'car', 'vehicle', 'vulcanizer', 'sprayer', 'body', 'motorcycle', 'heavy equipment', 'engine', 'tyre'],
-  'home_repairs': <String>['handyman', 'furniture', 'door', 'window', 'pest', 'cleaner', 'gardener', 'cleaning', 'repairs', 'maintenance'],
-  'beauty_fashion': <String>['hairdresser', 'barber', 'makeup', 'tailor', 'dressmaker', 'shoemaker', 'cobbler', 'bead', 'milliner', 'braids', 'styling', 'sewing'],
-  'electronics_it': <String>['phone', 'laptop', 'tv', 'sound', 'printer', 'computer', 'screen', 'electronics', 'it', 'network', 'wifi'],
-  'hospitality_events': <String>['caterer', 'baker', 'decorator', 'photographer', 'videographer', 'dj', 'canopy', 'chair', 'catering', 'event', 'cake'],
-  'arts_crafts': <String>['potter', 'weaver', 'wood carver', 'drum', 'goldsmith', 'jeweller', 'brass smith', 'signwriter', 'kente', 'pottery', 'craft'],
+  'construction_building': <String>['carpenter', 'woodwork', 'furniture', 'cabinet', 'roofing woodwork', 'doors', 'wood', 'carpentry'],
 };
 
 

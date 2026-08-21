@@ -186,74 +186,28 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   List<TradeEntry> get _fallbackTrades {
-    const IconData constructionIcon = PhosphorIcons.barricade;
-    const IconData electricalIcon = PhosphorIcons.lightning;
     const IconData plumbingIcon = PhosphorIcons.drop;
+    const IconData electricalIcon = PhosphorIcons.lightning;
     const IconData autoIcon = PhosphorIcons.car;
-    const IconData homeRepairIcon = PhosphorIcons.hammer;
-    const IconData beautyIcon = PhosphorIcons.scissors;
-    const IconData electronicsIcon = PhosphorIcons.desktopTower;
-    const IconData hospitalityIcon = PhosphorIcons.forkKnife;
-    const IconData artsIcon = PhosphorIcons.palette;
+    const IconData woodIcon = PhosphorIcons.barricade;
 
     return const <TradeEntry>[
-      TradeEntry('Mason', constructionIcon),
-      TradeEntry('Carpenter', constructionIcon),
-      TradeEntry('Tiler', constructionIcon),
-      TradeEntry('Painter', constructionIcon),
-      TradeEntry('Steel Bender', constructionIcon),
-      TradeEntry('Welder / Metal Fabricator', constructionIcon),
-      TradeEntry('Ceiling Installer', constructionIcon),
-      TradeEntry('Glass Worker', constructionIcon),
-      TradeEntry('Roofer', constructionIcon),
-      TradeEntry('Paver / Landscaper', constructionIcon),
+      TradeEntry('Plumber', plumbingIcon),
+      TradeEntry('Borehole / Pump Technician', plumbingIcon),
+      TradeEntry('Drainage Worker', plumbingIcon),
+      TradeEntry('Sanitary Installer', plumbingIcon),
       TradeEntry('Electrician', electricalIcon),
       TradeEntry('Solar Technician', electricalIcon),
       TradeEntry('Appliance Electrician', electricalIcon),
       TradeEntry('Generator Technician', electricalIcon),
       TradeEntry('CCTV / Security Installer', electricalIcon),
-      TradeEntry('Plumber', plumbingIcon),
-      TradeEntry('Borehole / Pump Technician', plumbingIcon),
-      TradeEntry('Drainage Worker', plumbingIcon),
-      TradeEntry('Sanitary Installer', plumbingIcon),
       TradeEntry('Auto Mechanic', autoIcon),
       TradeEntry('Auto Electrician', autoIcon),
       TradeEntry('Vulcanizer', autoIcon),
       TradeEntry('Sprayer / Auto Body Worker', autoIcon),
       TradeEntry('Motorcycle Mechanic', autoIcon),
       TradeEntry('Heavy Equipment Mechanic', autoIcon),
-      TradeEntry('General Handyman', homeRepairIcon),
-      TradeEntry('Furniture Repairer', homeRepairIcon),
-      TradeEntry('Door/Window Repairer', homeRepairIcon),
-      TradeEntry('Pest Control Worker', homeRepairIcon),
-      TradeEntry('Cleaner', homeRepairIcon),
-      TradeEntry('Gardener', homeRepairIcon),
-      TradeEntry('Hairdresser', beautyIcon),
-      TradeEntry('Barber', beautyIcon),
-      TradeEntry('Makeup Artist', beautyIcon),
-      TradeEntry('Tailor / Dressmaker', beautyIcon),
-      TradeEntry('Shoemaker / Cobbler', beautyIcon),
-      TradeEntry('Bead Maker', beautyIcon),
-      TradeEntry('Milliner', beautyIcon),
-      TradeEntry('Phone Repairer', electronicsIcon),
-      TradeEntry('Laptop Technician', electronicsIcon),
-      TradeEntry('TV Technician', electronicsIcon),
-      TradeEntry('Sound System Technician', electronicsIcon),
-      TradeEntry('Printer/Photocopier Technician', electronicsIcon),
-      TradeEntry('Caterer', hospitalityIcon),
-      TradeEntry('Baker', hospitalityIcon),
-      TradeEntry('Decorator', hospitalityIcon),
-      TradeEntry('Photographer', hospitalityIcon),
-      TradeEntry('Videographer', hospitalityIcon),
-      TradeEntry('DJ / Sound Provider', hospitalityIcon),
-      TradeEntry('Canopy/Chair Rental', hospitalityIcon),
-      TradeEntry('Potter', artsIcon),
-      TradeEntry('Weaver', artsIcon),
-      TradeEntry('Wood Carver', artsIcon),
-      TradeEntry('Drum Maker', artsIcon),
-      TradeEntry('Goldsmith / Jeweller', artsIcon),
-      TradeEntry('Brass Smith', artsIcon),
-      TradeEntry('Signwriter / Printer', artsIcon),
+      TradeEntry('Carpenter', woodIcon),
     ];
   }
 

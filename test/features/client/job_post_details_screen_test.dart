@@ -15,7 +15,7 @@ void main() {
       ),
     );
 
-    expect(find.text('0/20 characters minimum'), findsOneWidget);
+    expect(find.text('0/2000'), findsOneWidget);
     expect(
       find.text('Add at least 20 characters so artisans understand the work.'),
       findsOneWidget,
@@ -30,7 +30,7 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('43/20 characters minimum'), findsOneWidget);
+    expect(find.text('43/2000'), findsOneWidget);
     expect(
       find.text('Add at least 20 characters so artisans understand the work.'),
       findsNothing,
