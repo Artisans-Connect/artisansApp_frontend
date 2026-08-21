@@ -1,4 +1,4 @@
-import '../../../shared/models/user_profile_view.dart';
+import 'package:artisans_app/shared/models/user_profile_view.dart';
 
 /// UI-phase session state set at role selection and updated through onboarding.
 class OnboardingSession {

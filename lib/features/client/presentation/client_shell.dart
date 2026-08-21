@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../shared/presentation/screens/messages_list_screen.dart';
-import '../../../shared/presentation/screens/user_profile_screen.dart';
-import 'navigation/client_shell_scope.dart';
-import 'screens/booking_history_screen.dart';
-import 'screens/client_home_screen.dart';
-import '../../../core/session/app_user_session.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/presentation/screens/messages_list_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/user_profile_screen.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_shell_scope.dart';
+import 'package:artisans_app/features/client/presentation/screens/booking_history_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/client_home_screen.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
 
 enum ClientNavTab { home, bookings, messages, profile }
 

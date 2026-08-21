@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../core/session/app_user_session.dart';
-import '../../core/services/negotiation_service.dart';
-import '../../core/services/negotiation_realtime_service.dart';
-import '../../core/theme/index.dart';
-import '../models/negotiation.dart';
-import 'app_input.dart';
-import 'app_loader.dart';
-import 'app_toast.dart';
-import 'gradient_button.dart';
-import 'secondary_button.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/services/negotiation_service.dart';
+import 'package:artisans_app/core/services/negotiation_realtime_service.dart';
+import 'package:artisans_app/core/theme/index.dart';
+import 'package:artisans_app/shared/models/negotiation.dart';
+import 'package:artisans_app/shared/widgets/app_input.dart';
+import 'package:artisans_app/shared/widgets/app_loader.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/gradient_button.dart';
+import 'package:artisans_app/shared/widgets/secondary_button.dart';
 
 class NegotiationChatSheet extends StatefulWidget {
   const NegotiationChatSheet({

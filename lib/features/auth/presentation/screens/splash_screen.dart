@@ -3,15 +3,15 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/errors/auth_failure.dart';
-import '../../../../core/network/api_client.dart';
-import '../../../../core/navigation/auth_navigation.dart';
-import '../../../../core/services/auth_service.dart';
-import '../../../../core/services/notification_service.dart';
-import '../../../../core/theme/index.dart';
-import 'onboarding_screen.dart';
-import 'role_selection_screen.dart';
-import 'sign_in_screen.dart';
+import 'package:artisans_app/core/errors/auth_failure.dart';
+import 'package:artisans_app/core/network/api_client.dart';
+import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/services/auth_service.dart';
+import 'package:artisans_app/core/services/notification_service.dart';
+import 'package:artisans_app/core/theme/index.dart';
+import 'package:artisans_app/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../navigation/client_navigation.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../core/services/reviews_service.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/shared/widgets/primary_button.dart';
+import 'package:artisans_app/core/services/reviews_service.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
 
 class RateServiceScreen extends StatefulWidget {
   final Map<String, dynamic>? service;

@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 
-import '../../features/client/presentation/client_shell.dart';
-import '../../features/client/presentation/screens/explore_artisans_screen.dart';
-import '../../features/client/presentation/screens/map_discovery_screen.dart';
-import '../../features/client/presentation/screens/artisan_profile_screen.dart';
-import '../../features/client/presentation/screens/direct_worker_request_screen.dart';
-import '../../features/client/presentation/screens/finding_artisan_screen.dart';
-import '../../features/client/presentation/screens/job_post_category_screen.dart';
-import '../../features/client/presentation/screens/job_post_subcategory_screen.dart';
-import '../../features/client/presentation/screens/job_post_details_screen.dart';
-import '../../features/client/presentation/screens/job_post_location_schedule_screen.dart';
-import '../../features/client/presentation/screens/job_post_summary_screen.dart';
-import '../../features/client/presentation/screens/job_applicants_screen.dart';
-import '../../features/client/presentation/screens/live_tracking_screen.dart';
-import '../../features/client/presentation/screens/rate_service_screen.dart';
-import '../session/app_user_session.dart';
-import '../theme/app_colors.dart';
-import '../theme/app_typography.dart';
-import 'app_routes.dart';
-import 'auth_navigation.dart';
-import '../../shared/presentation/screens/notifications_screen.dart';
-import '../../features/wallet/presentation/screens/wallet_screen.dart';
-import '../../features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:artisans_app/features/client/presentation/client_shell.dart';
+import 'package:artisans_app/features/client/presentation/screens/explore_artisans_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/map_discovery_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/artisan_profile_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/direct_worker_request_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/finding_artisan_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/job_post_category_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/job_post_subcategory_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/job_post_details_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/job_post_location_schedule_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/job_post_summary_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/job_applicants_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/live_tracking_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/rate_service_screen.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/shared/presentation/screens/notifications_screen.dart';
+import 'package:artisans_app/features/wallet/presentation/screens/wallet_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {

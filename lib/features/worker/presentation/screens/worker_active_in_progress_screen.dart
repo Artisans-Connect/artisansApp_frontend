@@ -1,28 +1,28 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../../../core/services/negotiation_service.dart';
-import '../../../../core/services/negotiation_realtime_service.dart';
-import '../../../../core/session/app_user_session.dart';
-import '../../../../shared/models/negotiation.dart';
-import '../../../../shared/widgets/negotiation_chat_sheet.dart';
+import 'package:artisans_app/core/services/negotiation_service.dart';
+import 'package:artisans_app/core/services/negotiation_realtime_service.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/shared/models/negotiation.dart';
+import 'package:artisans_app/shared/widgets/negotiation_chat_sheet.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/services/workers_service.dart';
-import '../../../../core/theme/index.dart';
-import '../../../../shared/presentation/navigation/shared_route_args.dart';
-import '../../../../shared/presentation/screens/chat_detail_screen.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/job_site_map.dart';
-import '../../../client/presentation/navigation/client_navigation.dart';
-import '../models/worker_job.dart';
-import '../state/worker_session_state.dart';
-import '../widgets/client_contact_row.dart';
-import '../widgets/elapsed_timer_card.dart';
-import '../widgets/gradient_button.dart';
-import '../widgets/worker_phase_stepper.dart';
-import 'worker_completion_form_screen.dart';
-import '../../../trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/core/theme/index.dart';
+import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
+import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/job_site_map.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/client_contact_row.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/elapsed_timer_card.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_phase_stepper.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_completion_form_screen.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
 
 class WorkerActiveInProgressScreen extends StatefulWidget {
   const WorkerActiveInProgressScreen({super.key, required this.job});
@@ -592,7 +592,7 @@ class _WorkerActiveInProgressScreenState
                     const SizedBox(height: DesignTokens.xl),
 
                     // Primary Complete Button
-                    GradientButton(
+                    WorkerGradientButton(
                       label: 'Mark Work as Complete  ✓',
                       onPressed: () {
                         Navigator.of(context).push(

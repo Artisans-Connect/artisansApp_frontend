@@ -1,12 +1,12 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 
-import '../../../../core/services/workers_service.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../models/worker_job.dart';
-import '../state/worker_session_state.dart';
-import '../widgets/gradient_button.dart';
-import '../widgets/job_detail_card.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/job_detail_card.dart';
 
 class WorkerTerminationRequestScreen extends StatefulWidget {
   const WorkerTerminationRequestScreen({super.key, required this.job});
@@ -97,7 +97,7 @@ class _WorkerTerminationRequestScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            GradientButton(
+            WorkerGradientButton(
               label: 'Accept termination',
               enabled: !_isResponding,
               isLoading: _isResponding,

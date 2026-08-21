@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/session/app_user_session.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/utils/greeting_utils.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/utils/greeting_utils.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});

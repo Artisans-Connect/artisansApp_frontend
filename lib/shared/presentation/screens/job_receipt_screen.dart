@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../core/errors/error_messages.dart';
-import '../../../core/services/jobs_service.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../models/job_receipt_view.dart';
-import '../../widgets/custom_app_bar.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/models/job_receipt_view.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
 
 /// Read-only job receipt for workers.
 class JobReceiptScreen extends StatefulWidget {

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/gradient_button.dart';
-import '../../widgets/dot_indicator.dart';
-import '../../widgets/onboarding_page_content.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/gradient_button.dart';
+import 'package:artisans_app/features/auth/widgets/dot_indicator.dart';
+import 'package:artisans_app/features/auth/widgets/onboarding_page_content.dart';
 
 /// Two-page introductory onboarding screen shown after the splash and
 /// before the sign-in / sign-up flow.

@@ -1,26 +1,26 @@
-import '../../../../core/theme/design_tokens.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../models/client_booking.dart';
-import '../navigation/client_navigation.dart';
-import '../navigation/client_shell_scope.dart';
-import '../client_shell.dart';
-import '../widgets/artisan_card.dart';
-import '../widgets/client_home/home_hero.dart';
-import '../widgets/client_home/home_atoms.dart';
-import '../widgets/client_home/active_job_banner.dart';
-import '../widgets/client_home/artisan_list_states.dart';
-import '../widgets/client_home/marquee_categories.dart';
-import '../../../../core/services/categories_service.dart';
-import '../../../../core/services/jobs_service.dart';
-import '../../../../core/services/notification_service.dart';
-import '../../../../core/session/app_user_session.dart';
-import '../../../../core/utils/icon_mapper.dart';
-import '../../services/explore_service.dart';
-import '../../../../core/services/smart_search_service.dart';
-import '../../../../shared/utils/greeting_utils.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_shell_scope.dart';
+import 'package:artisans_app/features/client/presentation/client_shell.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_card.dart';
+import 'package:artisans_app/features/client/presentation/widgets/client_home/home_hero.dart';
+import 'package:artisans_app/features/client/presentation/widgets/client_home/home_atoms.dart';
+import 'package:artisans_app/features/client/presentation/widgets/client_home/active_job_banner.dart';
+import 'package:artisans_app/features/client/presentation/widgets/client_home/artisan_list_states.dart';
+import 'package:artisans_app/features/client/presentation/widgets/client_home/marquee_categories.dart';
+import 'package:artisans_app/core/services/categories_service.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
+import 'package:artisans_app/core/services/notification_service.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/utils/icon_mapper.dart';
+import 'package:artisans_app/features/client/services/explore_service.dart';
+import 'package:artisans_app/core/services/smart_search_service.dart';
+import 'package:artisans_app/shared/utils/greeting_utils.dart';
 
 const Map<String, List<String>> _categoryAliases = <String, List<String>>{
   'construction_building': <String>['builder', 'building', 'mason', 'carpenter', 'tiler', 'painter', 'steel bender', 'welder', 'fabricator', 'ceiling', 'glass', 'roofer', 'paver', 'construction'],

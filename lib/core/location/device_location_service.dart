@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import '../services/platform_service.dart';
-import '../../shared/widgets/app_toast.dart';
+import 'package:artisans_app/core/services/platform_service.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
 
 /// Neutral fallback when GPS is unavailable. Callers must not treat this as
 /// the user's live location without checking [isFallback].

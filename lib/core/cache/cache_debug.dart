@@ -1,7 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
-import 'cache_keys.dart';
-import 'cache_store.dart';
+import 'package:artisans_app/core/cache/cache_keys.dart';
+import 'package:artisans_app/core/cache/cache_store.dart';
 
 /// Debug utilities for the cache system.
 abstract final class CacheDebug {

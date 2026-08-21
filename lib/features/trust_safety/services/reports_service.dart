@@ -3,7 +3,7 @@ import '../../../core/network/api_client.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../shared/models/picked_media.dart';
 import '../domain/models/report_category.dart';
-import '../domain/models/report_model.dart';
+import '../domain/models/safety_report.dart';
 
 class ReportsService {
   static final ReportsService instance = ReportsService._();

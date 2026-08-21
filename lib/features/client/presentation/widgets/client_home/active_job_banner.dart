@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../models/client_booking.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
 
 class ActiveJobBanner extends StatefulWidget {
   const ActiveJobBanner({

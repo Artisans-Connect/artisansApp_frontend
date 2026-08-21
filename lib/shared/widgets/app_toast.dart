@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../core/errors/error_messages.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
 
 enum AppToastType { error, success, info, payment, escrow }
 

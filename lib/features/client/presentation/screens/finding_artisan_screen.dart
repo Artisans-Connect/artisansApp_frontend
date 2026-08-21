@@ -3,19 +3,19 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/services/job_realtime_service.dart';
-import '../../../../core/services/jobs_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/error_state_view.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/secondary_button.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../models/client_booking.dart';
-import '../navigation/client_navigation.dart';
-import 'job_applicants_screen.dart';
+import 'package:artisans_app/core/services/job_realtime_service.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/error_state_view.dart';
+import 'package:artisans_app/shared/widgets/primary_button.dart';
+import 'package:artisans_app/shared/widgets/secondary_button.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/features/client/presentation/screens/job_applicants_screen.dart';
 
 class FindingArtisanScreen extends StatefulWidget {
   const FindingArtisanScreen({

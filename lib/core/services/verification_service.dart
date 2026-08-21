@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../constants/app_constants.dart';
-import '../network/api_client.dart';
-import 'profile_service.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/network/api_client.dart';
+import 'package:artisans_app/core/services/profile_service.dart';
 
 class VerificationContext {
   const VerificationContext({

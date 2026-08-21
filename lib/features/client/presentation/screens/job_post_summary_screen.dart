@@ -4,20 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../../../core/errors/api_exception.dart';
-import '../../../../core/offline/job_post_queue.dart';
-import '../../../../core/services/jobs_service.dart';
-import '../../../../core/services/pricing_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/legal_agreement_text.dart';
-import '../../data/job_draft_store.dart';
-import '../models/client_job_draft.dart';
-import '../models/job_post_wizard_step.dart';
-import '../navigation/client_navigation.dart';
-import '../widgets/job_post_wizard_scaffold.dart';
+import 'package:artisans_app/core/errors/api_exception.dart';
+import 'package:artisans_app/core/offline/job_post_queue.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
+import 'package:artisans_app/core/services/pricing_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/legal_agreement_text.dart';
+import 'package:artisans_app/features/client/data/job_draft_store.dart';
+import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
+import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/features/client/presentation/widgets/job_post_wizard_scaffold.dart';
 
 class JobPostSummaryScreen extends StatefulWidget {
   const JobPostSummaryScreen({super.key, this.jobData});

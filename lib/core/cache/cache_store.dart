@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:hive_flutter/hive_flutter.dart';
 
-import '../utils/cache_logger.dart';
-import 'cache_keys.dart';
+import 'package:artisans_app/core/utils/cache_logger.dart';
+import 'package:artisans_app/core/cache/cache_keys.dart';
 
 const String _boxName = 'api_cache';
 const int _cacheVersion = 2; // Increment when cache schema changes

@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/location/device_location_service.dart';
-import '../../../../core/maps/map_feature_helpers.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../../../../core/services/categories_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/artisan_logo_avatar.dart';
-import '../../../../shared/widgets/mapbox_client_map.dart';
-import '../../services/explore_service.dart';
-import '../widgets/artisan_detail_sheet.dart';
-import '../widgets/map_search_bar.dart';
+import 'package:artisans_app/core/location/device_location_service.dart';
+import 'package:artisans_app/core/maps/map_feature_helpers.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/services/categories_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/artisan_logo_avatar.dart';
+import 'package:artisans_app/shared/widgets/mapbox_maps.dart';
+import 'package:artisans_app/features/client/services/explore_service.dart';
+import 'package:artisans_app/features/client/presentation/widgets/selected_worker_preview.dart';
+import 'package:artisans_app/features/client/presentation/widgets/map_overlay_controls.dart';
 class MapDiscoveryScreen extends StatefulWidget {
   const MapDiscoveryScreen({Key? key}) : super(key: key);
 

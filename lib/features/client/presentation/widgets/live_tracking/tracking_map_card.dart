@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/widgets/worker_tracking_map.dart';
-import 'tracking_atoms.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/worker_tracking_map.dart';
+import 'package:artisans_app/features/client/presentation/widgets/live_tracking/tracking_atoms.dart';
 
 // ---------------------------------------------------------------------------
 // TrackingMapCard – live map with worker location

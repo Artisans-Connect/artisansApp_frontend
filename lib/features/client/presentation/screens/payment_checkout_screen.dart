@@ -2,11 +2,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/services/payment_service.dart';
-import '../../../../shared/widgets/gradient_button.dart';
-import '../../../../shared/widgets/app_toast.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/core/services/payment_service.dart';
+import 'package:artisans_app/shared/widgets/gradient_button.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
 
 class PaymentCheckoutScreen extends StatefulWidget {
   const PaymentCheckoutScreen({

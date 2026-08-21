@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../../core/location/place_lookup_service.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/widgets/app_input.dart';
-import '../../../models/onboarding_session.dart';
-import 'experience_option_card.dart';
-import 'onboarding_atoms.dart';
+import 'package:artisans_app/core/location/place_lookup_service.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/app_input.dart';
+import 'package:artisans_app/shared/models/onboarding_session.dart';
+import 'package:artisans_app/features/auth/presentation/widgets/role_selection/experience_option_card.dart';
+import 'package:artisans_app/features/auth/presentation/widgets/role_selection/onboarding_atoms.dart';
 
 class ServiceAreasPage extends StatelessWidget {
   const ServiceAreasPage({

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/theme/design_tokens.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
 
 class ExtraChargeAlertDialog extends StatelessWidget {
   final double amount;

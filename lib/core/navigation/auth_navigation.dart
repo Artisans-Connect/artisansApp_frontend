@@ -1,6 +1,6 @@
-import '../../features/client/presentation/client_shell.dart';
-import '../../features/worker/presentation/worker_shell.dart';
-import '../session/app_user_session.dart';
+import 'package:artisans_app/features/client/presentation/client_shell.dart';
+import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
 
 /// Routes to the correct shell based on capabilities and last active mode.
 String shellRouteForUser(AppUser user) {

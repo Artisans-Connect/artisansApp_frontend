@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../../core/theme/design_tokens.dart';
-import '../../../../../../shared/models/negotiation.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/models/negotiation.dart';
 
 class ExtraChargeCard extends StatelessWidget {
   final Map<String, dynamic>? activeExtraCharge;

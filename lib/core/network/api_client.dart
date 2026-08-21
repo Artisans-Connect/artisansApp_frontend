@@ -4,10 +4,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../constants/app_constants.dart';
-import '../errors/api_exception.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/errors/api_exception.dart';
 
-export '../errors/api_exception.dart';
+export 'package:artisans_app/core/errors/api_exception.dart';
 
 class ApiClient {
   static final ApiClient instance = ApiClient._();

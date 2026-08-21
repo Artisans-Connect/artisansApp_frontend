@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../models/worker_job.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
 
 class TimingEstimateRow extends StatelessWidget {

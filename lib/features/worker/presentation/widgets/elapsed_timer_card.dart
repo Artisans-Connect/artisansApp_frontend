@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/theme/index.dart';
+import 'package:artisans_app/core/theme/index.dart';
 
 class ElapsedTimerCard extends StatefulWidget {
   const ElapsedTimerCard({super.key, this.startedAt});

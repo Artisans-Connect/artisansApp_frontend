@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/widgets/job_requests_map.dart';
-import '../../models/worker_job.dart';
-import '../worker_request_card.dart';
-import 'availability_card.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/job_requests_map.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_request_cards.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_dashboard/availability_card.dart';
 
 class NearbyJobsSection extends StatelessWidget {
   const NearbyJobsSection({

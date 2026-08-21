@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/widgets/category_icon_badge.dart';
-import '../worker_request_card.dart'; // Ensure JobTag is available here
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/category_icon_badge.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_request_cards.dart'; // Ensure JobTag is available here
 
 class PendingApplicationCard extends StatelessWidget {
   const PendingApplicationCard({

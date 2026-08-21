@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/errors/error_messages.dart';
-import '../../../../core/services/jobs_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/error_state_view.dart';
-import '../../data/job_draft_store.dart';
-import '../../data/hidden_bookings_store.dart';
-import '../models/client_booking.dart';
-import '../navigation/client_navigation.dart';
-import '../widgets/client_booking_card.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/error_state_view.dart';
+import 'package:artisans_app/features/client/data/job_draft_store.dart';
+import 'package:artisans_app/features/client/data/hidden_bookings_store.dart';
+import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/features/client/presentation/widgets/client_booking_card.dart';
 
 class BookingHistoryScreen extends StatefulWidget {
   const BookingHistoryScreen({

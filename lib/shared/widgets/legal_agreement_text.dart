@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../presentation/navigation/legal_navigation.dart';
+import 'package:artisans_app/shared/presentation/navigation/legal_navigation.dart';
 
 class LegalAgreementText extends StatelessWidget {
   const LegalAgreementText({

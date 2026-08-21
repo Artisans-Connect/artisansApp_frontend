@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../presentation/models/client_booking.dart';
-import '../presentation/models/client_job_draft.dart';
+import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
+import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
 
 const String _boxName = 'client_job_drafts';
 

@@ -1,15 +1,15 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/errors/error_messages.dart';
-import '../../../../core/services/workers_service.dart';
-import '../../../../shared/widgets/error_state_view.dart';
-import '../models/worker_job.dart';
-import '../state/worker_session_state.dart';
-import '../utils/worker_job_mapper.dart';
-import '../widgets/history_job_card.dart';
-import '../widgets/segment_toggle.dart';
-import 'worker_booking_detail_screen.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/shared/widgets/error_state_view.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/utils/worker_job_mapper.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/history_job_card.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/segment_toggle.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_booking_detail_screen.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
 
 class WorkerBookingHistoryScreen extends StatefulWidget {
   const WorkerBookingHistoryScreen({super.key});

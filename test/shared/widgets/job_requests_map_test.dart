@@ -1,4 +1,4 @@
-import 'package:artisans_app/features/worker/presentation/models/worker_job.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 import 'package:artisans_app/shared/widgets/job_requests_map.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

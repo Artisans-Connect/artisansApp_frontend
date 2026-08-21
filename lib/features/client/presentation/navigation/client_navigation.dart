@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/navigation/app_routes.dart';
-import '../../../../core/services/chat_service.dart';
-import '../../../../core/utils/current_user.dart';
-import '../../../../shared/presentation/navigation/shared_route_args.dart';
-import '../../../../shared/presentation/screens/chat_detail_screen.dart';
-import '../../../../shared/presentation/screens/settings_screen.dart';
-import '../../../../shared/presentation/screens/user_profile_screen.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../worker/presentation/worker_shell.dart';
-import '../client_shell.dart';
-import '../models/client_booking.dart';
-import '../models/client_job_draft.dart';
-import '../models/job_post_wizard_step.dart';
-import 'client_shell_scope.dart';
-import '../screens/payment_checkout_screen.dart';
-import '../widgets/booking_summary_sheet.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/services/chat_service.dart';
+import 'package:artisans_app/core/utils/current_user.dart';
+import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
+import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/settings_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/user_profile_screen.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
+import 'package:artisans_app/features/client/presentation/client_shell.dart';
+import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
+import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
+import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_shell_scope.dart';
+import 'package:artisans_app/features/client/presentation/screens/payment_checkout_screen.dart';
+import 'package:artisans_app/features/client/presentation/widgets/booking_summary_sheet.dart';
 
 /// Client-side navigation helpers (shell-safe).
 class ClientNavigation {

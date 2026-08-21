@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/location/device_location_service.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/search_bar.dart';
-import '../navigation/client_navigation.dart';
-import '../../services/explore_service.dart';
-import '../widgets/explore/artisan_list_item.dart';
-import '../widgets/explore/explore_empty_state.dart';
-import '../widgets/explore/explore_filter_bar.dart';
-import '../../../../core/services/smart_search_service.dart';
+import 'package:artisans_app/core/location/device_location_service.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/search_bar.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/features/client/services/explore_service.dart';
+import 'package:artisans_app/features/client/presentation/widgets/explore/artisan_list_item.dart';
+import 'package:artisans_app/features/client/presentation/widgets/explore/explore_empty_state.dart';
+import 'package:artisans_app/features/client/presentation/widgets/explore/explore_filter_bar.dart';
+import 'package:artisans_app/core/services/smart_search_service.dart';
 
 class ExploreArtisansScreen extends StatefulWidget {
   const ExploreArtisansScreen({

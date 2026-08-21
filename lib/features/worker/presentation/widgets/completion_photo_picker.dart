@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:artisans_app/core/theme/index.dart';
-import '../../../../shared/models/picked_media.dart';
-import '../../../../shared/widgets/picked_media_image.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
+import 'package:artisans_app/shared/widgets/picked_media_image.dart';
 
 class CompletionPhotoPicker extends StatelessWidget {
   const CompletionPhotoPicker({

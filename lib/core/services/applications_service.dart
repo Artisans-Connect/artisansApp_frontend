@@ -1,6 +1,6 @@
-import '../cache/cache_keys.dart';
-import '../cache/cache_store.dart';
-import '../network/api_client.dart';
+import 'package:artisans_app/core/cache/cache_keys.dart';
+import 'package:artisans_app/core/cache/cache_store.dart';
+import 'package:artisans_app/core/network/api_client.dart';
 
 class ApplicationsService {
   final ApiClient _api = ApiClient.instance;

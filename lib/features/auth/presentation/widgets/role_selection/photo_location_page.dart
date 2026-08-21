@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../../core/theme/app_typography.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/widgets/app_input.dart';
-import '../../../../../shared/widgets/picked_media_image.dart';
-import '../../../../../shared/models/picked_media.dart';
-import '../../../models/onboarding_session.dart';
-import 'onboarding_atoms.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/app_input.dart';
+import 'package:artisans_app/shared/widgets/picked_media_image.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
+import 'package:artisans_app/shared/models/onboarding_session.dart';
+import 'package:artisans_app/features/auth/presentation/widgets/role_selection/onboarding_atoms.dart';
 
 class PhotoLocationPage extends StatelessWidget {
   const PhotoLocationPage({

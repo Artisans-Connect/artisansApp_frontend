@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../core/utils/color_mapper.dart';
-import '../../core/utils/icon_mapper.dart';
+import 'package:artisans_app/core/utils/color_mapper.dart';
+import 'package:artisans_app/core/utils/icon_mapper.dart';
 
 class CategoryIconBadge extends StatelessWidget {
   const CategoryIconBadge({

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as google;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 
-import '../theme/app_colors.dart';
-import 'map_feature_helpers.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/maps/map_feature_helpers.dart';
 
 /// Shared primitives for the Mapbox-rendered maps across the app. Keeps the
 /// per-widget map implementations consistent (style, marker colors, camera

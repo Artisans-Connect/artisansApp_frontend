@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
 
 /// Shared dot-style page/step indicator used across onboarding intro
 /// screens and profile-completion steps.

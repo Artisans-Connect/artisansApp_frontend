@@ -7,15 +7,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../features/worker/presentation/worker_shell.dart';
-import '../constants/app_constants.dart';
-import '../navigation/app_routes.dart';
-import '../network/api_client.dart';
-import '../notifications/notification_metadata.dart';
-import '../../shared/presentation/navigation/shared_route_args.dart';
-import '../../shared/presentation/screens/chat_detail_screen.dart';
-import '../session/app_user_session.dart';
-import 'auth_service.dart';
+import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/network/api_client.dart';
+import 'package:artisans_app/core/notifications/notification_metadata.dart';
+import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
+import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/services/auth_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {}

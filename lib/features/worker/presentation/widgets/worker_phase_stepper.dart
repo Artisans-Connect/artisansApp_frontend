@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/theme/index.dart';
-import '../state/worker_session_state.dart';
+import 'package:artisans_app/core/theme/index.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
 
 class WorkerPhaseStepper extends StatelessWidget {
   const WorkerPhaseStepper({

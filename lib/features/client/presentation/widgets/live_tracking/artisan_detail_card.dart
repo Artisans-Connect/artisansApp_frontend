@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/design_tokens.dart';
-import 'tracking_atoms.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/features/client/presentation/widgets/live_tracking/tracking_atoms.dart';
 
 // ---------------------------------------------------------------------------
 // ArtisanDetailCard – avatar, name, profession, rating, verified badge

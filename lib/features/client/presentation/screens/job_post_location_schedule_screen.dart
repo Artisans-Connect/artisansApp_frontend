@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/location/device_location_service.dart';
-import '../../../../core/location/place_lookup_service.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/job_location_map.dart';
-import '../models/client_job_draft.dart';
-import '../models/job_post_wizard_step.dart';
-import '../widgets/job_post_wizard_scaffold.dart';
+import 'package:artisans_app/core/location/device_location_service.dart';
+import 'package:artisans_app/core/location/place_lookup_service.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/job_location_map.dart';
+import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
+import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
+import 'package:artisans_app/features/client/presentation/widgets/job_post_wizard_scaffold.dart';
 
 /// Merged step 4: Location + Urgency/Schedule.
 class JobPostLocationScheduleScreen extends StatefulWidget {

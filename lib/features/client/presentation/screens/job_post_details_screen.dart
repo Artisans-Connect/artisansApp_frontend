@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/navigation/app_routes.dart';
-import '../../../../core/services/platform_service.dart';
-import '../../../../core/services/storage_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/models/picked_media.dart';
-import '../../../../shared/widgets/picked_media_image.dart';
-import '../models/client_job_draft.dart';
-import '../models/job_post_wizard_step.dart';
-import '../widgets/job_post_wizard_scaffold.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/services/platform_service.dart';
+import 'package:artisans_app/core/services/storage_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
+import 'package:artisans_app/shared/widgets/picked_media_image.dart';
+import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
+import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
+import 'package:artisans_app/features/client/presentation/widgets/job_post_wizard_scaffold.dart';
 
 /// Merged step 3: Title + Description + Photo upload.
 class JobPostDetailsScreen extends StatefulWidget {

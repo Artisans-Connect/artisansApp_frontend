@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/design_tokens.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
 
 /// Premium 2-col trade icon card chip.
 class TradeChip extends StatelessWidget {

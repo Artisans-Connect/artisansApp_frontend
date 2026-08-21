@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../models/worker_job.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 import 'package:artisans_app/core/theme/index.dart';
-import '../utils/worker_formatters.dart';
-import '../widgets/gradient_button.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/features/worker/presentation/utils/worker_formatters.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
 
 class WorkerCompletionSuccessScreen extends StatelessWidget {
   const WorkerCompletionSuccessScreen({
@@ -160,7 +160,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            GradientButton(
+            WorkerGradientButton(
               label: 'Back to Requests',
               onPressed: () => _goHome(context),
             ),

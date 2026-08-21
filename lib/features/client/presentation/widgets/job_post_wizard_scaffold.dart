@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../shared/widgets/secondary_button.dart';
-import '../models/job_post_wizard_step.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/primary_button.dart';
+import 'package:artisans_app/shared/widgets/secondary_button.dart';
+import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
 
 /// Shared layout for all job post wizard steps: progress, scroll body, pinned CTAs.
 class JobPostWizardScaffold extends StatelessWidget {

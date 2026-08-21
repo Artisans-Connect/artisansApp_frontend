@@ -1,8 +1,8 @@
-import '../../core/session/app_user_session.dart';
-import '../../core/utils/current_user.dart';
-import '../../features/auth/models/onboarding_session.dart';
-import '../models/user_profile_view.dart';
-import '../presentation/navigation/shared_route_args.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/utils/current_user.dart';
+import 'package:artisans_app/shared/models/onboarding_session.dart';
+import 'package:artisans_app/shared/models/user_profile_view.dart';
+import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
 
 /// Resolves the logged-in user's active mode and merged profile for shared screens.
 class SharedUserContext {

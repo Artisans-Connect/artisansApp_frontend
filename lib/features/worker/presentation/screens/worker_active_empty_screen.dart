@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/theme/index.dart';
-import '../models/worker_ui_contracts.dart';
-import '../state/worker_session_state.dart';
-import '../widgets/gradient_button.dart';
+import 'package:artisans_app/core/theme/index.dart';
+import 'package:artisans_app/features/worker/presentation/models/worker_ui_contracts.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
 
 class WorkerActiveEmptyScreen extends StatelessWidget {
   const WorkerActiveEmptyScreen({super.key});
@@ -225,7 +225,7 @@ class WorkerActiveEmptyScreen extends StatelessWidget {
               const SizedBox(height: DesignTokens.xl),
 
               // Action Button
-              GradientButton(
+              WorkerGradientButton(
                 label: 'Browse Available Jobs  →',
                 onPressed: session.goToExplore,
               ),

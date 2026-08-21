@@ -1,5 +1,5 @@
-import '../utils/cache_logger.dart';
-import 'cache_store.dart';
+import 'package:artisans_app/core/utils/cache_logger.dart';
+import 'package:artisans_app/core/cache/cache_store.dart';
 
 /// Cache-first fetch with optional background refresh.
 class CachedFetch {

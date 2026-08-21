@@ -7,14 +7,14 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as google;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../core/constants/app_constants.dart';
-import '../../core/location/device_location_service.dart';
-import '../../core/maps/map_feature_helpers.dart';
-import '../../core/maps/mapbox_helpers.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
-import '../../features/worker/presentation/models/worker_job.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/location/device_location_service.dart';
+import 'package:artisans_app/core/maps/map_feature_helpers.dart';
+import 'package:artisans_app/core/maps/mapbox_helpers.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 
 bool get _useMapbox => !kIsWeb && AppConstants.mapboxAccessToken.isNotEmpty;
 bool get _mapsConfigured =>

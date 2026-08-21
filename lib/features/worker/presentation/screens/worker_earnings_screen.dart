@@ -1,12 +1,12 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../shared/presentation/screens/user_profile_screen.dart';
-import '../state/worker_session_state.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../core/services/workers_service.dart';
-import '../../../../core/services/payment_service.dart';
-import '../../../../shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/presentation/screens/user_profile_screen.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/core/services/payment_service.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
 
 class WorkerEarningsScreen extends StatefulWidget {
   const WorkerEarningsScreen({super.key});

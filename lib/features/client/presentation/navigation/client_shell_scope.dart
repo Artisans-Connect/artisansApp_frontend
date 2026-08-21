@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../client_shell.dart';
+import 'package:artisans_app/features/client/presentation/client_shell.dart';
 
 /// Exposes tab switching to descendant screens inside [ClientShell].
 class ClientShellScope extends InheritedWidget {

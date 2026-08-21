@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/widgets/search_bar.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/search_bar.dart';
 
 class HomeHero extends StatelessWidget {
   const HomeHero({

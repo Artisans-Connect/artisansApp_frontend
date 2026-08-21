@@ -1,6 +1,6 @@
-import '../cache/cache_keys.dart';
-import '../cache/cached_fetch.dart';
-import '../network/api_client.dart';
+import 'package:artisans_app/core/cache/cache_keys.dart';
+import 'package:artisans_app/core/cache/cached_fetch.dart';
+import 'package:artisans_app/core/network/api_client.dart';
 
 /// Fallback categories data used when API is unavailable or returns empty.
 /// Network-first approach: API → Fallback

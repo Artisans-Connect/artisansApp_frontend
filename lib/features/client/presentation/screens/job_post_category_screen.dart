@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_spacing.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/services/categories_service.dart';
-import '../../../../core/utils/icon_mapper.dart';
-import '../../../../core/utils/color_mapper.dart';
-import '../models/client_job_draft.dart';
-import '../models/job_post_wizard_step.dart';
-import '../navigation/client_navigation.dart';
-import '../widgets/job_post_wizard_scaffold.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/core/services/categories_service.dart';
+import 'package:artisans_app/core/utils/icon_mapper.dart';
+import 'package:artisans_app/core/utils/color_mapper.dart';
+import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
+import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/features/client/presentation/widgets/job_post_wizard_scaffold.dart';
 
 class JobPostCategoryScreen extends StatefulWidget {
   const JobPostCategoryScreen({super.key, this.jobData});

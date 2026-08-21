@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../widgets/error_state_view.dart';
-import '../../widgets/custom_back_button.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/error_state_view.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
 
 class LegalDocumentScreen extends StatefulWidget {
   const LegalDocumentScreen({

@@ -6,12 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart' as google;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 
-import '../../core/constants/app_constants.dart';
-import '../../core/maps/map_feature_helpers.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
-import 'custom_marker_builder.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/maps/map_feature_helpers.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_marker_builder.dart';
 
 class MapboxWorkerMarker {
   const MapboxWorkerMarker({

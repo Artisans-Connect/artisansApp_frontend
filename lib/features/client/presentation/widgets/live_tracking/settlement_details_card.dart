@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/navigation/app_routes.dart';
-import '../../../../../core/services/payment_service.dart';
-import '../../../../../core/services/negotiation_service.dart';
-import '../../../../../shared/models/negotiation.dart';
-import '../../../../../shared/widgets/negotiation_chat_sheet.dart';
-import '../../../../../shared/widgets/app_toast.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../screens/payment_checkout_screen.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/services/payment_service.dart';
+import 'package:artisans_app/core/services/negotiation_service.dart';
+import 'package:artisans_app/shared/models/negotiation.dart';
+import 'package:artisans_app/shared/widgets/negotiation_chat_sheet.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/features/client/presentation/screens/payment_checkout_screen.dart';
 
 class SettlementDetailsCard extends StatefulWidget {
   final Map<String, dynamic> job;

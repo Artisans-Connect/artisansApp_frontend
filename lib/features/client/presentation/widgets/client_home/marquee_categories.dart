@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../category_chip.dart';
+import 'package:artisans_app/features/client/presentation/widgets/category_chip.dart';
 
 class MarqueeCategoriesList extends StatefulWidget {
   const MarqueeCategoriesList({

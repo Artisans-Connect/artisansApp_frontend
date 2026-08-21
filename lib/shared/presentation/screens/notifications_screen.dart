@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../core/errors/error_messages.dart';
-import '../../../core/notifications/notification_metadata.dart';
-import '../../../core/services/notification_service.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../models/notification_item.dart';
-import '../../widgets/app_toast.dart';
-import '../../widgets/custom_app_bar.dart';
-import '../../widgets/error_state_view.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/notifications/notification_metadata.dart';
+import 'package:artisans_app/core/services/notification_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/models/notification_item.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/error_state_view.dart';
 
 enum _NotificationFilter { all, unread, actionNeeded }
 

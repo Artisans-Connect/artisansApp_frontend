@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-import 'mapbox_client_map.dart';
+import 'package:artisans_app/shared/widgets/mapbox_maps.dart';
 
 /// Map centered on [initial]; calls [onPositionChanged] when the user drags the map.
 ///

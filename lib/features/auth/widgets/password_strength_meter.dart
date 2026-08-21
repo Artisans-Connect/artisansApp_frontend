@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../models/password_strength.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/features/auth/models/password_strength.dart';
 
 class PasswordStrengthMeter extends StatelessWidget {
   const PasswordStrengthMeter({

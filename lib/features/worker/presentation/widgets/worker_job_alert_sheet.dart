@@ -4,13 +4,13 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/job_site_map.dart';
-import '../../../../core/services/workers_service.dart';
-import '../models/worker_job.dart';
-import '../utils/worker_job_mapper.dart';
-import 'gradient_button.dart';
-import 'map_placeholder.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/job_site_map.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/utils/worker_job_mapper.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/map_placeholder.dart';
 
 class WorkerJobAlertSheet extends StatefulWidget {
   const WorkerJobAlertSheet({
@@ -224,7 +224,7 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                 const SizedBox(width: 8),
                 Expanded(
                   flex: widget.onViewDetails != null ? 1 : 2,
-                  child: GradientButton(
+                  child: WorkerGradientButton(
                     label: 'Apply',
                     isLoading: _accepting,
                     enabled: !_declining,

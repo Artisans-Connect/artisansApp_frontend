@@ -1,4 +1,4 @@
-import 'package:artisans_app/features/worker/presentation/utils/worker_application_navigation.dart';
+import 'package:artisans_app/features/worker/presentation/utils/worker_application_destination.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

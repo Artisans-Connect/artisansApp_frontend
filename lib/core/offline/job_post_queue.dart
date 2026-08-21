@@ -4,7 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:uuid/uuid.dart';
 
-import '../services/jobs_service.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
 
 const String _boxName = 'pending_job_posts';
 

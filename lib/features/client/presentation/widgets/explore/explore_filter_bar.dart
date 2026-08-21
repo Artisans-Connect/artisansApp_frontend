@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../../core/theme/app_spacing.dart';
-import '../../../../../core/theme/app_typography.dart';
-import '../../../../../shared/widgets/filter_chip.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/filter_chip.dart';
 
 class ExploreFilterBar extends StatelessWidget {
   const ExploreFilterBar({

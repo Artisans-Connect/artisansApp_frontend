@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../../core/theme/design_tokens.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
 
 /// Gallery image tile — shows a network image with a fallback placeholder.
 class GalleryTile extends StatelessWidget {

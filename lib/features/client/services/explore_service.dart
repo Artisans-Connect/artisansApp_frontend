@@ -1,7 +1,7 @@
-import '../../../core/cache/cache_keys.dart';
-import '../../../core/cache/cached_fetch.dart';
-import '../../../core/network/api_client.dart';
-import '../../../core/utils/current_user.dart';
+import 'package:artisans_app/core/cache/cache_keys.dart';
+import 'package:artisans_app/core/cache/cached_fetch.dart';
+import 'package:artisans_app/core/network/api_client.dart';
+import 'package:artisans_app/core/utils/current_user.dart';
 
 class ExploreService {
   static final ExploreService instance = ExploreService._();

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../models/picked_media.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
 
 class PickedMediaImage extends StatelessWidget {
   const PickedMediaImage({

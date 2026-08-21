@@ -1,6 +1,6 @@
-import 'package:artisans_app/features/worker/presentation/models/worker_job.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
-import 'package:artisans_app/features/worker/presentation/widgets/availability_card.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_dashboard/availability_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -13,13 +13,16 @@ void main() {
           body: AvailabilityCard(
             isAvailable: false,
             onChanged: (_) {},
+            lastCheckedAt: null,
+            isSilentRefreshing: false,
+            isAvailabilityLoading: false,
           ),
         ),
       ),
     );
 
-    expect(find.text('Available for work'), findsOneWidget);
     expect(find.byType(Switch), findsOneWidget);
+    expect(find.text('Offline'), findsOneWidget);
   });
 
   testWidgets('Accept job from detail updates session',

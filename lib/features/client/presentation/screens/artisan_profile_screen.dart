@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../../../../core/theme/design_tokens.dart';
-import '../../../../core/errors/error_messages.dart';
-import '../navigation/client_navigation.dart';
-import '../../../../shared/widgets/primary_button.dart';
-import '../../../../core/services/reviews_service.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
-import '../widgets/artisan_profile/profile_atoms.dart';
-import '../widgets/artisan_profile/review_components.dart';
-import '../widgets/artisan_profile/gallery_components.dart';
-import '../../../../core/services/profile_service.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../widgets/artisan_profile/profile_tab_bar.dart';
-import '../../../trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
-import '../../../trust_safety/services/reports_service.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/shared/widgets/primary_button.dart';
+import 'package:artisans_app/core/services/reviews_service.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_profile/profile_atoms.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_profile/review_components.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_profile/gallery_components.dart';
+import 'package:artisans_app/core/services/profile_service.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_profile/profile_tab_bar.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import 'package:artisans_app/features/trust_safety/services/reports_service.dart';
 
  
 // ─────────────────────────────────────────────────────────────────────────────

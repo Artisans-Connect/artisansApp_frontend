@@ -2,13 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../core/services/workers_service.dart';
-import '../../../../core/theme/index.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../models/worker_job.dart';
-import '../state/worker_session_state.dart';
-import '../widgets/worker_phase_stepper.dart';
-import 'worker_completion_form_screen.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/core/theme/index.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_phase_stepper.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_completion_form_screen.dart';
 
 class WorkerPendingApprovalScreen extends StatefulWidget {
   const WorkerPendingApprovalScreen({super.key, required this.job});

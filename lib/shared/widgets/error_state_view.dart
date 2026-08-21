@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import 'gradient_button.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/gradient_button.dart';
 
 /// Full-area error UI with optional retry — for list/detail fetch failures.
 class ErrorStateView extends StatelessWidget {

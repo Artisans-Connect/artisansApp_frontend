@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../screens/legal_document_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/legal_document_screen.dart';
 
 abstract final class LegalNavigation {
   static const String privacyTitle = 'Privacy Policy';

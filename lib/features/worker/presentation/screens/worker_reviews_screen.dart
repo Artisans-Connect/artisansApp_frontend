@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/utils/current_user.dart';
-import '../../../../core/services/reviews_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../core/theme/design_tokens.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../client/presentation/widgets/artisan_profile/review_components.dart';
-import '../../../client/presentation/widgets/artisan_profile/profile_atoms.dart';
+import 'package:artisans_app/core/utils/current_user.dart';
+import 'package:artisans_app/core/services/reviews_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_profile/review_components.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_profile/profile_atoms.dart';
 
 class WorkerReviewsScreen extends StatefulWidget {
   const WorkerReviewsScreen({super.key});

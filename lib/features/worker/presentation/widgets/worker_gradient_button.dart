@@ -1,8 +1,8 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-class GradientButton extends StatelessWidget {
-  const GradientButton({
+class WorkerGradientButton extends StatelessWidget {
+  const WorkerGradientButton({
     super.key,
     required this.label,
     required this.onPressed,

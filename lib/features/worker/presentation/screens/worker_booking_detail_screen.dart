@@ -1,10 +1,10 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 
-import '../models/worker_job.dart';
-import '../widgets/job_detail_card.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
-import '../../../trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/job_detail_card.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
 
 class WorkerBookingDetailScreen extends StatelessWidget {
   const WorkerBookingDetailScreen({super.key, required this.job});

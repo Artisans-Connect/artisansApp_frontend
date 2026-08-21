@@ -5,15 +5,15 @@ import 'package:flutter/foundation.dart'
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../cache/cache_keys.dart';
-import '../cache/cache_store.dart';
-import '../constants/app_constants.dart';
-import '../errors/auth_failure.dart';
-import '../location/worker_location_service.dart';
-import '../network/api_client.dart';
-import '../session/app_user_session.dart';
-import '../utils/cache_logger.dart';
-import 'notification_service.dart';
+import 'package:artisans_app/core/cache/cache_keys.dart';
+import 'package:artisans_app/core/cache/cache_store.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/errors/auth_failure.dart';
+import 'package:artisans_app/core/location/worker_location_service.dart';
+import 'package:artisans_app/core/network/api_client.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/utils/cache_logger.dart';
+import 'package:artisans_app/core/services/notification_service.dart';
 
 enum GoogleAuthFlow {
   signIn,

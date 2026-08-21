@@ -1,4 +1,4 @@
-import 'job_post_wizard_step.dart';
+import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
 
 /// In-memory job post draft passed through the client job wizard.
 class ClientJobDraft {

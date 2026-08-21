@@ -1,4 +1,4 @@
-import 'report_category.dart';
+import 'package:artisans_app/features/trust_safety/domain/models/report_category.dart';
 
 class SafetyReport {
   final String id;

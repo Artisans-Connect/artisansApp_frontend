@@ -1,14 +1,14 @@
 import 'package:flutter/widgets.dart';
 
-import '../../../../core/location/worker_location_service.dart';
-import '../../../../core/services/jobs_service.dart';
-import '../../../../core/services/workers_service.dart';
-import '../models/worker_job.dart';
-import '../models/worker_ui_contracts.dart';
-import '../utils/worker_job_mapper.dart';
-import '../widgets/worker_bottom_nav.dart';
+import 'package:artisans_app/core/location/worker_location_service.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/models/worker_ui_contracts.dart';
+import 'package:artisans_app/features/worker/presentation/utils/worker_job_mapper.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart';
 
-import '../../../../core/services/job_realtime_service.dart';
+import 'package:artisans_app/core/services/job_realtime_service.dart';
 
 enum WorkerJobPhase {
   none,

@@ -5,11 +5,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart' as google;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart' as mapbox;
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../core/constants/app_constants.dart';
-import '../../core/maps/map_feature_helpers.dart';
-import '../../core/maps/mapbox_helpers.dart';
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/maps/map_feature_helpers.dart';
+import 'package:artisans_app/core/maps/mapbox_helpers.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
 
 /// Client view: job site + live worker marker via Supabase Realtime on [workers].
 ///

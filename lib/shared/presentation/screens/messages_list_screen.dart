@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../core/errors/error_messages.dart';
-import '../../../core/navigation/app_routes.dart';
-import '../../../core/utils/current_user.dart';
-import '../../../core/services/chat_service.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../models/conversation_summary.dart';
-import '../../widgets/conversation_tile.dart';
-import '../../widgets/custom_app_bar.dart';
-import '../../widgets/error_state_view.dart';
-import '../../widgets/search_bar.dart';
-import '../../widgets/app_toast.dart';
-import '../../utils/shared_user_context.dart';
-import '../navigation/shared_route_args.dart';
-import 'chat_detail_screen.dart';
-import 'settings_screen.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/utils/current_user.dart';
+import 'package:artisans_app/core/services/chat_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/models/conversation_summary.dart';
+import 'package:artisans_app/shared/widgets/conversation_tile.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/error_state_view.dart';
+import 'package:artisans_app/shared/widgets/search_bar.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/utils/shared_user_context.dart';
+import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
+import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/settings_screen.dart';
 
 class MessagesListScreen extends StatefulWidget {
   const MessagesListScreen({

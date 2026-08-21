@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'app_colors.dart';
-import 'app_spacing.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
 
 class DesignTokens {
   const DesignTokens._();

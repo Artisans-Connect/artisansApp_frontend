@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/artisan_logo_avatar.dart';
-import '../../../../core/navigation/app_routes.dart';
-import '../models/client_booking.dart';
-import '../navigation/client_navigation.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/artisan_logo_avatar.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
 
 class BookingSummarySheet extends StatelessWidget {
   final ClientBooking booking;

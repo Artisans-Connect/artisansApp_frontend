@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_typography.dart';
-import '../models/conversation_summary.dart';
-import '../utils/time_format.dart';
-import 'artisan_logo_avatar.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/models/conversation_summary.dart';
+import 'package:artisans_app/shared/utils/time_format.dart';
+import 'package:artisans_app/shared/widgets/artisan_logo_avatar.dart';
 
 class ConversationTile extends StatelessWidget {
   const ConversationTile({

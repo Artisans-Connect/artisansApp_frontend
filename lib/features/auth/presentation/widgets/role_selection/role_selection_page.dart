@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../../core/theme/app_typography.dart';
-import '../../../../../shared/models/user_profile_view.dart';
-import '../../../models/onboarding_session.dart';
-import '../../../widgets/role_option_card.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/models/user_profile_view.dart';
+import 'package:artisans_app/shared/models/onboarding_session.dart';
+import 'package:artisans_app/features/auth/widgets/role_option_card.dart';
 
 class RoleSelectionPage extends StatelessWidget {
   const RoleSelectionPage({

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
-import '../../../../core/services/negotiation_service.dart';
-import '../../../../core/services/workers_service.dart';
-import '../../../../core/theme/design_tokens.dart';
-import '../../../../shared/models/negotiation.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/category_icon_badge.dart';
-import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../../../shared/widgets/negotiation_chat_sheet.dart';
+import 'package:artisans_app/core/services/negotiation_service.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/models/negotiation.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/category_icon_badge.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/negotiation_chat_sheet.dart';
 
 class WorkerApplicationDetailScreen extends StatefulWidget {
   const WorkerApplicationDetailScreen({

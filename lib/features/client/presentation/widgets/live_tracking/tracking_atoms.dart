@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../../core/theme/design_tokens.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
 
 // ---------------------------------------------------------------------------
 // MiniHero – gradient container used as a step illustration wrapper

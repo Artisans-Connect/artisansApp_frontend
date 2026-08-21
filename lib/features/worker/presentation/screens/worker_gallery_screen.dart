@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/services/profile_service.dart';
-import '../../../../core/services/storage_service.dart';
-import '../../../../core/utils/current_user.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/models/picked_media.dart';
+import 'package:artisans_app/core/services/profile_service.dart';
+import 'package:artisans_app/core/services/storage_service.dart';
+import 'package:artisans_app/core/utils/current_user.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
 
 class WorkerGalleryScreen extends StatefulWidget {
   const WorkerGalleryScreen({super.key});

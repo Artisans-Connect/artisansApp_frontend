@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../utils/haversine.dart' as distance_utils;
+import 'package:artisans_app/core/utils/haversine.dart' as distance_utils;
 
 class AppMapCoordinate {
   const AppMapCoordinate(this.latitude, this.longitude);

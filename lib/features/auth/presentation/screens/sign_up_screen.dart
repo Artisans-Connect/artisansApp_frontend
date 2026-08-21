@@ -5,22 +5,22 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/errors/auth_failure.dart';
-import '../../../../core/navigation/auth_navigation.dart';
-import '../../../../core/services/auth_service.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
-import '../../../../shared/widgets/app_input.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/gradient_button.dart';
-import '../../../../shared/widgets/legal_agreement_text.dart';
-import '../../../../shared/widgets/secondary_button.dart';
-import '../../models/onboarding_session.dart';
-import '../../models/password_strength.dart';
-import '../../widgets/auth_error_banner.dart';
-import '../../widgets/password_strength_meter.dart';
-import 'role_selection_screen.dart';
-import 'verify_email_screen.dart';
+import 'package:artisans_app/core/errors/auth_failure.dart';
+import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/services/auth_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/widgets/app_input.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/gradient_button.dart';
+import 'package:artisans_app/shared/widgets/legal_agreement_text.dart';
+import 'package:artisans_app/shared/widgets/secondary_button.dart';
+import 'package:artisans_app/shared/models/onboarding_session.dart';
+import 'package:artisans_app/features/auth/models/password_strength.dart';
+import 'package:artisans_app/features/auth/widgets/auth_error_banner.dart';
+import 'package:artisans_app/features/auth/widgets/password_strength_meter.dart';
+import 'package:artisans_app/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/verify_email_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});

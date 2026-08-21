@@ -5,7 +5,7 @@ import '../../../../core/errors/error_messages.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../shared/widgets/custom_app_bar.dart';
-import '../../domain/models/report_model.dart';
+import '../../domain/models/safety_report.dart';
 import '../../services/reports_service.dart';
 
 class MyReportsScreen extends StatefulWidget {

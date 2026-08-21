@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/services/platform_service.dart';
-import '../../../core/services/profile_service.dart';
-import '../../../core/services/storage_service.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../models/picked_media.dart';
-import '../../utils/shared_user_context.dart';
-import '../../widgets/app_input.dart';
-import '../../widgets/app_toast.dart';
-import '../../widgets/custom_app_bar.dart';
-import '../../widgets/gradient_button.dart';
+import 'package:artisans_app/core/services/platform_service.dart';
+import 'package:artisans_app/core/services/profile_service.dart';
+import 'package:artisans_app/core/services/storage_service.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
+import 'package:artisans_app/shared/utils/shared_user_context.dart';
+import 'package:artisans_app/shared/widgets/app_input.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/gradient_button.dart';
 
 /// Shared edit profile — worker form (64) vs slimmer client form on the same route.
 class EditProfileScreen extends StatefulWidget {

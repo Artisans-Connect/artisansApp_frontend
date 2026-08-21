@@ -1,4 +1,4 @@
-export 'app_colors.dart';
-export 'app_typography.dart';
-export 'app_spacing.dart';
-export 'design_tokens.dart';
+export 'package:artisans_app/core/theme/app_colors.dart';
+export 'package:artisans_app/core/theme/app_typography.dart';
+export 'package:artisans_app/core/theme/app_spacing.dart';
+export 'package:artisans_app/core/theme/design_tokens.dart';

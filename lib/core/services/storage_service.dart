@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../constants/app_constants.dart';
-import '../../shared/models/picked_media.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
 
 class StorageException implements Exception {
   const StorageException(this.message);

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../../../core/theme/design_tokens.dart';
-import '../../../../../shared/widgets/app_input.dart';
-import '../../../models/onboarding_session.dart';
-import 'onboarding_atoms.dart';
-import 'trade_chip.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/app_input.dart';
+import 'package:artisans_app/shared/models/onboarding_session.dart';
+import 'package:artisans_app/features/auth/presentation/widgets/role_selection/onboarding_atoms.dart';
+import 'package:artisans_app/features/auth/presentation/widgets/role_selection/trade_chip.dart';
 
 class TradeSelectionPage extends StatelessWidget {
   const TradeSelectionPage({

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
 
 class CustomBackButton extends StatelessWidget {
   const CustomBackButton({

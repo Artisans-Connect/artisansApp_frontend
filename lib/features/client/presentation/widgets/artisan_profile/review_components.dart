@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import 'profile_atoms.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/features/client/presentation/widgets/artisan_profile/profile_atoms.dart';
 
 /// Rating summary bar row (e.g. the 5-star breakdown on the Reviews tab).
 class RatingBarRow extends StatelessWidget {

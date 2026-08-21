@@ -3,22 +3,22 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import '../../../core/navigation/auth_navigation.dart';
-import '../../../core/services/auth_service.dart';
-import '../../../core/session/app_user_session.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../features/auth/presentation/screens/role_selection_screen.dart';
-import '../../../features/auth/presentation/screens/sign_in_screen.dart';
-import '../../../features/client/presentation/navigation/client_navigation.dart';
-import '../navigation/legal_navigation.dart';
-import '../../utils/shared_user_context.dart';
-import '../../widgets/app_toast.dart';
-import '../../widgets/custom_app_bar.dart';
-import '../../widgets/settings_group_tile.dart';
-import 'edit_profile_screen.dart';
-import '../../../features/trust_safety/presentation/screens/my_reports_screen.dart';
-import '../../../features/trust_safety/presentation/screens/blocked_users_screen.dart';
+import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/services/auth_service.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/theme/app_colors.dart';
+import 'package:artisans_app/core/theme/app_typography.dart';
+import 'package:artisans_app/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/shared/presentation/navigation/legal_navigation.dart';
+import 'package:artisans_app/shared/utils/shared_user_context.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
+import 'package:artisans_app/shared/widgets/settings_group_tile.dart';
+import 'package:artisans_app/shared/presentation/screens/edit_profile_screen.dart';
+import 'package:artisans_app/features/trust_safety/presentation/screens/my_reports_screen.dart';
+import 'package:artisans_app/features/trust_safety/presentation/screens/blocked_users_screen.dart';
 
 /// Shared settings — client layout (53) vs worker layout (65) on same route.
 class SettingsScreen extends StatefulWidget {

@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'api_exception.dart';
-import 'auth_failure.dart';
+import 'package:artisans_app/core/errors/api_exception.dart';
+import 'package:artisans_app/core/errors/auth_failure.dart';
 
 /// Maps any thrown value to a short, user-facing message.
 String userMessageFor(Object? error, {String? fallback}) {

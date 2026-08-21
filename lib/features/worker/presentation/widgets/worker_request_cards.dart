@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/design_tokens.dart';
-import '../../../../shared/widgets/category_icon_badge.dart';
-import '../models/worker_job.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/shared/widgets/category_icon_badge.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 
 class RequestJobCard extends StatelessWidget {
   const RequestJobCard({

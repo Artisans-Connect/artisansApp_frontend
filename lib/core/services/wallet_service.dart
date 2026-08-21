@@ -1,4 +1,4 @@
-import '../network/api_client.dart';
+import 'package:artisans_app/core/network/api_client.dart';
 
 class WalletService {
   WalletService._();

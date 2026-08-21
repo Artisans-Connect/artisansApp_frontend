@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import '../utils/cache_logger.dart';
+import 'package:artisans_app/core/utils/cache_logger.dart';
 
 /// Deduplicates concurrent API requests to prevent duplicate calls for the same cache key.
 /// If a request for key K is already in-flight, subsequent callers wait for that result

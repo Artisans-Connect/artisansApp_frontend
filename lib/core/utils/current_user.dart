@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../session/app_user_session.dart';
-import '../../shared/models/user_profile_view.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/shared/models/user_profile_view.dart';
 
 /// Resolves the signed-in user's id and active mode from session (not stub data).
 class CurrentUser {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:artisans_app/core/theme/index.dart';
-import 'worker_shell.dart';
+import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
 
 class WorkerDevRouter extends StatelessWidget {
   const WorkerDevRouter({super.key});

@@ -1,4 +1,4 @@
-import 'client_job_draft.dart';
+import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
 
 /// Booking lifecycle statuses aligned with backend_integration.md.
 enum ClientBookingStatus {

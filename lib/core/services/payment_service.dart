@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import '../network/api_client.dart';
+import 'package:artisans_app/core/network/api_client.dart';
 
 class PaymentService {
   PaymentService._();

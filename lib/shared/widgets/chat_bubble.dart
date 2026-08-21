@@ -3,7 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:artisans_app/core/theme/index.dart';
-import '../models/chat_message.dart';
+import 'package:artisans_app/shared/models/chat_message.dart';
 
 class ChatBubble extends StatelessWidget {
   const ChatBubble({

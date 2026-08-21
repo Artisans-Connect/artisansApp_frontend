@@ -1,7 +1,7 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../models/worker_job.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 class HistoryJobCard extends StatelessWidget {
   const HistoryJobCard({
     super.key,

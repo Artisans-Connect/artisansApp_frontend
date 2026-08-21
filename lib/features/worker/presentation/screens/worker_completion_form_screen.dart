@@ -2,22 +2,22 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../../../core/services/jobs_service.dart';
-import '../../../../core/services/payment_service.dart';
-import '../../../../core/services/negotiation_service.dart';
-import '../../../../core/services/storage_service.dart';
-import '../../../../shared/models/negotiation.dart';
-import '../../../../shared/models/picked_media.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/negotiation_chat_sheet.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
-import '../models/worker_job.dart';
-import '../state/worker_session_state.dart';
-import '../utils/worker_job_mapper.dart';
-import '../widgets/completion_photo_picker.dart';
-import '../widgets/gradient_button.dart';
-import '../widgets/job_detail_card.dart';
-import 'worker_completion_success_screen.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
+import 'package:artisans_app/core/services/payment_service.dart';
+import 'package:artisans_app/core/services/negotiation_service.dart';
+import 'package:artisans_app/core/services/storage_service.dart';
+import 'package:artisans_app/shared/models/negotiation.dart';
+import 'package:artisans_app/shared/models/picked_media.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/negotiation_chat_sheet.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/utils/worker_job_mapper.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/completion_photo_picker.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/job_detail_card.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_completion_success_screen.dart';
 
 class WorkerCompletionFormScreen extends StatefulWidget {
   const WorkerCompletionFormScreen({
@@ -357,7 +357,7 @@ class _WorkerCompletionFormScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.xl),
-            GradientButton(
+            WorkerGradientButton(
               label: 'Submit & Complete',
               isLoading: _isSubmitting,
               onPressed: _submit,

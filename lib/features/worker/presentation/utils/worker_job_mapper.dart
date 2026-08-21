@@ -1,4 +1,4 @@
-import '../models/worker_job.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
 
 JobUrgency _urgencyFromJobMode(dynamic jobMode) {
   return (jobMode?.toString().toLowerCase() ?? '') == 'asap'

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
-import '../../models/worker_stats.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/features/worker/presentation/models/worker_stats.dart';
 
 class RecentReviewsSection extends StatelessWidget {
   const RecentReviewsSection({

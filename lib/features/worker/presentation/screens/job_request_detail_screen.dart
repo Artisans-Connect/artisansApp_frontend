@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:artisans_app/core/theme/index.dart';
-import '../../../../core/services/workers_service.dart';
-import '../../../client/presentation/navigation/client_navigation.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/job_site_map.dart';
-import '../models/worker_job.dart';
-import '../utils/worker_formatters.dart';
-import '../widgets/gradient_button.dart';
-import '../widgets/map_placeholder.dart';
-import '../widgets/reference_photos_row.dart';
-import '../widgets/timing_estimate_row.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/job_site_map.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/utils/worker_formatters.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/map_placeholder.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/reference_photos_row.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/timing_estimate_row.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
 
 class JobRequestDetailScreen extends StatefulWidget {
   const JobRequestDetailScreen({
@@ -332,7 +332,7 @@ class _JobRequestDetailScreenState extends State<JobRequestDetailScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     flex: 2,
-                    child: GradientButton(
+                    child: WorkerGradientButton(
                       label: 'Apply for Job',
                       isLoading: _isApplying,
                       onPressed: _applyLocked || _isApplying ? null : _onApply,

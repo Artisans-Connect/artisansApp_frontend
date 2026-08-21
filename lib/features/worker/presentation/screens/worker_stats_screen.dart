@@ -1,13 +1,13 @@
 import 'package:artisans_app/core/theme/index.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
-import '../../../../core/errors/error_messages.dart';
-import '../../../../core/services/workers_service.dart';
-import '../../../../shared/presentation/screens/settings_screen.dart';
-import '../../../../shared/widgets/error_state_view.dart';
-import '../models/worker_stats.dart';
-import '../state/worker_session_state.dart';
-import '../../../../shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/shared/presentation/screens/settings_screen.dart';
+import 'package:artisans_app/shared/widgets/error_state_view.dart';
+import 'package:artisans_app/features/worker/presentation/models/worker_stats.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/shared/widgets/custom_back_button.dart';
 
 class WorkerStatsScreen extends StatefulWidget {
   const WorkerStatsScreen({super.key});

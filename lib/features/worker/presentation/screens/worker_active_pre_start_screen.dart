@@ -4,19 +4,19 @@ import 'package:flutter/services.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../../../../core/services/workers_service.dart';
-import '../../../../core/theme/index.dart';
-import '../../../../shared/presentation/navigation/shared_route_args.dart';
-import '../../../../shared/presentation/screens/chat_detail_screen.dart';
-import '../../../../shared/widgets/app_toast.dart';
-import '../../../../shared/widgets/job_site_map.dart';
-import '../../../client/presentation/navigation/client_navigation.dart';
-import '../models/worker_job.dart';
-import '../state/worker_session_state.dart';
-import '../widgets/client_contact_row.dart';
-import '../widgets/gradient_button.dart';
-import '../widgets/worker_phase_stepper.dart';
-import '../../../trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
+import 'package:artisans_app/core/services/workers_service.dart';
+import 'package:artisans_app/core/theme/index.dart';
+import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
+import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart';
+import 'package:artisans_app/shared/widgets/app_toast.dart';
+import 'package:artisans_app/shared/widgets/job_site_map.dart';
+import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
+import 'package:artisans_app/shared/models/worker_job.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/client_contact_row.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_phase_stepper.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/safety_help_bottom_sheet.dart';
 
 class WorkerActivePreStartScreen extends StatefulWidget {
   const WorkerActivePreStartScreen({
@@ -500,7 +500,7 @@ class _WorkerActivePreStartScreenState
     switch (widget.phase) {
       case WorkerJobPhase.accepted:
         return <Widget>[
-          GradientButton(
+          WorkerGradientButton(
             label: "I'm on my way",
             isLoading: _isAdvancing,
             enabled: !busy,
@@ -529,7 +529,7 @@ class _WorkerActivePreStartScreenState
         ];
       case WorkerJobPhase.onTheWay:
         return <Widget>[
-          GradientButton(
+          WorkerGradientButton(
             label: "I've arrived at site",
             isLoading: _isAdvancing,
             enabled: !busy,
@@ -558,7 +558,7 @@ class _WorkerActivePreStartScreenState
         ];
       case WorkerJobPhase.arrived:
         return <Widget>[
-          GradientButton(
+          WorkerGradientButton(
             label: 'Start Work Now',
             isLoading: _isStarting,
             enabled: !busy,

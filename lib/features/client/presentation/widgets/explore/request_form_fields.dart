@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/app_spacing.dart';
+import 'package:artisans_app/core/theme/app_spacing.dart';
 
 class RequestFormFields extends StatelessWidget {
   const RequestFormFields({

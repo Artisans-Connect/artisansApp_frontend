@@ -8,16 +8,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:flutter_web_plugins/url_strategy.dart';
 
-import 'app.dart';
-import 'core/cache/cache_store.dart';
-import 'core/constants/app_constants.dart';
-import 'core/maps/google_maps_loader.dart';
-import 'core/offline/job_post_queue.dart';
-import 'core/services/auth_service.dart';
-import 'core/services/notification_service.dart';
-import 'features/client/data/job_draft_store.dart';
-import 'features/client/data/hidden_bookings_store.dart';
-import 'features/worker/presentation/worker_dev_router.dart';
+import 'package:artisans_app/app.dart';
+import 'package:artisans_app/core/cache/cache_store.dart';
+import 'package:artisans_app/core/constants/app_constants.dart';
+import 'package:artisans_app/core/maps/google_maps_loader.dart';
+import 'package:artisans_app/core/offline/job_post_queue.dart';
+import 'package:artisans_app/core/services/auth_service.dart';
+import 'package:artisans_app/core/services/notification_service.dart';
+import 'package:artisans_app/features/client/data/job_draft_store.dart';
+import 'package:artisans_app/features/client/data/hidden_bookings_store.dart';
+import 'package:artisans_app/features/worker/presentation/worker_dev_router.dart';
 
 /// Set `--dart-define=WORKER_DEV=true` to preview worker UI.
 Future<void> main() async {

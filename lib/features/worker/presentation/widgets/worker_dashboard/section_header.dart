@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../../core/theme/design_tokens.dart';
+import 'package:artisans_app/core/theme/design_tokens.dart';
 
 class SectionHeader extends StatelessWidget {
   const SectionHeader({super.key, required this.label, this.count});
