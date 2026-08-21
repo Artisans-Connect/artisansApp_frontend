@@ -5,8 +5,9 @@ import 'package:artisans_app/core/theme/index.dart';
 import 'package:artisans_app/features/worker/presentation/utils/worker_formatters.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
 import 'package:artisans_app/shared/widgets/custom_back_button.dart';
+import 'package:artisans_app/features/worker/presentation/screens/rate_client_screen.dart';
 
-class WorkerCompletionSuccessScreen extends StatelessWidget {
+class WorkerCompletionSuccessScreen extends StatefulWidget {
   const WorkerCompletionSuccessScreen({
     super.key,
     required this.job,
@@ -17,14 +18,130 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
   final VoidCallback onDone;
 
   @override
+  State<WorkerCompletionSuccessScreen> createState() =>
+      _WorkerCompletionSuccessScreenState();
+}
+
+class _WorkerCompletionSuccessScreenState
+    extends State<WorkerCompletionSuccessScreen> {
+  bool _ratingPromptShown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Show the rating prompt after a brief delay so the success screen
+    // renders first and the worker sees the confirmation before being asked.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.delayed(const Duration(milliseconds: 800), () {
+        if (mounted && !_ratingPromptShown) {
+          _ratingPromptShown = true;
+          _showRatingPrompt();
+        }
+      });
+    });
+  }
+
+  void _showRatingPrompt() {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: AppColors.surface,
+          contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  PhosphorIcons.star,
+                  size: 32,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                'Rate ${widget.job.clientName}?',
+                style: AppTypography.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                'While you wait for payment approval, take a moment to rate your experience with this client.',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Maybe Later',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _navigateToRateClient();
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                'Rate Now',
+                style: AppTypography.labelLarge.copyWith(
+                  color: AppColors.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _navigateToRateClient() {
+    Navigator.of(context).push(
+      MaterialPageRoute<bool>(
+        builder: (_) => RateClientScreen(
+          jobId: widget.job.id,
+          clientId: widget.job.clientId ?? '',
+          clientName: widget.job.clientName,
+          clientAvatarUrl: widget.job.clientAvatarUrl,
+          jobTitle: widget.job.title,
+        ),
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final double clientCharge = job.grossAmount ??
-        job.applicationTotalQuote ??
-        job.earnedAmount ??
-        job.artisanPayout ??
+    final double clientCharge = widget.job.grossAmount ??
+        widget.job.applicationTotalQuote ??
+        widget.job.earnedAmount ??
+        widget.job.artisanPayout ??
         0;
-    final double? platformFee = job.platformFee;
-    final double? payout = job.artisanPayout ?? job.earnedAmount;
+    final double? platformFee = widget.job.platformFee;
+    final double? payout = widget.job.artisanPayout ?? widget.job.earnedAmount;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -128,7 +245,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                       CircleAvatar(
                         backgroundColor: AppColors.primaryFixed,
                         child: Text(
-                          job.clientName.substring(0, 1),
+                          widget.job.clientName.substring(0, 1),
                           style: AppTypography.titleLarge.copyWith(
                             color: AppColors.primary,
                           ),
@@ -140,13 +257,13 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              job.clientName,
+                              widget.job.clientName,
                               style: AppTypography.titleLarge.copyWith(
                                 fontSize: 16,
                               ),
                             ),
                             Text(
-                              job.title.toUpperCase(),
+                              widget.job.title.toUpperCase(),
                               style: AppTypography.labelCaps.copyWith(
                                 fontSize: 10,
                               ),
@@ -171,7 +288,7 @@ class WorkerCompletionSuccessScreen extends StatelessWidget {
   }
 
   void _goHome(BuildContext context) {
-    onDone();
+    widget.onDone();
     Navigator.of(context).popUntil((route) => route.isFirst);
   }
 }
