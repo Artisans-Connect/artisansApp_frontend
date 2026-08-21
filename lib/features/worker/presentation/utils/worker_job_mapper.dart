@@ -137,7 +137,7 @@ WorkerJob workerHistoryJobFromApi(Map<String, dynamic> json) {
     clientId: json['client_id'] as String?,
     clientPhone: clientPhone,
     clientAvatarUrl: clientAvatarUrl,
-    urgency: JobUrgency.scheduled,
+    urgency: _urgencyFromJobMode(json['job_mode']),
     estimatedBudgetLabel: _budgetLabel(json),
     backendStatus: status,
     distanceKm: null,
