@@ -23,6 +23,7 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
   String? _error;
   double _escrowHeld = 0.0;
   double _initialEscrow = 0.0;
+  double _urgencyPremium = 0.0;
   double _totalExtraCharges = 0.0;
   List<Map<String, dynamic>> _extraChargeList = <Map<String, dynamic>>[];
   List<Map<String, dynamic>> _pendingExtraCharges = <Map<String, dynamic>>[];
@@ -47,6 +48,7 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
       setState(() {
         _escrowHeld = double.tryParse(res['escrow_held']?.toString() ?? '0') ?? 0.0;
         _initialEscrow = double.tryParse(res['initial_escrow']?.toString() ?? '0') ?? 0.0;
+        _urgencyPremium = double.tryParse(res['urgency_premium']?.toString() ?? '0') ?? 0.0;
         _totalExtraCharges = double.tryParse(res['total_extra_charges']?.toString() ?? '0') ?? 0.0;
         _extraChargeList = rawExtras != null
             ? rawExtras.cast<Map<String, dynamic>>()
@@ -253,6 +255,8 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
           const Divider(color: DesignTokens.borderSubtle, height: 1),
           const SizedBox(height: 8),
           rowItem('Original Agreed Escrow', _initialEscrow > 0 ? _initialEscrow : _grossAmount),
+          if (_urgencyPremium > 0)
+            rowItem('ASAP Urgency Premium (+)', _urgencyPremium),
           if (_pendingExtraCharges.isNotEmpty) ...<Widget>[
             ..._pendingExtraCharges.map(
               (pending) => Container(

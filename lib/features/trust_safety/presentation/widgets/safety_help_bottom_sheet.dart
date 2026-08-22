@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
 import 'package:artisans_app/features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/block_user_dialog.dart';
 
 class SafetyHelpBottomSheet extends StatelessWidget {
   const SafetyHelpBottomSheet({
@@ -185,6 +186,41 @@ class SafetyHelpBottomSheet extends StatelessWidget {
             },
           ),
 
+          // Block this user — only shown when we know who the counterpart is,
+          // so the safety sheet offers the same block entry point as the chat
+          // and profile screens.
+          if ((otherUserId ?? '').isNotEmpty) ...<Widget>[
+            const SizedBox(height: 8),
+            ListTile(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              tileColor: AppColors.surface,
+              leading: CircleAvatar(
+                backgroundColor: AppColors.error.withOpacity(0.1),
+                child: Icon(PhosphorIcons.prohibit,
+                    color: AppColors.error, size: 22),
+              ),
+              title: Text('Block ${otherUserName ?? 'this user'}',
+                  style: AppTypography.titleSmall),
+              subtitle: Text(
+                'Stop this person from messaging or booking you.',
+                style: AppTypography.caption,
+              ),
+              trailing: const Icon(PhosphorIcons.caretRight, size: 18),
+              onTap: () async {
+                final bool blocked = await showBlockUserDialog(
+                  context,
+                  blockedId: otherUserId!,
+                  displayName: otherUserName ?? 'this user',
+                  source: 'safety sheet',
+                );
+                if (blocked && context.mounted) {
+                  Navigator.pop(context);
+                }
+              },
+            ),
+          ],
+
           const SizedBox(height: 8),
 
           // In-Home Safety Tips Card
@@ -209,7 +245,7 @@ class SafetyHelpBottomSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '• Keep payments within the CraftMatch app to maintain full escrow protection.\n'
+                  '• Keep payments within the CraftMatch app so every job is eligible for our dispute and mediation support.\n'
                   '• Verify identity before allowing entry into private residences.\n'
                   '• Keep emergency contacts accessible during live jobs.',
                   style: AppTypography.caption

@@ -25,6 +25,7 @@ import 'package:artisans_app/shared/presentation/navigation/shared_route_args.da
 import 'package:artisans_app/shared/presentation/screens/user_profile_screen.dart';
 import 'package:artisans_app/shared/widgets/custom_back_button.dart';
 import 'package:artisans_app/features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/block_user_dialog.dart';
 import 'package:artisans_app/features/trust_safety/services/reports_service.dart';
 
 class ChatDetailScreen extends StatefulWidget {
@@ -54,6 +55,9 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   int _offset = 0;
   bool _hasMore = true;
   bool _isFetchingMore = false;
+
+  bool _isBlocked = false;
+  bool _blockedByMe = false;
 
   @override
   void initState() {
@@ -89,6 +93,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
       }
       _activeConversationId = conversationId;
       _loadMessages(conversationId);
+      _loadBlockStatus(routeArgs.counterpartUserId);
       _subscribeToMessages(conversationId, isDirect: routeArgs.isDirect);
       _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) {
         if (_activeConversationId != null) {
@@ -147,6 +152,23 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
           },
         )
         .subscribe();
+  }
+
+  Future<void> _loadBlockStatus(String counterpartUserId) async {
+    final String targetId = counterpartUserId.trim();
+    if (targetId.isEmpty || targetId == 'unknown') return;
+    try {
+      final Map<String, dynamic> status =
+          await ReportsService.instance.checkBlockStatus(targetId);
+      if (!mounted) return;
+      setState(() {
+        _isBlocked = status['is_blocked'] == true;
+        _blockedByMe = status['is_blocked_by_me'] == true;
+      });
+    } catch (_) {
+      // Fail open: on a lookup error leave the composer usable. The backend
+      // still rejects blocked sends, so nothing gets through in error.
+    }
   }
 
   Future<void> _loadMessages(String conversationId,
@@ -298,6 +320,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     List<String>? mediaTypes,
   }) async {
     if (_isSending) return;
+    if (_isBlocked) {
+      AppToast.showInfo(
+        context,
+        _blockedByMe
+            ? 'You blocked this user. Unblock from Settings to message again.'
+            : "You can't message this user.",
+      );
+      return;
+    }
     final String text = _composerController.text.trim();
     final bool hasMedia = (imageUrls != null && imageUrls.isNotEmpty) ||
         (mediaUrls != null && mediaUrls.isNotEmpty);
@@ -444,38 +475,18 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         );
         break;
       case 'block':
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: Text('Block ${args.counterpartName}?'),
-            content: Text(
-              'Blocking will prevent ${args.counterpartName} from contacting or booking with you. You can unblock them anytime from Settings.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Cancel'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                child: const Text('Block User'),
-              ),
-            ],
-          ),
+        if (args.counterpartUserId.isEmpty) break;
+        final bool blocked = await showBlockUserDialog(
+          context,
+          blockedId: args.counterpartUserId,
+          displayName: args.counterpartName,
+          source: 'chat',
         );
-        if (confirm == true && args.counterpartUserId.isNotEmpty) {
-          try {
-            await ReportsService.instance.blockUser(
-              blockedId: args.counterpartUserId,
-              reason: 'Blocked from chat',
-            );
-            if (!mounted) return;
-            AppToast.showSuccess(context, 'User blocked.');
-          } catch (e) {
-            if (!mounted) return;
-            AppToast.showError(context, e, fallback: 'Could not block user.');
-          }
+        if (blocked && mounted) {
+          setState(() {
+            _isBlocked = true;
+            _blockedByMe = true;
+          });
         }
         break;
     }
@@ -674,15 +685,44 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                             },
                           ),
           ),
-          ChatComposer(
-            controller: _composerController,
-            isSending: _isSending,
-            isUploadingMedia: _isUploadingMedia,
-            onSend: _sendMessage,
-            onPickAttachment: (ImageSource source, bool video) =>
-                _pickAndUploadAttachment(source, video: video),
-          ),
+          _isBlocked
+              ? _buildBlockedBanner()
+              : ChatComposer(
+                  controller: _composerController,
+                  isSending: _isSending,
+                  isUploadingMedia: _isUploadingMedia,
+                  onSend: _sendMessage,
+                  onPickAttachment: (ImageSource source, bool video) =>
+                      _pickAndUploadAttachment(source, video: video),
+                ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildBlockedBanner() {
+    return Container(
+      width: double.infinity,
+      color: AppColors.surfaceContainerHigh,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: <Widget>[
+            Icon(PhosphorIcons.prohibit, size: 20, color: AppColors.textSecondary),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                _blockedByMe
+                    ? 'You blocked this user. Unblock them from Settings to message again.'
+                    : "You can't message this user.",
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

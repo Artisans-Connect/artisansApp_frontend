@@ -107,6 +107,14 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
         ? 'Restricted Clients & Dispatch Safeguards'
         : 'Restricted Artisans & Safety Controls';
 
+    // Separate the two very different kinds of "block" so the UI can label and
+    // action them distinctly: personal blocks the user chose (and can lift) vs
+    // platform-level suspensions moderated by CraftMatch (which they cannot).
+    final List<Map<String, dynamic>> personalBlocks =
+        _blocks.where((b) => b['is_personal_block'] == true).toList();
+    final List<Map<String, dynamic>> platformBlocks =
+        _blocks.where((b) => b['is_personal_block'] != true).toList();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: CustomAppBar(
@@ -156,60 +164,43 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                       _buildCautionBanner(isWorker),
                       const SizedBox(height: 16),
 
-                      // Section Header with count
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            isWorker
-                                ? 'Restricted Clients (${_blocks.length})'
-                                : 'Restricted Artisans (${_blocks.length})',
-                            style: const TextStyle(
-                              fontFamily: AppTypography.displayFontFamily,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFEF2F2),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFFECACA)),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  PhosphorIcons.shieldWarning,
-                                  size: 13,
-                                  color: Color(0xFFDC2626),
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Restricted',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: Color(0xFFDC2626),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
+                      // Personal blocks — the user chose to block these and
+                      // can lift them from here.
+                      if (personalBlocks.isNotEmpty) ...[
+                        _buildSectionHeader(
+                          title: 'Blocked by You',
+                          count: personalBlocks.length,
+                          icon: PhosphorIcons.prohibit,
+                          badgeLabel: 'Personal',
+                          badgeBg: const Color(0xFFFEF2F2),
+                          badgeBorder: const Color(0xFFFECACA),
+                          badgeFg: const Color(0xFFDC2626),
+                        ),
+                        ...personalBlocks
+                            .map((item) => _buildBlockedCard(item, isWorker)),
+                      ],
 
-                      // Empty state or list
-                      if (_blocks.isEmpty)
-                        _buildEmptyState(isWorker)
-                      else
-                        ..._blocks.map((item) => _buildBlockedCard(item, isWorker)),
+                      if (personalBlocks.isNotEmpty && platformBlocks.isNotEmpty)
+                        const SizedBox(height: 20),
+
+                      // Platform suspensions — moderated by CraftMatch; the user
+                      // cannot lift these, only Support can.
+                      if (platformBlocks.isNotEmpty) ...[
+                        _buildSectionHeader(
+                          title: 'Suspended by CraftMatch',
+                          count: platformBlocks.length,
+                          icon: PhosphorIcons.shieldWarning,
+                          badgeLabel: 'Platform',
+                          badgeBg: const Color(0xFFFFF7ED),
+                          badgeBorder: const Color(0xFFFFEDD5),
+                          badgeFg: const Color(0xFFC2410C),
+                        ),
+                        ...platformBlocks
+                            .map((item) => _buildBlockedCard(item, isWorker)),
+                      ],
+
+                      // Global empty state — nothing in either section.
+                      if (_blocks.isEmpty) _buildEmptyState(isWorker),
 
                       const SizedBox(height: 20),
 
@@ -219,6 +210,59 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                     ],
                   ),
                 ),
+    );
+  }
+
+  Widget _buildSectionHeader({
+    required String title,
+    required int count,
+    required IconData icon,
+    required String badgeLabel,
+    required Color badgeBg,
+    required Color badgeBorder,
+    required Color badgeFg,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              '$title ($count)',
+              style: const TextStyle(
+                fontFamily: AppTypography.displayFontFamily,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: badgeBg,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: badgeBorder),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 13, color: badgeFg),
+                const SizedBox(width: 4),
+                Text(
+                  badgeLabel,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: badgeFg,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -708,8 +752,8 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
               children: [
                 Text(
                   isWorker
-                      ? 'CraftMatch Worker Safety Guarantee'
-                      : 'CraftMatch Ghana Escrow Guarantee',
+                      ? 'CraftMatch Worker Safety'
+                      : 'CraftMatch Payment Safety',
                   style: const TextStyle(
                     fontFamily: AppTypography.displayFontFamily,
                     fontSize: 13,
@@ -720,8 +764,8 @@ class _BlockedUsersScreenState extends State<BlockedUsersScreen> {
                 const SizedBox(height: 2),
                 Text(
                   isWorker
-                      ? 'Never accept cash or start jobs before the client milestone is secured in escrow. Report any payment coercion directly to Support.'
-                      : 'All verified artisans are KYC checked with Ghana Card. Keep all payments in Milestone Escrow until job is fully complete.',
+                      ? 'Never accept cash or start a job before the client\'s payment is confirmed in CraftMatch. Report any payment coercion directly to Support.'
+                      : 'All verified artisans are KYC checked with Ghana Card. Keep all payments and messages inside CraftMatch, and release payment only when the job is fully complete.',
                   style: const TextStyle(
                     fontSize: 11.5,
                     color: AppColors.textSecondary,

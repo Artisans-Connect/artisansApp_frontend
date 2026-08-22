@@ -338,7 +338,7 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                                     ),
                                     const SizedBox(width: 6),
                                     Text(
-                                      'GHS ${heldBalance.toStringAsFixed(2)} held in active escrow',
+                                      'GHS ${heldBalance.toStringAsFixed(2)} held for active jobs',
                                       style: AppTypography.bodySmall.copyWith(
                                         color: Colors.amberAccent,
                                         fontWeight: FontWeight.w500,

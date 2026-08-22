@@ -24,7 +24,7 @@ import 'package:artisans_app/shared/models/user_profile_view.dart';
 import 'package:artisans_app/shared/presentation/screens/edit_profile_screen.dart';
 import 'package:artisans_app/shared/presentation/screens/settings_screen.dart';
 import 'package:artisans_app/features/trust_safety/presentation/widgets/report_submission_bottom_sheet.dart';
-import 'package:artisans_app/features/trust_safety/services/reports_service.dart';
+import 'package:artisans_app/features/trust_safety/presentation/widgets/block_user_dialog.dart';
 
 /// Shared profile for clients and workers. Same route; sections vary by [UserProfileViewData.role].
 class UserProfileScreen extends StatefulWidget {
@@ -146,39 +146,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     reportedName: profile.fullName,
                   );
                 } else if (value == 'block') {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text('Block ${profile.fullName}?'),
-                      content: Text(
-                        'Blocking will prevent ${profile.fullName} from contacting or booking with you. You can unblock them anytime from Settings.',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Cancel'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-                          child: const Text('Block User'),
-                        ),
-                      ],
-                    ),
+                  await showBlockUserDialog(
+                    context,
+                    blockedId: profile.id,
+                    displayName: profile.fullName,
+                    subjectLabel: profile.isWorker ? 'Worker' : 'Client',
+                    source: 'profile',
                   );
-                  if (confirm == true && profile.id.isNotEmpty) {
-                    try {
-                      await ReportsService.instance.blockUser(
-                        blockedId: profile.id,
-                        reason: 'Blocked from profile screen',
-                      );
-                      if (!mounted) return;
-                      AppToast.showSuccess(context, 'User blocked.');
-                    } catch (e) {
-                      if (!mounted) return;
-                      AppToast.showError(context, e, fallback: 'Could not block user.');
-                    }
-                  }
                 }
               },
               itemBuilder: (context) => [
