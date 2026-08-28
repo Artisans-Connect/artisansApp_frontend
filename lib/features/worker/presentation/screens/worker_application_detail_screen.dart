@@ -289,7 +289,52 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
           ],
 
           const SizedBox(height: DesignTokens.md),
-          if (counterRate == null && lastProposedBy.isEmpty)
+          if (applicationStatus == 'accepted' && jobStatus == 'awaiting_payment') ...[
+            Container(
+              padding: const EdgeInsets.all(DesignTokens.lg),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE0F2FE),
+                borderRadius: BorderRadius.circular(DesignTokens.radiusXl),
+                border: Border.all(color: const Color(0xFF7DD3FC)),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Icon(
+                        Icons.info_outline_rounded,
+                        size: 20,
+                        color: Color(0xFF0369A1),
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Awaiting Client Payment',
+                        style: TextStyle(
+                          fontFamily: 'Satoshi',
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0369A1),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'Great news! The client accepted your application. We are waiting a short moment for them to complete the initial escrow deposit payment. Once paid, the booking will be confirmed and you can start the job!',
+                    style: TextStyle(
+                      fontFamily: 'Satoshi',
+                      fontSize: 13,
+                      height: 1.5,
+                      color: Color(0xFF0C4A6E),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: DesignTokens.md),
+          ],
+          if (counterRate == null && lastProposedBy.isEmpty && !(applicationStatus == 'accepted' && jobStatus == 'awaiting_payment'))
             Text(
               applicationStatus == 'pending'
                   ? 'The client is reviewing applications. We will update this card when a decision is made.'
