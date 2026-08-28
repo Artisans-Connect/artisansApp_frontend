@@ -400,6 +400,30 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
   Future<void> _requestAnotherWorker(String? jobUuid) async {
     if (_requestingAnotherWorker || jobUuid == null || jobUuid.isEmpty) return;
+
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: const Text('Continue searching?'),
+        content: const Text(
+          'We\'ll search for another available artisan for this same job. '
+          'Your payment stays safely held in escrow.\n\n'
+          'The artisan who just cancelled will not be contacted again.',
+        ),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Not now'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Yes, continue'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
     setState(() => _requestingAnotherWorker = true);
     try {
       final dynamic reopened = await _jobsService.requestAnotherWorker(jobUuid);
@@ -733,6 +757,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
                   jobUuid: jobUuid,
                   isLoading: _requestingAnotherWorker,
                   onRequestAnother: _requestAnotherWorker,
+                  onCancelJob: () => _handleCancelJob(),
                 ),
                 const SizedBox(height: 20),
                 Center(

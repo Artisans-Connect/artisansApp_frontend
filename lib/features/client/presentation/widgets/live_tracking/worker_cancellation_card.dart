@@ -13,6 +13,7 @@ class WorkerCancellationCard extends StatelessWidget {
   final String? jobUuid;
   final bool isLoading;
   final ValueChanged<String?> onRequestAnother;
+  final VoidCallback? onCancelJob;
 
   const WorkerCancellationCard({
     super.key,
@@ -20,6 +21,7 @@ class WorkerCancellationCard extends StatelessWidget {
     required this.jobUuid,
     required this.isLoading,
     required this.onRequestAnother,
+    this.onCancelJob,
   });
 
   @override
@@ -79,11 +81,37 @@ class WorkerCancellationCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           PrimaryButton(
-            label: 'Request another worker',
+            label: 'Find another artisan',
             isLoading: isLoading,
             isEnabled: !isLoading && jobUuid != null && jobUuid!.isNotEmpty,
             onPressed: () => onRequestAnother(jobUuid),
           ),
+          if (onCancelJob != null) ...[
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: isLoading ? null : onCancelJob,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  side: BorderSide(
+                    color: DesignTokens.textSecondary
+                        .withAlpha((0.3 * 255).round()),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  'Cancel this job',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: DesignTokens.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

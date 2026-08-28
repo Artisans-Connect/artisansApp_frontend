@@ -249,8 +249,8 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 16,
+                        vertical: 10,
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryContainer,
@@ -270,11 +270,11 @@ class _FindingArtisanScreenState extends State<FindingArtisanScreen>
                               shape: BoxShape.circle,
                             ),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: 8),
                           Text(
                             '${_applications.length} ${_applications.length == 1 ? "Artisan" : "Artisans"} Applied',
                             style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.primary,
+                              color: AppColors.onPrimary,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
