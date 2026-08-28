@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:artisans_app/core/services/platform_service.dart';
 import 'package:artisans_app/core/services/profile_service.dart';
 import 'package:artisans_app/core/services/storage_service.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
 import 'package:artisans_app/shared/models/picked_media.dart';
