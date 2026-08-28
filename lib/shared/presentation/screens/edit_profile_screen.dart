@@ -77,8 +77,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _locationController = TextEditingController(
       text: session.locationLabel ?? profile.locationLabel ?? '',
     );
+    final double? appUserRate = AppUserSession.instance.currentUser?.hourlyRate;
     _hourlyRateController = TextEditingController(
-      text: session.hourlyRateNote ?? 'To be discussed with client',
+      text: session.hourlyRateNote ??
+          (appUserRate != null ? appUserRate.toStringAsFixed(0) : 'To be discussed with client'),
     );
     _serviceAreasController = TextEditingController(
       text: session.serviceAreas.isNotEmpty
@@ -120,6 +122,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       return;
     }
 
+    final String phoneTrim = phone.replaceAll(RegExp(r'\s+'), '');
+    final RegExp phoneRegex = RegExp(r'^(?:\+?233|0)[0-9]{9}$');
+    if (phoneTrim.isNotEmpty && !phoneRegex.hasMatch(phoneTrim)) {
+      AppToast.showError(context, 'Please enter a valid phone number (e.g., 024XXXXXXX).');
+      return;
+    }
+
+    double? baseFee;
+    if (_isWorker) {
+      if (_editableSkills.isEmpty) {
+        AppToast.showError(context, 'Please select at least one skill.');
+        return;
+      }
+
+      final String serviceAreasText = _serviceAreasController.text.trim();
+      if (serviceAreasText.isEmpty) {
+        AppToast.showError(context, 'Please specify at least one service area.');
+        return;
+      }
+
+      final String baseFeeText = _hourlyRateController.text.trim();
+      if (baseFeeText.isNotEmpty && baseFeeText.toLowerCase() != 'to be discussed with client') {
+        baseFee = double.tryParse(baseFeeText);
+        if (baseFee == null || baseFee <= 0) {
+          AppToast.showError(context, 'Please enter a valid positive number for the base service fee.');
+          return;
+        }
+      }
+    }
+
     setState(() => _isSaving = true);
 
     try {
@@ -141,6 +173,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty)
               .toList(),
+          'hourly_rate': baseFee,
         },
       };
 
@@ -162,6 +195,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               .map((e) => e.trim())
               .where((e) => e.isNotEmpty),
         );
+        session.hourlyRateNote = baseFee != null ? baseFee.toStringAsFixed(0) : null;
       }
       if (!mounted) return;
       AppToast.showSuccess(context, 'Profile updated.');
@@ -414,16 +448,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              _fieldLabel('HOURLY RATE'),
+              _fieldLabel('BASE VISIT / SERVICE FEE (GHS)'),
               const SizedBox(height: 8),
               AppInput(
                 controller: _hourlyRateController,
-                hint: 'To be discussed with client',
+                hint: 'e.g. 50',
                 prefixIcon: PhosphorIcons.money,
               ),
               const SizedBox(height: 6),
               Text(
-                'This value is managed through contract negotiations.',
+                'This is your starting fee for a site visit and diagnosis. Further workmanship is negotiated.',
                 style: AppTypography.bodyMedium,
               ),
               const SizedBox(height: 16),
