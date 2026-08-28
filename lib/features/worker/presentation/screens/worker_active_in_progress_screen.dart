@@ -68,7 +68,7 @@ class _WorkerActiveInProgressScreenState
       );
 
       final Negotiation? openNeg = negs.cast<Negotiation?>().firstWhere(
-        (n) => n != null && n.status == NegotiationStatus.open,
+        (n) => n != null && n.status == NegotiationStatus.open && n.type != NegotiationType.quote,
         orElse: () => null,
       );
 
