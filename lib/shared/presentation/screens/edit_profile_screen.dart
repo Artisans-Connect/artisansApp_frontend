@@ -28,30 +28,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   static const int _bioMaxLength = 150;
 
   static const List<String> _trades = <String>[
-    'Mason',
-    'Carpenter',
-    'Tiler',
-    'Painter',
-    'Welder / Metal Fabricator',
-    'Electrician',
-    'Solar Technician',
     'Plumber',
     'Borehole / Pump Technician',
+    'Drainage Worker',
+    'Sanitary Installer',
+    'Electrician',
+    'Solar Technician',
+    'Appliance Electrician',
+    'Generator Technician',
+    'CCTV / Security Installer',
     'Auto Mechanic',
+    'Auto Electrician',
     'Vulcanizer',
-    'General Handyman',
-    'Cleaner',
-    'Gardener',
-    'Hairdresser',
-    'Barber',
-    'Tailor / Dressmaker',
-    'Shoemaker / Cobbler',
-    'Phone Repairer',
-    'Laptop Technician',
-    'Caterer',
-    'Baker',
-    'Photographer',
-    'Wood Carver',
+    'Sprayer / Auto Body Worker',
+    'Motorcycle Mechanic',
+    'Heavy Equipment Mechanic',
+    'Carpenter',
     'Other',
   ];
 
@@ -142,6 +134,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (bio.isNotEmpty) 'bio': bio,
         'location_label': locationLabel,
         if (avatarUrl != null) 'avatar_url': avatarUrl,
+        if (_isWorker) ...<String, dynamic>{
+          'skills': _editableSkills,
+          'service_areas': _serviceAreasController.text
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList(),
+        },
       };
 
       await ProfileService.instance.updateProfile(body);
@@ -152,6 +152,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       session.bio = bio;
       session.locationLabel = locationLabel;
       if (avatarUrl != null) session.avatarUrl = avatarUrl;
+      if (_isWorker) {
+        session.selectedTrades.clear();
+        session.selectedTrades.addAll(_editableSkills);
+        session.serviceAreas.clear();
+        session.serviceAreas.addAll(
+          _serviceAreasController.text
+              .split(',')
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty),
+        );
+      }
       if (!mounted) return;
       AppToast.showSuccess(context, 'Profile updated.');
       Navigator.pop(context);
