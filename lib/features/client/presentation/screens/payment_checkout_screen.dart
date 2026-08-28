@@ -82,7 +82,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> with Widg
     if (_reference == null || _isVerifying || _isVerifyingSilent || _isCompleted || !mounted) return;
     _isVerifyingSilent = true;
     try {
-      final res = await _paymentService.verifyPayment(widget.jobId);
+      final res = await _paymentService.verifyPayment(_reference!);
       final bool success = res['success'] as bool? ?? false;
       if (!mounted) return;
       if (success && !_isCompleted) {
@@ -160,7 +160,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> with Widg
     });
     try {
       _pollTimer?.cancel();
-      final res = await _paymentService.verifyPayment(widget.jobId);
+      final res = await _paymentService.verifyPayment(_reference!);
       final bool success = res['success'] as bool? ?? false;
       if (!mounted) return;
       

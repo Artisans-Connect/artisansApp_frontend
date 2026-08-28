@@ -6,6 +6,8 @@ import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:artisans_app/core/services/applications_service.dart';
 import 'package:artisans_app/core/services/jobs_service.dart';
 import 'package:artisans_app/core/services/negotiation_service.dart';
+import 'package:artisans_app/core/services/negotiation_realtime_service.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_spacing.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
@@ -37,6 +39,10 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
   String? _errorMessage;
   List<Map<String, dynamic>> _applications = <Map<String, dynamic>>[];
 
+  final NegotiationRealtimeService _negotiationRealtime = NegotiationRealtimeService();
+  String? _hasOpenedLiveBargainingSheetKey;
+  bool _isModalOpen = false;
+
   String get _jobId =>
       (widget.job?['job_id'] ?? widget.job?['jobId'] ?? widget.job?['id'] ?? '')
           .toString();
@@ -60,6 +66,64 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
   void initState() {
     super.initState();
     _loadApplications();
+    _subscribeNegotiations();
+  }
+
+  @override
+  void dispose() {
+    _negotiationRealtime.unsubscribeJob();
+    super.dispose();
+  }
+
+  void _subscribeNegotiations() {
+    if (_jobId.isEmpty) return;
+    _negotiationRealtime.subscribeToJobNegotiations(
+      _jobId,
+      onUpdate: () {
+        _loadApplications();
+        _checkActiveNegotiations();
+      },
+    );
+  }
+
+  Future<void> _checkActiveNegotiations() async {
+    if (_jobId.isEmpty || !mounted) return;
+    try {
+      final List<Negotiation> negs = await NegotiationService.instance.getJobNegotiations(_jobId);
+      final Negotiation? openNeg = negs.cast<Negotiation?>().firstWhere(
+        (n) => n?.status == NegotiationStatus.open && n?.type == NegotiationType.quote,
+        orElse: () => null,
+      );
+
+      if (openNeg != null && mounted) {
+        final String currentUserId = AppUserSession.instance.currentUser?.id ?? '';
+        final NegotiationRound? lastRound = openNeg.rounds.isNotEmpty == true ? openNeg.rounds.last : null;
+        final bool isCounterpartyTurnToRespond = lastRound != null && lastRound.proposedBy != currentUserId;
+
+        if (isCounterpartyTurnToRespond) {
+          final String currentKey = '${openNeg.id}_${openNeg.rounds.length}';
+          if (_hasOpenedLiveBargainingSheetKey != currentKey) {
+            _hasOpenedLiveBargainingSheetKey = currentKey;
+            _showLiveBargainingSheet(openNeg);
+          }
+        }
+      }
+    } catch (_) {}
+  }
+
+  void _showLiveBargainingSheet(Negotiation negotiation) {
+    if (_isModalOpen) return;
+    setState(() => _isModalOpen = true);
+    NegotiationChatSheet.show(
+      context,
+      negotiation: negotiation,
+      onStatusChanged: () {
+        _loadApplications();
+      },
+    );
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) setState(() => _isModalOpen = false);
+    });
   }
 
   Future<void> _loadApplications() async {
