@@ -6,6 +6,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/shared/widgets/app_toast.dart';
 import 'package:artisans_app/shared/widgets/job_site_map.dart';
+import 'package:artisans_app/shared/widgets/primary_button.dart';
 import 'package:artisans_app/core/services/workers_service.dart';
 import 'package:artisans_app/shared/models/worker_job.dart';
 import 'package:artisans_app/features/worker/presentation/utils/worker_job_mapper.dart';
@@ -55,18 +56,233 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
     super.dispose();
   }
 
-  Future<void> _accept() async {
+  double _parseEstimatedRate() {
+    final job = widget.job;
+    if (job.applicationTotalQuote != null && job.applicationTotalQuote! > 0) {
+      return job.applicationTotalQuote!;
+    }
+    if (job.grossAmount != null && job.grossAmount! > 0) {
+      return job.grossAmount!;
+    }
+    if (job.baseRate != null && job.baseRate! > 0) {
+      return job.baseRate!;
+    }
+    final match = RegExp(r'(\d+(\.\d+)?)').firstMatch(job.estimateDisplay);
+    if (match != null) {
+      return double.tryParse(match.group(1)!) ?? 50.0;
+    }
+    return 50.0;
+  }
+
+  Future<void> _showQuoteModal() async {
+    final double initialRate = _parseEstimatedRate();
+    final TextEditingController rateController =
+        TextEditingController(text: initialRate.toStringAsFixed(0));
+    final TextEditingController noteController = TextEditingController();
+
+    final result = await showModalBottomSheet<Map<String, dynamic>>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (BuildContext ctx) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            final double currentVal =
+                double.tryParse(rateController.text) ?? initialRate;
+            return Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.outlineVariant,
+                        borderRadius: BorderRadius.circular(99),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Confirm Your Quote',
+                    style: AppTypography.titleLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Client estimate: GH₵${initialRate.toStringAsFixed(0)}. You can adjust your quote below:',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: rateController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    style: AppTypography.titleLarge.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Your Quote (GH₵)',
+                      prefixText: 'GH₵ ',
+                      filled: true,
+                      fillColor: AppColors.surfaceContainerLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    onChanged: (_) => setModalState(() {}),
+                  ),
+                  const SizedBox(height: 10),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        ActionChip(
+                          label: Text(
+                              'GH₵${initialRate.toStringAsFixed(0)} (Base)'),
+                          onPressed: () {
+                            rateController.text =
+                                initialRate.toStringAsFixed(0);
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        ActionChip(
+                          label: const Text('+ GH₵10'),
+                          onPressed: () {
+                            rateController.text =
+                                (currentVal + 10).toStringAsFixed(0);
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        ActionChip(
+                          label: const Text('+ GH₵20'),
+                          onPressed: () {
+                            rateController.text =
+                                (currentVal + 20).toStringAsFixed(0);
+                            setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        ActionChip(
+                          label: const Text('+ GH₵50'),
+                          onPressed: () {
+                            rateController.text =
+                                (currentVal + 50).toStringAsFixed(0);
+                            setModalState(() {});
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  TextField(
+                    controller: noteController,
+                    maxLines: 2,
+                    decoration: InputDecoration(
+                      hintText:
+                          'Add an optional note (e.g. includes transport)',
+                      hintStyle: AppTypography.bodySmall,
+                      filled: true,
+                      fillColor: AppColors.surfaceContainerLow,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: const Text('Back'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 2,
+                        child: PrimaryButton(
+                          label: 'Send Quote',
+                          onPressed: () {
+                            final double? quote =
+                                double.tryParse(rateController.text.trim());
+                            if (quote == null || quote <= 0) {
+                              AppToast.showError(
+                                  context, 'Please enter a valid quote amount.');
+                              return;
+                            }
+                            Navigator.of(context).pop(<String, dynamic>{
+                              'proposedRate': quote,
+                              'message': noteController.text.trim().isNotEmpty
+                                  ? noteController.text.trim()
+                                  : null,
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    rateController.dispose();
+    noteController.dispose();
+
+    if (result != null) {
+      final double? proposedRate = result['proposedRate'] as double?;
+      final String? message = result['message'] as String?;
+      await _submitApplication(
+        proposedRate: proposedRate,
+        message: message,
+      );
+    }
+  }
+
+  Future<void> _submitApplication({
+    double? proposedRate,
+    String? message,
+  }) async {
     if (_accepting || _declining) return;
     setState(() => _accepting = true);
     try {
-      final dynamic application = await _workersService.applyToJob(widget.job.id);
+      final dynamic application = await _workersService.applyToJob(
+        widget.job.id,
+        proposedRate: proposedRate,
+        message: message,
+      );
       if (!mounted) return;
       if (application is Map<String, dynamic>) {
         widget.onAccepted(application);
       }
       AppToast.showSuccess(
         context,
-        'Application sent. The client will choose an artisan.',
+        'Quote sent (GH₵${(proposedRate ?? _parseEstimatedRate()).toStringAsFixed(0)}). The client will review your quote.',
       );
       Navigator.of(context).pop();
     } catch (e) {
@@ -228,7 +444,7 @@ class _WorkerJobAlertSheetState extends State<WorkerJobAlertSheet> {
                     label: 'Apply',
                     isLoading: _accepting,
                     enabled: !_declining,
-                    onPressed: _accept,
+                    onPressed: _showQuoteModal,
                   ),
                 ),
               ],

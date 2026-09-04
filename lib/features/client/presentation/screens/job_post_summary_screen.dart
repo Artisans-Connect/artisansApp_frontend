@@ -348,7 +348,7 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'ESTIMATED TOTAL',
+                            'ESTIMATED STARTING FEE',
                             style: AppTypography.labelLarge,
                           ),
                           Text(
@@ -358,6 +358,33 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMedium),
+                          border: Border.all(
+                            color: AppColors.primary.withValues(alpha: 0.15),
+                          ),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(PhosphorIcons.info, size: 16, color: AppColors.primary),
+                            const SizedBox(width: AppSpacing.xs),
+                            Expanded(
+                              child: Text(
+                                'This is an estimated starting price. Applying artisans may propose a custom quote based on travel distance and job scope. You review and approve their quote before making any payment.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
