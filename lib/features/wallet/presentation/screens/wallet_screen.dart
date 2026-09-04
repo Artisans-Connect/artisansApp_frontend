@@ -71,7 +71,10 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
     if (tabIndex == 0) return _transactions;
     if (tabIndex == 1) {
       return _transactions
-          .where((tx) => tx['type'] == 'deposit' || tx['type'] == 'refund')
+          .where((tx) =>
+              tx['type'] == 'deposit' ||
+              tx['type'] == 'refund' ||
+              tx['type'] == 'cancellation_fee')
           .toList();
     }
     if (tabIndex == 2) {
@@ -444,6 +447,12 @@ class _WalletScreenState extends State<WalletScreen> with SingleTickerProviderSt
                                 } else if (type == 'payout') {
                                   icon = PhosphorIcons.paperPlaneRight;
                                   iconColor = Colors.purple;
+                                } else if (type == 'escrow_lock') {
+                                  icon = PhosphorIcons.lockKey;
+                                  iconColor = const Color(0xFFD97706);
+                                } else if (type == 'cancellation_fee') {
+                                  icon = PhosphorIcons.shieldWarning;
+                                  iconColor = const Color(0xFFF59E0B);
                                 }
 
                                 return ListTile(

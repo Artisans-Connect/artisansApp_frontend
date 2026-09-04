@@ -659,7 +659,7 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
         );
         if (paid == true && mounted) {
           final String jobStatus = (_job?['status'] ?? '').toString();
-          final bool isFinalCompletion = jobStatus == 'pending_completion' || jobStatus == 'completed';
+          final bool isFinalCompletion = jobStatus == 'pending_completion' || jobStatus == 'completed' || jobStatus == 'pending_client_approval';
 
           if (isFinalCompletion) {
             setState(() => _loading = true);

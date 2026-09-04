@@ -101,7 +101,7 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
 
     if (paid == true && mounted) {
       final String jobStatus = (widget.job['status'] ?? '').toString();
-      final bool isFinalCompletion = jobStatus == 'pending_completion' || jobStatus == 'completed';
+      final bool isFinalCompletion = jobStatus == 'pending_completion' || jobStatus == 'completed' || jobStatus == 'pending_client_approval';
 
       if (isFinalCompletion) {
         setState(() => _loading = true);

@@ -108,6 +108,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> with Widg
       final res = await _paymentService.initializePayment(
         jobId: widget.jobId,
         applicationId: widget.applicationId,
+        amount: widget.amount,
       );
       if (!mounted) return;
       setState(() {

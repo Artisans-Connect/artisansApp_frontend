@@ -11,13 +11,19 @@ class PaymentService {
   Future<Map<String, dynamic>> initializePayment({
     required String jobId,
     String? applicationId,
+    double? amount,
   }) async {
+    final String idemKey = 'pay_${jobId}_${applicationId ?? "settlement"}_${DateTime.now().millisecondsSinceEpoch ~/ (15 * 60 * 1000)}';
     final dynamic response = await _api.post(
       '/payments/initialize',
+      extraHeaders: <String, String>{
+        'Idempotency-Key': idemKey,
+      },
       body: <String, dynamic>{
         'jobId': jobId,
         'platform': kIsWeb ? 'web' : 'mobile',
         if (applicationId != null) 'applicationId': applicationId,
+        if (amount != null && amount > 0) 'amount': amount,
       },
     );
     return Map<String, dynamic>.from(response as Map);
@@ -125,8 +131,12 @@ class PaymentService {
 
   /// Initializes final settlement checkout session or releases escrow
   Future<Map<String, dynamic>> checkoutSettlement(String jobId) async {
+    final String idemKey = 'settle_${jobId}_${DateTime.now().millisecondsSinceEpoch ~/ (15 * 60 * 1000)}';
     final dynamic response = await _api.post(
       '/payments/settlement/$jobId/checkout',
+      extraHeaders: <String, String>{
+        'Idempotency-Key': idemKey,
+      },
       body: <String, dynamic>{
         'platform': kIsWeb ? 'web' : 'mobile',
       },
