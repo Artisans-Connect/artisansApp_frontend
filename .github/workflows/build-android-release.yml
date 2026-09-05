@@ -109,7 +109,38 @@ jobs:
           echo "SHA256=$SHA256_HASH" >> $GITHUB_OUTPUT
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Publish to GitHub Releases
+      - name: Upload APKs to Supabase Cloud Storage
+        run: |
+          VERSION="${{ steps.version_step.outputs.VERSION }}"
+          SUPABASE_URL="${{ secrets.SUPABASE_URL || 'https://qdeznjpvkhrxesjykovi.supabase.co' }}"
+          SUPABASE_KEY="${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}"
+          
+          if [ -z "$SUPABASE_KEY" ]; then
+            echo "::warning::SUPABASE_SERVICE_ROLE_KEY secret not found in repo secrets. Falling back to SUPABASE_PUBLISHABLE_KEY."
+            SUPABASE_KEY="${{ secrets.SUPABASE_PUBLISHABLE_KEY }}"
+          fi
+          
+          echo "Uploading CraftMatch-latest.apk to Supabase Storage ($SUPABASE_URL)..."
+          HTTP_STATUS_LATEST=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${SUPABASE_URL}/storage/v1/object/app-releases/CraftMatch-latest.apk" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            -H "x-upsert: true" \
+            --data-binary "@dist/CraftMatch-latest.apk")
+          echo "CraftMatch-latest.apk upload completed with status HTTP $HTTP_STATUS_LATEST"
+          
+          echo "Uploading CraftMatch-v${VERSION}.apk to Supabase Storage..."
+          HTTP_STATUS_VERSION=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${SUPABASE_URL}/storage/v1/object/app-releases/CraftMatch-v${VERSION}.apk" \
+            -H "Authorization: Bearer ${SUPABASE_KEY}" \
+            -H "Content-Type: application/vnd.android.package-archive" \
+            -H "x-upsert: true" \
+            --data-binary "@dist/CraftMatch-v${VERSION}.apk")
+          echo "CraftMatch-v${VERSION}.apk upload completed with status HTTP $HTTP_STATUS_VERSION"
+          
+          if [ "$HTTP_STATUS_LATEST" -ne 200 ] && [ "$HTTP_STATUS_LATEST" -ne 201 ]; then
+            echo "::warning::Direct upload returned status $HTTP_STATUS_LATEST. Check bucket permissions and secret key."
+          fi
+
+      - name: Publish to GitHub Releases (Archive Backup)
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
@@ -125,6 +156,7 @@ jobs:
             - **Size:** ${{ steps.metadata.outputs.FILE_SIZE_MB }} (${{ steps.metadata.outputs.FILE_SIZE_BYTES }} bytes)
             - **SHA-256 Checksum:** `${{ steps.metadata.outputs.SHA256 }}`
             - **Min Requirement:** Android 8.0 (API level 26) or newer
+            - **Public CDN Download:** https://qdeznjpvkhrxesjykovi.supabase.co/storage/v1/object/public/app-releases/CraftMatch-latest.apk
           files: |
             dist/CraftMatch-v${{ steps.version_step.outputs.VERSION }}.apk
             dist/CraftMatch-latest.apk
@@ -137,8 +169,9 @@ jobs:
         if: always()
         run: |
           VERSION="${{ steps.version_step.outputs.VERSION }}"
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/CraftMatch-v${VERSION}.apk"
-          LATEST_URL="https://github.com/${{ github.repository }}/releases/latest/download/CraftMatch-latest.apk"
+          SUPABASE_URL="${{ secrets.SUPABASE_URL || 'https://qdeznjpvkhrxesjykovi.supabase.co' }}"
+          LATEST_URL="${SUPABASE_URL}/storage/v1/object/public/app-releases/CraftMatch-latest.apk"
+          DOWNLOAD_URL="${SUPABASE_URL}/storage/v1/object/public/app-releases/CraftMatch-v${VERSION}.apk"
           BACKEND_URL="${{ secrets.EXPRESS_API_BASE_URL || 'https://artisansapp-backend.onrender.com/api' }}"
           WEBHOOK_KEY="${{ secrets.VERIFICATION_ADMIN_KEY }}"
           
