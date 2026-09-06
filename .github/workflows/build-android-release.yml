@@ -127,6 +127,7 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Upload APKs to Supabase Cloud Storage
+        continue-on-error: true
         run: |
           VERSION="${{ steps.version_step.outputs.VERSION }}"
           SUPABASE_URL="${{ secrets.SUPABASE_URL || 'https://qdeznjpvkhrxesjykovi.supabase.co' }}"
@@ -173,7 +174,7 @@ jobs:
             - **Size:** ${{ steps.metadata.outputs.FILE_SIZE_MB }} (${{ steps.metadata.outputs.FILE_SIZE_BYTES }} bytes)
             - **SHA-256 Checksum:** `${{ steps.metadata.outputs.SHA256 }}`
             - **Min Requirement:** Android 8.0 (API level 26) or newer
-            - **Public CDN Download:** https://qdeznjpvkhrxesjykovi.supabase.co/storage/v1/object/public/app-releases/CraftMatch-latest.apk
+            - **Public CDN Download:** https://github.com/Artisans-Connect/artisansApp_frontend/releases/download/v${{ steps.version_step.outputs.VERSION }}/CraftMatch-v${{ steps.version_step.outputs.VERSION }}.apk
           files: |
             dist/CraftMatch-v${{ steps.version_step.outputs.VERSION }}.apk
             dist/CraftMatch-latest.apk
@@ -186,9 +187,8 @@ jobs:
         if: success()
         run: |
           VERSION="${{ steps.version_step.outputs.VERSION }}"
-          SUPABASE_URL="${{ secrets.SUPABASE_URL || 'https://qdeznjpvkhrxesjykovi.supabase.co' }}"
-          LATEST_URL="${SUPABASE_URL}/storage/v1/object/public/app-releases/CraftMatch-latest.apk"
-          DOWNLOAD_URL="${SUPABASE_URL}/storage/v1/object/public/app-releases/CraftMatch-v${VERSION}.apk"
+          LATEST_URL="https://github.com/Artisans-Connect/artisansApp_frontend/releases/download/v${VERSION}/CraftMatch-latest.apk"
+          DOWNLOAD_URL="https://github.com/Artisans-Connect/artisansApp_frontend/releases/download/v${VERSION}/CraftMatch-v${VERSION}.apk"
           BACKEND_URL="${{ secrets.EXPRESS_API_BASE_URL || 'https://artisansapp-backend.onrender.com/api' }}"
           WEBHOOK_KEY="${{ secrets.VERIFICATION_ADMIN_KEY }}"
           
