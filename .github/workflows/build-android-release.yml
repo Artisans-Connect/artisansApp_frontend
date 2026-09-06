@@ -3,6 +3,10 @@ name: Build & Publish Android Release APK
 on:
   workflow_dispatch:
     inputs:
+      branch:
+        description: 'Git Branch / Ref to build'
+        required: false
+        default: 'main'
       version:
         description: 'Release Version (e.g. 1.0.0)'
         required: true
@@ -35,11 +39,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.inputs.branch || github.ref }}
           fetch-depth: 0
 
       - name: Determine Version
         id: version_step
         run: |
+          echo "Building branch: ${{ github.event.inputs.branch || github.ref }}"
           if [ -n "${{ github.event.inputs.version }}" ]; then
             VERSION="${{ github.event.inputs.version }}"
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
