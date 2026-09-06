@@ -87,47 +87,7 @@ jobs:
             echo "${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON }}" > android/app/google-services.json
             echo "Created android/app/google-services.json from repository secret."
           else
-            cat << 'EOF' > android/app/google-services.json
-{
-  "project_info": {
-    "project_number": "35491862087",
-    "project_id": "artisansconnect-498304",
-    "storage_bucket": "artisansconnect-498304.firebasestorage.app"
-  },
-  "client": [
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:35491862087:android:94e1ebab25501624e44362",
-        "android_client_info": {
-          "package_name": "com.example.artisans_app"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyD24ueVE0-P_fFi6h4HybcpgG928YWUq24"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    }
-  ],
-  "configuration_version": "1"
-}
-EOF
+            echo '{"project_info":{"project_number":"35491862087","project_id":"artisansconnect-498304","storage_bucket":"artisansconnect-498304.firebasestorage.app"},"client":[{"client_info":{"mobilesdk_app_id":"1:35491862087:android:94e1ebab25501624e44362","android_client_info":{"package_name":"com.example.artisans_app"}},"oauth_client":[{"client_id":"35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com","client_type":3}],"api_key":[{"current_key":"AIzaSyD24ueVE0-P_fFi6h4HybcpgG928YWUq24"}],"services":{"appinvite_service":{"other_platform_oauth_client":[{"client_id":"35491862087-v8st1cmcd1ulv8t0mv2762osp981s47m.apps.googleusercontent.com","client_type":3}]}}}],"configuration_version":"1"}' > android/app/google-services.json
             echo "Created fallback android/app/google-services.json for GitHub runner."
           fi
 
