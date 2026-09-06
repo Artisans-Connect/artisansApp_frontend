@@ -183,6 +183,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prune Old GitHub Releases (Keep Latest 3)
+        if: success()
+        run: |
+          echo "Pruning older GitHub Releases to save storage and keep releases tidy..."
+          RELEASES=$(gh release list --repo "${{ github.repository }}" --limit 30 | awk '{print $1}')
+          COUNT=0
+          KEEP_LIMIT=3
+          for TAG in $RELEASES; do
+            COUNT=$((COUNT + 1))
+            if [ $COUNT -gt $KEEP_LIMIT ]; then
+              echo "Pruning older release: $TAG"
+              gh release delete "$TAG" --repo "${{ github.repository }}" --cleanup-tag --yes || echo "Could not delete tag $TAG"
+            else
+              echo "Retaining release #$COUNT: $TAG"
+            fi
+          done
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Notify Backend Webhook (Sync Release Manifest)
         if: success()
         run: |
