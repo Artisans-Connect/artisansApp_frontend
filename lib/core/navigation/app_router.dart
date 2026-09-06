@@ -22,12 +22,79 @@ import 'package:artisans_app/core/navigation/auth_navigation.dart';
 import 'package:artisans_app/shared/presentation/screens/notifications_screen.dart';
 import 'package:artisans_app/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/role_selection_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/sign_up_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/splash_screen.dart';
+import 'package:artisans_app/features/auth/presentation/screens/verify_email_screen.dart';
+import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart';
+import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/edit_profile_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/job_receipt_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/messages_list_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/settings_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/user_profile_screen.dart';
+import 'package:artisans_app/features/trust_safety/presentation/screens/my_reports_screen.dart';
+import 'package:artisans_app/features/trust_safety/presentation/screens/blocked_users_screen.dart';
+import 'package:artisans_app/core/navigation/route_arguments.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
 
+      case SplashScreen.routeName:
+      case '/auth/splash':
+        return _page(settings, const SplashScreen());
+      case OnboardingScreen.routeName:
+        return _page(settings, const OnboardingScreen());
+      case ForgotPasswordScreen.routeName:
+        final args = settings.arguments;
+        final recoveryArgs = args is ForgotPasswordScreenArgs ? args : null;
+        return _page(settings, ForgotPasswordScreen(
+          initialEmail: recoveryArgs?.initialEmail ?? (args is String ? args : null),
+          isRecoveryFlow: recoveryArgs?.isRecoveryFlow ?? false,
+        ));
+      case RoleSelectionScreen.routeName:
+        return _page(settings, const RoleSelectionScreen());
+      case SignInScreen.routeName:
+        return _page(settings, SignInScreen(initialEmail: settings.arguments is String ? settings.arguments as String : null));
+      case SignUpScreen.routeName:
+        return _page(settings, const SignUpScreen());
+      case VerifyEmailScreen.routeName:
+        return _page(settings, VerifyEmailScreen(email: settings.arguments is String ? settings.arguments as String : ''));
+      case MessagesListScreen.routeName:
+        return _protectedPage(settings, const MessagesListScreen());
+      case ChatDetailScreen.routeName:
+        return _protectedPage(settings, const ChatDetailScreen());
+      case UserProfileScreen.routeName:
+        return _protectedPage(settings, const UserProfileScreen());
+      case SettingsScreen.routeName:
+        return _protectedPage(settings, const SettingsScreen());
+      case EditProfileScreen.routeName:
+        return _protectedPage(settings, const EditProfileScreen());
+      case JobReceiptScreen.routeName:
+        return _protectedPage(settings, const JobReceiptScreen());
+      case MyReportsScreen.routeName:
+        return _protectedPage(settings, const MyReportsScreen());
+      case BlockedUsersScreen.routeName:
+        return _protectedPage(settings, const BlockedUsersScreen());
+      case WorkerShell.routeName:
+        final args = settings.arguments;
+        final initialTabArg = args is Map ? args['initialTab'] : null;
+        final initialTab = initialTabArg == 'messages'
+            ? WorkerNavTab.messages
+            : initialTabArg == 'bookings'
+                ? WorkerNavTab.bookings
+                : WorkerNavTab.explore;
+        return _protectedPage(settings, WorkerShell(
+          initialJobRequestId: args is Map ? args['openJobRequestId'] as String? : null,
+          initialTab: initialTab,
+        ));
+
       case AppRoutes.clientHome:
+      case AppRoutes.clientHomeLegacy:
         return MaterialPageRoute(
           settings: settings,
           builder: (_) {
@@ -80,9 +147,11 @@ class AppRouter {
         );
 
       case AppRoutes.artisanProfile:
+        final profileArgs = ArtisanRouteArgs.tryParse(settings.arguments);
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => ArtisanProfileScreen(
-            artisan: settings.arguments as Map<String, dynamic>?,
+            artisan: profileArgs?.snapshot,
           ),
         );
 
@@ -151,16 +220,20 @@ class AppRouter {
         );
 
       case AppRoutes.liveTracking:
+        final trackingArgs = JobRouteArgs.tryParse(settings.arguments);
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => LiveTrackingScreen(
-            job: settings.arguments as Map<String, dynamic>?,
+            job: trackingArgs?.toMap(),
           ),
         );
 
       case AppRoutes.jobApplicants:
+        final applicantsArgs = JobRouteArgs.tryParse(settings.arguments);
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => JobApplicantsScreen(
-            job: settings.arguments as Map<String, dynamic>?,
+            job: applicantsArgs?.toMap(),
           ),
         );
 
@@ -188,6 +261,19 @@ class AppRouter {
           builder: (_) => _NotFoundScreen(routeName: settings.name),
         );
     }
+  }
+
+  static MaterialPageRoute<dynamic> _page(RouteSettings settings, Widget child) =>
+      MaterialPageRoute<dynamic>(settings: settings, builder: (_) => child);
+
+  static Route<dynamic> _protectedPage(RouteSettings settings, Widget child) {
+    if (!AppUserSession.instance.isAuthenticated) {
+      return _page(
+        RouteSettings(name: SignInScreen.routeName, arguments: settings),
+        const SignInScreen(),
+      );
+    }
+    return _page(settings, child);
   }
 }
 

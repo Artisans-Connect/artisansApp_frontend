@@ -70,56 +70,6 @@ class _MyAppState extends State<MyApp> {
       title: 'CraftMatch',
       theme: buildAppTheme(),
       initialRoute: '/',
-      routes: <String, WidgetBuilder>{
-        '/': (_) => const SplashScreen(),
-        '/auth/splash': (_) => const SplashScreen(),
-        OnboardingScreen.routeName: (_) => const OnboardingScreen(),
-        ForgotPasswordScreen.routeName: (BuildContext context) {
-          final Object? args = ModalRoute.of(context)?.settings.arguments;
-          if (args is ForgotPasswordScreenArgs) {
-            return ForgotPasswordScreen(
-              initialEmail: args.initialEmail,
-              isRecoveryFlow: args.isRecoveryFlow,
-            );
-          }
-          return ForgotPasswordScreen(
-            initialEmail: args is String ? args : null,
-          );
-        },
-        RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
-        SignInScreen.routeName: (_) => const SignInScreen(),
-        SignUpScreen.routeName: (_) => const SignUpScreen(),
-        VerifyEmailScreen.routeName: (BuildContext context) {
-          final Object? args = ModalRoute.of(context)?.settings.arguments;
-          return VerifyEmailScreen(email: args is String ? args : '');
-        },
-        MessagesListScreen.routeName: (_) => const MessagesListScreen(),
-        ChatDetailScreen.routeName: (_) => const ChatDetailScreen(),
-        UserProfileScreen.routeName: (_) => const UserProfileScreen(),
-        SettingsScreen.routeName: (_) => const SettingsScreen(),
-        EditProfileScreen.routeName: (_) => const EditProfileScreen(),
-        JobReceiptScreen.routeName: (_) => const JobReceiptScreen(),
-        MyReportsScreen.routeName: (_) => const MyReportsScreen(),
-        BlockedUsersScreen.routeName: (_) => const BlockedUsersScreen(),
-        WorkerShell.routeName: (BuildContext context) {
-          final Object? args = ModalRoute.of(context)?.settings.arguments;
-          final String? jobId = args is Map
-              ? args['openJobRequestId'] as String?
-              : null;
-          final Object? initialTabArg =
-              args is Map ? args['initialTab'] : null;
-          final WorkerNavTab initialTab = initialTabArg == 'messages'
-              ? WorkerNavTab.messages
-              : initialTabArg == 'bookings'
-                  ? WorkerNavTab.bookings
-                  : WorkerNavTab.explore;
-          return WorkerShell(
-            initialJobRequestId: jobId,
-            initialTab: initialTab,
-          );
-        },
-        ClientShell.routeName: (_) => const ClientShell(),
-      },
       onGenerateRoute: AppRouter.generateRoute,
     );
   }

@@ -227,7 +227,7 @@ class NotificationService {
   void _openClientJob(String jobId) {
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
-      _pendingClientApplicantsJobId = jobId;
+      _pendingClientJobId = jobId;
       return;
     }
 
@@ -247,7 +247,7 @@ class NotificationService {
   void _openClientApplicants(String jobId) {
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
-      _pendingClientJobId = jobId;
+      _pendingClientApplicantsJobId = jobId;
       return;
     }
 
