@@ -287,63 +287,8 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             amount: _estimate!.verifiedWorkerMarketPremium,
                           ),
                         const Divider(height: 20),
-                        Text(
-                          'Travel cost is calculated separately for each artisan when they apply.',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'This amount is only an estimate. The final price may change after the artisan reviews the job scope, materials, and travel needs.',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
                         const SizedBox(height: AppSpacing.sm),
-                        // _PriceBreakdownRow(
-                        //   label: 'Recommended fee',
-                        //   amount: _estimate!.minimumFee,
-                        //   isBold: true,
-                        // ),
                       ],
-                      // ── Optional premium ───────────────────────
-                      // const SizedBox(height: AppSpacing.md),
-                      // Text(
-                      //   'Add a premium for faster matching (optional)',
-                      //   style: AppTypography.bodySmall.copyWith(
-                      //     color: AppColors.textSecondary,
-                      //   ),
-                      // ),
-                      // const SizedBox(height: AppSpacing.sm),
-                      // Row(
-                      //   children: [
-                      //     Text(
-                      //       'GH₵${_clientPremium.toStringAsFixed(0)}',
-                      //       style: AppTypography.labelLarge,
-                      //     ),
-                      //     const SizedBox(width: AppSpacing.sm),
-                      //     Expanded(
-                      //       child: Slider(
-                      //         value: _clientPremium,
-                      //         min: 0,
-                      //         max: 200,
-                      //         divisions: 20,
-                      //         label:
-                      //             'GH₵${_clientPremium.toStringAsFixed(0)}',
-                      //         onChanged: (double v) {
-                      //           setState(() {
-                      //             _clientPremium = v;
-                      //             _draft.merge(<String, dynamic>{
-                      //               'clientPremium': v,
-                      //             });
-                      //           });
-                      //         },
-                      //       ),
-                      //     ),
-                      //   ],
-                      // ),
-                      // const Divider(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -376,7 +321,15 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
                               child: Text(
-                                'This is an estimated starting price. Applying artisans may propose a custom quote based on travel distance and job scope. You review and approve their quote before making any payment.',
+                                'Travel cost is calculated separately for each artisan when they apply. This amount is only an estimate and may adjust based on scope and materials.',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 11,
+                                ),
+                              ),
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                '🛡️ Escrow Protection: Your payment is held securely and only released once the job is completed to your satisfaction.',
                                 style: AppTypography.bodySmall.copyWith(
                                   color: AppColors.textSecondary,
                                   fontSize: 11,
