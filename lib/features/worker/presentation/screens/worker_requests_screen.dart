@@ -86,10 +86,14 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     _tipOfTheDay = _tips[Random().nextInt(_tips.length)];
     WidgetsBinding.instance.addObserver(this);
     _load();
-    _refreshTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => _load(silent: true),
-    );
+  }
+
+  void _scheduleNextRefresh([bool fastPoll = false]) {
+    _refreshTimer?.cancel();
+    final duration = fastPoll ? const Duration(seconds: 4) : const Duration(seconds: 30);
+    _refreshTimer = Timer(duration, () {
+      if (mounted) _load(silent: true);
+    });
   }
  
   @override
@@ -155,6 +159,41 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
         _lastCheckedAt = DateTime.now();
         _isSilentRefreshing = false;
       });
+
+      if (mounted) {
+        try {
+          final session = WorkerScope.read(context);
+          if (!session.hasActiveJob) {
+            final bool hasNewlyActivatedJob = _applications.any((app) {
+              final String appStatus = (app['status'] ?? '').toString().toLowerCase();
+              final Map<String, dynamic> jobMap =
+                  Map<String, dynamic>.from(app['job'] as Map? ?? const {});
+              final String jobStatus = (jobMap['status'] ?? '').toString().toLowerCase();
+              return appStatus == 'accepted' &&
+                  <String>{
+                    'matched',
+                    'on_the_way',
+                    'arrived',
+                    'in_progress',
+                    'termination_requested',
+                    'pending_client_approval',
+                  }.contains(jobStatus);
+            });
+            if (hasNewlyActivatedJob) {
+              unawaited(session.loadActiveJob());
+            }
+          }
+        } catch (_) {}
+
+        final bool hasAwaitingPayment = _applications.any((app) {
+          final String appStatus = (app['status'] ?? '').toString().toLowerCase();
+          final Map<String, dynamic> jobMap =
+              Map<String, dynamic>.from(app['job'] as Map? ?? const {});
+          final String jobStatus = (jobMap['status'] ?? '').toString().toLowerCase();
+          return appStatus == 'accepted' && jobStatus == 'awaiting_payment';
+        });
+        _scheduleNextRefresh(hasAwaitingPayment);
+      }
     } catch (e) {
       if (!mounted) return;
       if (silent) {
@@ -166,6 +205,7 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
           _viewState = RequestsViewState.error;
         });
       }
+      _scheduleNextRefresh(false);
     } finally {
       _isLoadingRequests = false;
     }
@@ -318,15 +358,15 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     }
 
     if (!mounted) return;
-    final dynamic updated = await Navigator.of(context).push(
+    await Navigator.of(context).push(
       MaterialPageRoute<dynamic>(
         builder: (_) => WorkerApplicationDetailScreen(
           application: application,
         ),
       ),
     );
-    if (updated == true && mounted) {
-      _load();
+    if (mounted) {
+      _load(silent: true);
     }
   }
 
