@@ -163,25 +163,29 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
       if (mounted) {
         try {
           final session = WorkerScope.read(context);
-          if (!session.hasActiveJob) {
-            final bool hasNewlyActivatedJob = _applications.any((app) {
-              final String appStatus = (app['status'] ?? '').toString().toLowerCase();
-              final Map<String, dynamic> jobMap =
-                  Map<String, dynamic>.from(app['job'] as Map? ?? const {});
-              final String jobStatus = (jobMap['status'] ?? '').toString().toLowerCase();
-              return appStatus == 'accepted' &&
-                  <String>{
-                    'matched',
-                    'on_the_way',
-                    'arrived',
-                    'in_progress',
-                    'termination_requested',
-                    'pending_client_approval',
-                  }.contains(jobStatus);
-            });
-            if (hasNewlyActivatedJob) {
-              unawaited(session.loadActiveJob());
-            }
+          final bool hasNewlyActivatedJob = _applications.any((app) {
+            final String appStatus = (app['status'] ?? '').toString().toLowerCase();
+            final Map<String, dynamic> jobMap =
+                Map<String, dynamic>.from(app['job'] as Map? ?? const {});
+            final String jobStatus = (jobMap['status'] ?? '').toString().toLowerCase();
+            return appStatus == 'accepted' &&
+                <String>{
+                  'matched',
+                  'on_the_way',
+                  'arrived',
+                  'in_progress',
+                  'termination_requested',
+                  'pending_client_approval',
+                }.contains(jobStatus);
+          });
+          if (hasNewlyActivatedJob || !session.hasActiveJob) {
+            unawaited(session.loadActiveJob().then((_) {
+              if (mounted && session.hasActiveJob) {
+                session.setTab(WorkerNavTab.bookings);
+              }
+            }));
+          } else if (session.hasActiveJob) {
+            session.setTab(WorkerNavTab.bookings);
           }
         } catch (_) {}
 

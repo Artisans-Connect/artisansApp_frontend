@@ -7,6 +7,7 @@ import 'package:artisans_app/shared/models/worker_job.dart';
 import 'package:artisans_app/features/worker/presentation/models/worker_ui_contracts.dart';
 import 'package:artisans_app/features/worker/presentation/utils/worker_job_mapper.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart';
+export 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart' show WorkerNavTab;
 
 import 'package:artisans_app/core/services/job_realtime_service.dart';
 

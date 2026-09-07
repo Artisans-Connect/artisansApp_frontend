@@ -99,6 +99,7 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
         try {
           final WorkerSessionState session = WorkerScope.read(context);
           await session.loadActiveJob();
+          session.setTab(WorkerNavTab.bookings);
         } catch (_) {}
         if (mounted) {
           Navigator.of(context).pop(true);
