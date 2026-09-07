@@ -22,6 +22,7 @@ class PaymentService {
       body: <String, dynamic>{
         'jobId': jobId,
         'platform': kIsWeb ? 'web' : 'mobile',
+        if (kIsWeb) 'returnUrl': Uri.base.origin,
         if (applicationId != null) 'applicationId': applicationId,
         if (amount != null && amount > 0) 'amount': amount,
       },

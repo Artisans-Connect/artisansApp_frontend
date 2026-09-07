@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:artisans_app/core/services/jobs_service.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
@@ -12,7 +13,7 @@ import 'package:artisans_app/shared/widgets/custom_app_bar.dart';
 class JobReceiptScreen extends StatefulWidget {
   const JobReceiptScreen({super.key});
 
-  static const String routeName = '/shared/job-receipt';
+  static const String routeName = AppRoutes.sharedJobReceipt;
 
   @override
   State<JobReceiptScreen> createState() => _JobReceiptScreenState();

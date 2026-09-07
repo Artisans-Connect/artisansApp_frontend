@@ -6,7 +6,8 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:artisans_app/core/errors/auth_failure.dart';
-import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
@@ -22,7 +23,7 @@ import 'package:artisans_app/shared/models/onboarding_session.dart';
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key, this.initialEmail});
 
-  static const String routeName = '/auth/sign-in';
+  static const String routeName = AppRoutes.authSignIn;
 
   final String? initialEmail;
 
@@ -90,9 +91,8 @@ class _SignInScreenState extends State<SignInScreen> {
         debugPrint('[SignInScreen] Widget not mounted, aborting redirect');
         return;
       }
-      final targetRoute = shellRouteForUser(user);
-      debugPrint('[SignInScreen] Redirecting to target route: $targetRoute');
-      await Navigator.pushReplacementNamed(context, targetRoute);
+      debugPrint('[SignInScreen] Redirecting to authenticated shell');
+      AppNavigation.resetForUser(context, user);
     } on AuthFailure catch (e) {
       debugPrint('[SignInScreen] AuthFailure during auto-redirect: ${e.code} - ${e.message}');
       if (!mounted) return;
@@ -123,7 +123,7 @@ class _SignInScreenState extends State<SignInScreen> {
       );
 
       if (!mounted) return;
-      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+      AppNavigation.resetForUser(context, user);
     } on AuthFailure catch (e) {
       if (!mounted) return;
       if (e.code == AuthFailureCode.profileNotFound) {
@@ -153,7 +153,7 @@ class _SignInScreenState extends State<SignInScreen> {
     try {
       final user = await AuthService.instance.signInWithGoogle();
       if (!mounted) return;
-      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+      AppNavigation.resetForUser(context, user);
     } on AuthFailure catch (e) {
       if (!mounted) return;
       debugPrint('[SignIn] Google AuthFailure: ${e.code} - ${e.message}');
@@ -340,7 +340,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       Center(
                         child: TextButton(
                           onPressed: () => unawaited(
-                            Navigator.pushNamed(context, '/auth/sign-up'),
+                            Navigator.pushNamed(context, AppRoutes.authSignUp),
                           ),
                           child: const Text("Don't have an account? Sign Up"),
                         ),

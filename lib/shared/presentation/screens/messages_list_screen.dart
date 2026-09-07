@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/errors/error_messages.dart';
@@ -25,7 +26,7 @@ class MessagesListScreen extends StatefulWidget {
     this.refreshSignal = 0,
   });
 
-  static const String routeName = '/shared/messages';
+  static const String routeName = AppRoutes.sharedMessages;
 
   final bool embedInShell;
   final int refreshSignal;

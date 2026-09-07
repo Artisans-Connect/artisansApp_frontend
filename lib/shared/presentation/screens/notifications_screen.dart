@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/errors/error_messages.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:artisans_app/core/notifications/notification_metadata.dart';
 import 'package:artisans_app/core/services/notification_service.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
@@ -16,7 +17,7 @@ enum _NotificationFilter { all, unread, actionNeeded }
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
 
-  static const String routeName = '/notifications';
+  static const String routeName = AppRoutes.notifications;
 
   @override
   State<NotificationsScreen> createState() => _NotificationsScreenState();

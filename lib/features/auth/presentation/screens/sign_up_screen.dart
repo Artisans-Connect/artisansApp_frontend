@@ -6,7 +6,8 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:artisans_app/core/errors/auth_failure.dart';
-import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
@@ -25,7 +26,7 @@ import 'package:artisans_app/features/auth/presentation/screens/verify_email_scr
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
 
-  static const String routeName = '/auth/sign-up';
+  static const String routeName = AppRoutes.authSignUp;
 
   @override
   State<SignUpScreen> createState() => _SignUpScreenState();
@@ -124,7 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         flow: GoogleAuthFlow.signUp,
       );
       if (!mounted) return;
-      await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+      AppNavigation.resetForUser(context, user);
     } on AuthFailure catch (e) {
       if (!mounted) return;
       if (e.code == AuthFailureCode.profileNotFound) {
@@ -377,7 +378,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       Center(
                         child: TextButton(
                           onPressed: () => unawaited(
-                            Navigator.pushNamed(context, '/auth/sign-in'),
+                            Navigator.pushNamed(context, AppRoutes.authSignIn),
                           ),
                           child: const Text('Already have an account? Sign In'),
                         ),

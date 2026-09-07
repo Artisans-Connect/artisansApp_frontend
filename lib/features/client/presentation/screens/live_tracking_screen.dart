@@ -6,13 +6,13 @@ import 'package:artisans_app/core/session/app_user_session.dart';
 import 'package:artisans_app/shared/models/negotiation.dart';
 import 'package:artisans_app/shared/widgets/negotiation_chat_sheet.dart';
 import 'dart:async';
-import 'package:artisans_app/features/client/presentation/screens/payment_checkout_screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:artisans_app/core/errors/error_messages.dart';
 import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/route_arguments.dart';
 import 'package:artisans_app/core/services/job_realtime_service.dart';
 import 'package:artisans_app/core/services/jobs_service.dart';
 import 'package:artisans_app/core/theme/app_spacing.dart';
@@ -648,14 +648,10 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
 
       if (outstanding > 0) {
         // Must pay outstanding balance first
-        final bool? paid = await Navigator.push<bool>(
+        final bool? paid = await Navigator.pushNamed<bool>(
           context,
-          MaterialPageRoute(
-            builder: (context) => PaymentCheckoutScreen(
-              jobId: jobId,
-              amount: outstanding,
-            ),
-          ),
+          AppRoutes.paymentCheckout,
+          arguments: PaymentCheckoutArgs(jobId: jobId, amount: outstanding),
         );
         if (paid == true && mounted) {
           final String jobStatus = (_job?['status'] ?? '').toString();

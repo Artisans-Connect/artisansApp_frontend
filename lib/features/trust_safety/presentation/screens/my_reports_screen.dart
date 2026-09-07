@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/error_messages.dart';
@@ -11,7 +12,7 @@ import '../../services/reports_service.dart';
 class MyReportsScreen extends StatefulWidget {
   const MyReportsScreen({super.key});
 
-  static const String routeName = '/my-reports';
+  static const String routeName = AppRoutes.myReports;
 
   @override
   State<MyReportsScreen> createState() => _MyReportsScreenState();

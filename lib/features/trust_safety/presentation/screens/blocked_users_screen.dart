@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import '../../../../core/errors/error_messages.dart';
@@ -11,7 +12,7 @@ import '../../services/reports_service.dart';
 class BlockedUsersScreen extends StatefulWidget {
   const BlockedUsersScreen({super.key});
 
-  static const String routeName = '/blocked-users';
+  static const String routeName = AppRoutes.blockedUsers;
 
   @override
   State<BlockedUsersScreen> createState() => _BlockedUsersScreenState();

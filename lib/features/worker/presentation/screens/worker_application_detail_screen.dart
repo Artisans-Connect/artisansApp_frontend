@@ -27,12 +27,19 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
   bool _isAcceptingCounter = false;
 
   Future<void> _confirmWithdraw(BuildContext context) async {
+    final Map<String, dynamic> job =
+        Map<String, dynamic>.from(widget.application['job'] as Map? ?? const {});
+    final String jobStatus = (job['status'] ?? '').toString().toLowerCase();
+    final bool isAwaitingPayment = jobStatus == 'awaiting_payment';
+
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        title: const Text('Withdraw application?'),
-        content: const Text(
-          'Are you sure you want to withdraw your application? This request will no longer be available to you.',
+        title: Text(isAwaitingPayment ? 'Cancel booking & withdraw?' : 'Withdraw application?'),
+        content: Text(
+          isAwaitingPayment
+              ? 'The client was redirected to complete their initial escrow deposit (15 min window).\n\nIf the client is unresponsive or you can no longer take this job, withdrawing will safely cancel their pending checkout session and return the request to search.\n\nAre you sure you want to withdraw?'
+              : 'Are you sure you want to withdraw your application? This request will no longer be available to you.',
         ),
         actions: <Widget>[
           TextButton(
@@ -41,9 +48,9 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Withdraw',
-              style: TextStyle(color: DesignTokens.error),
+            child: Text(
+              isAwaitingPayment ? 'Yes, Withdraw' : 'Withdraw',
+              style: const TextStyle(color: DesignTokens.error, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -319,9 +326,9 @@ class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailS
                       ),
                     ],
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    'Great news! The client accepted your application. We are waiting a short moment for them to complete the initial escrow deposit payment. Once paid, the booking will be confirmed and you can start the job!',
+                  const SizedBox(height: 10),
+                  const Text(
+                    'Great news! The client accepted your quote and was redirected to secure the booking deposit in escrow. They have up to 15 minutes to complete checkout. Once paid, the booking is confirmed and you can start the job! If the client abandons payment, you can safely withdraw below.',
                     style: TextStyle(
                       fontFamily: 'Satoshi',
                       fontSize: 13,

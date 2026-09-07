@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/theme/app_colors.dart';
@@ -16,7 +17,7 @@ import 'package:artisans_app/features/auth/widgets/onboarding_page_content.dart'
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
-  static const String routeName = '/auth/onboarding';
+  static const String routeName = AppRoutes.authOnboarding;
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -35,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _goToSignIn() {
-    Navigator.pushReplacementNamed(context, '/auth/sign-in');
+        Navigator.pushReplacementNamed(context, AppRoutes.authSignIn);
   }
 
   void _nextPage() {

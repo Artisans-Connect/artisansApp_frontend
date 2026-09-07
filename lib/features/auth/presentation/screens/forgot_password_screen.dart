@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/errors/auth_failure.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
@@ -12,7 +14,6 @@ import 'package:artisans_app/shared/widgets/app_toast.dart';
 import 'package:artisans_app/shared/widgets/gradient_button.dart';
 import 'package:artisans_app/features/auth/models/password_strength.dart';
 import 'package:artisans_app/features/auth/widgets/password_strength_meter.dart';
-import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
 
 class ForgotPasswordScreenArgs {
   const ForgotPasswordScreenArgs({
@@ -31,7 +32,7 @@ class ForgotPasswordScreen extends StatefulWidget {
     this.isRecoveryFlow = false,
   });
 
-  static const String routeName = '/auth/forgot-password';
+  static const String routeName = AppRoutes.authForgotPassword;
 
   final String? initialEmail;
   final bool isRecoveryFlow;
@@ -133,11 +134,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       AppToast.showSuccess(context, 'Password updated successfully.');
       await AuthService.instance.signOut();
       if (!mounted) return;
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        SignInScreen.routeName,
-        (_) => false,
-      );
+      AppNavigation.resetToSignIn(context);
     } on AuthFailure catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not update password.');
@@ -253,11 +250,9 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         ),
                         const SizedBox(height: 12),
                         TextButton(
-                          onPressed: () => unawaited(Navigator.pushNamedAndRemoveUntil(
-                            context,
-                            SignInScreen.routeName,
-                            (_) => false,
-                          )),
+                          onPressed: () => unawaited(
+                            Future<void>.sync(() => AppNavigation.resetToSignIn(context)),
+                          ),
                           child: const Text('Back to Sign In'),
                         ),
                       ] else ...<Widget>[

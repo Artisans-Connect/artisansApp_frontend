@@ -8,13 +8,14 @@ import 'package:artisans_app/features/client/presentation/navigation/client_shel
 import 'package:artisans_app/features/client/presentation/screens/booking_history_screen.dart';
 import 'package:artisans_app/features/client/presentation/screens/client_home_screen.dart';
 import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 
 enum ClientNavTab { home, bookings, messages, profile }
 
 class ClientShell extends StatefulWidget {
   const ClientShell({super.key, this.initialTab = ClientNavTab.home});
 
-  static const String routeName = '/client-shell';
+  static const String routeName = AppRoutes.clientHome;
 
   final ClientNavTab initialTab;
 

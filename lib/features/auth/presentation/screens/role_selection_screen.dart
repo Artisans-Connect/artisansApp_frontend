@@ -8,7 +8,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:artisans_app/core/location/device_location_service.dart';
 import 'package:artisans_app/core/location/place_lookup_service.dart';
-import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/network/api_client.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/services/platform_service.dart';
@@ -19,7 +20,6 @@ import 'package:artisans_app/shared/models/user_profile_view.dart';
 import 'package:artisans_app/shared/models/picked_media.dart';
 import 'package:artisans_app/shared/widgets/app_toast.dart';
 import 'package:artisans_app/shared/widgets/gradient_button.dart';
-import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
 import 'package:artisans_app/shared/models/onboarding_session.dart';
 import 'package:artisans_app/features/auth/presentation/widgets/role_selection/bio_page.dart';
 import 'package:artisans_app/features/auth/presentation/widgets/role_selection/onboarding_atoms.dart';
@@ -41,7 +41,7 @@ class RoleSelectionScreen extends StatefulWidget {
   /// If true, we skip the role-selection page and go straight to worker config
   final bool isBecomingWorker;
 
-  static const String routeName = '/auth/role';
+  static const String routeName = AppRoutes.authRole;
 
   @override
   State<RoleSelectionScreen> createState() => _RoleSelectionScreenState();
@@ -399,11 +399,7 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
         };
         await AuthService.instance.becomeWorker(workerBody);
         if (!mounted) return;
-        await Navigator.pushNamedAndRemoveUntil(
-          context,
-          WorkerShell.routeName,
-          (Route<dynamic> route) => false,
-        );
+        AppNavigation.resetToWorker(context);
         return;
       }
 
@@ -433,11 +429,11 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
       final user = await AuthService.instance.createProfile(body);
 
       if (!mounted) return;
-      await Navigator.pushNamedAndRemoveUntil(
-        context,
-        shellRouteForUser(user),
-        (Route<dynamic> route) => false,
-      );
+      if (user.hasWorkerProfile && user.lastActiveMode == 'worker') {
+        AppNavigation.resetToWorker(context);
+      } else {
+        AppNavigation.resetToClient(context);
+      }
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not save your profile.');

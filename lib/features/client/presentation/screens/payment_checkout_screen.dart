@@ -84,8 +84,15 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> with Widg
     try {
       final res = await _paymentService.verifyPayment(_reference!);
       final bool success = res['success'] as bool? ?? false;
+      final dynamic data = res['data'];
+      final bool dataSuccess = data is Map ? (data['success'] as bool? ?? false) : true;
+      final String status = (data is Map ? data['status'] : res['status'])?.toString() ?? '';
+      final bool isCompleted = status == 'completed' ||
+          (data is Map && (data['message']?.toString().contains('already processed') ?? false)) ||
+          (res['message']?.toString().contains('already processed') ?? false);
+
       if (!mounted) return;
-      if (success && !_isCompleted) {
+      if (success && dataSuccess && isCompleted && !_isCompleted) {
         _isCompleted = true;
         _pollTimer?.cancel();
         AppToast.showEscrow(context, 'Payment Confirmed! Funds are securely held in Escrow.');
@@ -134,7 +141,16 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> with Widg
     try {
       final uri = Uri.parse(_checkoutUrl!);
       if (kIsWeb) {
-        await launchUrl(uri, mode: LaunchMode.platformDefault);
+        final bool launched = await launchUrl(
+          uri,
+          mode: LaunchMode.platformDefault,
+          webOnlyWindowName: '_blank',
+        );
+        if (!launched && mounted) {
+          setState(() {
+            _error = 'Browser blocked popup window. Please click "Open Payment Page" below.';
+          });
+        }
       } else {
         final bool launched = await launchUrl(
           uri,
@@ -163,9 +179,16 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> with Widg
       _pollTimer?.cancel();
       final res = await _paymentService.verifyPayment(_reference!);
       final bool success = res['success'] as bool? ?? false;
+      final dynamic data = res['data'];
+      final bool dataSuccess = data is Map ? (data['success'] as bool? ?? false) : true;
+      final String status = (data is Map ? data['status'] : res['status'])?.toString() ?? '';
+      final bool isCompleted = status == 'completed' ||
+          (data is Map && (data['message']?.toString().contains('already processed') ?? false)) ||
+          (res['message']?.toString().contains('already processed') ?? false);
+
       if (!mounted) return;
       
-      if (success) {
+      if (success && dataSuccess && isCompleted) {
         AppToast.showEscrow(context, 'Payment Confirmed! Funds are securely held in Escrow.');
         Navigator.of(context).pop(true);
       } else {

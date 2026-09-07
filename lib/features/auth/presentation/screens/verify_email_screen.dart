@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/services/auth_service.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
 import 'package:artisans_app/shared/widgets/app_toast.dart';
 import 'package:artisans_app/shared/widgets/gradient_button.dart';
-import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
 
 class VerifyEmailScreen extends StatefulWidget {
   const VerifyEmailScreen({super.key, required this.email});
 
-  static const String routeName = '/auth/verify-email';
+  static const String routeName = AppRoutes.authVerifyEmail;
 
   final String email;
 
@@ -37,11 +38,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
   }
 
   void _goToSignIn() {
-    Navigator.pushReplacementNamed(
-      context,
-      SignInScreen.routeName,
-      arguments: widget.email,
-    );
+    AppNavigation.resetToSignIn(context, initialEmail: widget.email);
   }
 
   @override

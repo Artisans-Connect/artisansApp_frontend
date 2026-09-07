@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/services/chat_service.dart';
 import 'package:artisans_app/core/utils/current_user.dart';
 import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
@@ -9,13 +10,13 @@ import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart
 import 'package:artisans_app/shared/presentation/screens/settings_screen.dart';
 import 'package:artisans_app/shared/presentation/screens/user_profile_screen.dart';
 import 'package:artisans_app/shared/widgets/app_toast.dart';
-import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart';
 import 'package:artisans_app/features/client/presentation/client_shell.dart';
 import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
 import 'package:artisans_app/features/client/presentation/models/client_job_draft.dart';
 import 'package:artisans_app/features/client/presentation/models/job_post_wizard_step.dart';
 import 'package:artisans_app/features/client/presentation/navigation/client_shell_scope.dart';
-import 'package:artisans_app/features/client/presentation/screens/payment_checkout_screen.dart';
+import 'package:artisans_app/core/navigation/route_arguments.dart';
 import 'package:artisans_app/features/client/presentation/widgets/booking_summary_sheet.dart';
 
 /// Client-side navigation helpers (shell-safe).
@@ -138,12 +139,7 @@ class ClientNavigation {
   }
 
   static void replaceWithBookingsTab(BuildContext context) {
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      AppRoutes.clientHome,
-      (_) => false,
-      arguments: <String, dynamic>{'initialTab': ClientNavTab.bookings},
-    );
+    AppNavigation.resetToClient(context, initialTab: ClientNavTab.bookings);
   }
 
   static void goToMessagesTab(BuildContext context) {
@@ -156,17 +152,11 @@ class ClientNavigation {
       scope.selectTab(ClientNavTab.messages);
       return;
     }
-    final String route = CurrentUser.role?.name == 'worker'
-        ? WorkerShell.routeName
-        : AppRoutes.clientHome;
-    Navigator.pushNamedAndRemoveUntil(
-      context,
-      route,
-      (_) => false,
-      arguments: CurrentUser.role?.name == 'worker'
-          ? <String, dynamic>{'initialTab': 'messages'}
-          : <String, dynamic>{'initialTab': ClientNavTab.messages},
-    );
+    if (CurrentUser.role?.name == 'worker') {
+      AppNavigation.resetToWorker(context, initialTab: WorkerNavTab.messages);
+    } else {
+      AppNavigation.resetToClient(context, initialTab: ClientNavTab.messages);
+    }
   }
 
   static void openSettings(BuildContext context) {
@@ -297,10 +287,9 @@ class ClientNavigation {
     BuildContext context, {
     required Map<String, dynamic> booking,
   }) {
-    Navigator.pushNamedAndRemoveUntil(
+    AppNavigation.popToClientShellAndPush(
       context,
       AppRoutes.liveTracking,
-      (Route<dynamic> route) => route.settings.name == ClientShell.routeName,
       arguments: booking,
     );
   }
@@ -324,22 +313,17 @@ class ClientNavigation {
       case ClientBookingStatus.awaitingPayment:
         await pushFlow(context, AppRoutes.jobApplicants, arguments: booking.toMap());
       case ClientBookingStatus.requested:
-        if (booking.backendStatus == 'draft') {
-          await Navigator.push<dynamic>(
-            context,
-            MaterialPageRoute<dynamic>(
-              builder: (BuildContext context) => PaymentCheckoutScreen(
-                jobId: booking.id,
-                amount: double.tryParse(booking.amount.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 20.00,
-              ),
-            ),
-          );
-        } else if (booking.backendStatus == 'draft' &&
-            booking.jobMode == 'scheduled') {
+        if (booking.backendStatus == 'draft' && booking.jobMode == 'scheduled') {
           AppToast.showInfo(
             context,
             'This scheduled job will start matching before the appointment.',
           );
+        } else if (booking.backendStatus == 'draft') {
+          await pushFlow<void>(context, AppRoutes.paymentCheckout,
+              arguments: PaymentCheckoutArgs(
+                jobId: booking.id,
+                amount: double.tryParse(booking.amount.replaceAll(RegExp(r'[^0-9.]'), '')) ?? 20.00,
+              ));
         } else {
           await pushFlow(context, AppRoutes.jobApplicants,
               arguments: booking.toMap());

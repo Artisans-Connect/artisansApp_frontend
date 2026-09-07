@@ -2,6 +2,20 @@ class AppRoutes {
   // Main flows
   static const splash = '/';
   static const authForgotPassword = '/auth/forgot-password';
+  static const authSignIn = '/auth/sign-in';
+  static const authSignUp = '/auth/sign-up';
+  static const authOnboarding = '/auth/onboarding';
+  static const authRole = '/auth/role';
+  static const authVerifyEmail = '/auth/verify-email';
+  static const sharedMessages = '/shared/messages';
+  static const sharedChat = '/shared/chat';
+  static const sharedProfile = '/shared/profile';
+  static const sharedSettings = '/shared/settings';
+  static const sharedEditProfile = '/shared/edit-profile';
+  static const sharedJobReceipt = '/shared/job-receipt';
+  static const myReports = '/my-reports';
+  static const blockedUsers = '/blocked-users';
+  static const workerHome = '/shared/worker-home';
   static const clientHome = '/client-shell';
   static const clientHomeLegacy = '/client-home';
   static const exploreArtisans = '/explore-artisans';
@@ -26,4 +40,24 @@ class AppRoutes {
   // Shared
   static const notifications = '/notifications';
   static const wallet = '/wallet';
+  static const paymentSuccess = '/payment-success';
+  static const paymentCheckout = '/payment-checkout';
+  static const workerEarnings = '/worker/earnings';
+  static const workerStats = '/worker/stats';
+  static const workerHistory = '/worker/history';
+  static const workerReviews = '/worker/reviews';
+  static const workerGallery = '/worker/gallery';
+
+  static const all = <String>{
+    splash, authForgotPassword, authSignIn, authSignUp, authOnboarding,
+    authRole, authVerifyEmail, sharedMessages, sharedChat, sharedProfile,
+    sharedSettings, sharedEditProfile, sharedJobReceipt, myReports,
+    blockedUsers, workerHome, clientHome, clientHomeLegacy, exploreArtisans,
+    artisanProfile, mapDiscovery, findingArtisan, directWorkerRequest,
+    jobPostCategory, jobPostSubcategory, jobPostDetails,
+    jobPostLocationSchedule, jobPostSummary, bookingHistory, liveTracking,
+    jobApplicants, rateService, notifications, wallet, paymentSuccess,
+    paymentCheckout, workerEarnings, workerStats, workerHistory,
+    workerReviews, workerGallery,
+  };
 }

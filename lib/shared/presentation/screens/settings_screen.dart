@@ -3,13 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
-import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/session/app_user_session.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
 import 'package:artisans_app/features/auth/presentation/screens/role_selection_screen.dart';
-import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:artisans_app/features/client/presentation/navigation/client_navigation.dart';
 import 'package:artisans_app/shared/presentation/navigation/legal_navigation.dart';
 import 'package:artisans_app/shared/utils/shared_user_context.dart';
@@ -24,7 +25,7 @@ import 'package:artisans_app/features/trust_safety/presentation/screens/blocked_
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key, this.embedInShell = false});
 
-  static const String routeName = '/shared/settings';
+  static const String routeName = AppRoutes.sharedSettings;
 
   final bool embedInShell;
 
@@ -68,11 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       SharedUserContext.session.reset();
       if (!mounted) return;
       AppToast.showSuccess(context, 'Signed out.');
-      await Navigator.pushNamedAndRemoveUntil(
-        context,
-        SignInScreen.routeName,
-        (_) => false,
-      );
+      AppNavigation.resetToSignIn(context);
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not sign out.');
@@ -149,11 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       SharedUserContext.session.reset();
       if (!mounted) return;
       AppToast.showSuccess(context, 'Your account has been deleted.');
-      await Navigator.pushNamedAndRemoveUntil(
-        context,
-        SignInScreen.routeName,
-        (_) => false,
-      );
+      AppNavigation.resetToSignIn(context);
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not delete account.');
@@ -166,11 +159,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       await AuthService.instance.updateActiveMode(targetMode);
       if (!mounted) return;
-      final String route = shellRouteForMode(
-        targetMode,
-        AppUserSession.instance.isWorkerCapable,
-      );
-      await Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+      AppNavigation.resetForMode(context, targetMode);
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not switch view.');

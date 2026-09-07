@@ -31,7 +31,7 @@ import 'package:artisans_app/features/trust_safety/services/reports_service.dart
 class ChatDetailScreen extends StatefulWidget {
   const ChatDetailScreen({super.key});
 
-  static const String routeName = '/shared/chat';
+  static const String routeName = AppRoutes.sharedChat;
 
   @override
   State<ChatDetailScreen> createState() => _ChatDetailScreenState();

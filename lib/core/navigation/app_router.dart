@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:artisans_app/features/client/presentation/client_shell.dart';
 import 'package:artisans_app/features/client/presentation/screens/explore_artisans_screen.dart';
@@ -13,12 +14,12 @@ import 'package:artisans_app/features/client/presentation/screens/job_post_locat
 import 'package:artisans_app/features/client/presentation/screens/job_post_summary_screen.dart';
 import 'package:artisans_app/features/client/presentation/screens/job_applicants_screen.dart';
 import 'package:artisans_app/features/client/presentation/screens/live_tracking_screen.dart';
+import 'package:artisans_app/features/client/presentation/screens/payment_checkout_screen.dart';
 import 'package:artisans_app/features/client/presentation/screens/rate_service_screen.dart';
 import 'package:artisans_app/core/session/app_user_session.dart';
 import 'package:artisans_app/core/theme/app_colors.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
 import 'package:artisans_app/core/navigation/app_routes.dart';
-import 'package:artisans_app/core/navigation/auth_navigation.dart';
 import 'package:artisans_app/shared/presentation/screens/notifications_screen.dart';
 import 'package:artisans_app/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
@@ -30,6 +31,11 @@ import 'package:artisans_app/features/auth/presentation/screens/splash_screen.da
 import 'package:artisans_app/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_earnings_screen.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_stats_screen.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_booking_history_screen.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_reviews_screen.dart';
+import 'package:artisans_app/features/worker/presentation/screens/worker_gallery_screen.dart';
 import 'package:artisans_app/shared/presentation/screens/chat_detail_screen.dart';
 import 'package:artisans_app/shared/presentation/screens/edit_profile_screen.dart';
 import 'package:artisans_app/shared/presentation/screens/job_receipt_screen.dart';
@@ -38,11 +44,87 @@ import 'package:artisans_app/shared/presentation/screens/settings_screen.dart';
 import 'package:artisans_app/shared/presentation/screens/user_profile_screen.dart';
 import 'package:artisans_app/features/trust_safety/presentation/screens/my_reports_screen.dart';
 import 'package:artisans_app/features/trust_safety/presentation/screens/blocked_users_screen.dart';
+import 'package:artisans_app/shared/presentation/screens/payment_success_screen.dart';
 import 'package:artisans_app/core/navigation/route_arguments.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
+import 'package:artisans_app/core/navigation/route_policy.dart';
 
 class AppRouter {
+  /// Routes with explicit builders in the central registry. Query strings are
+  /// normalized away before lookup, so this set contains path names only.
+  static const Set<String> registeredRoutes = <String>{
+    AppRoutes.splash,
+    AppRoutes.authForgotPassword,
+    AppRoutes.authSignIn,
+    AppRoutes.authSignUp,
+    AppRoutes.authOnboarding,
+    AppRoutes.authRole,
+    AppRoutes.authVerifyEmail,
+    AppRoutes.sharedMessages,
+    AppRoutes.sharedChat,
+    AppRoutes.sharedProfile,
+    AppRoutes.sharedSettings,
+    AppRoutes.sharedEditProfile,
+    AppRoutes.sharedJobReceipt,
+    AppRoutes.myReports,
+    AppRoutes.blockedUsers,
+    AppRoutes.workerHome,
+    AppRoutes.clientHome,
+    AppRoutes.clientHomeLegacy,
+    AppRoutes.exploreArtisans,
+    AppRoutes.artisanProfile,
+    AppRoutes.mapDiscovery,
+    AppRoutes.findingArtisan,
+    AppRoutes.directWorkerRequest,
+    AppRoutes.jobPostCategory,
+    AppRoutes.jobPostSubcategory,
+    AppRoutes.jobPostDetails,
+    AppRoutes.jobPostLocationSchedule,
+    AppRoutes.jobPostSummary,
+    AppRoutes.bookingHistory,
+    AppRoutes.liveTracking,
+    AppRoutes.jobApplicants,
+    AppRoutes.rateService,
+    AppRoutes.notifications,
+    AppRoutes.wallet,
+    AppRoutes.paymentSuccess,
+    AppRoutes.paymentCheckout,
+    AppRoutes.workerEarnings,
+    AppRoutes.workerStats,
+    AppRoutes.workerHistory,
+    AppRoutes.workerReviews,
+    AppRoutes.workerGallery,
+  };
+
   static Route<dynamic> generateRoute(RouteSettings settings) {
-    switch (settings.name) {
+    final String rawName = settings.name ?? '';
+    final Uri uri;
+    try {
+      uri = Uri.parse(rawName);
+    } on FormatException {
+      return _page(settings, _NotFoundScreen(routeName: rawName));
+    }
+    final String routeName = uri.path;
+
+    // All feature routes enter through this boundary, including legacy links.
+    // Auth screens and the splash remain publicly reachable.
+    if (RoutePolicy.isProtected(routeName) &&
+        Supabase.instance.client.auth.currentSession == null) {
+      return _page(
+        const RouteSettings(name: SignInScreen.routeName),
+        const SignInScreen(),
+      );
+    }
+    if (RoutePolicy.requiresWorkerCapability(routeName) &&
+        AppUserSession.instance.currentUser != null &&
+        !AppUserSession.instance.isWorkerCapable) {
+      return _page(
+        const RouteSettings(name: AppRoutes.clientHome),
+        const ClientShell(),
+      );
+    }
+
+    switch (routeName) {
 
       case SplashScreen.routeName:
       case '/auth/splash':
@@ -81,6 +163,13 @@ class AppRouter {
       case BlockedUsersScreen.routeName:
         return _protectedPage(settings, const BlockedUsersScreen());
       case WorkerShell.routeName:
+        final currentUser = AppUserSession.instance.currentUser;
+        if (currentUser != null && !currentUser.hasWorkerProfile) {
+          return _page(
+            const RouteSettings(name: AppRoutes.clientHome),
+            const ClientShell(),
+          );
+        }
         final args = settings.arguments;
         final initialTabArg = args is Map ? args['initialTab'] : null;
         final initialTab = initialTabArg == 'messages'
@@ -92,6 +181,16 @@ class AppRouter {
           initialJobRequestId: args is Map ? args['openJobRequestId'] as String? : null,
           initialTab: initialTab,
         ));
+      case AppRoutes.workerEarnings:
+        return _protectedPage(settings, const WorkerEarningsScreen());
+      case AppRoutes.workerStats:
+        return _protectedPage(settings, const WorkerStatsScreen());
+      case AppRoutes.workerHistory:
+        return _protectedPage(settings, const WorkerBookingHistoryScreen());
+      case AppRoutes.workerReviews:
+        return _protectedPage(settings, const WorkerReviewsScreen());
+      case AppRoutes.workerGallery:
+        return _protectedPage(settings, const WorkerGalleryScreen());
 
       case AppRoutes.clientHome:
       case AppRoutes.clientHomeLegacy:
@@ -131,6 +230,7 @@ class AppRouter {
           }
         }
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => ExploreArtisansScreen(
             initialQuery: initialQuery,
             initialCategory: initialCategory,
@@ -143,11 +243,15 @@ class AppRouter {
 
       case AppRoutes.mapDiscovery:
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => const MapDiscoveryScreen(),
         );
 
       case AppRoutes.artisanProfile:
         final profileArgs = ArtisanRouteArgs.tryParse(settings.arguments);
+        if (profileArgs == null) {
+          return _page(settings, const _InvalidRouteArgumentsScreen());
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => ArtisanProfileScreen(
@@ -165,6 +269,7 @@ class AppRouter {
           artisan = findingArgs['artisan'] as Map<String, dynamic>?;
         }
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => FindingArtisanScreen(
             jobData: jobData,
             artisan: artisan,
@@ -172,44 +277,54 @@ class AppRouter {
         );
 
       case AppRoutes.directWorkerRequest:
+        final requestArgs = ArtisanRouteArgs.tryParse(settings.arguments);
+        if (requestArgs == null) {
+          return _page(settings, const _InvalidRouteArgumentsScreen());
+        }
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => DirectWorkerRequestScreen(
-            artisan: settings.arguments as Map<String, dynamic>?,
+            artisan: requestArgs.snapshot,
           ),
         );
 
       case AppRoutes.jobPostCategory:
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => JobPostCategoryScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: _mapArguments(settings.arguments),
           ),
         );
 
       case AppRoutes.jobPostSubcategory:
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => JobPostSubcategoryScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: _mapArguments(settings.arguments),
           ),
         );
 
       case AppRoutes.jobPostDetails:
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => JobPostDetailsScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: _mapArguments(settings.arguments),
           ),
         );
 
       case AppRoutes.jobPostLocationSchedule:
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => JobPostLocationScheduleScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: _mapArguments(settings.arguments),
           ),
         );
 
       case AppRoutes.jobPostSummary:
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => JobPostSummaryScreen(
-            jobData: settings.arguments as Map<String, dynamic>?,
+            jobData: _mapArguments(settings.arguments),
           ),
         );
 
@@ -221,6 +336,9 @@ class AppRouter {
 
       case AppRoutes.liveTracking:
         final trackingArgs = JobRouteArgs.tryParse(settings.arguments);
+        if (trackingArgs == null) {
+          return _page(settings, const _InvalidRouteArgumentsScreen());
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => LiveTrackingScreen(
@@ -230,6 +348,9 @@ class AppRouter {
 
       case AppRoutes.jobApplicants:
         final applicantsArgs = JobRouteArgs.tryParse(settings.arguments);
+        if (applicantsArgs == null) {
+          return _page(settings, const _InvalidRouteArgumentsScreen());
+        }
         return MaterialPageRoute(
           settings: settings,
           builder: (_) => JobApplicantsScreen(
@@ -238,26 +359,49 @@ class AppRouter {
         );
 
       case AppRoutes.rateService:
+        final Object? rawService = settings.arguments;
+        final Map<String, dynamic>? service = rawService is Map
+            ? Map<String, dynamic>.from(rawService)
+            : null;
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => RateServiceScreen(
-            service: settings.arguments as Map<String, dynamic>?,
+            service: service,
           ),
         );
 
       case AppRoutes.notifications:
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => const NotificationsScreen(),
         );
 
       case AppRoutes.wallet:
         final bool isWorker = settings.arguments == true;
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => WalletScreen(isWorker: isWorker),
         );
+
+      case AppRoutes.paymentSuccess:
+        final Object? rawReference = settings.arguments;
+        final String? argumentReference = rawReference is Map
+            ? rawReference['reference']?.toString()
+            : rawReference is String
+                ? rawReference
+                : null;
+        final String? ref = uri.queryParameters['reference'] ?? argumentReference;
+        return _page(settings, PaymentSuccessScreen(reference: ref));
+
+      case AppRoutes.paymentCheckout:
+        final args = PaymentCheckoutArgs.tryParse(settings.arguments);
+        if (args == null) return _page(settings, const _InvalidRouteArgumentsScreen());
+        return _protectedPage(settings, PaymentCheckoutScreen(jobId: args.jobId, amount: args.amount, applicationId: args.applicationId, initialCheckoutUrl: args.initialCheckoutUrl, initialReference: args.initialReference));
 
       default:
         debugPrint('⚠️ 404: Route not found: ${settings.name}');
         return MaterialPageRoute(
+          settings: settings,
           builder: (_) => _NotFoundScreen(routeName: settings.name),
         );
     }
@@ -266,8 +410,13 @@ class AppRouter {
   static MaterialPageRoute<dynamic> _page(RouteSettings settings, Widget child) =>
       MaterialPageRoute<dynamic>(settings: settings, builder: (_) => child);
 
+  static Map<String, dynamic>? _mapArguments(Object? value) {
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return null;
+  }
+
   static Route<dynamic> _protectedPage(RouteSettings settings, Widget child) {
-    if (!AppUserSession.instance.isAuthenticated) {
+    if (Supabase.instance.client.auth.currentSession == null) {
       return _page(
         RouteSettings(name: SignInScreen.routeName, arguments: settings),
         const SignInScreen(),
@@ -275,6 +424,13 @@ class AppRouter {
     }
     return _page(settings, child);
   }
+
+}
+
+class _InvalidRouteArgumentsScreen extends StatelessWidget {
+  const _InvalidRouteArgumentsScreen();
+  @override
+  Widget build(BuildContext context) => const Scaffold(body: Center(child: Text('This action is no longer available.')));
 }
 
 class _NotFoundScreen extends StatefulWidget {
@@ -302,15 +458,15 @@ class _NotFoundScreenState extends State<_NotFoundScreen> {
     
     // If not authenticated, redirect to sign in instead of client shell
     if (!session.isAuthenticated) {
-      Navigator.pushNamedAndRemoveUntil(context, SignInScreen.routeName, (_) => false);
+      AppNavigation.resetToSignIn(context);
       return;
     }
 
-    final String route = shellRouteForMode(
-      session.activeMode,
-      session.isWorkerCapable,
-    );
-    Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+    if (session.isWorkerCapable && session.activeMode == 'worker') {
+      AppNavigation.resetToWorker(context);
+    } else {
+      AppNavigation.resetToClient(context);
+    }
   }
 
   @override

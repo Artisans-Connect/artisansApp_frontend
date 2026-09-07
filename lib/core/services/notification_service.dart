@@ -7,9 +7,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:artisans_app/features/worker/presentation/worker_shell.dart';
+import 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart';
 import 'package:artisans_app/core/constants/app_constants.dart';
 import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/network/api_client.dart';
 import 'package:artisans_app/core/notifications/notification_metadata.dart';
 import 'package:artisans_app/shared/presentation/navigation/shared_route_args.dart';
@@ -202,18 +203,14 @@ class NotificationService {
 
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
+      AppNavigation.resetToSignIn(navigator.context);
       _pendingJobRequestId = jobId;
       return;
     }
 
     unawaited(_switchToWorkerMode());
 
-    navigator.pushNamedAndRemoveUntil(
-      WorkerShell.routeName,
-      (_) => false,
-      arguments: <String, dynamic>{'openJobRequestId': jobId},
-    );
+    AppNavigation.resetToWorker(navigator.context, openJobRequestId: jobId);
   }
 
   Future<void> _switchToWorkerMode() async {
@@ -233,12 +230,13 @@ class NotificationService {
 
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
-      _pendingClientApplicantsJobId = jobId;
+      AppNavigation.resetToSignIn(navigator.context);
+      _pendingClientJobId = jobId;
       return;
     }
 
-    navigator.pushNamed(
+    AppNavigation.resetToClientAndPush(
+      navigator.context,
       AppRoutes.liveTracking,
       arguments: <String, dynamic>{'id': jobId},
     );
@@ -253,12 +251,13 @@ class NotificationService {
 
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
-      _pendingClientJobId = jobId;
+      AppNavigation.resetToSignIn(navigator.context);
+      _pendingClientApplicantsJobId = jobId;
       return;
     }
 
-    navigator.pushNamed(
+    AppNavigation.resetToClientAndPush(
+      navigator.context,
       AppRoutes.jobApplicants,
       arguments: <String, dynamic>{'id': jobId, 'job_id': jobId},
     );
@@ -273,24 +272,20 @@ class NotificationService {
 
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
+      AppNavigation.resetToSignIn(navigator.context);
       _pendingWorkerBookings = true;
       return;
     }
 
     unawaited(_switchToWorkerMode());
 
-    navigator.pushNamedAndRemoveUntil(
-      WorkerShell.routeName,
-      (_) => false,
-      arguments: <String, dynamic>{'initialTab': 'bookings'},
-    );
+    AppNavigation.resetToWorker(navigator.context, initialTab: WorkerNavTab.bookings);
   }
 
   void _openMessages() {
     final navigator = navigatorKey.currentState;
     if (navigator == null) return;
-    navigator.pushNamed('/shared/messages');
+    navigator.pushNamed(AppRoutes.sharedMessages);
   }
 
   void _openChat(String jobId) {
@@ -302,7 +297,7 @@ class NotificationService {
 
     final session = Supabase.instance.client.auth.currentSession;
     if (session == null) {
-      navigator.pushNamedAndRemoveUntil('/auth/sign-in', (_) => false);
+      AppNavigation.resetToSignIn(navigator.context);
       _pendingChatJobId = jobId;
       return;
     }

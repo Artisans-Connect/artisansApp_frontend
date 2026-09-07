@@ -3,6 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/errors/error_messages.dart';
 import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/route_arguments.dart';
 import 'package:artisans_app/core/services/applications_service.dart';
 import 'package:artisans_app/core/services/jobs_service.dart';
 import 'package:artisans_app/core/services/negotiation_service.dart';
@@ -19,7 +20,6 @@ import 'package:artisans_app/shared/widgets/error_state_view.dart';
 import 'package:artisans_app/shared/widgets/negotiation_chat_sheet.dart';
 import 'package:artisans_app/shared/widgets/primary_button.dart';
 import 'package:artisans_app/features/client/presentation/models/client_booking.dart';
-import 'package:artisans_app/features/client/presentation/screens/payment_checkout_screen.dart';
 
 class JobApplicantsScreen extends StatefulWidget {
   const JobApplicantsScreen({super.key, this.job});
@@ -190,14 +190,13 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
       // Step 2: Navigate to payment checkout (100% upfront payment)
       final double totalQuote = double.tryParse((application['total_quote'] ?? '').toString()) ?? 100.00;
 
-      final bool? paid = await Navigator.push<bool>(
+      final bool? paid = await Navigator.pushNamed<bool>(
         context,
-        MaterialPageRoute<bool>(
-          builder: (BuildContext context) => PaymentCheckoutScreen(
-            jobId: _jobId,
-            applicationId: applicationId,
-            amount: totalQuote,
-          ),
+        AppRoutes.paymentCheckout,
+        arguments: PaymentCheckoutArgs(
+          jobId: _jobId,
+          applicationId: applicationId,
+          amount: totalQuote,
         ),
       );
 
@@ -241,14 +240,13 @@ class _JobApplicantsScreenState extends State<JobApplicantsScreen> {
 
           final double totalQuote = double.tryParse((targetApp['total_quote'] ?? application['total_quote'] ?? '').toString()) ?? 100.00;
 
-          final bool? paid = await Navigator.push<bool>(
+          final bool? paid = await Navigator.pushNamed<bool>(
             context,
-            MaterialPageRoute<bool>(
-              builder: (BuildContext context) => PaymentCheckoutScreen(
-                jobId: _jobId,
-                applicationId: applicationId,
-                amount: totalQuote,
-              ),
+            AppRoutes.paymentCheckout,
+            arguments: PaymentCheckoutArgs(
+              jobId: _jobId,
+              applicationId: applicationId,
+              amount: totalQuote,
             ),
           );
 

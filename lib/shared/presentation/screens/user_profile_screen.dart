@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
 import 'package:artisans_app/core/navigation/app_routes.dart';
-import 'package:artisans_app/core/navigation/auth_navigation.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/services/profile_service.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/services/verification_service.dart';
@@ -38,7 +38,7 @@ class UserProfileScreen extends StatefulWidget {
     this.onOpenWorkerGallery,
   });
 
-  static const String routeName = '/shared/profile';
+  static const String routeName = AppRoutes.sharedProfile;
 
   /// When true, user is inside worker shell — Settings live on another tab.
   final bool embedInShell;
@@ -84,11 +84,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     try {
       await AuthService.instance.updateActiveMode(targetMode);
       if (!mounted) return;
-      final String route = shellRouteForMode(
-        targetMode,
-        AppUserSession.instance.isWorkerCapable,
-      );
-      await Navigator.pushNamedAndRemoveUntil(context, route, (_) => false);
+      AppNavigation.resetForMode(context, targetMode);
     } catch (e) {
       if (!mounted) return;
       AppToast.showError(context, e, fallback: 'Could not switch view.');

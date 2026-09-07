@@ -3,6 +3,7 @@ import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 import 'package:artisans_app/core/services/platform_service.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:artisans_app/core/services/profile_service.dart';
 import 'package:artisans_app/core/services/storage_service.dart';
 import 'package:artisans_app/core/session/app_user_session.dart';
@@ -19,7 +20,7 @@ import 'package:artisans_app/shared/widgets/gradient_button.dart';
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
 
-  static const String routeName = '/shared/edit-profile';
+  static const String routeName = AppRoutes.sharedEditProfile;
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();

@@ -23,6 +23,7 @@ import 'package:artisans_app/features/worker/presentation/utils/worker_job_mappe
 import 'package:artisans_app/features/worker/presentation/widgets/worker_bottom_nav.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/worker_job_alert_sheet.dart';
 import 'package:artisans_app/core/session/app_user_session.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
 
 class WorkerShell extends StatefulWidget {
   const WorkerShell({
@@ -31,7 +32,7 @@ class WorkerShell extends StatefulWidget {
     this.initialTab = WorkerNavTab.explore,
   });
 
-  static const String routeName = '/shared/worker-home';
+  static const String routeName = AppRoutes.workerHome;
 
   final String? initialJobRequestId;
   final WorkerNavTab initialTab;
@@ -268,39 +269,19 @@ class _WorkerShellState extends State<WorkerShell> with WidgetsBindingObserver {
             UserProfileScreen(
               embedInShell: true,
               onOpenWorkerEarnings: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const WorkerEarningsScreen(),
-                  ),
-                );
+                Navigator.pushNamed(context, AppRoutes.workerEarnings);
               },
               onOpenWorkerStats: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const WorkerStatsScreen(),
-                  ),
-                );
+                Navigator.pushNamed(context, AppRoutes.workerStats);
               },
               onOpenWorkerHistory: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const WorkerBookingHistoryScreen(),
-                  ),
-                );
+                Navigator.pushNamed(context, AppRoutes.workerHistory);
               },
               onOpenWorkerReviews: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const WorkerReviewsScreen(),
-                  ),
-                );
+                Navigator.pushNamed(context, AppRoutes.workerReviews);
               },
               onOpenWorkerGallery: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (_) => const WorkerGalleryScreen(),
-                  ),
-                );
+                Navigator.pushNamed(context, AppRoutes.workerGallery);
               },
             ),
           ],

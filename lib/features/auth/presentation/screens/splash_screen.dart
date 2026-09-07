@@ -4,19 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:artisans_app/core/errors/auth_failure.dart';
+import 'package:artisans_app/core/navigation/app_routes.dart';
+import 'package:artisans_app/core/navigation/app_navigation.dart';
 import 'package:artisans_app/core/network/api_client.dart';
-import 'package:artisans_app/core/navigation/auth_navigation.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/services/notification_service.dart';
 import 'package:artisans_app/core/theme/index.dart';
-import 'package:artisans_app/features/auth/presentation/screens/onboarding_screen.dart';
-import 'package:artisans_app/features/auth/presentation/screens/role_selection_screen.dart';
-import 'package:artisans_app/features/auth/presentation/screens/sign_in_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
-  static const String routeName = '/';
+  static const String routeName = AppRoutes.splash;
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -79,9 +77,8 @@ class _SplashScreenState extends State<SplashScreen> {
     debugPrint('[SplashScreen] Cached user loaded: ${user?.email}');
     if (user == null || !mounted) return false;
 
-    final targetRoute = shellRouteForUser(user);
-    debugPrint('[SplashScreen] Fast booting to cached user route: $targetRoute');
-    await Navigator.pushReplacementNamed(context, targetRoute);
+    debugPrint('[SplashScreen] Fast booting to cached user shell');
+    AppNavigation.resetForUser(context, user);
     
     // Verify user profile in background and handle session invalidation cleanly
     AuthService.instance.getCurrentUser(forceRefresh: true).then((_) {
@@ -101,9 +98,9 @@ class _SplashScreenState extends State<SplashScreen> {
       final navigator = NotificationService.instance.navigatorKey.currentState;
       if (navigator != null) {
         if (error is AuthFailure && error.code == AuthFailureCode.profileNotFound) {
-          navigator.pushNamedAndRemoveUntil(RoleSelectionScreen.routeName, (_) => false);
+          AppNavigation.resetToRoleSelection(navigator.context);
         } else {
-          navigator.pushNamedAndRemoveUntil(SignInScreen.routeName, (_) => false);
+          AppNavigation.resetToSignIn(navigator.context);
         }
       }
     });
@@ -119,7 +116,7 @@ class _SplashScreenState extends State<SplashScreen> {
     final user = await AuthService.instance.loadCachedUser();
     debugPrint('[SplashScreen] Routing cached user if available. Found: ${user?.email}');
     if (user == null || !mounted) return false;
-    await Navigator.pushReplacementNamed(context, shellRouteForUser(user));
+    AppNavigation.resetForUser(context, user);
     return true;
   }
 
@@ -131,18 +128,17 @@ class _SplashScreenState extends State<SplashScreen> {
         final user = await AuthService.instance.getCurrentUser();
         debugPrint('[SplashScreen] Current user fetched: ${user.email}, mode: ${user.lastActiveMode}');
         if (!mounted) return;
-        final targetRoute = shellRouteForUser(user);
-        debugPrint('[SplashScreen] Redirecting to target route: $targetRoute');
-        await Navigator.pushReplacementNamed(context, targetRoute);
+        debugPrint('[SplashScreen] Redirecting to authenticated shell');
+        AppNavigation.resetForUser(context, user);
       } on AuthFailure catch (e) {
         debugPrint('[SplashScreen] AuthFailure: ${e.code} - ${e.message}');
         if (!mounted) return;
         if (e.code == AuthFailureCode.profileNotFound) {
           debugPrint('[SplashScreen] Profile not found, redirecting to RoleSelectionScreen');
-          await Navigator.pushReplacementNamed(context, RoleSelectionScreen.routeName);
+          AppNavigation.resetToRoleSelection(context);
         } else {
           debugPrint('[SplashScreen] Redirecting to SignInScreen');
-          await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+          AppNavigation.resetToSignIn(context);
         }
       } on NetworkException {
         debugPrint('[SplashScreen] NetworkException during _routeAfterAuth');
@@ -150,13 +146,13 @@ class _SplashScreenState extends State<SplashScreen> {
         if (await _routeCachedUserIfAvailable()) return;
         if (!mounted) return;
         debugPrint('[SplashScreen] Redirecting to SignInScreen (offline & no cache)');
-        await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+        AppNavigation.resetToSignIn(context);
       } on ApiException catch (e) {
         if (!mounted) return;
         if (e.code == 'ACCOUNT_SUSPENDED') {
           await AuthService.instance.signOut();
           if (!mounted) return;
-          await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+          AppNavigation.resetToSignIn(context);
           return;
         }
         if (e.isUnauthorized) {
@@ -167,10 +163,7 @@ class _SplashScreenState extends State<SplashScreen> {
                 forceRefresh: true,
               );
               if (!mounted) return;
-              await Navigator.pushReplacementNamed(
-                context,
-                shellRouteForUser(user),
-              );
+              AppNavigation.resetForUser(context, user);
               return;
             } catch (_) {
               await AuthService.instance.signOut();
@@ -182,16 +175,16 @@ class _SplashScreenState extends State<SplashScreen> {
         if (!mounted) return;
         if (await _routeCachedUserIfAvailable()) return;
         if (!mounted) return;
-        await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+        AppNavigation.resetToSignIn(context);
       } catch (_) {
         if (!mounted) return;
         if (await _routeCachedUserIfAvailable()) return;
         if (!mounted) return;
-        await Navigator.pushReplacementNamed(context, SignInScreen.routeName);
+        AppNavigation.resetToSignIn(context);
       }
     } else {
       if (!mounted) return;
-      await Navigator.pushReplacementNamed(context, OnboardingScreen.routeName);
+        AppNavigation.resetToOnboarding(context);
     }
   }
 
