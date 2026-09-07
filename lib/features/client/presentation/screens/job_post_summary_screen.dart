@@ -320,20 +320,25 @@ class _JobPostSummaryScreenState extends State<JobPostSummaryScreen> {
                             Icon(PhosphorIcons.info, size: 16, color: AppColors.primary),
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
-                              child: Text(
-                                'Travel cost is calculated separately for each artisan when they apply. This amount is only an estimate and may adjust based on scope and materials.',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                '🛡️ Escrow Protection: Your payment is held securely and only released once the job is completed to your satisfaction.',
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: AppColors.textSecondary,
-                                  fontSize: 11,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Travel cost is calculated separately for each artisan when they apply. This amount is only an estimate and may adjust based on scope and materials.',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  const SizedBox(height: AppSpacing.xs),
+                                  Text(
+                                    '🛡️ Escrow Protection: Your payment is held securely and only released once the job is completed to your satisfaction.',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textSecondary,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
