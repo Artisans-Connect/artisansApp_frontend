@@ -1,8 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import 'package:artisans_app/core/services/job_realtime_service.dart';
+import 'package:artisans_app/core/services/jobs_service.dart';
 import 'package:artisans_app/core/services/negotiation_service.dart';
 import 'package:artisans_app/core/services/workers_service.dart';
 import 'package:artisans_app/core/theme/design_tokens.dart';
+import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
 import 'package:artisans_app/shared/models/negotiation.dart';
 import 'package:artisans_app/shared/widgets/app_toast.dart';
 import 'package:artisans_app/shared/widgets/category_icon_badge.dart';
@@ -23,8 +28,95 @@ class WorkerApplicationDetailScreen extends StatefulWidget {
 
 class _WorkerApplicationDetailScreenState extends State<WorkerApplicationDetailScreen> {
   final WorkersService _workersService = WorkersService();
+  final JobsService _jobsService = JobsService();
+  final JobRealtimeService _jobRealtimeService = JobRealtimeService();
+  Timer? _pollTimer;
+  bool _hasHandledTransition = false;
   bool _isWithdrawing = false;
   bool _isAcceptingCounter = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initPaymentListener();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    _jobRealtimeService.unsubscribe();
+    super.dispose();
+  }
+
+  void _initPaymentListener() {
+    final Map<String, dynamic> job =
+        Map<String, dynamic>.from(widget.application['job'] as Map? ?? const {});
+    final String applicationStatus =
+        (widget.application['status'] ?? 'pending').toString().toLowerCase();
+    final String jobStatus = (job['status'] ?? '').toString().toLowerCase();
+    final String jobId = (job['id'] ?? '').toString();
+
+    if (jobId.isNotEmpty && applicationStatus == 'accepted' && jobStatus == 'awaiting_payment') {
+      _jobRealtimeService.subscribeToJob(
+        jobId,
+        onUpdate: (updatedJob) => _onJobStatusUpdated(updatedJob),
+      );
+      _pollTimer?.cancel();
+      _pollTimer = Timer.periodic(
+        const Duration(seconds: 3),
+        (_) => _pollJobStatus(jobId),
+      );
+    }
+  }
+
+  Future<void> _pollJobStatus(String jobId) async {
+    if (_hasHandledTransition || !mounted) return;
+    try {
+      final dynamic data = await _jobsService.getJobById(jobId);
+      if (data is Map<String, dynamic>) {
+        _onJobStatusUpdated(data);
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _onJobStatusUpdated(Map<String, dynamic> jobData) async {
+    if (_hasHandledTransition || !mounted) return;
+    final String status = (jobData['status'] as String? ?? '').toLowerCase();
+
+    if (<String>{
+      'matched',
+      'on_the_way',
+      'arrived',
+      'in_progress',
+      'scheduled_confirmed',
+    }.contains(status)) {
+      _hasHandledTransition = true;
+      _pollTimer?.cancel();
+      _jobRealtimeService.unsubscribe();
+
+      if (mounted) {
+        AppToast.showSuccess(context, 'Payment confirmed! Starting your booking...');
+        try {
+          final WorkerSessionState session = WorkerScope.read(context);
+          await session.loadActiveJob();
+        } catch (_) {}
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
+      }
+    } else if (status == 'cancelled' || status == 'client_cancelled') {
+      _hasHandledTransition = true;
+      _pollTimer?.cancel();
+      _jobRealtimeService.unsubscribe();
+
+      if (mounted) {
+        AppToast.showInfo(context, 'This job was cancelled by the client.');
+        if (mounted) {
+          Navigator.of(context).pop(true);
+        }
+      }
+    }
+  }
 
   Future<void> _confirmWithdraw(BuildContext context) async {
     final bool? confirmed = await showDialog<bool>(
