@@ -86,7 +86,12 @@ class _MyAppState extends State<MyApp> {
             initialEmail: args is String ? args : null,
           );
         },
-        RoleSelectionScreen.routeName: (_) => const RoleSelectionScreen(),
+        RoleSelectionScreen.routeName: (BuildContext context) {
+          final Object? args = ModalRoute.of(context)?.settings.arguments;
+          final bool isBecomingWorker =
+              args is Map && (args['isBecomingWorker'] == true);
+          return RoleSelectionScreen(isBecomingWorker: isBecomingWorker);
+        },
         SignInScreen.routeName: (_) => const SignInScreen(),
         SignUpScreen.routeName: (_) => const SignUpScreen(),
         VerifyEmailScreen.routeName: (BuildContext context) {

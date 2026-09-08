@@ -10,6 +10,7 @@ import 'package:artisans_app/core/location/device_location_service.dart';
 import 'package:artisans_app/core/location/place_lookup_service.dart';
 import 'package:artisans_app/core/navigation/auth_navigation.dart';
 import 'package:artisans_app/core/network/api_client.dart';
+import 'package:artisans_app/core/session/app_user_session.dart';
 import 'package:artisans_app/core/services/auth_service.dart';
 import 'package:artisans_app/core/services/platform_service.dart';
 import 'package:artisans_app/core/services/storage_service.dart';
@@ -51,7 +52,8 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   // ── State ──────────────────────────────────────────────────────────────────
   late final OnboardingSession _session;
   late final PageController _pageController;
-  late final bool _isBecomingWorker;
+  late bool _isBecomingWorker;
+  bool _initializedFromRoute = false;
 
   int _currentIndex = 0;
   bool _isSubmitting = false;
@@ -125,6 +127,23 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     _areaSearchController.addListener(_onAreaSearchChanged);
 
     _loadTrades();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initializedFromRoute) {
+      _initializedFromRoute = true;
+      final Object? args = ModalRoute.of(context)?.settings.arguments;
+      if (args is Map && args['isBecomingWorker'] == true) {
+        if (!_isBecomingWorker) {
+          setState(() {
+            _isBecomingWorker = true;
+            _session.setRole(UserRole.worker);
+          });
+        }
+      }
+    }
   }
 
   @override
@@ -382,7 +401,14 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
     try {
       _hydrateSessionFromAuthMetadata();
       final String role = _session.isWorker ? 'worker' : 'client';
-      if (_isBecomingWorker) {
+      final bool isExistingClientBecomingWorker =
+          AppUserSession.instance.currentUser != null &&
+          !AppUserSession.instance.isWorkerCapable &&
+          _session.isWorker;
+      final bool shouldBecomeWorker =
+          _isBecomingWorker || isExistingClientBecomingWorker;
+
+      if (shouldBecomeWorker) {
         final Map<String, dynamic> workerBody = <String, dynamic>{
           'skills': _session.selectedTrades.toList(),
           'service_areas': _session.serviceAreas.toList(),
@@ -447,6 +473,35 @@ class _RoleSelectionScreenState extends State<RoleSelectionScreen> {
   }
 
   void _hydrateSessionFromAuthMetadata() {
+    final AppUser? currentUser = AppUserSession.instance.currentUser;
+    if (currentUser != null) {
+      if ((_session.fullName == null || _session.fullName!.trim().isEmpty) &&
+          currentUser.fullName.isNotEmpty) {
+        _session.fullName = currentUser.fullName;
+      }
+      if ((_session.phone == null || _session.phone!.trim().isEmpty) &&
+          currentUser.phone != null &&
+          currentUser.phone!.isNotEmpty &&
+          currentUser.phone != '0000000000') {
+        _session.phone = currentUser.phone;
+      }
+      if ((_session.locationLabel == null || _session.locationLabel!.trim().isEmpty) &&
+          currentUser.locationLabel != null &&
+          currentUser.locationLabel!.isNotEmpty) {
+        _session.locationLabel = currentUser.locationLabel;
+      }
+      if ((_session.avatarUrl == null || _session.avatarUrl!.trim().isEmpty) &&
+          currentUser.avatarUrl != null &&
+          currentUser.avatarUrl!.isNotEmpty) {
+        _session.avatarUrl = currentUser.avatarUrl;
+      }
+      if ((_session.bio == null || _session.bio!.trim().isEmpty) &&
+          currentUser.bio != null &&
+          currentUser.bio!.isNotEmpty) {
+        _session.bio = currentUser.bio;
+      }
+    }
+
     final User? authUser = Supabase.instance.client.auth.currentUser;
     if (authUser == null) return;
 

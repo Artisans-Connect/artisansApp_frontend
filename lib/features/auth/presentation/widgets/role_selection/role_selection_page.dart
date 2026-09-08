@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:phosphoricons_flutter/phosphoricons_flutter.dart';
 
+import 'package:artisans_app/core/session/app_user_session.dart';
 import 'package:artisans_app/core/theme/app_typography.dart';
 import 'package:artisans_app/shared/models/user_profile_view.dart';
 import 'package:artisans_app/shared/models/onboarding_session.dart';
@@ -18,6 +19,10 @@ class RoleSelectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final AppUser? currentUser = AppUserSession.instance.currentUser;
+    final bool isClientOccupied = currentUser != null;
+    final bool isWorkerOccupied = currentUser?.hasWorkerProfile ?? false;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -37,18 +42,40 @@ class RoleSelectionPage extends StatelessWidget {
           const SizedBox(height: 24),
           RoleOptionCard(
             title: 'I need a worker',
-            subtitle: 'Find skilled professionals for your next project.',
+            subtitle: isClientOccupied
+                ? 'You already have an active Client profile.'
+                : 'Find skilled professionals for your next project.',
             icon: PhosphorIcons.desktop,
-            isSelected: session.isClient,
-            onTap: () => onRoleSelected(UserRole.client),
+            isSelected: isClientOccupied ? false : session.isClient,
+            isDisabled: isClientOccupied,
+            statusBadge: isClientOccupied ? 'Current Role' : null,
+            onTap: () {
+              if (!isClientOccupied) {
+                onRoleSelected(UserRole.client);
+              }
+            },
           ),
           const SizedBox(height: 18),
           RoleOptionCard(
             title: 'I offer services',
-            subtitle: 'Showcase your skills and find new clients.',
+            subtitle: isWorkerOccupied
+                ? 'You are already registered as a worker.'
+                : isClientOccupied
+                    ? 'Expand your account to offer services and earn.'
+                    : 'Showcase your skills and find new clients.',
             icon: PhosphorIcons.briefcase,
-            isSelected: session.isWorker,
-            onTap: () => onRoleSelected(UserRole.worker),
+            isSelected: isWorkerOccupied ? false : session.isWorker,
+            isDisabled: isWorkerOccupied,
+            statusBadge: isWorkerOccupied
+                ? 'Active Worker'
+                : isClientOccupied
+                    ? 'Available'
+                    : null,
+            onTap: () {
+              if (!isWorkerOccupied) {
+                onRoleSelected(UserRole.worker);
+              }
+            },
           ),
         ],
       ),
