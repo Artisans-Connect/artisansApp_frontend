@@ -24,6 +24,24 @@ class _WorkerPendingApprovalScreenState
     extends State<WorkerPendingApprovalScreen> {
   final WorkersService _workersService = WorkersService();
   bool _isCancelling = false;
+  Timer? _pollTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    _pollTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) {
+        final WorkerSessionState session = WorkerScope.read(context);
+        unawaited(session.loadActiveJob());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
 
   Future<void> _confirmCancel(
     BuildContext context,

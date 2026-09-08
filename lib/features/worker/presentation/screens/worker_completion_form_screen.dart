@@ -13,11 +13,9 @@ import 'package:artisans_app/shared/widgets/negotiation_chat_sheet.dart';
 import 'package:artisans_app/shared/widgets/custom_back_button.dart';
 import 'package:artisans_app/shared/models/worker_job.dart';
 import 'package:artisans_app/features/worker/presentation/state/worker_session_state.dart';
-import 'package:artisans_app/features/worker/presentation/utils/worker_job_mapper.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/completion_photo_picker.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/worker_gradient_button.dart';
 import 'package:artisans_app/features/worker/presentation/widgets/job_detail_card.dart';
-import 'package:artisans_app/features/worker/presentation/screens/worker_completion_success_screen.dart';
 
 class WorkerCompletionFormScreen extends StatefulWidget {
   const WorkerCompletionFormScreen({
@@ -149,21 +147,30 @@ class _WorkerCompletionFormScreenState
         },
       );
       if (!mounted) return;
-      final WorkerJob successJob = updated is Map<String, dynamic>
-          ? workerJobFromApi(updated)
-          : widget.job;
+      final WorkerSessionState session = WorkerScope.read(context);
+      if (updated is Map<String, dynamic>) {
+        session.updateActiveJobFromApi(updated);
+      } else {
+        await session.loadActiveJob();
+      }
+      widget.onCompletionSubmitted();
       setState(() => _isSubmitting = false);
-      await WorkerScope.read(context).setAvailable(true);
-      await Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => WorkerCompletionSuccessScreen(
-            job: successJob,
-            onDone: widget.onCompletionSubmitted,
-          ),
-        ),
-      );
+      if (!mounted) return;
+      AppToast.showSuccess(context, 'Completion report submitted! Awaiting client approval.');
+      Navigator.of(context).pop(true);
     } catch (e) {
       if (!mounted) return;
+      try {
+        final WorkerSessionState session = WorkerScope.read(context);
+        await session.loadActiveJob();
+        if (session.jobPhase == WorkerJobPhase.pendingApproval) {
+          widget.onCompletionSubmitted();
+          setState(() => _isSubmitting = false);
+          AppToast.showSuccess(context, 'Completion report submitted! Awaiting client approval.');
+          Navigator.of(context).pop(true);
+          return;
+        }
+      } catch (_) {}
       setState(() => _isSubmitting = false);
       AppToast.showError(context, e, fallback: 'Could not complete job.');
     }

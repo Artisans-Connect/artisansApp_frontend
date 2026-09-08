@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:artisans_app/core/navigation/app_routes.dart';
 import 'package:artisans_app/core/services/payment_service.dart';
 import 'package:artisans_app/core/services/negotiation_service.dart';
 import 'package:artisans_app/shared/models/negotiation.dart';
@@ -100,35 +99,9 @@ class _SettlementDetailsCardState extends State<SettlementDetailsCard> {
     );
 
     if (paid == true && mounted) {
-      final String jobStatus = (widget.job['status'] ?? '').toString();
-      final bool isFinalCompletion = jobStatus == 'pending_completion' || jobStatus == 'completed' || jobStatus == 'pending_client_approval';
-
-      if (isFinalCompletion) {
-        setState(() => _loading = true);
-        try {
-          await PaymentService.instance.checkoutSettlement(jobId);
-          if (!mounted) return;
-          setState(() => _loading = false);
-          AppToast.showEscrow(context, '🛡️ Settlement completed & Escrow funds released to artisan!');
-          if (widget.onSettled != null) widget.onSettled!();
-          final Map<String, dynamic> ratingArgs = <String, dynamic>{
-            'id': jobId,
-            'jobId': jobId,
-            'artisan': widget.job['artisan_name'] ?? widget.job['worker']?['full_name'] ?? 'Artisan',
-            'title': widget.job['category'] ?? widget.job['title'] ?? 'Service',
-          };
-          Navigator.pushNamed(context, AppRoutes.rateService, arguments: ratingArgs);
-        } catch (_) {
-          if (!mounted) return;
-          setState(() => _loading = false);
-          await _fetchSettlementDetails();
-          if (widget.onSettled != null) widget.onSettled!();
-        }
-      } else {
-        await _fetchSettlementDetails();
-        if (widget.onSettled != null) widget.onSettled!();
-        AppToast.showEscrow(context, '⚡ Extra charge payment confirmed! Held safely in Escrow.');
-      }
+      await _fetchSettlementDetails();
+      if (widget.onSettled != null) widget.onSettled!();
+      AppToast.showEscrow(context, '⚡ Extra charge payment confirmed! Held safely in Escrow.');
     }
   }
 

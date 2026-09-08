@@ -381,13 +381,7 @@ class ClientBooking {
           statusRaw == 'arrived' ||
           statusRaw == 'in_progress' ||
           statusRaw == 'termination_requested' ||
-          statusRaw == 'pending_client_approval' ||
-          (statusRaw == 'cancelled' &&
-              (((json['cancelled_by'] as String?) ?? '').toLowerCase() ==
-                      'worker' ||
-                  (((json['cancellation_stage'] as String?) ?? '')
-                          .toLowerCase() ==
-                      'termination_requested')))) {
+          statusRaw == 'pending_client_approval') {
         return ClientBooking.fromApiJob(json);
       }
     }

@@ -101,16 +101,23 @@ class WorkerSessionState extends ChangeNotifier {
       if (data is! Map<String, dynamic>) {
         if (activeJob != null) {
           final String previousJobId = activeJob!.id;
+          final WorkerJobPhase prevPhase = jobPhase;
           try {
             final dynamic jobData = await _jobsService.getJobById(previousJobId);
             if (jobData is Map<String, dynamic>) {
               final String status = (jobData['status'] as String? ?? '').toLowerCase();
               if (status == 'cancelled' || status == 'client_cancelled') {
                 pendingCancellationMessage = 'The client has cancelled this booking.';
+              } else if (status == 'completed') {
+                currentTab = WorkerNavTab.explore;
               }
+            } else if (prevPhase == WorkerJobPhase.pendingApproval) {
+              currentTab = WorkerNavTab.explore;
             }
           } catch (_) {
-            // Avoid false cancellation notification if status check fails
+            if (prevPhase == WorkerJobPhase.pendingApproval) {
+              currentTab = WorkerNavTab.explore;
+            }
           }
           await setAvailable(true);
         }
@@ -137,6 +144,7 @@ class WorkerSessionState extends ChangeNotifier {
         _realtimeService.unsubscribe();
         activeJob = null;
         jobPhase = WorkerJobPhase.none;
+        currentTab = WorkerNavTab.explore;
         await setAvailable(true);
         notifyListeners();
         return;

@@ -658,24 +658,8 @@ class _LiveTrackingScreenState extends State<LiveTrackingScreen>
           ),
         );
         if (paid == true && mounted) {
-          final String jobStatus = (_job?['status'] ?? '').toString();
-          final bool isFinalCompletion = jobStatus == 'pending_completion' || jobStatus == 'completed' || jobStatus == 'pending_client_approval';
-
-          if (isFinalCompletion) {
-            setState(() => _loading = true);
-            await PaymentService.instance.checkoutSettlement(jobId);
-            setState(() => _loading = false);
-            if (!mounted) return;
-            AppToast.showEscrow(context, 'Escrow Funds Released! Payment completed & transferred to artisan.');
-            unawaited(Navigator.pushNamed(
-              context,
-              AppRoutes.rateService,
-              arguments: _ratingPayload(),
-            ));
-          } else {
-            AppToast.showEscrow(context, '⚡ Extra charge payment confirmed! Held safely in Escrow.');
-            await _loadJobDetails();
-          }
+          AppToast.showEscrow(context, '⚡ Extra charge payment confirmed! Held safely in Escrow.');
+          await _loadJobDetails();
         }
       } else {
         // No outstanding balance, release escrow directly
