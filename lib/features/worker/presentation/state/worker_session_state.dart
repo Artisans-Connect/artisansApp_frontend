@@ -95,7 +95,7 @@ class WorkerSessionState extends ChangeNotifier {
     pendingCancellationMessage = null;
   }
 
-  Future<void> loadActiveJob() async {
+  Future<void> loadActiveJob({bool switchToBookings = false}) async {
     try {
       final dynamic data = await _workersService.getActiveJob();
       if (data is! Map<String, dynamic>) {
@@ -144,7 +144,9 @@ class WorkerSessionState extends ChangeNotifier {
 
       activeJob = workerJobFromApi(data);
       jobPhase = _phaseForStatus(status);
-      currentTab = WorkerNavTab.bookings;
+      if (switchToBookings) {
+        currentTab = WorkerNavTab.bookings;
+      }
       notifyListeners();
 
       _realtimeService.subscribeToJob(
@@ -189,7 +191,6 @@ class WorkerSessionState extends ChangeNotifier {
   void updateActiveJobFromApi(Map<String, dynamic> job) {
     activeJob = workerJobFromApi(job);
     jobPhase = _phaseForStatus((job['status'] as String? ?? '').toLowerCase());
-    currentTab = WorkerNavTab.bookings;
     notifyListeners();
   }
 

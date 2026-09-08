@@ -178,14 +178,14 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
                   'pending_client_approval',
                 }.contains(jobStatus);
           });
-          if (hasNewlyActivatedJob || !session.hasActiveJob) {
+          if (hasNewlyActivatedJob && !session.hasActiveJob) {
             unawaited(session.loadActiveJob().then((_) {
               if (mounted && session.hasActiveJob) {
                 session.setTab(WorkerNavTab.bookings);
               }
             }));
-          } else if (session.hasActiveJob) {
-            session.setTab(WorkerNavTab.bookings);
+          } else {
+            unawaited(session.loadActiveJob());
           }
         } catch (_) {}
 
@@ -351,7 +351,11 @@ class _WorkerRequestsScreenState extends State<WorkerRequestsScreen>
     if (destination == WorkerApplicationDestination.activeBooking) {
       final WorkerSessionState session = WorkerScope.of(context);
       await session.loadActiveJob();
-      if (session.hasActiveJob || !mounted) return;
+      if (session.hasActiveJob && mounted) {
+        session.setTab(WorkerNavTab.bookings);
+        return;
+      }
+      if (!mounted) return;
     } else if (destination == WorkerApplicationDestination.history) {
       await Navigator.of(context).push(
         MaterialPageRoute<void>(
